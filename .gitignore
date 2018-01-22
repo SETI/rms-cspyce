@@ -1,0 +1,5 @@
+*.pyc
+*.so
+*/*.pyc
+*/*.so
+cspyce0/cspice
