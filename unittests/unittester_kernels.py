@@ -8,7 +8,7 @@ import unittest
 
 class Test_spyce1_kernels(unittest.TestCase):
 
-  PATH = s.__path__[0] + '/unittest_support/'
+  PATH = s.__path__[0] + '/../unittest_support/'
 
   @staticmethod
   def furnish(PATH):
