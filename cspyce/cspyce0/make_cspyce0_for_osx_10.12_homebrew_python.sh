@@ -16,13 +16,13 @@
 # where "[cspice_path]" is replaced by the path to your existing cspice
 # directory.
 #
-# Execute this shell script: ./cspyce_make_osx_10.12_homebrew_python.sh
+# Execute this shell script: ./make_cspyce_osx_10.12_homebrew_python.sh
 #
 # To test the installation, the following should display the CSPICE
 # toolkit version string:
 #
 #    $ python
-#    >>> importc spyce
+#    >>> import cspyce
 #    >>> cspyce.tkvrsn("toolkit")
 #
 # *** NOTE ***
