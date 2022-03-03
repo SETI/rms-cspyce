@@ -1,369 +1,391 @@
 ################################################################################
-# Usage: python make_vectorize_i.py >vectorize.i
+# Usage: python make_vectorize_i.py
 #
 # This progrmm generates file vectorize.i by creating a macro that defines the
 # inline code for the signature of each SWIG interface to a CSPICE function.
-################################################################################
+#
+# The generated file consists of the following:
+#
+# 1. An exact copy of the file vectorize_header.text
+# 2. A sequence of SWIG macro defintions, one for any VECTOR_ macro found in the
+#    file cspyce0.i.  This program looks for VECTOR_ at the start of line, and
+#    treats everything up to the initial parenthesis as the name of the macro.
+#    Each macro name defines a sequence of input arguments followed by a sequence of
+#    output arguments.
+#
+# This program interprets the name of the macro and defines a SWIG inline function that
+# handles that sequence of arguments.
+####################################################################################
 
-class Arg(object):
-    pass
+from __future__ import annotations
 
-def print_vectorization_macro(fullname):
+from collections import Counter
+from dataclasses import dataclass
 
-    ### Interpret the encoded name
 
-    if not fullname.startswith('VECTORIZE_'):
-        raise ValueError('Invalid name: ' + fullname)
+class Indent:
+    spaces: int
 
-    argstring = fullname[len('VECTORIZE_'):]
+    def __init__(self, spaces):
+        self.spaces = spaces
 
-    (inarg_string, outarg_string) = argstring.split('__')
+    def __str__(self):
+        return ' ' * self.spaces
 
-    # Extract a RETURN indicator
-    use_return = outarg_string.startswith('RETURN')
-    if use_return:
-        outarg_string = outarg_string[len('RETURN_')]
+    def __enter__(self):
+        self.spaces += 4
 
-    # Replace '2d' with 'd','d', etc.
-    arg_keys = []
-    for arg_string in (inarg_string, outarg_string):
-        parts = arg_string.split('_')
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.spaces -= 4
 
-        parsed = []
-        for part in parts:
-            if part[0] in '23456789':
-                count = int(part[0])
-                part = part[1:]
-                parsed += count * [part]
-            else:
-                parsed.append(part)
 
-        arg_keys.append(parsed)
+@dataclass
+class Arg:
+    key: str
+    has_variable_multi_dimensions: bool = False
+    
+    def __post_init__(self):
+        if self.key[0] in 'de' and len(self.key) > 1:
+            if not (self.key[1:].islower() or self.key[1:].isupper()):
+                raise ValueError(f'Unexpected mixed case key "{self.key}"')
+            self.has_variable_multi_dimensions = self.key[1:].islower()
+        
 
-    (inarg_keys, outarg_keys) = arg_keys
+class InArg(Arg):
+    name: str
+    rank: int
+    dim_names: list[str]
 
-    ### MACRO HEADER
-
-    # Identify capital letters which will need to be defined in the macro
-    out_letters = []
-    for key in outarg_keys:
-        for c in key[1:]:
-            if c in 'IJKLMN':
-                out_letters.append(c)
-
-    print
-    len_letters = len(out_letters)
-    if len_letters == 0:
-        print '%%define %s(NAME, FUNC)' % fullname
-    else:
-        print '%%define %s(NAME, FUNC,' % fullname,
-        for k in range(len_letters-1):
-            print out_letters[k] + ',',
-        print out_letters[-1] + ')'
-
-    print
-
-    ### Interpret the input argument keys
-
-    s_count = 0
-    i_count = 0
-    de_counts = {
-        'd': [0, 0, 0, 0],  # For ConstSpiceDouble
-        'e': [0, 0, 0, 0],  # For SpiceDouble
-    }
-    de_type = {
-        'd': 'ConstSpiceDouble *',
-        'e': 'SpiceDouble *',
-    }
-
-    ijkdict = {}    # Maps lowercase indices (i,j,k) to input argument names
-
-    inargs = []
-    sizers = []
-    for key in inarg_keys:
-        arg = Arg()
-        arg.key = key
-        arg.char = key[0]
-        arg.comma1 = ','    # used after declaration
-        arg.comma2 = ','    # used after function call
-        arg.is_lower = False
-
-        if key == 's':
-            s_count += 1
-            arg.name = 'str%d' % s_count
-            arg.rank = 0
-            arg.declaration = 'ConstSpiceChar *' + arg.name
-        elif key == 'i':
-            i_count += 1
-            arg.name = 'k%d' % i_count
-            arg.rank = 0
-            arg.declaration = 'SpiceInt ' + arg.name
-        elif key[0] in 'de':
-            arg.rank = len(key)
-            de_counts[key[0]][arg.rank] += 1
-            arg.name = 'in%d%d' % (arg.rank, de_counts[key[0]][arg.rank])
-            arg.is_lower = key[-1].lower() == key[-1]   # i, j, k, etc.
-            arg.dim_names = [arg.name + '_dim1']
-            parts = [de_type[key[0]] + arg.name, 'int ' + arg.dim_names[0]]
-            for k in range(1,arg.rank):
-                dim_name = arg.name + '_dim' + str(k+1)
-                letter = key[k]
-                if arg.is_lower:
-                    ijkdict[letter] = dim_name
-                arg.dim_names.append(dim_name)
-                parts.append('int ' + dim_name)
-            arg.declaration = ', '.join(parts)
-            sizers.append(arg.dim_names[0])
+    def expand_key(self, counter, ijkdict, fullname):
+        lookup_key = (self.key[0], len(self.key))
+        counter[lookup_key] += 1
+        my_id = counter[lookup_key]
+        if self.key == 's':
+            self.name = f'str{my_id}'
+            self.rank = 0
+        elif self.key == 'i':
+            self.name = f'k{my_id}'
+            self.rank = 0
+        elif self.key[0] in 'de':
+            self.name = f'in{len(self.key)}{my_id}'
+            self.rank = len(self.key)
+            self.dim_names = [f'{self.name}_dim{i + 1}' for i in range(self.rank)]
+            if self.has_variable_multi_dimensions:
+                for k in range(1, self.rank):
+                    ijkdict[self.key[k]] = self.dim_names[k]
         else:
             raise ValueError('Unrecognized input arg in ' + fullname)
 
-        inargs.append(arg)
+    def get_declaration(self):
+        if self.key == 's':
+            return 'ConstSpiceChar *' + self.name
+        elif self.key == 'i':
+            return 'SpiceInt ' + self.name
+        else:
+            my_type = "ConstSpiceDouble *" if self.key[0] == 'd' else "SpiceDouble *"
+            main_declaration = f'{my_type}{self.name}'
+            dim_declarations = [f'int {dim}' for dim in self.dim_names]
+            return ', '.join((main_declaration, *dim_declarations))
 
-    # Define how to include each input item in the call
-    for arg in inargs:
-        if arg.rank == 0:
-            arg.call = arg.name
-            continue
+    def get_call(self, sizer_count):
+        if self.rank == 0:
+            return self.name
 
-        if len(sizers) == 1:
+        if sizer_count == 1:
             indexer = 'i'
         else:
-            indexer = 'i %% %s' % arg.dim_names[0]
+            indexer = f'i % {self.dim_names[0]}'
 
-        parts = [arg.name]
-        if arg.rank == 1:
-            parts += ['[', indexer, ']']
+        if self.rank == 1:
+            result = f'{self.name}[{indexer}]'
         else:
-            parts += [' + (', indexer, ')']
+            multiplicands = [f'({indexer})', *self.dim_names[1:]]
+            result = f'{self.name} + {" * ".join(multiplicands)}'
+            if self.has_variable_multi_dimensions:
+                result = ', '.join((result, *self.dim_names[1:]))
 
-        for dim_name in arg.dim_names[1:]:
-            parts += [' * ', dim_name]
+        return result
 
-        if arg.is_lower:
-            for dim_name in arg.dim_names[1:]:
-                parts += [', ', dim_name]
 
-        arg.call = ''.join(parts)
+class OutArg(Arg):
+    name: str
+    rank: int
+    dim_names: list[str]
+    dim_values: list[str]
 
-    ### Interpret the output argument keys
-
-    b_count = 0
-    i_count = 0
-    d_counts = [0, 0, 0, 0]
-
-    outargs = []
-    for key in outarg_keys:
-        arg = Arg()
-        arg.key = key
-        arg.char = key[0]
-        arg.comma1 = ','    # used after declaration
-        arg.comma2 = ','    # used after function call
-        arg.is_lower = False
-
-        if key == 'i':
-            i_count += 1
-            arg.name = 'int%d' % i_count
-            arg.rank = 1
-            arg.dim_names = [arg.name + '_dim1']
-            arg.dim_values = ['']
-            arg.declaration = 'SpiceInt **%s, int *%s' % (arg.name,
-                                                          arg.dim_names[0])
-            arg.malloc = ('SpiceInt *%s_buffer = ' % arg.name +
-                          'my_int_malloc(size, my_name);')
-        elif key == 'b':
-            b_count += 1
-            arg.name = 'bool%d' % b_count
-            arg.rank = 1
-            arg.dim_names = [arg.name + '_dim1']
-            arg.dim_values = ['']
-            arg.declaration = 'SpiceBoolean **%s, int *%s' % (arg.name,
-                                                              arg.dim_names[0])
-            arg.malloc = ('SpiceBoolean *%s_buffer = ' % arg.name +
-                          'my_bool_malloc(size, my_name);')
-            arg.dim_names = [arg.name + '_dim1']
-            arg.dim_values = ['']
-        elif key[0] == 'd':
-            arg.rank = len(key)
-            d_counts[arg.rank] += 1
-            arg.name = 'out%d%d' % (arg.rank, d_counts[arg.rank])
-            arg.dim_names = [arg.name + '_dim1']
-            arg.dim_values = ['']
-            arg.is_lower = key[-1].lower() == key[-1]   # i, j, k, etc.
-            parts = ['SpiceDouble **%s' % arg.name,
-                     'int *%s' % arg.dim_names[0]]
-            for k in range(1,arg.rank):
-                dim_name = arg.name + '_dim' + str(k+1)
-                letter = key[k]
-                if letter == letter.lower():
-                    dim_value = ijkdict[letter]
-                else:
-                    dim_value = letter
-                arg.dim_names.append(dim_name)
-                arg.dim_values.append(dim_value)
-                parts.append('int *%s' % dim_name)
-            arg.declaration = ', '.join(parts)
-
-            parts = ['SpiceDouble *%s_buffer = my_malloc(size' % arg.name] + \
-                    arg.dim_values[1:]
-            arg.malloc = ' * '.join(parts) + ', my_name);'
+    def expand_key(self, counter, ijkdict, fullname):
+        lookup_key = (self.key[0], len(self.key))
+        counter[lookup_key] += 1
+        my_id = counter[lookup_key]
+        if self.key == 'i':
+            self.name = f'int{my_id}'
+            self.rank = 1
+            self.dim_names = [f'{self.name}_dim1']
+            self.dim_values = ['0']
+        elif self.key == 'b':
+            self.name = f'bool{my_id}'
+            self.rank = 1
+            self.dim_names = [f'{self.name}_dim1']
+            self.dim_values = ['0']
+        elif self.key[0] == 'd':
+            self.name = f'out{len(self.key)}{counter[lookup_key]}'
+            self.rank = len(self.key)
+            self.dim_names = [f'{self.name}_dim{k}' for k in range(1, self.rank + 1)]
+            size_args = list(self.key[1:])
+            if self.has_variable_multi_dimensions:
+                size_args = [ijkdict[letter] for letter in size_args]
+            self.dim_values = ['0', *size_args]
         else:
             raise ValueError('Unrecognized input arg in ' + fullname)
 
-        outargs.append(arg)
+    def get_declaration(self):
+        my_type = dict(i='SpiceInt', b='SpiceBoolean').get(self.key, 'SpiceDouble')
+        main_declaration = f'{my_type} **{self.name}'
+        dims_declarations = [f'int *{name}' for name in self.dim_names]
+        return ', '.join((main_declaration, *dims_declarations))
 
-    # Define how to include each input item in the call
-    for arg in outargs:
-        parts = [arg.name, '_buffer + i']
-
-        for dim_value in arg.dim_values[1:]:
-            parts += [' * ', dim_value]
-
-        if arg.is_lower:
-            for dim_name in arg.dim_names[1:]:
-                parts += [', ', dim_name]
-
-        arg.call = ''.join(parts)
-
-    # No comma after the last declaration
-    outargs[-1].comma1 = ''
-
-    # No comma after the last argument in the function call
-    if use_return:
-        outargs[0].comma2 = ''
-        inargs[-1].comma2 = ''
-    else:
-        outargs[-1].comma2 = ''
-
-    ### FUNCTION DECLARATION
-
-    print '%apply (void RETURN_VOID) {void NAME ## _vector};'
-    print
-
-    print '%inline %{'
-    print '    void NAME ## _vector('
-
-    for arg in inargs + outargs:
-        print 8 * ' ' + arg.declaration + arg.comma1
-
-    print '    ) {'
-    print
-    print 8*' ' + 'char *my_name = "NAME" "_vector";'
-    print
-
-    # Initialize return variables
-    for k in range(len(outargs)):
-        arg = outargs[k]
-        print 8*' ' + '*%s = NULL;' % arg.name
-        print 8*' ' + '*%s = 0;' % arg.dim_names[0]
-        for (name, value) in zip(arg.dim_names, arg.dim_values)[1:]:
-            print 8*' ' + '*%s = %s;' % (name, value)
-
-        print
-
-    # Get maximum leading dimensions
-    print 8*' ' + 'int maxdim = %s;' % sizers[0]
-    for sizer in sizers[1:]:
-        print 8*' ' + 'if (maxdim < %s) maxdim = %s;' % (sizer, sizer)
-    print
-    print 8*' ' + 'int size = (maxdim == 0 ? 1 : maxdim);'
-    for sizer in sizers:
-        print 8*' ' + '%s = (%s == 0 ? 1 : %s);' % (sizer, sizer, sizer)
-    print
-
-    # Allocate output arrays
-    for k in range(len(outargs)):
-        arg = outargs[k]
-        print 8*' ' + arg.malloc
-
-        if k == 0:
-          print 8*' ' + 'if (!%s_buffer) return;' % arg.name
-
+    def get_malloc(self):
+        buffer = f'{self.name}_buffer'
+        if self.key == 'i':
+            return 'SpiceInt *{}', buffer, 'my_int_malloc(size, my_name)'
+        elif self.key == 'b':
+            return 'SpiceBoolean *{}', buffer, 'my_bool_malloc(size, my_name)'
         else:
-          print 8*' ' + 'if (!%s_buffer) {' % arg.name
-          for kk in range(k):
-            print 12*' ' + 'free(%s_buffer);' % outargs[kk].name
-          print   12*' ' + 'return;'
-          print 8*' ' + '}'
+            size_arg = ' * '.join(['size', *self.dim_values[1:]])
+            return 'SpiceDouble *{}', buffer, f'my_malloc({size_arg}, my_name)'
 
-        print
+    def get_call(self, _sizer_count):
+        multiplier = ' * '.join(['i', *self.dim_values[1:]])
+        buffer_arg = f'{self.name}_buffer + {multiplier}'
+        if self.has_variable_multi_dimensions:
+            return ', '.join([buffer_arg,  *self.dim_names[1:]])
+        else:
+            return buffer_arg
 
-    # Loop through values
-    print 8*' ' + 'for (int i = 0; i < size; i++) {'
 
-    # Execute function inside loop
-    if use_return:
-        print 12*' ' + '%s_buffer[i] = FUNC(' % outargs[0].name
-    else:
-        print 12*' ' + 'FUNC('
+class MacroGenerator:
+    def __init__(self, fullname, file):
+        if not fullname.startswith('VECTORIZE_'):
+            raise ValueError('Invalid name: ' + fullname)
+        argstring = fullname[len('VECTORIZE_'):]
+        inarg_keys, outarg_keys, use_return = self.parse_argstring(argstring)
 
-    # Insert input arguments into function
-    for arg in inargs:
-        print 16*' ' + arg.call + arg.comma2
+        ijkdict = {}  # Maps lowercase indices (i,j,k) to input argument names
+        in_counter = Counter()
+        out_counter = Counter()
 
-    if not use_return:
+        inargs = [InArg(key) for key in inarg_keys]
+        outargs = [OutArg(key) for key in outarg_keys]
+        for arg in inargs:
+            arg.expand_key(in_counter, ijkdict, fullname)
         for arg in outargs:
-            print 16*' ' + arg.call + arg.comma2
+            arg.expand_key(out_counter, ijkdict, fullname)
 
-    print 12*' ' + ');'
+        self.fullname = fullname
+        self.file = file
+        self.inargs = inargs
+        self.outargs = outargs
+        self.use_return = use_return
+        self.indent = Indent(0)
 
-    # End of loop
-    print '        }'
-    print
+    def out(self, string=""):
+        if not string:
+            self.file.write("\n")
+        else:
+            self.file.write(str(self.indent) + string + "\n")
 
-    # Return pointers to the allocated buffers
-    for k in range(len(outargs)):
-        arg = outargs[k]
-        print 8*' ' + '*%s = %s_buffer;' % (arg.name, arg.name)
-        print 8*' ' + '*%s = maxdim;' % arg.dim_names[0]
-        for (name, value) in zip(arg.dim_names, arg.dim_values)[1:]:
-            print 8*' ' + '*%s = %s;' % (name, value)
+    @staticmethod
+    def parse_argstring(argstring):
+        (inarg_string, outarg_string) = argstring.split('__')
+        # Extract a RETURN indicator
+        use_return = outarg_string.startswith('RETURN')
+        if use_return:
+            outarg_string = outarg_string[len('RETURN_')]
+        # Replace '2d' with 'd','d', etc.
+        arg_keys = []
+        for arg_string in (inarg_string, outarg_string):
+            parts = arg_string.split('_')
+            parsed = []
+            for part in parts:
+                if part[0] in '23456789':
+                    count = int(part[0])
+                    part = part[1:]
+                    parsed += count * [part]
+                else:
+                    parsed.append(part)
 
-        if k < len(outargs) - 1:
-            print
+            arg_keys.append(parsed)
+        (inarg_keys, outarg_keys) = arg_keys
+        return inarg_keys, outarg_keys, use_return
 
-    print '    }'
+    def generate_code(self):
+        out = self.out
+        out()
+        letters = self.__get_out_letters()
+        out(f'%define {self.fullname}({", ".join(["NAME", "FUNC", *letters])})\n')
+        out('%apply (void RETURN_VOID) {void NAME ## _vector};\n')
+        out('%inline %{')
+        with self.indent:
+            out('void NAME ## _vector(')
+            with self.indent:
+                all_args = [*self.inargs, *self.outargs]
+                for k, arg in enumerate(all_args):
+                    suffix = ') {' if k == len(all_args) - 1 else ','
+                    out(f'{arg.get_declaration()}{suffix}')
+            with self.indent:
+                self.write_body()
 
-    # End of inline
+            out("}")
+        out('%}\n')
+        out('%enddef\n')
+        out('/' + 78 * '*' + '/')
 
-    print '%}'
-    print
+    def write_body(self):
+        out = self.out
 
-    # End of macro
+        out('char *my_name = "NAME" "_vector";\n')
+        # Get maximum leading dimensions
+        self.get_maxdim_and_size()
+        # Set all ouput vars to the values they'll have if allocation fails.
+        self.generate_initialize_output_vars()
+        # Allocate output arrays
+        self.generate_output_buffer_allocation()
+        # Loop through values
+        out('for (int i = 0; i < size; i++) {')
+        with self.indent:
+            self.generate_cspice_call()
+        # End of loop
+        out('}\n')
+        # Return pointers to the allocated buffers
+        self.generate_return_results_to_caller()
 
-    print '%enddef'
-    print
-    print '/' + 78*'*' + '/'
+    def get_maxdim_and_size(self):
+        out = self.out
+        sizers = [arg.dim_names[0] for arg in self.inargs if arg.rank > 0]
+        out(f'int maxdim = {sizers[0]};')
+        for sizer in sizers[1:]:
+            out(f'if (maxdim < {sizer}) maxdim = {sizer};')
+        out()
+        out(f'int size = (maxdim == 0 ? 1 : maxdim);')
+        for sizer in sizers:
+            out(f'{sizer} = ({sizer} == 0 ? 1 : {sizer});')
+        out()
 
-# Print the header
-print '/' + 131 * '*'
-print '* cspyce0/vectorize.i'
-print '*'
-print '* This file is automatically generated by program make_vectorize.py. To regenerate:'
-print '*     python make_vectorize.py >vectorize.i'
-print '*'
-print '* This file begins with an exact copy of file vectorize_header.txt. '  +\
-        'This is followed by a sequence of SWIG macro definitions, one'
-print '* for each of the names listed in file vectorize_names.txt. Each '     +\
-        'macro name defines a sequence of input arguments followed by a'
-print '* sequence of output arguments. Program make_vectorize.py interprets ' +\
-        'the name of the macro and defines a SWIG inline function that'
-print '* handles that sequence of arguments. Inside the file cspyce0.i, each '+\
-        'function is vectorized by executing one of these macros, which'
-print '* then expands into the needed inline source code.'
-print 131 * '*' + '/'
-print
+    def generate_initialize_output_vars(self):
+        for arg in self.outargs:
+            initialize_arg_name = f'*{arg.name} = NULL;'
+            initialize_dimensions = [f'*{name} = {value};'
+                                     for name, value in zip(arg.dim_names, arg.dim_values)]
+            self.out(' '.join((initialize_arg_name, *initialize_dimensions)))
+        self.out()
 
-# Define the typemaps
-f = open('vectorize_header.txt')
-for rec in f:
-    print rec[:-1]
-f.close()
+    def generate_output_buffer_allocation(self):
+        out = self.out
+        seen_buffers = []
+        for arg in self.outargs:
+            type_formatter, buffer, mallocer = arg.get_malloc()
+            if not seen_buffers:
+                out(f'{type_formatter.format(buffer)} = {mallocer};')
+            else:
+                out(f'{type_formatter.format(buffer)} = '
+                    f'{seen_buffers[-1]} ? {mallocer} : NULL;')
+            seen_buffers.append(buffer)
+        # Handle an error
+        if len(seen_buffers) == 1:
+            out(f'if (!{seen_buffers[-1]}) return;')
+        else:
+            out(f'if (!{seen_buffers[-1]}) {{')
+            with self.indent:
+                for seen_buffer in seen_buffers[:-1]:
+                    out(f'free({seen_buffer});')
+                out(f'return;')
+            out('}\n')
 
-# Print a macro for each name
-f = open('vectorize_names.txt')
-names = [rec[:-1] for rec in f]
-f.close()
+    def generate_cspice_call(self):
+        out = self.out
+        if self.use_return:
+            out(f'{self.outargs[0].name}_buffer[i] = FUNC(')
+        else:
+            out(f'FUNC(')
+        # Insert input arguments into function
+        funcargs = [*self.inargs, *self.outargs] if not self.use_return else self.inargs
+        sizer_count = sum(arg.rank > 0 for arg in self.inargs)
+        with self.indent:
+            for k, arg in enumerate(funcargs):
+                suffix = ',' if k < len(funcargs) - 1 else ");"
+                out(f'{arg.get_call(sizer_count)}{suffix}')
 
-for name in names:
-    print_vectorization_macro(name)
+    def generate_return_results_to_caller(self):
+        # We only need to change those values that have changed from the default
+        # return values.  The buffer needs to point to the actual buffer, and the
+        # first dimension set to maxdim.
+        out = self.out
+        for arg in self.outargs:
+            out(f'*{arg.name} = {arg.name}_buffer; *{arg.dim_names[0]} = maxdim;')
 
+    def __get_out_letters(self):
+        out_letters = []
+        for arg in self.outargs:
+            for c in arg.key[1:]:
+                if c in 'IJKLMN':
+                    out_letters.append(c)
+        if out_letters != sorted(out_letters):
+            raise ValueError(f'Out letters in {self.fullname} are not sorted.  ')
+        return out_letters
+
+
+HEADER = """
+/****************************************************************************************
+* cspyce0/vectorize.i
+*
+* This file is automatically generated by program make_vectorize.py. Do not modify.
+* To regenerate:
+*     python make_vectorize.py
+* 
+* See make_vectorize.py for more information.
+*/
+"""
+
+
+APPLY_TEMPLATE_LINES = [
+    "%apply (ConstSpiceDouble *IN_ARRAY01, int DIM1) {(ConstSpiceDouble *in1@, int in1@_dim1)};",
+    "%apply (ConstSpiceDouble *IN_ARRAY12, int DIM1, int DIM2) {(ConstSpiceDouble *in2@, int in2@_dim1, int in2@_dim2)};",
+    "%apply (ConstSpiceDouble *IN_ARRAY23, int DIM1, int DIM2, int DIM3) {(ConstSpiceDouble *in3@, int in3@_dim1, int in3@_dim2, int in3@_dim3)};",
+    "%apply (SpiceDouble *IN_ARRAY01, int DIM1) {(SpiceDouble *in1@, int in1@_dim1)};",
+    "%apply (SpiceDouble *IN_ARRAY12, int DIM1, int DIM2) {(SpiceDouble *in2@, int in2@_dim1, int in2@_dim2)};",
+    "%apply (SpiceDouble *IN_ARRAY23, int DIM1, int DIM2, int DIM3) {(SpiceDouble *in3@, int in3@_dim1, int in3@_dim2, int in3@_dim3)};",
+    "%apply (ConstSpiceChar *CONST_STRING) {(ConstSpiceChar *str@)};",
+    "%apply (SpiceDouble **OUT_ARRAY01, int *SIZE1) {(SpiceDouble **out1@, int *out1@_dim1)};",
+    "%apply (SpiceDouble **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(SpiceDouble **out2@, int *out2@_dim1, int *out2@_dim2)};",
+    "%apply (SpiceDouble **OUT_ARRAY23, int *SIZE1, int *SIZE2, int *SIZE3) {(SpiceDouble **out3@, int *out3@_dim1, int *out3@_dim2, int *out3@_dim3)};",
+    "%apply (SpiceInt **OUT_ARRAY01, int *SIZE1) {(SpiceInt **int@, int *int@_dim1)};",
+    "%apply (SpiceBoolean **OUT_ARRAY01, int *SIZE1) {(SpiceBoolean **bool@, int *bool@_dim1)};",
+]
+
+
+def create_vectorize_header_file(input_file, output_file):
+    # Print the header
+    with open(output_file, 'w') as f:
+        # Copy the header
+        f.write(HEADER.lstrip())
+        f.write('\n')
+
+        # Generate the apply templates
+        for line in APPLY_TEMPLATE_LINES:
+            for i in range(1, 10):
+                f.write(line.replace('@', str(i)) + "\n")
+            f.write("\n")
+
+        # Print a macro for each line starting with VECTORIZE found in the file
+        with open(input_file) as g:
+            seen = set()
+            for line in g:
+                if line.startswith("VECTORIZE"):
+                    name = line[:line.index('(')]
+                    if name not in seen:
+                        MacroGenerator(name, f).generate_code()
+                        seen.add(name)
+
+
+if __name__ == '__main__':
+    create_vectorize_header_file('cspyce0.i', 'vectorize.i')

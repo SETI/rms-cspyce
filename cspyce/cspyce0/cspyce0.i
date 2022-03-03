@@ -1,4 +1,5 @@
 %module cspyce0
+
 %{
 #define SWIG_FILE_WITH_INIT
 
@@ -19,8 +20,7 @@
 
 /* Internal routine to malloc a vector of doubles */
 SpiceDouble *my_malloc(int count, const char *fname) {
-    SpiceDouble *result = (SpiceDouble *) PyMem_Malloc(count *
-                                                       sizeof(SpiceDouble));
+    SpiceDouble *result = (SpiceDouble *) PyMem_Malloc(count * sizeof(SpiceDouble));
     if (!result) {
         chkin_c(fname);
         setmsg_c("Failed to allocate memory");
@@ -118,13 +118,17 @@ void reset_messages(void);
 %}
 
 %include "typemaps.i"
+%include "numpy.i"
 %include "cspyce_typemaps.i"
 %include "vectorize.i"
+
+%fragment("NumPy_Fragments");
 
 %init %{
         import_array(); /* For numpy interface */
         erract_c("SET", 256, "RETURN");
         errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
+	    initialize_typemap_globals();
 %}
 
 %feature("autodoc", "1");
@@ -4458,8 +4462,8 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
-%apply (ConstSpiceDouble IN_ARRAY2[ANY][ANY], SpiceInt DIM1)
-                            {(ConstSpiceDouble lonlat[1][2], SpiceInt npts)};
+%apply (ConstSpiceDouble IN_ARRAY2[][ANY], SpiceInt DIM1)
+                            {(ConstSpiceDouble lonlat[][2], SpiceInt npts)};
 %apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
                             {(SpiceDouble **srfpts, int *sdim1, int *sdim2)};
 %apply (void RETURN_VOID)   {void my_latsrf_c};
@@ -4470,7 +4474,7 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
                      ConstSpiceChar   *target,
                      SpiceDouble      et,
                      ConstSpiceChar   *fixref,
-                     ConstSpiceDouble lonlat[1][2], SpiceInt npts,
+                     ConstSpiceDouble lonlat[][2], SpiceInt npts,
                      SpiceDouble      **srfpts, int *sdim1, int *sdim2) {
 
         SpiceDouble *srfpts1 = my_malloc(npts * 3, "latsrf");
@@ -6291,15 +6295,15 @@ VECTORIZE_dX_dX__dN(pjelpl, pjelpl_c, NELLIPSE)
 
 %rename (pltar) pltar_c;
 
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[ANY][ANY])
-                                {(SpiceInt nv, ConstSpiceDouble vrtces[1][3])};
-%apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY2[ANY][ANY])
-                                {(SpiceInt np, ConstSpiceInt plates[1][3])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+                                {(SpiceInt nv, ConstSpiceDouble vrtces[][3])};
+%apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY2[][ANY])
+                                {(SpiceInt np, ConstSpiceInt plates[][3])};
 %apply (SpiceDouble RETURN_DOUBLE) {SpiceDouble pltar_c};
 
 extern SpiceDouble pltar_c(
-        SpiceInt nv, ConstSpiceDouble vrtces[1][3],
-        SpiceInt np, ConstSpiceInt    plates[1][3]);
+        SpiceInt nv, ConstSpiceDouble vrtces[][3],
+        SpiceInt np, ConstSpiceInt    plates[][3]);
 
 /***********************************************************************
 * -Procedure pltexp_c ( Plate expander )
@@ -6413,15 +6417,15 @@ VECTORIZE_dX_dX_dX_dX__dN_d(pltnp, pltnp_c, 3)
 
 %rename (pltvol) pltvol_c;
 
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[ANY][ANY])
-                                {(SpiceInt nv, ConstSpiceDouble vrtces[1][3])};
-%apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY2[ANY][ANY])
-                                {(SpiceInt np, ConstSpiceInt    plates[1][3])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+                                {(SpiceInt nv, ConstSpiceDouble vrtces[][3])};
+%apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY2[][ANY])
+                                {(SpiceInt np, ConstSpiceInt    plates[][3])};
 %apply (SpiceDouble RETURN_DOUBLE) {SpiceDouble pltvol_c};
 
 extern SpiceDouble pltvol_c(
-        SpiceInt nv, ConstSpiceDouble vrtces[1][3],
-        SpiceInt np, ConstSpiceInt    plates[1][3]);
+        SpiceInt nv, ConstSpiceDouble vrtces[][3],
+        SpiceInt np, ConstSpiceInt    plates[][3]);
 
 /***********************************************************************
 * -Procedure pl2nvc_c ( Plane to normal vector and constant )
@@ -9257,8 +9261,8 @@ extern void srfcss_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[ANY][ANY])
-                          {(SpiceInt npts, SpiceDouble srfpts[1][3])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+                          {(SpiceInt npts, SpiceDouble srfpts[][3])};
 %apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
                           {(SpiceDouble **normls, int *dim1, int *dim2)};
 %apply (void RETURN_VOID) {void my_srfnrm_c};
@@ -9269,7 +9273,7 @@ extern void srfcss_c(
                      ConstSpiceChar *target,
                      SpiceDouble    et,
                      ConstSpiceChar *fixref,
-                     SpiceInt npts, SpiceDouble srfpts[1][3],
+                     SpiceInt npts, SpiceDouble srfpts[][3],
                      SpiceDouble **normls, int *dim1, int *dim2) {
 
         *normls = NULL;
