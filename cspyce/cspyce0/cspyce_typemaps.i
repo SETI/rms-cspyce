@@ -20,7 +20,7 @@
 *******************************************************************************/
 
 
-#ifdef SWIGPYTHON_PY3 // set when using -py3
+#ifdef PYTHON3
 #define is_swig_py3 1
 #else
 #define is_swig_py3 0
@@ -546,13 +546,15 @@ void handle_malloc_failure(const char* symname) {
 %define TEST_IS_STRING(obj)
 {
 #if is_swig_py3
-        if (!PyUnicode_Check(obj)) {
-            RAISE_BAD_STRING_ON_ERROR(SWIG_ERROR);
-        }
+    if (!PyUnicode_Check(obj)) {
+        handle_bad_string_error("$symname");
+        SWIG_fail;
+    }
 #else
-        if (!PyString_Check(obj)) {
-            RAISE_BAD_STRING_ON_ERROR(SWIG_ERROR)
-        }
+    if (!PyString_Check(obj)) {
+        handle_bad_string_error("$symname");
+        SWIG_fail;
+    }
 #endif
 }
 %enddef

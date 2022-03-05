@@ -8,8 +8,10 @@
 # forward to the cspyce2 module.
 ################################################################################
 
-HEADER = \
-"""################################################################################
+from __future__ import print_function
+
+HEADER = """
+################################################################################
 # cspyce/cspyce2.py
 ################################################################################
 # module cspyce.cspyce2
@@ -24,6 +26,9 @@ HEADER = \
 #
 ################################################################################
 
+import sys
+PYTHON2 = sys.version_info[0] < 3
+
 # This function makes cspyce2 look the same as cspyce1. It ensures that every
 # location in the global dictionary and every function's internal link point
 # a new function of the same name.
@@ -37,9 +42,11 @@ def relink_all(new_dict, old_dict):
 
     dict_names = {}     # maps each function name to its dictionary locations
     old_funcs = {}      # maps each function name to its old function
-    for (dict_name, old_func) in old_dict.iteritems():
-        if type(old_func).__name__ != 'function': continue
-        if 'SIGNATURE' not in old_func.__dict__:  continue
+    for (dict_name, old_func) in old_dict.items():
+        if not callable(old_func):
+            continue
+        if 'SIGNATURE' not in old_func.__dict__:
+            continue
 
         func_name = old_func.__name__
         old_funcs[func_name] = old_func
@@ -49,7 +56,7 @@ def relink_all(new_dict, old_dict):
 
         dict_names[func_name].append(dict_name)
 
-    for (name, keys) in dict_names.iteritems():
+    for (name, keys) in dict_names.items():
         func = new_dict[name]
         for key in keys:
             new_dict[key] = func
@@ -58,56 +65,61 @@ def relink_all(new_dict, old_dict):
     # Make sure each cspyce function has the same properties and attributes as
     # the one in the old dictionary
 
-    for (name, old_func) in old_funcs.iteritems():
+    for (name, old_func) in old_funcs.items():
         func = new_dict[name]
 
         # Copy function properties
-        func.__doc__       = old_func.__doc__
-        func.func_defaults = old_func.func_defaults
+        func.__doc__ = old_func.__doc__
+
+        if PYTHON2:
+            func.func_defaults = old_func.func_defaults
+        else:
+            func.__defaults__ = old_func.__defaults__
 
         # Copy attributes
-        for (key, value) in old_func.__dict__.iteritems():
-            if type(value).__name__ != 'function':
+        for (key, value) in old_func.__dict__.items():
+            if not callable(value):
                 func.__dict__[key] = value
             else:
                 # If it's a function, locate a new one with the same name
                 func.__dict__[key] = new_dict[value.__name__]
 
+
+import cspyce.cspyce1 as cspyce1
+from cspyce.cspyce1 import *
 """
 
 import cspyce.cspyce1 as cspyce1
 
-# Get a list by name of every define cspyce function
-arglists = {}  # keyed by name, returns argument name lists
-for (key, func) in cspyce1.__dict__.iteritems():
-    if type(func).__name__ != 'function': continue
-    if not hasattr(func, 'ARGNAMES'): continue
-    arglists[func.__name__] = func.ARGNAMES
+def generate_cspyce2():
+    # Get a list by name of every define cspyce function
+    arglists = {}  # keyed by name, returns argument name lists
+    for (key, func) in cspyce1.__dict__.items():
+        if type(func).__name__ != 'function': continue
+        if not hasattr(func, 'ARGNAMES'): continue
+        arglists[func.__name__] = func.ARGNAMES
 
-keys = arglists.keys()
-keys.sort()
+    ########################################
+    # Start writing
+    ########################################
 
-########################################
-# Start writing
-########################################
+    print(HEADER.lstrip())
 
-print HEADER
 
-print "import cspyce.cspyce1 as cspyce1"
-print "from cspyce.cspyce1 import *"
-print
+    for key in sorted(arglists.keys()):
+        argstr = ', '.join(arglists[key])
 
-for key in keys:
-    argstr = ', '.join(arglists[key])
+        print('def %s(%s):' % (key, argstr))
+        print('  return cspyce1.%s(%s)' % (key, argstr))
+        print()
 
-    print 'def %s(%s):' % (key, argstr)
-    print '  return cspyce1.%s(%s)' % (key, argstr)
-    print
+    print('# Upon execution, re-connect all the lost attibutes and broken links...')
+    print()
 
-print '# Upon execution, re-connect all the lost attibutes and broken links...'
-print
+    print('relink_all(globals(), cspyce1.__dict__)')
 
-print 'relink_all(globals(), cspyce1.__dict__)'
+    print()
+    print(80*'#')
 
-print
-print 80*'#'
+if __name__ == '__main__':
+    generate_cspyce2()

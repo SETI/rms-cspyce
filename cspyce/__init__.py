@@ -13,7 +13,13 @@
 # See the file AAREADME.txt for more information.
 #
 # Mark Showalter, PDS Ring-Moons Systems Node, SETI Institute, December 2017.
+#   - Adapted for Python 3, February 2022.
 ################################################################################
+
+import inspect
+import sys
+
+PYTHON2 = sys.version_info[0] < 3
 
 # We allow the import of cspyce2 to fail because, during development, there are
 # times when cspyce2.py might be invalid. If that happens, we still want to be
@@ -22,7 +28,7 @@
 # inside this directory tree. This should never occur during a normal run.
 
 try:
-    from cspyce2 import *
+    from .cspyce2 import *
 except ImportError:
     pass
 
@@ -51,6 +57,10 @@ def use_errors(*funcs):
         GLOBAL_STATUS.discard('FLAGS')
 
     for name in _get_func_names(funcs):
+        # <name>_flag must always point to the flag version
+        # <name>_error must always point to the error version
+        # Only function names that don't specify one of these are modified to
+        # point to the error version.
         if 'error' not in name and 'flag' not in name:
             globals()[name] = globals()[name].error
 
@@ -72,6 +82,10 @@ def use_flags(*funcs):
         GLOBAL_STATUS.discard('FLAGS')
 
     for name in _get_func_names(funcs):
+        # <name>_flag must always point to the flag version
+        # <name>_error must always point to the error version
+        # Only function names that don't specify one of these are modified to
+        # point to the flag version.
         if 'error' not in name and 'flag' not in name:
             globals()[name] = globals()[name].flag
 
@@ -99,6 +113,11 @@ def use_vectors(*funcs):
         GLOBAL_STATUS.discard('SCALARS')
 
     for name in _get_func_names(funcs):
+        # <name>_scalar must always point to the scalar version
+        # <name>_vector must always point to the vector version
+        # <name>_array must always point to the array version
+        # Only function names that don't specify one of these are modified to
+        # point to the vector version.
         if ('scalar' not in name and 'vector' not in name
                                  and 'array' not in name):
             globals()[name] = globals()[name].vector
@@ -122,13 +141,18 @@ def use_scalars(*funcs):
         GLOBAL_STATUS.discard('SCALARS')
 
     for name in _get_func_names(funcs):
+        # <name>_scalar must always point to the scalar version
+        # <name>_vector must always point to the vector version
+        # <name>_array must always point to the array version
+        # Only function names that don't specify one of these are modified to
+        # point to the scalar version.
         if ('scalar' not in name and 'vector' not in name
                                  and 'array' not in name):
             globals()[name] = globals()[name].scalar
 
 def _get_func_names(funcs=[], source=None):
     """Convert a list of cspyce functions or names to a set of unique names,
-    including all versions.
+    including all version suffixes.
     """
 
     source = source or globals()
@@ -148,7 +172,7 @@ def _get_func_names(funcs=[], source=None):
 ################################################################################
 
 def get_all_funcs(source=None, cspyce_dict=None):
-    """Return a dictionary of all cspyce functions, keyed by their names.
+    """A dictionary of all cspyce functions, keyed by their names.
 
     Inputs:
         source      the dictionary to search, which defaults to globals().
@@ -165,11 +189,14 @@ def get_all_funcs(source=None, cspyce_dict=None):
     names = source.keys()
     for name in names:
         func = source[name]
-        if type(func).__name__ != 'function': continue
-        if 'SIGNATURE' not in func.__dict__:  continue
+        if not callable(func):
+            continue
+        if not hasattr(func, 'SIGNATURE'):
+            continue
 
         # Stop if this function was already found; break infinite recursion
-        if func.__name__ in cspyce_dict: continue
+        if func.__name__ in cspyce_dict:
+            continue
 
         # Add this function to the dictionary
         cspyce_dict[func.__name__] = func
@@ -180,8 +207,8 @@ def get_all_funcs(source=None, cspyce_dict=None):
     return cspyce_dict
 
 def get_all_versions(func, source=None):
-    """Return a dictionary of all cspyce functions associated with this one,
-    keyed by their names.
+    """A dictionary of all cspyce functions associated with this one, keyed by
+    their names.
 
     Inputs:
         func        a cspyce function or the name of a cspyce function.
@@ -193,8 +220,8 @@ def get_all_versions(func, source=None):
     return get_all_funcs(func.__dict__)
 
 def validate_func(func, source=None):
-    """Return the cspyce function if this is a valid cspyce function or the name
-    of a cspyce function. Otherwise, raise an exception.
+    """A cspyce function, given either its name or the function itself.
+    Otherwise, raise an exception.
 
     Inputs:
         func        a cspyce function or the name of a cspyce function.
@@ -202,7 +229,7 @@ def validate_func(func, source=None):
                     default is globals().
     """
 
-    if type(func) == str:
+    if isinstance(func, str):
         full_name = func
         short_name = full_name.split('_')[0]
         source = source or globals()
@@ -211,13 +238,27 @@ def validate_func(func, source=None):
         except KeyError:
             raise KeyError('Unrecognized function name "%s"' % full_name)
 
-    if type(func).__name__ != 'function':
+    if not callable(func):
         raise ValueError('Not a function: "%s"' % full_name)
 
-    if 'SIGNATURE' not in func.__dict__:
+    if not hasattr(func, 'SIGNATURE'):
         raise ValueError('Not a cspyce function: "%s"' % func.__name__)
 
     return func
+
+################################################################################
+# Add return annotations to all cspyce functions if this is Python 3
+################################################################################
+
+if not PYTHON2:
+    for func in get_all_funcs().values():
+        retnames = func.RETNAMES
+        if retnames:
+            sig = inspect.signature(func)
+            if len(func.RETNAMES) == 1:
+                func.__signature__ = sig.replace(return_annotation=retnames[0])
+            else:
+                func.__signature__ = sig.replace(return_annotation=retnames)
 
 ################################################################################
 

@@ -3,11 +3,21 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
+from __future__ import print_function
+
 import numpy as np
+import sys
+import warnings
+import inspect
 
 import cspyce
 import cspyce.cspyce1 as cspyce1
 from cspyce.alias_support import alias_version
+
+PYTHON2 = sys.version_info[0] < 3
+
+# This isn't how we want to handle a ragged array
+np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 ################################################################################
 # cspyce array function wrapper
@@ -16,8 +26,8 @@ from cspyce.alias_support import alias_version
 ARRAY_NOTE = """
 This version supports array inputs in place of any floating-point inputs. Array
 shapes are broadcasted following NumPy rules. This function vectorizes the call
-so that any iteration is performed inside C code an is faster than Python
-iteration.
+so that any iteration is performed inside C code and is therefore faster than
+Python iteration.
 """
 
 def _array_name(name):
@@ -26,7 +36,7 @@ def _array_name(name):
 def _arrayize_arglist(arglist):
     arrayized = []
     for arg in arglist:
-        arrayized.append(arg.replace('[*', '[...'))
+        arrayized.append(arg.replace('[_', '[...'))
 
     return arrayized
 
@@ -59,26 +69,62 @@ def array_version(func):
         func.array = array_func
         return func
 
+    # At this point, we always have the vectorized version of the function, and
+    # the array version has not yet been constructed.
+
     # Identify the names and locations of arguments that can be vectorized;
-    # store their ranks in a dictionary
-    if not hasattr(func, 'BROADCAST_RANKS'):
-        broadcast_ranks = {}
-        for k in range(len(func.ARGNAMES)):
-            sig = func.SIGNATURE[k]
+
+    # INPUT_ITEMS is a dictionary indicating the required shape of each
+    # floating-point input. It is keyed by both the name and index of the input
+    # argument. If the length along a particular axis is unspecified (indicated
+    # by "*" in the signature), the value in the tuple is zero.
+
+    # RETURN_ITEMS is a list containing the shapes of the returned items, in
+    # order.
+
+    if not hasattr(func, 'INPUT_ITEMS'):
+        input_items = {}
+        for k, sig in enumerate(func.SIGNATURE):
             parts = sig.split('[')
-            if parts[0] in ('int', 'bool', 'string'): continue
+            if parts[0] in ('int', 'bool', 'string', 'body_name', 'body_code',
+                            'frame_name', 'frame_code'):
+                continue
 
             if len(parts) == 1:
-                rank = 0
+                shape = ()
             else:
-                rank = len(parts[1].split(','))
+                dims = (parts[1][:-1].replace('_,', '')
+                                     .replace('_', '')
+                                     .replace('*', '0'))
+                if dims:
+                    shape = tuple([int(d) for d in dims.split(',')])
+                else:
+                    shape = ()
 
-            broadcast_ranks[k] = rank
-            broadcast_ranks[func.ARGNAMES[k]] = rank
+            input_items[k] = shape
+            input_items[func.ARGNAMES[k]] = shape
 
-        func.BROADCAST_RANKS = broadcast_ranks
+        func.INPUT_ITEMS = input_items
 
-    if not func.BROADCAST_RANKS:
+        return_items = []
+        for sig in func.RETURNS:
+            parts = sig.split('[')
+            if len(parts) == 1:
+                shape = ()
+            else:
+                dims = (parts[1][:-1].replace('_,', '')
+                                     .replace('_', '')
+                                     .replace('*', '0'))
+                if dims:
+                    shape = tuple([int(d) for d in dims.split(',')])
+                else:
+                    shape = ()
+
+            return_items.append(shape)
+
+        func.RETURN_ITEMS = return_items
+
+    if not func.INPUT_ITEMS:
         func.array = func.vector
         return func
 
@@ -86,8 +132,8 @@ def array_version(func):
         return _exec_with_broadcasting(func, *args, **keywords)
 
     # Copy type info but not function version links
-    for (key, value) in func.__dict__.iteritems():
-        if type(value).__name__ != 'function':
+    for (key, value) in func.__dict__.items():
+        if not callable(value):
             wrapper.__dict__[key] = value
 
     # After copy, revise SIGNATURE, RETURNS, and NOTES
@@ -98,189 +144,182 @@ def array_version(func):
     # Save key attributes of the wrapper function before returning
     cspyce.assign_docstring(wrapper)
     wrapper.__name__ = _array_name(func.__name__)
-    wrapper.func_defaults = func.func_defaults
+    if PYTHON2:
+        wrapper.func_defaults = func.func_defaults
+    else:
+        wrapper.__defaults__ = func.__defaults__
+        wrapper.__signature__ = inspect.signature(func)
 
     # Insert mutual links
     wrapper.array  = wrapper
     wrapper.vector = func
     wrapper.scalar = func.scalar
-
     func.array = wrapper
 
     return wrapper
 
+def _getarg(indx, args, keywords):
+    if isinstance(indx, int):
+        return args[indx]
+    else:
+        return keywords[indx]
+
+def _setarg(indx, value, args, keywords):
+    if isinstance(indx, int):
+        args[indx] = value
+    else:
+        keywords[indx] = value
+
 def _exec_with_broadcasting(func, *args, **keywords):
     """Main function to broadcast together the shapes of the input arguments
-    and return results with the broadcasted shape."""
+    and return results with the broadcasted shape, given the vectorized form of
+    a function.
+    """
 
-    # Identify arguments needing broadcasting
-    arg_ranks = []
-    arg_indices = []
+    args = list(args)   # args must be mutable
 
-    for k in range(len(args)) + keywords.keys():
+    # Identify arguments needing broadcasting, convert to arrays
+    array_args = []     # list of tuples (index or key of arg, array, rank)
+    shapes = []
+    for indx in list(range(len(args))) + list(keywords.keys()):
 
-        rank = func.BROADCAST_RANKS.get(k, None)
-        if rank is None: continue
+        item = func.INPUT_ITEMS.get(indx, None)
+        if not item:
+            continue
+
+        rank = len(item)
 
         # Get argument
-        if type(k) == int:
-            arg = args[k]
-        else:
-            arg = keywords[k]
+        arg = _getarg(indx, args, keywords)
 
-        # Ignore args that are not arrays
-        if not isinstance(arg, np.ndarray): continue
+        # Convert to floating-point array
+        error = False
+        try:
+            arg = np.asfarray(arg)
+        except ValueError:
+            error = True
 
-        # Determine leading shape, if any
+        if error or arg.dtype == np.dtype('O'): # indicates a ragged array shape
+            name = indx if isinstance(indx,str) else func.ARGNAMES[indx]
+            cspyce1.chkin(func.array.__name__)
+            cspyce1.setmsg('Ragged input array for "%s": ' % name)
+            cspyce1.sigerr('SPICE(INVALIDARRAYSHAPE)')
+            cspyce1.chkout(func.array.__name__)
+            return None
+
+        # Extract leading shape of each array
         if rank == 0:
             shape = arg.shape
+            invalid_shape = False
+        elif rank > len(arg.shape):
+            shape = ()
+            invalid_shape = True
         else:
-            shape = arg.shape[:rank]
+            shape = arg.shape[:-rank]
+            arg_item = arg.shape[-rank:]
+            invalid_shape = any([d1 != 0 and d1 != d2
+                                 for (d1,d2) in zip(arg_item, item)])
 
-        if shape == (): continue
-        if shape == (1,): continue
+        if invalid_shape:
+            name = indx if isinstance(indx,str) else func.ARGNAMES[indx]
+            required_shape = str(item).replace('0','*').replace(',)',')')
+            cspyce1.chkin(func.array.__name__)
+            cspyce1.setmsg('Invalid array shape %s ' % str(arg.shape) +
+                           'for input "%s" ' % name +
+                           'in module %s: ' % func.__name__ +
+                           '(...,%s is required' % required_shape[1:])
+            cspyce1.sigerr('SPICE(INVALIDARRAYSHAPE)')
+            cspyce1.chkout(func.array.__name__)
+            return None
 
-        arg_ranks.append(rank)
-        arg_indices.append(k)
+        # Unit-sized items never need broadcasting
+        if all([d == 1 for d in shape]):
+            continue
+
+        shapes.append(shape)
+        array_args.append((indx, arg, rank))
 
     # Call function now if iteration is not needed
-    if not arg_indices:
-        return func.__call__(*args, **keywords)
+    if not array_args:
+        return func.scalar.__call__(*args, **keywords)
 
-    # Broadcast the arrays
+    # Determine the broadcasted shape
+    try:
+        broadcasted_shape = np.broadcast_shapes(*shapes)
+    except ValueError:
+        cspyce1.chkin(func.array.__name__)
+        cspyce1.setmsg('Incompatible shapes for broadcasting: ' +
+                       str(shapes)[1:-1])
+        cspyce1.sigerr('SPICE(ARRAYSHAPEMISMATCH)')
+        cspyce1.chkout(func.array.__name__)
+        return None
+
+    # Broadcast each array and prepare for vectorization
+    for (indx, arg, rank) in array_args:
+
+        # Determine required shape
+        if rank:
+            item = arg.shape[-rank:]
+            required_shape = broadcasted_shape + item
+        else:
+            item = ()
+            required_shape = broadcasted_shape
+
+        # Leading axes are handled by iteration through the vector and can be
+        # ignored
+        required_shape = required_shape[-len(arg.shape):]
+
+        # Leading unit axes can also be ignored
+        arg_shape = arg.shape
+        for d in arg_shape:
+            if d == 1:
+                required_shape = required_shape[1:]
+                arg_shape = arg_shape[1:]
+                arg = arg.reshape(arg.shape)
+            else:
+                break
+
+        # Broadcast and copy if necessary
+        if arg_shape == required_shape:
+            arg = np.ascontiguousarray(arg)
+        else:
+            arg = np.broadcast_to(arg, required_shape).copy()
+
+        # Flatten the leading axes
+        arg = arg.reshape((-1,) + item)
+
+        # Restore into the function arguments
+        _setarg(indx, args, keywords)
+
+    # Execute the function
     cspyce1.chkin(func.array.__name__)
-    (broadcasted_shape, reshaped_args) = _broadcast_arrays(arg_ranks, args)
+    results = func.__call__(*args, **keywords)
+
     if cspyce1.failed():
         cspyce1.chkout(func.array.__name__)
         return None
 
-    # Update the argument list with flattened arrays
-    args = list(args)
-    for (k,reshaped_arg) in zip(arg_indices, reshaped_args):
-        flattened_arg = np.ravel(reshaped_arg)
-        if type(k) == int:
-            args[k] = flattened_arg
-        else:
-            keywords[k] = flattened_arg
+    # Reshape the results
+    multiple_results = isinstance(results, list)
+    if not multiple_results:
+        results = [results]
 
-    # Execute the function
-    results = func.__call__(*args, **keywords)
+    for indx,result in enumerate(results):
+        rank = len(func.RETURN_ITEMS[indx])
+        if rank:
+            result = result.reshape(broadcasted_shape + result.shape[-rank:])
+        else:
+            result = result.reshape(broadcasted_shape)
+
+        results[indx] = result
+
+    # Return results
     cspyce1.chkout(func.array.__name__)
 
-    if cspyce1.failed():
+    if multiple_results:
         return results
-
-    # Reshape the results
-    if isinstance(results, np.ndarray):
-        return np.reshape(results, broadcasted_shape)
-
-    reshaped_results = []
-    for result in results:
-        reshaped_results.append(np.reshape(result, broadcasted_shape))
-
-    return reshaped_results
-
-def _broadcast_arrays(ranks, args):
-    """Return the shape resulting from broadcasting together all of the given
-    shapes. Also update all shapes to the same rank."""
-
-    broadcasted = []
-    lbroad = 0
-    shapes = []
-    for (array, rank) in zip(args, ranks):
-        shape = array.shape
-        if rank:
-            shape = shape[:-rank]
-        lshape = len(shape)
-        shapes.append(shape)
-
-        if lbroad < lshape:
-            broadcasted = list(shape)[:(lshape - lbroad)] + broadcasted
-            lbroad = lshape
-
-        for i in range(1,lshape+1): # work starting from right
-            broadcasted[-i] = max(broadcasted[-i], shape[-i])
-
-    scaled_arrays = []
-    scalings = []
-    for (shape,array) in zip(shapes,args):
-        scaling = []
-        lshape = len(shape)
-
-        for i in range(1,lshape+1): # work starting from right
-          if (shape[-i] != 1 and broadcasted[-i] != shape[-i]):
-            cspyce1.setmsg('Incompatible shapes for broadcasting: ' +
-                          '%s, %s' %  (str(tuple(shape)),
-                                       str(tuple(broadcasted))))
-            cspyce1.sigerr('SPICE(INVALIDARRAYSHAPE)')
-            return (None,None)
-
-          scaling.append(broadcasted[-i] // shape[-i])
-        scaling = scaling[::-1]
-
-        # We do not need to scale the leading axis, because of how the _vector
-        # methods cycle through the array indices.
-        for i in range(lshape):
-            if shape[i] == 1:
-                scaling[i] = 1
-                continue
-
-            scaling[i] = 1
-            break
-
-        scalings.append(scaling)
-
-        # Convert to contiguous arrays with compatible shapes
-        if prod(scaling) == 1:
-            array = np.ascontiguousarray(array)
-        else:
-            array = _reshaped_array(scaling, rank, array)
-
-        scaled_arrays.append(array)
-
-    return (broadcasted, scaled_arrays)
-
-def _reshaped_array(scaling, rank, array):
-    """Return an array that can safely be flattened in such a way that it will
-    work inside a cspyce vectorized function."""
-
-    # Save the original shape and core shape
-    if rank == 0:
-        old_shape = array.shape
-        core_shape = []
     else:
-        old_shape = array.shape[:-rank]
-        core_shape = list(array.shape[-rank:])
-
-    # Determine a new shape that will broadcast to the desired shape, allowing
-    # for the _vector procedure to cycle through the leading axis if necessary.
-    temp_shape = []
-    new_shape = []
-    for (axis, scale) in zip(old_shape, scaling):
-        if scale == 1:
-            temp_shape.append(axis)
-            new_shape.append(axis)
-        else:
-            temp_shape.append(1)
-            temp_shape.append(axis)
-            new_shape.append(scale)
-            new_shape.append(axis)
-
-    # At this point, temp_shape has the same size as old_shape, but with added
-    # an added unit axis in front of each axis that must be duplicated in
-    # memory. It is safe to reshape the given array to this shape.
-    array = np.reshape(array, temp_shape + core_shape)
-
-    # At this point, new_shape has the same rank as temp_shape, but each new
-    # axis of temp_shape is aligned with an axis in new_shape that contains the
-    # axis scale factor. Broadcasting is now a safe operation.
-    array = np.broadcast_to(array, new_shape + core_shape)
-
-    # Conversion to a contiguous array ensures that any stride tricks are
-    # eliminated; array elements are duplicated if necessary.
-    array = np.ascontiguousarray(array)
-
-    return array
+        return results[0]
 
 ################################################################################
 # Define the alias function selector
@@ -304,10 +343,11 @@ def use_arrays(*funcs):
         cspyce.GLOBAL_STATUS.discard('SCALARS')
 
     for name in cspyce._get_func_names(funcs, source=SPYCE_DICT):
-        if 'alias' not in name:
-            SPYCE_DICT[name] = SPYCE_DICT[name].alias
-
-    for name in cspyce._get_func_names(funcs, source=SPYCE_DICT):
+        # <name>_scalar must always point to the scalar version
+        # <name>_vector must always point to the vector version
+        # <name>_array must always point to the array version
+        # Only function names that don't specify one of these are modified to
+        # point to the array version.
         if ('scalar' not in name and 'vector' not in name
                                  and 'array' not in name):
             SPYCE_DICT[name] = SPYCE_DICT[name].array
@@ -330,10 +370,12 @@ def _define_all_array_versions():
 
     # Do non-alias versions first; otherwise some .array attributes are broken
     for func in funcs:
-        if 'alias' in func.__name__: continue
+        if 'alias' in func.__name__:
+            continue
 
         afunc = array_version(func)
-        if afunc is func: continue      # function could not use arrays
+        if afunc is func:               # function could not use arrays
+            continue
 
         aname = afunc.__name__
         SPYCE_DICT[aname] = afunc
@@ -342,10 +384,12 @@ def _define_all_array_versions():
             avpairs.append((afunc, func))
 
     for func in funcs:
-        if 'alias' not in func.__name__: continue
+        if 'alias' not in func.__name__:
+            continue
 
         afunc = array_version(func)
-        if afunc is func: continue      # function could not use arrays
+        if afunc is func:               # function could not use arrays
+            continue
 
         aname = afunc.__name__
         SPYCE_DICT[aname] = afunc
@@ -365,15 +409,13 @@ def _define_all_array_versions():
 def _define_missing_versions_for_array(afunc, vfunc):
     """Complete the missing version attributes for a given array function."""
 
-    for (key, version) in vfunc.__dict__.iteritems():
-        if type(version).__name__ != 'function': continue
-        if afunc.__name__[:5] == 'vsclg': print key
-        if key in ('vector','scalar','array'):
-            if afunc.__name__[:5] == 'vsclg': print 'copied!'
+    for (key, version) in vfunc.__dict__.items():
+        if not callable(version):
+            continue
+        if key in ('vector', 'scalar', 'array'):
             afunc.__dict__[key] = version
         else:
-            version_name = version.__name__.replace('_vector','_array')
-            if afunc.__name__[:5] == 'vsclg': print version_name, SPYCE_DICT[version_name]
+            version_name = version.__name__.replace('_vector', '_array')
             afunc.__dict__[key] = SPYCE_DICT[version_name]
 
 ################################################################################
