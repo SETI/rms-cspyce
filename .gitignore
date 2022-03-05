@@ -3,3 +3,5 @@
 */*.pyc
 */*.so
 cspyce/cspyce0/cspice
+/.idea/
+/cspyce/cspyce0/build/
