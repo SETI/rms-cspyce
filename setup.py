@@ -10,7 +10,7 @@ except:
 
 import numpy
 import sysconfig
-
+from glob import glob
 
 cspyce0_module = Extension(
     'cspyce._cspyce0',
@@ -29,6 +29,8 @@ setup (name = 'cspyce',
        author  = "Mark Showalter/PDS Ring-Moon Systems Node",
        description = "Low-level SWIG interface to the CSPICE library",
        ext_modules = [cspyce0_module],
-       packages=["cspyce"]
-)
+       packages=["cspyce"],
+       data_files=[("cspyce/swig", glob("cspyce/swig/*.i"))],
+       install_requires=['numpy']
+       )
 
