@@ -61,7 +61,6 @@ class _SwigNonDynamicMeta(type):
     __setattr__ = _swig_setattr_nondynamic_class_variable(type.__setattr__)
 
 
-is_swig_py3 = _cspyce0.is_swig_py3
 
 def axisar(axis, angle):
     r"""axisar(ConstSpiceDouble [3] axis, SpiceDouble angle)"""

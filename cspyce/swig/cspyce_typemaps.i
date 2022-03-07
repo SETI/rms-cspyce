@@ -20,12 +20,6 @@
 *******************************************************************************/
 
 
-#ifdef PYTHON3
-#define is_swig_py3 1
-#else
-#define is_swig_py3 0
-#endif
-
 %{
 #ifndef SWIG_FILE_WITH_INIT
 #  define NO_IMPORT_ARRAY
@@ -35,6 +29,12 @@
 #include <numpy/arrayobject.h>
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
+
+#if PY_VERSION_HEX >= 0x03000000
+#    define is_python_3xx 1
+#else
+#    define is_python_3xx 0
+#endif
 
 /*******************************************************************************
 *******************************************************************************/
@@ -545,17 +545,10 @@ void handle_malloc_failure(const char* symname) {
 
 %define TEST_IS_STRING(obj)
 {
-#if is_swig_py3
-    if (!PyUnicode_Check(obj)) {
+    if (is_python_3xx ? !PyUnicode_Check(obj) : !PyString_Check(obj)) {
         handle_bad_string_error("$symname");
         SWIG_fail;
     }
-#else
-    if (!PyString_Check(obj)) {
-        handle_bad_string_error("$symname");
-        SWIG_fail;
-    }
-#endif
 }
 %enddef
 
@@ -2672,7 +2665,7 @@ void resize_char_array_to_minimum_size(
         }
     }
 }
-            
+
 %}
 
 
@@ -2975,11 +2968,11 @@ TYPEMAP_INOUT_OUT(SpiceChar)
     for (int i = 0; i < PyList_Size(list); i++) {
         PyObject *obj = PyList_GetItem(list, i);  // Note, we don't own this object
         TEST_IS_STRING(obj);
-#if is_swig_py3
-        PyObject *temp = PyUnicode_AsUTF8String(obj);  // We own this object
-        TEST_MALLOC_FAILURE(temp);
-        PyList_SetItem(list, i, temp);  // PyList_SetItem steals our ownership
-#endif
+        if (is_python_3xx) {
+            PyObject *temp = PyUnicode_AsUTF8String(obj);
+            TEST_MALLOC_FAILURE(temp);
+            PyList_SetItem(list, i, temp);
+        }
     }
 
     Py_ssize_t count = PyList_Size(list);

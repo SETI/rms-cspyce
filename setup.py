@@ -10,41 +10,25 @@ except:
 
 import numpy
 import sysconfig
-import sys
-
-if (sys.version_info > (3, 0)):
-    swig_opts = ['-DPYTHON3']
-else:
-    swig_opts = []
-
-
-class GenerateVectorize(build_py):
-    def run(self):
-        import make_vectorize
-        print("Generating vectorize.i")
-        make_vectorize.create_vectorize_header_file('cspyce0.i', 'vectorize.i')
 
 
 cspyce0_module = Extension(
-    '_cspyce0',
-    sources=['cspyce0.i'],
-    swig_opts=swig_opts,
-    include_dirs=['cspice/src/cspice',
+    'cspyce._cspyce0',
+    sources=['cspyce/swig/cspyce0.i'],
+    include_dirs=['cspyce/cspice/include',
                   sysconfig.get_config_var('INCLUDEPY'),
                   numpy.get_include()],
+    swig_opts=["-outdir", "cspyce/."],
     extra_compile_args=['-Wno-incompatible-pointer-types'],
-    library_dirs=['cspice/lib'],
+    library_dirs=['cspyce/cspice/lib'],
     libraries=['cspice'],
 )
 
-setup (name = 'cspyce0',
+setup (name = 'cspyce',
        version = '2.0',
        author  = "Mark Showalter/PDS Ring-Moon Systems Node",
        description = "Low-level SWIG interface to the CSPICE library",
        ext_modules = [cspyce0_module],
-       py_modules = ["cspyce0"],
-       cmdclass={
-           'build_py': GenerateVectorize,
-       },
+       packages=["cspyce"]
 )
 

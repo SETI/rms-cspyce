@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as  np
-import typemap_samples0 as ts
+import typemap_samples as ts
 
 
 def flatten(array):

@@ -1,4 +1,4 @@
-%module typemap_samples0
+%module typemap_samples
 
 %{
 #define SWIG_FILE_WITH_INIT
