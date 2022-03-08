@@ -999,7 +999,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 {
 //      (Type ...IN_ARRAY1[ANY]...)
     if (is_new_object$argnum) {
-	    Py_XDECREF(pyarr$argnum);
+            Py_XDECREF(pyarr$argnum);
     }
 }
 
@@ -1104,8 +1104,8 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     TEST_INVALID_ARRAY_SHAPE_2D(pyarr, $1_dim0, $1_dim1);
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                         // ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);			       // DIM1
-    $3 = (int) PyArray_DIM(pyarr, 1);			       // DIM2
+    $2 = (int) PyArray_DIM(pyarr, 0);                          // DIM1
+    $3 = (int) PyArray_DIM(pyarr, 1);                          // DIM2
 }
 
 /*******************************************************
@@ -1124,7 +1124,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     TEST_INVALID_ARRAY_RANK(pyarr, 2);
     TEST_INVALID_ARRAY_SHAPE_2D(pyarr, $3_dim0, $3_dim1);
 
-    $3 = ($3_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
     $2 = (int) PyArray_DIM(pyarr, 1);                            // DIM2
 }
@@ -1144,9 +1144,9 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
     TEST_INVALID_ARRAY_RANK(pyarr, 2);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $3 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $3 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
 }
 
 /*******************************************************
@@ -1154,9 +1154,9 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 *******************************************************/
 
 %typemap(in)
-    (int DIM1, int DIM2, Type *IN_ARRAY2)			// PATTERN
+    (int DIM1, int DIM2, Type *IN_ARRAY2)                       // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0),
-    (SpiceInt DIM1, SpiceInt DIM2, Type *IN_ARRAY2)		// PATTERN
+    (SpiceInt DIM1, SpiceInt DIM2, Type *IN_ARRAY2)             // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0)
 {
 //      (int DIM1, int DIM2, Type *IN_ARRAY2)
@@ -1165,9 +1165,9 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
     TEST_INVALID_ARRAY_RANK(pyarr, 2);
 
-    $3 = ($3_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $1 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $2 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $2 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
 }
 
 /*******************************************************
@@ -1176,9 +1176,9 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 *******************************************************/
 
 %typemap(in)
-    (int DIM1, Type IN_ARRAY2[][ANY])			// PATTERN
+    (int DIM1, Type IN_ARRAY2[][ANY])                   // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0),
-    (SpiceInt DIM1, Type IN_ARRAY2[][ANY])			// PATTERN
+    (SpiceInt DIM1, Type IN_ARRAY2[][ANY])                      // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0)
 {
 //      (int DIM1, Type IN_ARRAY2[][ANY])
@@ -1188,8 +1188,8 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     TEST_INVALID_ARRAY_RANK(pyarr, 2);
     TEST_INVALID_ARRAY_SHAPE_x2D(pyarr, $2_dim1);
 
-    $2 = ($2_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $1 = (int) PyArray_DIM(pyarr, 0);				// DIM1
+    $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
 }
 
 /*******************************************************
@@ -1198,9 +1198,9 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 *******************************************************/
 
 %typemap(in)
-    (Type IN_ARRAY2[][ANY], int DIM1)			// PATTERN
+    (Type IN_ARRAY2[][ANY], int DIM1)                   // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0),
-    (Type IN_ARRAY2[][ANY], SpiceInt DIM1)			// PATTERN
+    (Type IN_ARRAY2[][ANY], SpiceInt DIM1)                      // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0)
 {
 //      (Type IN_ARRAY2[][ANY], int DIM1)
@@ -1210,8 +1210,8 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     TEST_INVALID_ARRAY_RANK(pyarr, 2);
     TEST_INVALID_ARRAY_SHAPE_x2D(pyarr, $1_dim1);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
 }
 
 /*******************************************************
@@ -1220,16 +1220,16 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 *******************************************************/
 
 %typemap(in)
-    (Type *IN_ARRAY2)		// PATTERN
+    (Type *IN_ARRAY2)           // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0),
-    (Type IN_ARRAY2[])		// PATTERN
+    (Type IN_ARRAY2[])          // PATTERN
         (PyArrayObject* pyarr=NULL, int is_new_object=0)
 {
 //      (int DIM1, int DIM2, Type *IN_ARRAY2)
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
     TEST_INVALID_ARRAY_RANK(pyarr, 2);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
 }
 
 
@@ -1249,11 +1249,11 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     TEST_INVALID_ARRAY_RANK_OR(pyarr, 1, 2);
 
     if (PyArray_NDIM(pyarr) == 1) {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);			// ARRAY
-        $2 = 0;							// DIM1
+        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
+        $2 = 0;                                                 // DIM1
         $3 = (int) PyArray_DIM(pyarr, 0);                        // DIM2
     } else {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);			// ARRAY
+        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
         $2 = (int) PyArray_DIM(pyarr, 0);                        // DIM1
         $3 = (int) PyArray_DIM(pyarr, 1);                        // DIM2
     }
@@ -1275,12 +1275,12 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     TEST_INVALID_ARRAY_RANK_OR(pyarr, 2, 3);
 
     if (PyArray_NDIM(pyarr) == 2) {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);			// ARRAY
-        $2 = 0;							// DIM1
+        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
+        $2 = 0;                                                 // DIM1
         $3 = (int) PyArray_DIM(pyarr, 0);                        // DIM2
         $4 = (int) PyArray_DIM(pyarr, 1);                        // DIM3
     } else {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);			// ARRAY
+        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
         $2 = (int) PyArray_DIM(pyarr, 0);                        // DIM1
         $3 = (int) PyArray_DIM(pyarr, 1);                        // DIM2
         $4 = (int) PyArray_DIM(pyarr, 2);                        // DIM3
@@ -1416,7 +1416,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
 //  $2 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
 //  $3 = &size[0];                                              // SIZE1
 }
@@ -1434,12 +1434,12 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 //      (Type OUT_ARRAY1[ANY], int DIM1)
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[1] = {$1_dim0};				// ARRAY
+    npy_intp dims[1] = {$1_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
 //  $3 = &size[0];                                              // SIZE1
 }
 
@@ -1456,12 +1456,12 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 //      (int DIM1, Type OUT_ARRAY1[ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[1] = {$2_dim0};				// ARRAY
+    npy_intp dims[1] = {$2_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $2 = ($2_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $1 = (int) PyArray_DIM(pyarr, 0);				// DIM1
+    $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
 //  $3 = &size[0];                                              // SIZE1
 }
 
@@ -1478,12 +1478,12 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 //      (Type OUT_ARRAY1[ANY], int DIM1, int *SIZE1)
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[1] = {$1_dim0};				// ARRAY
+    npy_intp dims[1] = {$1_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
     $3 = &size[0];                                              // SIZE1
 }
 
@@ -1500,13 +1500,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 //      (Type OUT_ARRAY1[ANY], int *SIZE1, int DIM1)
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[1] = {$1_dim0};				// ARRAY
+    npy_intp dims[1] = {$1_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $3 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $2 = &size[0];						// SIZE1
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $3 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $2 = &size[0];                                              // SIZE1
 }
 
 /*******************************************************
@@ -1521,13 +1521,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 {
 //      (int DIM1, int *SIZE1, Type OUT_ARRAY1[ANY])
 
-    npy_intp dims[1] = {$3_dim0};				// ARRAY
+    npy_intp dims[1] = {$3_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $3 = ($3_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
-    $2 = &size[0];						// SIZE1
+    $2 = &size[0];                                              // SIZE1
 }
 
 /*******************************************************
@@ -1543,13 +1543,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 //      (int *SIZE1, int DIM1, Type OUT_ARRAY1[ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[1] = {$3_dim0};				// ARRAY
+    npy_intp dims[1] = {$3_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $3 = ($3_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $1 = &size[0];						// SIZE1
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $1 = &size[0];                                              // SIZE1
 }
 
 /*******************************************************
@@ -1564,11 +1564,11 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 {
 //      (Type OUT_ARRAY1[ANY], int *SIZE1)
 
-    npy_intp dims[1] = {$1_dim0};				// ARRAY
+    npy_intp dims[1] = {$1_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
 //  $3 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
     $2 = &size[0];                                              // SIZE1
 }
@@ -1585,11 +1585,11 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 {
 //      (int *SIZE1, Type OUT_ARRAY1[ANY])
 
-    npy_intp dims[1] = {$2_dim0};				// ARRAY
+    npy_intp dims[1] = {$2_dim0};                               // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    $2 = ($2_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
 //  $3 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
     $1 = &size[0];                                              // SIZE1
 }
@@ -1899,16 +1899,16 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2)
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$1_dim0, $1_dim1};			// ARRAY
+    npy_intp dims[2] = {$1_dim0, $1_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $3 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $3 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
 //  $4 = &dimsize[0];                                           // SIZE1
 //  $5 = &dimsize[1];                                           // SIZE2
 }
@@ -1926,16 +1926,16 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$3_dim0, $3_dim1};			// ARRAY
+    npy_intp dims[2] = {$3_dim0, $3_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $3 = ($3_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $1 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $2 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $2 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
 //  $4 = &dimsize[0];                                           // SIZE1
 //  $5 = &dimsize[1];                                           // SIZE2
 }
@@ -1960,9 +1960,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dim$argnums[1];
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $3 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $3 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
     $4 = &dimsize[0];                                           // SIZE1
 //  $5 = &dimsize[1];                                           // SIZE2
 
@@ -1981,7 +1981,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type OUT_ARRAY2[ANY][ANY], int *SIZE1, int DIM1, int DIM2)
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$1_dim0, $1_dim1};			// ARRAY
+    npy_intp dims[2] = {$1_dim0, $1_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
@@ -2008,16 +2008,16 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (int DIM1, int DIM2, int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$4_dim0, $4_dim1};			// ARRAY
+    npy_intp dims[2] = {$4_dim0, $4_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $4 = ($4_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $1 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $2 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $4 = ($4_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $2 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
     $3 = &dimsize[0];                                           // SIZE1
 //  $5 = &dimsize[1];                                           // SIZE2
 }
@@ -2035,16 +2035,16 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (int *SIZE1, int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$4_dim0, $4_dim1};			// ARRAY
+    npy_intp dims[2] = {$4_dim0, $4_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $4 = ($4_ltype) PyArray_DATA(pyarr);				// ARRAY
-    $2 = (int) PyArray_DIM(pyarr, 0);				// DIM1
-    $3 = (int) PyArray_DIM(pyarr, 1);				// DIM2
+    $4 = ($4_ltype) PyArray_DATA(pyarr);                                // ARRAY
+    $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+    $3 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
     $1 = &dimsize[0];                                           // SIZE1
 //  $5 = &dimsize[1];                                           // SIZE2
 }
@@ -2061,7 +2061,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 {
 //      (Type OUT_ARRAY2[ANY][ANY], int *SIZE1)
 
-    npy_intp dims[2] = {$1_dim0, $1_dim1};			// ARRAY
+    npy_intp dims[2] = {$1_dim0, $1_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
@@ -2088,14 +2088,14 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$2_dim0, $2_dim1};			// ARRAY
+    npy_intp dims[2] = {$2_dim0, $2_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $2 = ($2_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
 //  $3 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
 //  $4 = (int) PyArray_DIM(pyarr, 1);                            // DIM2
     $1 = &dimsize[0];                                           // SIZE1
@@ -2115,14 +2115,14 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type OUT_ARRAY2[ANY][ANY], int *SIZE1, int *SIZE2)
 //  NOT CURRENTLY USED BY CSPICE
 
-    npy_intp dims[2] = {$1_dim0, $1_dim1};			// ARRAY
+    npy_intp dims[2] = {$1_dim0, $1_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $1 = ($1_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
 //  $4 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
 //  $5 = (int) PyArray_DIM(pyarr, 1);                            // DIM2
     $2 = &dimsize[0];                                           // SIZE1
@@ -2141,14 +2141,14 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 {
 //      (int *SIZE1, int *SIZE2, Type OUT_ARRAY2[ANY][ANY])
 
-    npy_intp dims[2] = {$3_dim0, $3_dim1};			// ARRAY
+    npy_intp dims[2] = {$3_dim0, $3_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
     dimsize[0] = (int) dims[0];
     dimsize[1] = (int) dims[1];
 
-    $3 = ($3_ltype) PyArray_DATA(pyarr);				// ARRAY
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
 //  $4 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
 //  $5 = (int) PyArray_DIM(pyarr, 1);                            // DIM2
     $1 = &dimsize[0];                                           // SIZE1

@@ -128,7 +128,7 @@ void reset_messages(void);
         import_array(); /* For numpy interface */
         erract_c("SET", 256, "RETURN");
         errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
-	    initialize_typemap_globals();
+        initialize_typemap_globals();
 %}
 
 %feature("autodoc", "1");
