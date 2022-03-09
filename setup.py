@@ -26,23 +26,53 @@
 
 # We prefer setuptools, but will use distutils if setuptools isn't available
 try:
-    from setuptools import setup, Extension
+    from setuptools import Command, setup, Extension
     from setuptools.command.build_py import build_py
 except:
-    from distutils.core import setup, Extension
+    from distutils.core import Command, setup, Extension
     from distutils.core import setup, Extension, build_py
 
 import numpy
 from glob import glob
+import subprocess
 
 sources = (['cspyce/swig/cspyce0.i'] + glob("cspice/src/cspice/*.c"))
 
+class GenerateCommand(Command):
+    description = 'Create generated files'
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        command = "swig -python -outdir cspyce/. -o cspyce/swig/cspyce0_wrap.c cspyce/swig/cspyce0.i".split(' ')
+        subprocess.check_call(command)
+
+cspice_module = Extension(
+    'cspyce.cspice',
+    sources=glob("cspice/src/cspice/*.c"),
+    include_dirs=['cspice/include'],
+    extra_compile_args=['-Wno-incompatible-pointer-types', '-Wno-parentheses', 
+                        '-Wno-implicit-int'],
+)
+
+lib_cspice = ("cspice", {
+    "sources" : glob("cspice/src/cspice/*.c"),
+    "include_dirs": ["cspice/include"],
+    "cflags": ['-Wno-incompatible-pointer-types', '-Wno-parentheses', 
+               '-Wno-implicit-int', "-Wno-shift-op-parentheses",
+               '-Wno-logical-op-parentheses', '-Wno-sign-compare',
+               '-Wno-pointer-to-int-cast', '-Wno-strict-prototypes']
+})
+
 cspyce0_module = Extension(
     'cspyce._cspyce0',
-    sources=sources,
-    include_dirs=['cspice/include',
-                  numpy.get_include()],
-    swig_opts=["-outdir", "cspyce/."],
+    sources=['cspyce/swig/cspyce0_wrap.c'],
+    include_dirs=['cspice/include', numpy.get_include()],
     extra_compile_args=['-Wno-incompatible-pointer-types'],
 )
 
@@ -51,11 +81,11 @@ setup (name = 'cspyce',
        author  = "Mark Showalter/PDS Ring-Moon Systems Node",
        description = "Low-level SWIG interface to the CSPICE library",
        ext_modules = [cspyce0_module],
+       libraries=[lib_cspice],
        packages=["cspyce"],
        install_requires=['numpy'],
-       data_files = [("cspyce/swig", glob("cspyce/swig/*.i")),
-                     ("cspice/include/", glob("cspice/include/*.h")),
-                    ],
-
+       cmdclass={
+           'generate': GenerateCommand,
+       },
 )
 

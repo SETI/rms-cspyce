@@ -1019,6 +1019,7 @@ TYPEMAP_IN(int,              NPY_INT   )
 TYPEMAP_IN(SpiceInt,         NPY_INT   )
 TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
 TYPEMAP_IN(SpiceBoolean,     NPY_INT   )
+TYPEMAP_IN(ConstSpiceBoolean,NPY_INT   )
 TYPEMAP_IN(long,             NPY_LONG  )
 TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
@@ -1360,6 +1361,7 @@ TYPEMAP_IN(int,              NPY_INT   )
 TYPEMAP_IN(SpiceInt,         NPY_INT   )
 TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
 TYPEMAP_IN(SpiceBoolean,     NPY_INT   )
+TYPEMAP_IN(ConstSpiceBoolean,NPY_INT   )
 TYPEMAP_IN(long,             NPY_LONG  )
 TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
@@ -1842,6 +1844,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 *       (type OUT_ARRAY2[ANY][ANY], int *SIZE1, int DIM1, int DIM2)
 *       (int DIM1, int DIM2, int *SIZE1, type OUT_ARRAY2[ANY][ANY])
 *       (int *SIZE1, int DIM1, int DIM2, type OUT_ARRAY2[ANY][ANY])
+* Also...
+*       (int DIM1, int *SIZE1, type OUT_ARRAY2[ANY][ANY])
+*       (int *SIZE1, type OUT_ARRAY2[ANY][ANY])
 *
 * If an upper limit on the total size of a temporary memory buffer can be
 * specified in advance, and the shape of the array then returned afterward.
@@ -2023,6 +2028,30 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 }
 
 /***************************************************************
+* (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
+***************************************************************/
+
+%typemap(in, numinputs=0)
+    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
+        (PyArrayObject* pyarr = NULL, int dimsize[2])
+{
+//      (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
+
+    npy_intp dims[2] = {$3_dim0, $3_dim1};                      // ARRAY
+    pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
+    TEST_MALLOC_FAILURE(pyarr);
+
+    dimsize[0] = (int) dims[0];
+    dimsize[1] = (int) $3_dim1;
+
+    $3 = ($3_ltype) PyArray_DATA(pyarr);                        // ARRAY
+    $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+//  $4 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
+    $2 = &dimsize[0];                                           // SIZE1
+//  $5 = &dimsize[1];                                           // SIZE2
+}
+
+/***************************************************************
 * (int *SIZE1, int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY])
 ***************************************************************/
 
@@ -2086,7 +2115,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
         (PyArrayObject* pyarr = NULL, int dimsize[2])
 {
 //      (int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
-//  NOT CURRENTLY USED BY CSPICE
 
     npy_intp dims[2] = {$2_dim0, $2_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
@@ -2791,7 +2819,7 @@ void resize_char_array_to_minimum_size(
 ***********************************************/
 
 %typemap(in)
-    (INT DIM1, Type *INOUT_STRING)                              // PATTERN
+    (int DIM1, Type *INOUT_STRING)                              // PATTERN
         (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0),
     (SpiceInt DIM1, Type *INOUT_STRING)                         // PATTERN
         (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
@@ -3289,7 +3317,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(out)
     (char *RETURN_STRING),
-    (SPICE_Char *RETURN_STRING) {
+    (SpiceChar *RETURN_STRING) {
 
     TEST_FOR_EXCEPTION;
     $result = SWIG_Python_AppendOutput($result,
@@ -3313,4 +3341,3 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
      ERROR The argument "$1_type $1_name" in "$symname" didnt match any template!!
 }
 #endif
-

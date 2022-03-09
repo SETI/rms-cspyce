@@ -18,6 +18,7 @@
 
 import inspect
 import sys
+import os
 
 PYTHON2 = sys.version_info[0] < 3
 
@@ -29,8 +30,13 @@ PYTHON2 = sys.version_info[0] < 3
 
 try:
     from .cspyce2 import *
-except ImportError:
-    pass
+except ImportError as err:
+    if os.getenv("CSPICE_DEVELOPMENT"):
+        print("Package cspyce2 not found.  Error ignored.")
+        pass
+    else:
+        print("Set environment variable 'CSPICE_DEVELOPMENT' to 'True' to ignore this error")
+        raise err
 
 # A set of keywords listing options set globally across the cspyce functions
 GLOBAL_STATUS = set()
