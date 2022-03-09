@@ -47,6 +47,8 @@ class GenerateCommand(Command):
         pass
 
     def run(self):
+        from cspyce.swig.make_vectorize import create_vectorize_header_file
+        create_vectorize_header_file("cspyce/swig/vectorize.i")
         command = "swig -python -outdir cspyce/. -o cspyce/swig/cspyce0_wrap.c cspyce/swig/cspyce0.i".split(' ')
         subprocess.check_call(command)
 

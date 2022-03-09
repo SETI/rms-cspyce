@@ -19,6 +19,8 @@
 
 from __future__ import annotations
 
+import os
+import re
 from collections import Counter
 from dataclasses import dataclass
 
@@ -368,7 +370,14 @@ APPLY_TEMPLATE_LINES = [
 ]
 
 
-def create_vectorize_header_file(input_file, output_file):
+def create_vectorize_header_file(output_file, input_files=None):
+    if input_files is None:
+        directory = os.path.dirname(os.path.abspath(__file__))
+        input_files = [os.path.join(directory, f) for f in os.listdir(directory)
+                       if re.match(r'cspyce0.*\.i', f)]
+        if not input_files:
+            raise FileNotFoundError(f"No files matching pattern found in {directory}")
+
     # Print the header
     with open(output_file, 'w') as f:
         # Copy the header
@@ -381,16 +390,17 @@ def create_vectorize_header_file(input_file, output_file):
                 f.write(line.replace('@', str(i)) + "\n")
             f.write("\n")
 
-        # Print a macro for each line starting with VECTORIZE found in the file
-        with open(input_file) as g:
-            seen = set()
-            for line in g:
-                if line.startswith("VECTORIZE"):
-                    name = line[:line.index('(')]
-                    if name not in seen:
-                        MacroGenerator(name, f).generate_code()
-                        seen.add(name)
+        seen = set()
+        for input_file in input_files:
+            # Print a macro for each line starting with VECTORIZE found in the file
+            with open(input_file) as g:
+                for line in g:
+                    if line.startswith("VECTORIZE"):
+                        name = line[:line.index('(')]
+                        if name not in seen:
+                            MacroGenerator(name, f).generate_code()
+                            seen.add(name)
 
 
 if __name__ == '__main__':
-    create_vectorize_header_file('cspyce0.i', 'vectorize.i')
+    create_vectorize_header_file('vectorize.i')
