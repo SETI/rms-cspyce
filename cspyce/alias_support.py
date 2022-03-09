@@ -345,7 +345,7 @@ def alias_version(func):
     _alias_signature(wrapper)   # Add asterisks on aliased inputs
 
     # Save key attributes of the wrapper function before returning
-    cspyce.assign_docstring(wrapper, ALIAS_NOTE)
+    cspyce1.assign_docstring(wrapper, ALIAS_NOTE)
     wrapper.__name__ = _alias_name(func.__name__)
     if PYTHON2:
         wrapper.func_defaults = func.func_defaults
@@ -523,7 +523,6 @@ def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
         return results
 
     return func.__call__(*args, **keywords)
-
 
 class _AliasFailure(Exception): # used for iterative attempts at a working alias
     pass
