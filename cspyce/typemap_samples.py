@@ -107,6 +107,12 @@ def out_array2_2(start, length):
 def out_array2_3(start, length1, length2):
     return _typemap_samples.out_array2_3(start, length1, length2)
 
+def out_array2_4(start, length):
+    return _typemap_samples.out_array2_4(start, length)
+
+def out_array2_5(length):
+    return _typemap_samples.out_array2_5(length)
+
 def out_array12_1(start, length1, length2):
     return _typemap_samples.out_array12_1(start, length1, length2)
 
@@ -130,6 +136,15 @@ def in_strings(strings):
 
 def out_strings(length):
     return _typemap_samples.out_strings(length)
+
+def double_in_out_array(dim1):
+    return _typemap_samples.double_in_out_array(dim1)
+
+def sort_strings(rows):
+    return _typemap_samples.sort_strings(rows)
+
+def foobar(obj):
+    return _typemap_samples.foobar(obj)
 
 def return_string():
     return _typemap_samples.return_string()

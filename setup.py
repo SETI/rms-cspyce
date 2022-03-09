@@ -36,8 +36,6 @@ import numpy
 from glob import glob
 import subprocess
 
-sources = (['cspyce/swig/cspyce0.i'] + glob("cspice/src/cspice/*.c"))
-
 class GenerateCommand(Command):
     description = 'Create generated files'
     user_options = []

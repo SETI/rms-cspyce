@@ -200,6 +200,24 @@ void out_array01_malloc(double start, int length, double **arrayP, int *size);
         *size2 = length2;
     }
 
+    int out_array2_4(int start, int length, int dim1, int *size1, double result[4][5]) {
+        double *ptr = result;
+        for (int i = 0; i <= 20; i++) {
+            ptr[i] = start + i;
+        }
+        *size1 = length;
+        return dim1;
+    }
+
+    void out_array2_5(int length, int *size1, SpiceBoolean result[4][5]) {
+        *size1 = length;
+        SpiceBoolean *ptr = result;
+        for (int i = 0; i < 20; i++) {
+            ptr[i] = (i % 3) == 0;
+        }
+    }
+
+
     void out_array12_1(int start, int length1, int length2, int **result, int *size1, int *size2) {
         int *ptr = NULL;
         if (start >= 0) {
@@ -240,11 +258,19 @@ void out_array2_2(int start, int length, int array[1000][2], int *size);
 %apply (int **OUT_ARRAY2, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
 void out_array2_3(int start, int length1, int length2, int **result, int *size1, int *size2);
 
+%apply (int DIM1, int *SIZE1, double OUT_ARRAY2[ANY][ANY]) {(int dim1, int *size1, double result[4][5])};
+int out_array2_4(int start, int length, int dim1, int *size1, double result[4][5]);
+
+%apply (int *SIZE1, SpiceBoolean OUT_ARRAY2[ANY][ANY]) {(int *size1, SpiceBoolean result[4][5])}
+void out_array2_5(int length, int *size1, SpiceBoolean result[4][5]);
+
 %apply (int **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
 void out_array12_1(int start, int length1, int length2, int **result, int *size1, int *size2);
 
 %apply (double **OUT_ARRAY23, int *SIZE1, int *SIZE2, int *SIZE3) {(double **result, int *size1, int *size2, int *size3)};
 void out_array23_1(int start, int length1, int length2, int length3, double **result, int *size1, int *size2, int *size3);
+
+
 
 %{
     int const_string_0(const char *string) {
@@ -303,7 +329,26 @@ PyObject* in_strings(const char *strings, int dim1, int dim2);
 %apply (int DIM1, int DIM2, int *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY]) {(int dim1, int dim2, int *size, char buffer[50][256])};
 PyObject* out_strings(int length, int dim1, int dim2, int *size, char buffer[50][256]);
 
+%{
+    void double_in_out_array(int dim1, int *array) {
+        for (int i = 0; i < dim1; i++) {
+            array[i] *= 2;
+        }
+    }
 
+%}
+
+%apply (int DIM1, int *INOUT_ARRAY1) {(int dim1, int *array)}
+void double_in_out_array(int dim1, int *array);
+
+%{
+    void sort_strings(int rows, int columns, char* array) {
+        qsort(array, rows, columns, strcmp);
+    }
+%}
+
+%apply (int DIM1, int DIM2, char *INOUT_STRINGS) {(int rows, int columns, char* array)};
+void sort_strings(int rows, int columns, char* array);
 
 %{
     const char* return_string(void) {
@@ -316,7 +361,10 @@ PyObject* out_strings(int length, int dim1, int dim2, int *size, char buffer[50]
 
     void return_sigerr(void) {
     }
+
 %}
+
+PyObject* foobar(PyObject *obj);
 
 %apply (char *RETURN_STRING) {const char* return_string};
 const char* return_string();
@@ -326,3 +374,5 @@ int return_boolean(int value);
 
 %apply (void RETURN_VOID_SIGERR) {void return_sigerr};
 void return_sigerr(void);
+
+

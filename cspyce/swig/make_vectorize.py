@@ -66,6 +66,9 @@ class InArg(Arg):
         elif self.key == 'i':
             self.name = f'k{my_id}'
             self.rank = 0
+        elif self.key == 'b':
+            self.name = f'b{my_id}'
+            self.rank = 0
         elif self.key[0] in 'de':
             self.name = f'in{len(self.key)}{my_id}'
             self.rank = len(self.key)
@@ -81,6 +84,8 @@ class InArg(Arg):
             return 'ConstSpiceChar *' + self.name
         elif self.key == 'i':
             return 'SpiceInt ' + self.name
+        elif self.key == 'b':
+            return 'SpiceBoolean' + self.name
         else:
             my_type = "ConstSpiceDouble *" if self.key[0] == 'd' else "SpiceDouble *"
             main_declaration = f'{my_type}{self.name}'

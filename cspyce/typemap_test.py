@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as  np
-import typemap_samples as ts
+import cspyce.typemap_samples as ts
 
 
 def flatten(array):
@@ -219,6 +219,43 @@ class test_array2_3(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array2_3(None)
 
+class test_array2_3(unittest.TestCase):
+    # %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
+    # This function takes any 2-dimensional array whose second dimension is 5.
+    # It returns the elements, and the dimensions.
+    def test_basic_run(self):
+        array = np.arange(100, 150, dtype='int32').reshape(10, 5)
+        self.assertEqual((flatten(array), 10, 5), ts.in_array2_3(array))
+        self.assertEqual((flatten(array[1:]), 9, 5), ts.in_array2_3(array[1:]))
+
+    def test_non_contiguous_array(self):
+        array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 2]
+        self.assertEquals((flatten(array), 3, 5), ts.in_array2_3(array))
+
+    def test_no_other_width(self):
+        array = np.arange(100, 150, dtype='int32').reshape(5, 10)
+        with self.assertRaises(ValueError):
+            ts.in_array2_3(array)
+
+    def test_no_other_data_type(self):
+        array = np.arange(100, 150, dtype='float').reshape(10, 5)
+        with self.assertRaises(ValueError):
+            ts.in_array2_3(array)
+
+    def test_no_bigger_dimension(self):
+        array = np.arange(100, 150, dtype='int32').reshape(1, 10, 5)
+        with self.assertRaises(ValueError):
+            ts.in_array2_3(array)
+
+    def test_no_smaller_dimension(self):
+        array = np.arange(100, 150, dtype='int32')
+        with self.assertRaises(ValueError):
+            ts.in_array2_3(array)
+
+    def test_requires_non_null(self):
+        with self.assertRaises(TypeError):
+            ts.in_array2_3(None)
+
 
 class test_array12(unittest.TestCase):
     # %apply (int *IN_ARRAY12, int DIM1, int DIM2)  {(int *arg, int dim1, int dim2)};
@@ -373,6 +410,20 @@ class test_out_array2(unittest.TestCase):
         with self.assertRaises(MemoryError):
             value = ts.out_array2_3(-1, 40, 41)
 
+    # %apply (int DIM1, int *SIZE1, double OUT_ARRAY2[ANY][ANY]) {(int dim1, int *size1, double result[4][5])};
+    def test_2dim_fixed_size_array(self):
+        array_length, result = ts.out_array2_4(10, 3)
+        self.assertEqual(4, array_length);  # Why does the function need this?
+        self.assertEqual((3, 5), result.shape)
+        self.assertEqual(flatten(np.arange(10.0, 25.0)), flatten(result))
+
+    # %apply (int *SIZE1, double OUT_ARRAY2[ANY][ANY]) {(int *size1, double result[4][5])};
+    def test_2dim_fixed_size_array(self):
+        result = ts.out_array2_5(2)
+        self.assertEqual((2, 5), result.shape)
+        # This generates a boolean array in which the elemnts whose index is a multiple of 3
+        # is true.  Just not worth dealing with this
+
 class test_out_array12(unittest.TestCase):
     # %apply (int **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
     # Same as before, but a dim1=0 indicates to return a 1-dimensional array
@@ -407,6 +458,36 @@ class test_out_array23(unittest.TestCase):
     def test_memory_error(self):
         with self.assertRaises(MemoryError):
             ts.out_array23_1(-1, 0, 4, 5)
+
+class test_inout_array_1d(unittest.TestCase):
+    # double_in_out_array doubles each element in the array.
+    # cs.in_array1_1 just returns whatever 3 integers it was passed as a numpy array
+    def test_basic_test_tuple(self):
+        self.assertEqual((2, 4, 6), flatten(ts.double_in_out_array((1, 2, 3))))
+
+    def test_basic_test_array(self):
+        array = np.arange(10, 13, dtype="int32")
+        self.assertEqual((20, 22, 24), flatten(ts.double_in_out_array(array)))
+        # verify that array itself hasn't been touched
+        self.assertEqual((10, 11, 12), flatten(array))
+
+    def test_non_contiguous_array(self):
+        array = np.arange(9, dtype='int32').reshape((3, 3))
+        self.assertEquals((0, 6, 12), flatten(ts.double_in_out_array(array[:, 0])))
+
+    def test_requires_integer_array(self):
+        with self.assertRaises(ValueError):
+            ts.double_in_out_array(np.arange(3.0))
+
+    def test_requires_one_dimensional_array(self):
+        array = np.zeros((3, 3), dtype="int32")
+        with self.assertRaises(ValueError):
+            ts.double_in_out_array(array)
+
+    def test_requires_non_null(self):
+        with self.assertRaises(TypeError):
+            ts.double_in_out_array(None)
+
 
 
 class test_single_strings_input(unittest.TestCase):
@@ -499,6 +580,28 @@ class test_multiple_strings_output(unittest.TestCase):
         self.assertEqual(10, len(strings))
         self.assertEqual("a", strings[0])
         self.assertEqual("j" * 10, strings[9])
+
+
+class test_multiple_strings_inout(unittest.TestCase):
+    # %apply(int DIM1, int DIM2, Type *INOUT_STRINGS)
+    # because we could, we wrote a simple sorting program
+    def test_basic_test_tuple(self):
+        argument = "Four score and thirty years ago".split(' ')
+        result, = ts.sort_strings(argument)
+        self.assertEqual(sorted(argument), result)
+
+    def test_okay_to_pass_empty_list(self):
+        result, = ts.sort_strings(())
+        self.assertEqual([], result)
+
+    def test_requires_one_dimensional_array(self):
+        argument = np.array([["a", "b", "c", "d"], ["w", "x", "y", "z"]])
+        with self.assertRaises(ValueError):
+            ts.sort_strings(argument)
+
+    def test_requires_non_null(self):
+        with self.assertRaises(TypeError):
+            ts.sort_strings(None)
 
 
 class test_primitive_return_types(unittest.TestCase):
