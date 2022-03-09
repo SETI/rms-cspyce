@@ -47,9 +47,9 @@ class GenerateCommand(Command):
         pass
 
     def run(self):
-        from cspyce.swig.make_vectorize import create_vectorize_header_file
-        create_vectorize_header_file("cspyce/swig/vectorize.i")
-        command = "swig -python -outdir cspyce/. -o cspyce/swig/cspyce0_wrap.c cspyce/swig/cspyce0.i".split(' ')
+        from swig.make_vectorize import create_vectorize_header_file
+        create_vectorize_header_file("swig/vectorize.i")
+        command = "swig -python -outdir cspyce/. -o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
         subprocess.check_call(command)
 
 cspice_module = Extension(
@@ -71,7 +71,7 @@ lib_cspice = ("cspice", {
 
 cspyce0_module = Extension(
     'cspyce._cspyce0',
-    sources=['cspyce/swig/cspyce0_wrap.c'],
+    sources=['swig/cspyce0_wrap.c'],
     include_dirs=['cspice/include', numpy.get_include()],
     extra_compile_args=['-Wno-incompatible-pointer-types'],
 )

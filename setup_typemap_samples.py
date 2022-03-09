@@ -55,7 +55,7 @@ class GenerateCommand(Command):
         pass
 
     def run(self):
-        command = "swig -python -outdir cspyce/. -o cspyce/swig/typemap_samples_wrap.c cspyce/swig/typemap_samples.i".split(' ')
+        command = "swig -python -outdir cspyce/. -o swig/typemap_samples_wrap.c swig/typemap_samples.i".split(' ')
         subprocess.check_call(command)
 
 cspice_module = Extension(
@@ -77,7 +77,7 @@ lib_cspice = ("cspice", {
 
 typemap_samples_module = Extension(
     'cspyce._typemap_samples',
-    sources=['cspyce/swig/typemap_samples_wrap.c'],
+    sources=['swig/typemap_samples_wrap.c'],
     include_dirs=['cspice/include', numpy.get_include()],
     extra_compile_args=['-Wno-incompatible-pointer-types'],
 )
