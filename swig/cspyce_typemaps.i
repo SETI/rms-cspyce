@@ -676,15 +676,14 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 }
 %enddef
 
-// result must be a variable that it XDECREF'ed in freeArg.
+// result must be a variable which will be Py_DECREF-ed if an error occurs
 %define CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer, rows, columns, result)
-    Py_XDECREF(result);
     result = PyList_New(rows);
     TEST_MALLOC_FAILURE(list$argnum);
 
     // Convert the results to Python strings and add them to the list
     for (int i = 0; i < rows; i++) {
-        char *str = &buffer$argnum[i * columns];
+        char *str = &buffer[i * columns];
         PyObject *value = PyString_FromString(str);
         TEST_MALLOC_FAILURE(value)
         PyList_SetItem(result, i, value);
@@ -735,15 +734,48 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
 }
 %}
 
-%define CONVERT_SEQUENCE_TO_LIST(arg, list)
+// This macro takes $input
+%define HANDLE_TYPEMAP_IN_STRINGS(ARG_buffer, ARG_buffer_etype, ARG_count, ARG_maxlen, buffer, list)
 {
-    list = PySequence_List(arg);
+    ARG_buffer = NULL;
+    ARG_count = 0;
+    ARG_maxlen = 0;
+
+    list = PySequence_List($input);
     if (!list) {
         handle_bad_sequence_to_list("$symname");
         SWIG_fail;
     }
+
+    // list is guaranteed to be a PyList, and we own it.
+    Py_ssize_t count = PyList_Size(list);
+    Py_ssize_t maxlen = 2;
+    for (int i = 0; i < count; i++) {
+        PyObject *obj = PyList_GetItem(list, i);  // Note, we don't own this object
+        TEST_IS_STRING(obj);
+        if (is_python_3xx) {
+            obj = PyUnicode_AsUTF8String(obj);   // We own this item
+            TEST_MALLOC_FAILURE(obj);
+            PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
+        }
+        maxlen = max(maxlen, PyBytes_Size(obj));
+    }
+    // Allocate the buffer
+    buffer = (ARG_buffer_etype *) PyMem_Malloc(
+        count * (maxlen + 1) * sizeof(ARG_buffer_etype));
+    TEST_MALLOC_FAILURE(buffer);
+    // Copy the strings
+    for (int i = 0; i < count; i++) {
+        PyObject *obj = PyList_GetItem(list, i);
+        // PyBytes_AsString simply grabs a pointer out of the python object.
+        strncpy((buffer + i * (maxlen+1)), PyBytes_AsString(obj), maxlen+1);
+    }
+    ARG_buffer = buffer;
+    ARG_count = (int) count;
+    ARG_maxlen = (int)(maxlen + 1);
 }
 %enddef
+
 
 %{
 void handle_bad_sequence_to_list(const char *symname) {
@@ -2964,45 +2996,6 @@ TYPEMAP_INOUT_OUT(SpiceChar)
 * and returned to the user as a result.
 *******************************************************************************/
 
-%define HANDLE_TYPEMAP_IN_STRINGS(ARG_buffer, ARG_buffer_etype, ARG_count, ARG_maxlen)
-    ARG_buffer = NULL;
-    ARG_count = 0;
-    ARG_maxlen = 0;
-
-    CONVERT_SEQUENCE_TO_LIST($input, list);
-
-    // list is guaranteed to be a PyList, and we own it.
-    for (int i = 0; i < PyList_Size(list); i++) {
-        PyObject *obj = PyList_GetItem(list, i);  // Note, we don't own this object
-        TEST_IS_STRING(obj);
-        if (is_python_3xx) {
-            PyObject *temp = PyUnicode_AsUTF8String(obj);
-            TEST_MALLOC_FAILURE(temp);
-            PyList_SetItem(list, i, temp);
-        }
-    }
-
-    Py_ssize_t count = PyList_Size(list);
-    // Get the maximum length of the string
-    Py_ssize_t maxlen = 2;
-    for (int i = 0; i < count; i++) {
-        PyObject *obj = PyList_GetItem(list, i);
-        maxlen = max(maxlen, PyBytes_Size(obj));
-    }
-    // Allocate the buffer
-    buffer = (ARG_buffer_etype *) PyMem_Malloc(
-        count * (maxlen + 1) * sizeof(ARG_buffer_etype));
-    TEST_MALLOC_FAILURE(buffer);
-    // Copy the strings
-    for (int i = 0; i < count; i++) {
-        PyObject *obj = PyList_GetItem(list, i);
-        // PyBytes_AsString simply grabs a pointer out of the python object.
-        strncpy((buffer + i * (maxlen+1)), PyBytes_AsString(obj), maxlen+1);
-    }
-    ARG_buffer = buffer;
-    ARG_count = (int) count;
-    ARG_maxlen = (int)(maxlen + 1);
-%enddef
 
 %define TYPEMAP_IN(Type) // Use to fill in types below
 
@@ -3019,7 +3012,7 @@ TYPEMAP_INOUT_OUT(SpiceChar)
 //      (Type *IN_STRINGS, int DIM1, int DIM2)
 //  NOT CURRENTLY USED BY CSPICE
 
-    HANDLE_TYPEMAP_IN_STRINGS($1, $*1_type, $2, $3)
+    HANDLE_TYPEMAP_IN_STRINGS($1, $*1_type, $2, $3, buffer, list)
 }
 
 /***********************************************************************
@@ -3038,7 +3031,7 @@ TYPEMAP_INOUT_OUT(SpiceChar)
 {
 //      (int DIM1, int DIM2, Type *IN[OUT]_STRINGS)
 
-    HANDLE_TYPEMAP_IN_STRINGS($3, $*3_type, $1, $2)
+    HANDLE_TYPEMAP_IN_STRINGS($3, $*3_type, $1, $2, buffer, list)
 }
 
 /***********************************************************************
@@ -3056,7 +3049,11 @@ TYPEMAP_INOUT_OUT(SpiceChar)
     (int DIM1, int DIM2, Type *INOUT_STRINGS),
     (SpiceInt DIM1, SpiceInt DIM2, Type *INOUT_STRINGS)
 {
-    CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer, $1, $2, list$argnum);
+//      (int DIM1, int DIM2, Type *INOUT_STRINGS)
+    // We can reuse list$argnum, but first we need to free whatever is already there.
+    Py_XDECREF(list$argnum);
+    list$argnum = NULL;
+    CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer$argnum, $1, $2, list$argnum);
     $result = SWIG_Python_AppendOutput($result, list$argnum);
     list$argnum = NULL;
 }
@@ -3172,7 +3169,7 @@ TYPEMAP_IN(ConstSpiceChar)
 {
 //      (char OUT_STRINGS[ANY][ANY], int DIM1, int DIM2, int *NSTRINGS)
 
-    CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer, dimsize$argnum[0], dimsize$argnum[1], list$argnum)
+    CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer$argnum, dimsize$argnum[0], dimsize$argnum[1], list$argnum)
     $result = SWIG_Python_AppendOutput($result, list$argnum);
     list$argnum = NULL;
 }

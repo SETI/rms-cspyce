@@ -10,6 +10,9 @@ implements the most widely-used functions of CSPICE in a Python-like way. It
 also supports numerous enhancements, including support for Python exceptions,
 array inputs, and aliases.
 
+If you are looking for information on running or distributing this code from
+the github sources, look at the file `README-developers.md` in this directory.
+
 ## PYTHONIZATION
 
 This module has been designed to replicate the core features of CSPICE for
