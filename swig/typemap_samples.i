@@ -364,8 +364,6 @@ void sort_strings(int rows, int columns, char* array);
 
 %}
 
-PyObject* foobar(PyObject *obj);
-
 %apply (char *RETURN_STRING) {const char* return_string};
 const char* return_string();
 

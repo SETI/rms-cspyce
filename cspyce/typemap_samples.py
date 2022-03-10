@@ -143,9 +143,6 @@ def double_in_out_array(dim1):
 def sort_strings(rows):
     return _typemap_samples.sort_strings(rows)
 
-def foobar(obj):
-    return _typemap_samples.foobar(obj)
-
 def return_string():
     return _typemap_samples.return_string()
 

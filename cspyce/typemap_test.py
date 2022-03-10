@@ -20,7 +20,7 @@ class test_array1_1(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(9, dtype='int32').reshape((3, 3))
-        self.assertEquals((0, 3, 6), ts.in_array1_1(array[:, 0]))
+        self.assertEqual((0, 3, 6), ts.in_array1_1(array[:, 0]))
 
     def test_requires_three_elements(self):
         with self.assertRaises(ValueError):
@@ -55,7 +55,7 @@ class test_array1_2(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(12, dtype='int32').reshape((4, 3))[:, 1]
-        self.assertEquals(flatten(array), ts.in_array1_2(array))
+        self.assertEqual(flatten(array), ts.in_array1_2(array))
 
     def test_requires_integer_array(self):
         with self.assertRaises(ValueError):
@@ -96,7 +96,7 @@ class test_array1_01_1(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(12, dtype='int32').reshape((4, 3))[:, 0]
-        self.assertEquals(flatten(array), ts.in_array01_1(array))
+        self.assertEqual(flatten(array), ts.in_array01_1(array))
 
     def test_requires_integer_array(self):
         with self.assertRaises(ValueError):
@@ -160,7 +160,7 @@ class test_array2_2(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 2]
-        self.assertEquals((flatten(array), 3, 5), ts.in_array2_2(array))
+        self.assertEqual((flatten(array), 3, 5), ts.in_array2_2(array))
 
     def test_no_other_data_type(self):
         array = np.arange(100., 200.).reshape(5, 20)
@@ -193,7 +193,7 @@ class test_array2_3(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 2]
-        self.assertEquals((flatten(array), 3, 5), ts.in_array2_3(array))
+        self.assertEqual((flatten(array), 3, 5), ts.in_array2_3(array))
 
     def test_no_other_width(self):
         array = np.arange(100, 150, dtype='int32').reshape(5, 10)
@@ -230,7 +230,7 @@ class test_array2_3(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 2]
-        self.assertEquals((flatten(array), 3, 5), ts.in_array2_3(array))
+        self.assertEqual((flatten(array), 3, 5), ts.in_array2_3(array))
 
     def test_no_other_width(self):
         array = np.arange(100, 150, dtype='int32').reshape(5, 10)
@@ -313,7 +313,7 @@ class test_array23(unittest.TestCase):
 
     def test_non_contiguous_array_2d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 1]
-        self.assertEquals((flatten(array), 0, 3, 5), ts.in_array23(array))
+        self.assertEqual((flatten(array), 0, 3, 5), ts.in_array23(array))
 
     def test_non_contiguous_array_3d(self):
         array = np.empty((3, 4, 5, 8), dtype='int32')[...,2]
@@ -473,7 +473,7 @@ class test_inout_array_1d(unittest.TestCase):
 
     def test_non_contiguous_array(self):
         array = np.arange(9, dtype='int32').reshape((3, 3))
-        self.assertEquals((0, 6, 12), flatten(ts.double_in_out_array(array[:, 0])))
+        self.assertEqual((0, 6, 12), flatten(ts.double_in_out_array(array[:, 0])))
 
     def test_requires_integer_array(self):
         with self.assertRaises(ValueError):

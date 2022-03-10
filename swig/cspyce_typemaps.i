@@ -574,57 +574,6 @@ void handle_bad_string_error(const char* symname) {
 }
 %}
 
-%define TEST_INVALID_ARRAY_RANK(pyarr, required_rank)
-{
-    if ((pyarr) && (PyArray_NDIM(pyarr) != (required_rank))) {
-        handle_invalid_array_rank("$symname", pyarr, required_rank);
-        SWIG_fail;
-    }
-}
-%enddef
-
-%{
-void handle_invalid_array_rank(const char* symname, PyArrayObject* pyarr, int rank) {
-    chkin_c(symname);
-    setmsg_c("Invalid array rank #; # is required");
-    errint_c("#", (int) (PyArray_NDIM(pyarr)));
-    errint_c("#", (int) (rank));
-    sigerr_c("SPICE(INVALID_ARRAY_RANK)");
-    chkout_c(symname);
-    PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
-        get_exception_message(symname));
-    reset_c();
-}
-%}
-
-%define TEST_INVALID_ARRAY_RANK_OR(pyarr, option1, option2)
-{
-    if ((pyarr) && (PyArray_NDIM(pyarr) != (option1)) &&
-                   (PyArray_NDIM(pyarr) != (option2))) {
-        handle_invalid_array_rank_or("$symname", pyarr, option1, option2);
-        SWIG_fail;
-    }
-}
-%enddef
-
-%{
-void handle_invalid_array_rank_or(const char* symname, PyArrayObject* pyarr, int rank1, int rank2) {
-    chkin_c(symname);
-    setmsg_c("Invalid array rank # in module #; # or # is required");
-    errint_c("#", (int) PyArray_NDIM(pyarr));
-    errch_c( "#", symname);
-    errint_c("#", (int) (rank1));
-    errint_c("#", (int) (rank2));
-    sigerr_c("SPICE(INVALID_ARRAY_RANK)");
-    chkout_c(symname);
-
-    PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
-        get_exception_message(symname));
-    reset_c();
-}
-%}
 
 %define TEST_INVALID_ARRAY_SHAPE_1D(pyarr, req0)
 {
@@ -707,35 +656,21 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 }
 %}
 
-%define TEST_NONCONTIGUOUS_ARRAY(pyarr)
+%define CONVERT_TO_CONTIGUOUS_ARRAY(typecode, input, min, max, result)
 {
-    if ((pyarr) && !array_is_contiguous(pyarr)) {
-        handle_noncontiguous_array("$symname", pyarr);
+    result = PyArray_FROMANY(input, typecode, min, max, NPY_ARRAY_CARRAY_RO); // readonly okay
+    if (!result){
+        handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
     }
 }
 %enddef
 
-%{
-void handle_noncontiguous_array(const char *symname, PyArrayObject *pyarr) {
-    chkin_c(symname);
-    setmsg_c("Contiguous array required in module #: "
-             "input/output array is not contiguous");
-    errch_c("#", symname);
-    sigerr_c("SPICE(NONCONTIGUOUSARRAY)");
-    chkout_c(symname);
-    PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
-        get_exception_message(symname));
-    reset_c();
-}
-%}
-
-%define CONVERT_TO_CONTIGUOUS_ARRAY(typecode, input, result, is_new_object)
+%define CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(typecode, input, min, max, result)
 {
-    result = obj_to_array_contiguous_allow_conversion(input, typecode, &is_new_object);
-    if (!result) {
-        handle_bad_array_conversion("$symname", typecode, input);
+    result = PyArray_FROMANY(input, typecode, min, max, NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
+    if (!result){
+        handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
     }
 }
@@ -760,20 +695,38 @@ void handle_noncontiguous_array(const char *symname, PyArrayObject *pyarr) {
 %{
 extern const char* typecode_string(int typecode);
 
-void handle_bad_array_conversion(const char* symname, int typecode, PyObject *input) {
-    if (input && PyArray_Check(input)) {
+void handle_bad_array_conversion(const char* symname, int typecode, PyObject *input, int min, int max) {
+    if (!input || !PyArray_Check(input)) {
+        setmsg_c("Array of type \"#\" required in module #; "
+                 "input argument could not be converted");
+        errch_c("#", typecode_string(typecode));
+        errch_c("#", symname);
+        sigerr_c("SPICE(INVALIDTYPE)");
+    } else if (PyArray_NDIM(input) < min || PyArray_NDIM(input) > max) {
+        if (min == max) {
+            setmsg_c("Invalid array rank # in module #; # is required");
+        } else {
+            setmsg_c("Invalid array rank # in module #; # or # is required");
+        }
+        errint_c("#", (int) PyArray_NDIM(input));
+        errch_c( "#", symname);
+        errint_c("#", (int) (min));
+        if (min != max) {
+            errint_c("#", (int) (max));
+        }
+        sigerr_c("SPICE(INVALID_ARRAY_RANK)");
+        PyErr_SetString(
+            USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
+            get_exception_message(symname));
+        reset_c();
+        return;
+    } else {
         setmsg_c("Array of type \"#\" required in module #; "
                  "array of type \"#\" could not be converted");
         errch_c("#", typecode_string(typecode));
         errch_c("#", symname);
         errch_c("#", typecode_string(PyArray_TYPE(input)));
         sigerr_c("SPICE(INVALIDARRAYTYPE)");
-      } else {
-        setmsg_c("Array of type \"#\" required in module #; "
-                 "input argument could not be converted");
-        errch_c("#", typecode_string(typecode));
-        errch_c("#", symname);
-        sigerr_c("SPICE(INVALIDTYPE)");
     }
     // We don't like the error that's already been set up by the array conversion code
     // so we modify it to be what we want.
@@ -843,12 +796,11 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (Type IN_ARRAY1[ANY])                                       // PATTERN
-            (PyArrayObject* pyarr=NULL, int is_new_object=0)
+            (PyArrayObject* pyarr=NULL)
 {
 //      (Type IN_ARRAY1[ANY])
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
     TEST_INVALID_ARRAY_SHAPE_1D(pyarr, $1_dim0);
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                          // ARRAY
@@ -861,15 +813,14 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (Type IN_ARRAY1[ANY], int DIM1)                             // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type IN_ARRAY1[ANY], SpiceInt DIM1)                        // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type IN_ARRAY1[ANY], int DIM1)
 //  NOT CURRENTLY USED BY CSPICE
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
     TEST_INVALID_ARRAY_SHAPE_1D(pyarr, $1_dim0);
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                          // ARRAY
@@ -882,15 +833,14 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (int DIM1, Type IN_ARRAY1[ANY])                             // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (SpiceInt DIM1, Type IN_ARRAY1[ANY])                        // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, Type IN_ARRAY1[ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
     TEST_INVALID_ARRAY_SHAPE_1D(pyarr, $2_dim0);
 
     $2 = ($2_ltype) PyArray_DATA(pyarr);                          // ARRAY
@@ -903,14 +853,13 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (Type *IN_ARRAY1, int DIM1)                                 // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type *IN_ARRAY1, SpiceInt DIM1)                            // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY1, int DIM1)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                          // ARRAY
     $2 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
@@ -922,14 +871,13 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (int DIM1, Type *IN_ARRAY1)                                 // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (SpiceInt DIM1, Type *IN_ARRAY1)                            // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, Type *IN_ARRAY1)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
 
     $2 = ($2_ltype) PyArray_DATA(pyarr);                          // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                            // DIM1
@@ -941,15 +889,14 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (Type *IN_ARRAY1)                                 // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type IN_ARRAY1[])                            // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY1)
 //      (Type IN_ARRAY1[]
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
 
     $1 = ($2_ltype) PyArray_DATA(pyarr);                          // ARRAY
 }
@@ -960,14 +907,13 @@ void handle_bad_sequence_to_list(const char *symname) {
 
 %typemap(in)
     (Type *IN_ARRAY01, int DIM1)                                // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type *IN_ARRAY01, SpiceInt DIM1)                           // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY01, int DIM1)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK_OR(pyarr, 0, 1);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 0, 1, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                          // ARRAY
     if (PyArray_NDIM(pyarr) == 0) {
@@ -1014,9 +960,7 @@ void handle_bad_sequence_to_list(const char *symname) {
     (Type *IN_ARRAY01, SpiceInt DIM1)
 {
 //      (Type ...IN_ARRAY1[ANY]...)
-    if (is_new_object$argnum) {
-            Py_XDECREF(pyarr$argnum);
-    }
+    Py_XDECREF(pyarr$argnum);
 }
 
 /*******************************************************
@@ -1090,12 +1034,11 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type IN_ARRAY2[ANY][ANY])                                  // PATTERN
-            (PyArrayObject* pyarr=NULL, int is_new_object=0)
+            (PyArrayObject* pyarr=NULL)
 {
 //      (Type IN_ARRAY2[ANY][ANY])
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_2D(pyarr, $1_dim0, $1_dim1);
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                          // ARRAY
@@ -1109,15 +1052,14 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type IN_ARRAY2[ANY][ANY], int DIM1, int DIM2)              // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type IN_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2)    // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type IN_ARRAY2[ANY][ANY], int DIM1, int DIM2)
 //  NOT CURRENTLY USED BY CSPICE
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_2D(pyarr, $1_dim0, $1_dim1);
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                         // ARRAY
@@ -1131,14 +1073,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (int DIM1, int DIM2, Type IN_ARRAY2[ANY][ANY])              // PATTERN
-            (PyArrayObject* pyarr=NULL, int is_new_object=0),
+            (PyArrayObject* pyarr=NULL),
     (SpiceInt DIM1, SpiceInt DIM2, Type IN_ARRAY2[ANY][ANY])    // PATTERN
-            (PyArrayObject* pyarr=NULL, int is_new_object=0)
+            (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, int DIM2, Type IN_ARRAY2[ANY][ANY])
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_2D(pyarr, $3_dim0, $3_dim1);
 
     $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
@@ -1152,14 +1093,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type *IN_ARRAY2, int DIM1, int DIM2)                       // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type *IN_ARRAY2, SpiceInt DIM1, SpiceInt DIM2)             // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY2, int DIM1, int DIM2)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
@@ -1172,15 +1112,14 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (int DIM1, int DIM2, Type *IN_ARRAY2)                       // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (SpiceInt DIM1, SpiceInt DIM2, Type *IN_ARRAY2)             // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, int DIM2, Type *IN_ARRAY2)
 //  NOT CURRENTLY USED BY CSPICE
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
 
     $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
@@ -1194,15 +1133,14 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (int DIM1, Type IN_ARRAY2[][ANY])                   // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (SpiceInt DIM1, Type IN_ARRAY2[][ANY])                      // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, Type IN_ARRAY2[][ANY])
 //      (SpiceInt DIM1, Type IN_ARRAY2[][ANY])
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_x2D(pyarr, $2_dim1);
 
     $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
@@ -1216,15 +1154,14 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type IN_ARRAY2[][ANY], int DIM1)                   // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type IN_ARRAY2[][ANY], SpiceInt DIM1)                      // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type IN_ARRAY2[][ANY], int DIM1)
 //      (Type IN_ARRAY2[][ANY], SpiceInt DIM1)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_x2D(pyarr, $1_dim1);
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
@@ -1238,13 +1175,12 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type *IN_ARRAY2)           // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type IN_ARRAY2[])          // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, int DIM2, Type *IN_ARRAY2)
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
 }
@@ -1256,14 +1192,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type *IN_ARRAY12, int DIM1, int DIM2)                      // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type *IN_ARRAY12, SpiceInt DIM1, SpiceInt DIM2)            // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY12, int DIM1, int DIM2)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK_OR(pyarr, 1, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 2, pyarr)
 
     if (PyArray_NDIM(pyarr) == 1) {
         $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
@@ -1282,14 +1217,13 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %typemap(in)
     (Type *IN_ARRAY23, int DIM1, int DIM2, int DIM3)                      // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (Type *IN_ARRAY23, SpiceInt DIM1, SpiceInt DIM2, SpiceInt DIM3)            // PATTERN
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY23, int DIM1, int DIM2, int DIM3)
 
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK_OR(pyarr, 2, 3);
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 3, pyarr)
 
     if (PyArray_NDIM(pyarr) == 2) {
         $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
@@ -1355,9 +1289,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 {
 //      (Type ...IN_ARRAY2...)
-    if (is_new_object$argnum) {
-        Py_XDECREF(pyarr$argnum);
-    }
+    Py_XDECREF(pyarr$argnum);
 }
 
 /*******************************************************
@@ -2478,37 +2410,25 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 
 %typemap(in)
     (int DIM1, Type *INOUT_ARRAY1)
-        (PyArrayObject* pyarr=NULL, int is_new_object=0),
+        (PyArrayObject* pyarr=NULL),
     (int DIM1, Type INOUT_ARRAY1[])
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, Type INOUT_ARRAY1)
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 1);
-    if (!is_new_object) {
-        pyarr = PyArray_NewCopy(pyarr, NPY_CORDER);
-        TEST_MALLOC_FAILURE(pyarr);
-        is_new_object = 1;
-    }
+    CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
     $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                                   // DIM1
 }
 
 %typemap(in)
     (int DIM1, Type INOUT_ARRAY2[][ANY])
-        (PyArrayObject* pyarr=NULL, int is_new_object=0)
+        (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, type INOUT_ARRAY2[][ANY])
 
     // NOT CURRENTLY USED
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, pyarr, is_new_object)
-    TEST_INVALID_ARRAY_RANK(pyarr, 2);
+    CONVERT_TO_CONTIGUOUS_ARRAY_WRITABLE_COPY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_x2D(pyarr, $2_dim1)
-    if (!is_new_object) {
-        pyarr = PyArray_NewCopy(pyarr, NPY_CORDER);
-        TEST_MALLOC_FAILURE(pyarr);
-        is_new_object = 1;
-    }
     $1 = (int) PyArray_DIM(pyarr, 0);                                   // DIM1
     $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
 }
@@ -2527,9 +2447,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY])
 {
-    if (is_new_object$argnum) {
-        Py_XDECREF(pyarr$argnum);
-    }
+    Py_XDECREF(pyarr$argnum);
 }
 
 %enddef
@@ -2551,56 +2469,6 @@ TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
 
 
 #undef TYPEMAP_INOUT
-/*******************************************************************************
-* Numeric typemaps for input/output
-*
-* This family of typemaps allows the data values in a Numpy array to be
-* overwritten by a C function. Care should be exercised: the array must be large
-* enough and must be contiguous. The elements could appear in the wrong order if
-* the Numpy array uses a non-standard set of strides.
-*******************************************************************************/
-
-%define TYPEMAP_INOUT2(Type, Typecode) // Use to fill in numeric types below
-
-/*******************************************************
-* (Type *INOUT_ARRAY)
-*******************************************************/
-
-%typemap(in)
-    (Type *INOUT_ARRAY)                                         // PATTERN
-{
-//      (Type *INOUT_ARRAY)
-//  NOT CURRENTLY USED BY CSPICE
-
-    PyArrayObject* pyarr = obj_to_array_no_conversion($input, Typecode, "$symname");
-    TEST_FOR_EXCEPTION;
-    TEST_NONCONTIGUOUS_ARRAY(pyarr)
-
-    $1 = ($1_ltype) PyArray_DATA(pyarr);                         // ARRAY
-}
-
-/*******************************************************
-* Now apply to all data types
-*******************************************************/
-
-%enddef
-
-// Define concrete examples of the TYPEMAP_IN1 macros
-TYPEMAP_INOUT2(char,          NPY_CHAR  )
-TYPEMAP_INOUT2(SpiceChar,     NPY_CHAR  )
-TYPEMAP_INOUT2(unsigned char, NPY_UBYTE )
-TYPEMAP_INOUT2(signed char,   NPY_SBYTE )
-TYPEMAP_INOUT2(short,         NPY_SHORT )
-TYPEMAP_INOUT2(int,           NPY_INT   )
-TYPEMAP_INOUT2(SpiceInt,      NPY_INT   )
-TYPEMAP_INOUT2(SpiceBoolean,  NPY_INT   )
-TYPEMAP_INOUT2(long,          NPY_LONG  )
-TYPEMAP_INOUT2(float,         NPY_FLOAT )
-TYPEMAP_INOUT2(double,        NPY_DOUBLE)
-TYPEMAP_INOUT2(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_INOUT2(PyObject,      NPY_OBJECT)
-
-#undef TYPEMAP_INOUT2
 
 /*******************************************************************************
 * Typemap for string input
