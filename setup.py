@@ -74,13 +74,20 @@ cspice_module = Extension(
                '-Wno-pointer-to-int-cast', '-Wno-strict-prototypes'],
 )
 
+lib_cspice = ("cspice", {
+    "sources" : glob("cspice/src/cspice/*.c"),
+    "include_dirs": ["cspice/include"],
+    "cflags": ['-Wno-incompatible-pointer-types', '-Wno-parentheses',
+               '-Wno-implicit-int', "-Wno-shift-op-parentheses",
+               '-Wno-logical-op-parentheses', '-Wno-sign-compare',
+               '-Wno-pointer-to-int-cast', '-Wno-strict-prototypes']
+})
+
 cspyce0_module = Extension(
     'cspyce._cspyce0',
     sources=['swig/cspyce0_wrap.c'],
     include_dirs=['cspice/include', numpy.get_include()],
     extra_compile_args=['-Wno-incompatible-pointer-types'],
-    libraries=['cspice'],
-    library_dirs=['build/'],
 )
 
 typemap_samples_module = Extension(
@@ -90,16 +97,15 @@ typemap_samples_module = Extension(
     extra_compile_args=['-Wno-incompatible-pointer-types'],
 )
 
-setup (name = 'cspyce',
+setup(name = 'cspyce',
        version = '2.0.0',
        author  = "Mark Showalter/PDS Ring-Moon Systems Node",
        description = "Low-level SWIG interface to the CSPICE library",
-       ext_modules = [cspyce0_module, typemap_samples_module, cspice_module],
-       # libraries=[lib_cspice],
+       ext_modules = [cspyce0_module, typemap_samples_module],
+       libraries=[lib_cspice],
        packages=["cspyce"],
        install_requires=['numpy'],
        cmdclass={
            'generate': GenerateCommand,
-       },
+       }
 )
-
