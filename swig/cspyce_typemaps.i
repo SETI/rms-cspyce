@@ -1853,7 +1853,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(in, numinputs=0)
     (Type OUT_ARRAY2[ANY][ANY])                                 // PATTERN
-        (PyArrayObject* pyarr = NULL, int dimsize[2])
+        (PyArrayObject* pyarr = NULL)
 {
 //      (Type OUT_ARRAY2[ANY][ANY])
 
@@ -1861,8 +1861,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    dimsize[0] = (int) dims[0];
-    dimsize[1] = (int) dims[1];
+//  dimsize[0] = (int) dims[0];
+//  dimsize[1] = (int) dims[1];
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
 //  $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
@@ -1877,9 +1877,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(in, numinputs=0)
     (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2)             // PATTERN
-        (PyArrayObject* pyarr = NULL, int dimsize[2]),
+        (PyArrayObject* pyarr = NULL),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2)   // PATTERN
-        (PyArrayObject* pyarr = NULL, int dimsize[2])
+        (PyArrayObject* pyarr = NULL)
 {
 //      (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2)
 //  NOT CURRENTLY USED BY CSPICE
@@ -1888,8 +1888,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    dimsize[0] = (int) dims[0];
-    dimsize[1] = (int) dims[1];
+//  dimsize[0] = (int) dims[0];
+//  dimsize[1] = (int) dims[1];
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
@@ -1904,9 +1904,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(in, numinputs=0)
     (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY])             // PATTERN
-        (PyArrayObject* pyarr = NULL, int dimsize[2]),
+        (PyArrayObject* pyarr = NULL),
     (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY])   // PATTERN
-        (PyArrayObject* pyarr = NULL, int dimsize[2])
+        (PyArrayObject* pyarr = NULL)
 {
 //      (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY])
 //  NOT CURRENTLY USED BY CSPICE
@@ -1915,8 +1915,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
 
-    dimsize[0] = (int) dims[0];
-    dimsize[1] = (int) dims[1];
+//  dimsize[0] = (int) dims[0];
+//  dimsize[1] = (int) dims[1];
 
     $3 = ($3_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                           // DIM1

@@ -58,6 +58,8 @@ class GenerateCommand(Command):
             print("Rerunning swig")
             command = "swig -python -outdir cspyce/. -o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
             subprocess.check_call(command)
+            command = "swig -python -outdir cspyce/. -o swig/typemap_samples_wrap.c swig/typemap_samples.i".split(' ')
+            subprocess.check_call(command)
         else:
             command = "echo Cannot rebuild files in Python2".split(' ')
             subprocess.check_call(command)
@@ -67,21 +69,23 @@ cspice_module = Extension(
     sources=glob("cspice/src/cspice/*.c"),
     include_dirs=['cspice/include'],
     extra_compile_args=['-Wno-incompatible-pointer-types', '-Wno-parentheses', 
-                        '-Wno-implicit-int'],
-)
-
-lib_cspice = ("cspice", {
-    "sources" : glob("cspice/src/cspice/*.c"),
-    "include_dirs": ["cspice/include"],
-    "cflags": ['-Wno-incompatible-pointer-types', '-Wno-parentheses', 
                '-Wno-implicit-int', "-Wno-shift-op-parentheses",
                '-Wno-logical-op-parentheses', '-Wno-sign-compare',
-               '-Wno-pointer-to-int-cast', '-Wno-strict-prototypes']
-})
+               '-Wno-pointer-to-int-cast', '-Wno-strict-prototypes'],
+)
 
 cspyce0_module = Extension(
     'cspyce._cspyce0',
     sources=['swig/cspyce0_wrap.c'],
+    include_dirs=['cspice/include', numpy.get_include()],
+    extra_compile_args=['-Wno-incompatible-pointer-types'],
+    libraries=['cspice'],
+    library_dirs=['build/'],
+)
+
+typemap_samples_module = Extension(
+    'cspyce._typemap_samples',
+    sources=['swig/typemap_samples_wrap.c'],
     include_dirs=['cspice/include', numpy.get_include()],
     extra_compile_args=['-Wno-incompatible-pointer-types'],
 )
@@ -90,8 +94,8 @@ setup (name = 'cspyce',
        version = '2.0.0',
        author  = "Mark Showalter/PDS Ring-Moon Systems Node",
        description = "Low-level SWIG interface to the CSPICE library",
-       ext_modules = [cspyce0_module],
-       libraries=[lib_cspice],
+       ext_modules = [cspyce0_module, typemap_samples_module, cspice_module],
+       # libraries=[lib_cspice],
        packages=["cspyce"],
        install_requires=['numpy'],
        cmdclass={
