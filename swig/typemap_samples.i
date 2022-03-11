@@ -56,6 +56,10 @@
         return int_array_to_tuple(arg, dim);
     }
 
+    PyObject* in_array1_3(int *arg, int dim) {
+        return int_array_to_tuple(arg, dim);
+    }
+
     PyObject* in_array01_1(int *arg, int dim) {
         if (dim == 0) {
             return Py_BuildValue("i", arg[0]);
@@ -70,9 +74,11 @@ PyObject* in_array1_1(int arg[3]);
 %apply (int* IN_ARRAY1, int DIM1) {(int* arg, int dim)};
 PyObject* in_array1_2(int *arg, int dim);
 
+%apply (int* IN_ARRAY1) {(int arg[])};
+PyObject* in_array1_3(int arg[], int dim);
+
 %apply (int *IN_ARRAY01, int DIM1) {(int *arg, int dim)};
 PyObject* in_array01_1(int *arg, int dim);
-
 
 %{
    PyObject* in_array2_1(int arg[3][5]) {

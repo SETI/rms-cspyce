@@ -25,6 +25,7 @@
 
 
 # We prefer setuptools, but will use distutils if setuptools isn't available
+
 try:
     from setuptools import Command, setup, Extension
     from setuptools.command.build_py import build_py
@@ -77,7 +78,7 @@ cspyce0_module = Extension(
 )
 
 setup (name = 'cspyce',
-       version = '2.0.1',
+       version = '2.0.0',
        author  = "Mark Showalter/PDS Ring-Moon Systems Node",
        description = "Low-level SWIG interface to the CSPICE library",
        ext_modules = [cspyce0_module],

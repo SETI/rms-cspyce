@@ -75,6 +75,42 @@ class test_array1_2(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array1_2(None)
 
+class test_array1_3(unittest.TestCase):
+    # %apply (int* IN_ARRAY1, int DIM1) {(int* arg)};
+    # This function is exactly like test_array_1_2, except the length is passed separately
+    def test_basic_test_tuple(self):
+        self.assertEqual((1, 2, 3, 4, 5), ts.in_array1_3([1, 2, 3, 4, 5], 5))
+
+    def test_basic_test_array(self):
+        arg = np.arange(1, 10, dtype='int32')
+        self.assertEqual(flatten(arg), ts.in_array1_3(arg, len(arg)))
+
+    def test_okay_to_pass_empty_list(self):
+        self.assertEqual((), ts.in_array1_3((), 0))
+
+    def test_non_contiguous_array(self):
+        array = np.arange(12, dtype='int32').reshape((4, 3))[:, 1]
+        self.assertEqual(flatten(array), ts.in_array1_3(array, len(array)))
+
+    def test_requires_integer_array(self):
+        with self.assertRaises(ValueError):
+            ts.in_array1_3(np.arange(10.0), 1)
+
+    def test_requires_one_dimensional_array(self):
+        array = np.zeros((3, 3), dtype="int32")
+        with self.assertRaises(ValueError):
+            ts.in_array1_3(array, 9)
+
+    def test_requires_one_dimensional_int_array(self):
+        array = np.zeros((3, 3), dtype="double")
+        with self.assertRaises(ValueError):
+            ts.in_array1_3(array, 9)
+
+    def test_requires_non_null(self):
+        with self.assertRaises(TypeError):
+            ts.in_array1_3(None, 0)
+
+
 class test_array1_01_1(unittest.TestCase):
     # %apply (int *IN_ARRAY01, int DIM1) {(int *arg, int dim)};
     # cs.in_array01_1 received either an int scalar or sequence of integer, and

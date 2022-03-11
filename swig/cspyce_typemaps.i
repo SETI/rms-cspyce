@@ -922,7 +922,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 %typemap(in)
     (Type *IN_ARRAY1)                                 // PATTERN
         (PyArrayObject* pyarr=NULL),
-    (Type IN_ARRAY1[])                            // PATTERN
+    (Type IN_ARRAY1[])                               // PATTERN
         (PyArrayObject* pyarr=NULL)
 {
 //      (Type *IN_ARRAY1)
@@ -930,7 +930,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
 
-    $1 = ($2_ltype) PyArray_DATA(pyarr);                          // ARRAY
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                          // ARRAY
 }
 
 /*******************************************************
