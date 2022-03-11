@@ -36,6 +36,9 @@ except:
 import numpy
 from glob import glob
 import subprocess
+import sys
+
+PYTHON2 = sys.version_info[0] < 3
 
 class GenerateCommand(Command):
     description = 'Create generated files'
@@ -48,10 +51,16 @@ class GenerateCommand(Command):
         pass
 
     def run(self):
-        from swig.make_vectorize import create_vectorize_header_file
-        create_vectorize_header_file("swig/vectorize.i")
-        command = "swig -python -outdir cspyce/. -o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
-        subprocess.check_call(command)
+        if not PYTHON2:
+            print("Recreating the vectorize macros")
+            from swig.make_vectorize import create_vectorize_header_file
+            create_vectorize_header_file("swig/vectorize.i")
+            print("Rerunning swig")
+            command = "swig -python -outdir cspyce/. -o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
+            subprocess.check_call(command)
+        else:
+            command = "echo Cannot rebuild files in Python2".split(' ')
+            subprocess.check_call(command)
 
 cspice_module = Extension(
     'cspyce.cspice',
