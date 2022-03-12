@@ -33,9 +33,8 @@ try:
 except ImportError as err:
     if os.getenv("CSPICE_DEVELOPMENT"):
         print("Package cspyce2 not found.  Error ignored.")
-        pass
     else:
-        print("Set environment variable 'CSPICE_DEVELOPMENT' to 'True' to ignore this error")
+        print("Set environment variable 'CSPICE_DEVELOPMENT' to '1' to ignore this error")
         raise err
 
 # A set of keywords listing options set globally across the cspyce functions
@@ -178,7 +177,7 @@ def _get_func_names(funcs=[], source=None):
 ################################################################################
 
 def get_all_funcs(source=None, cspyce_dict=None):
-    """A dictionary of all cspyce functions, keyed by their names.
+    """Return a dictionary of all cspyce functions, keyed by their names.
 
     Inputs:
         source      the dictionary to search, which defaults to globals().

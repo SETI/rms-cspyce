@@ -12,12 +12,14 @@ distribition of the sources.
 ## SETTING UP
 
 The root of the github tree is called `pds-cspyce`.
-When we use `pds-cspcyce` in this document, we are referring to that directory,
+When we use `pds-cspyce` in this document, we are referring to that directory,
 wherever it happens to be on your computer.
 
 The github source code intentionally does not include the source code to
 cspice itself.
-You should download the cspice sources from XXXX.
+You should download the cspice sources from
+https://naif.jpl.nasa.gov/naif/toolkit.html. 
+The current SPICE Toolkit version is N0067, released January 3, 2022.
 You should make a soft link from your cspice directory to `pds-cspyce/cspice`.
 ```shell
 ln -s <path-to-your-cspice-directory> <path-to-your-pds-cspyce>/cspice
@@ -26,7 +28,7 @@ Confirm that `pds-cspyce/cspice/include` has a bunch of `.h` files and that
 `pds-cspyce/cspice/src/cspice` contains several thousand `.c` files.
 
 ## BUILDING CSPYCE
-Whenever I use the program `python` as a command, I mean your specific Python
+Whenever we use the program `python` as a command, we mean your specific Python
 runtime.  If you have multiple versions of Python installed on your computer,
 you may need to be running `python2` and `python3`, or `python3.7` and
 `python3.8`.
@@ -35,24 +37,32 @@ In general, our `.py` and `.c` sources should work across all implementations of
 Python beyond 2.7. There is no expectation of binary compatibility between
 multiple versions.
 
-You build `cspyce` by running the command
+You must have swig and at least one version of Python3 running on your computer
+for the first step:
+```shell
+python3 setup.py build generate
+```
+This step re-creates all the generated files .py and .c needed to implement
+the templates.  
+
+You compile the c-implementation of the Spice library by running:
+```shell
+python setup.py build build_clib
+```
+This will execute somewhat slowly because it is compiling several thousand files.  
+You should only need to do this once.
+
+You then build `cspyce` by running the command
 ```shell
 python setup.py build_ext --inplace
 ```
+It is particularly important that you execute this command using the same
+version of Python that you are planning to use for running cspyce.
+Python does not guarantee binary compatibility between Python versions.
 
-If you have modified any of the template files, you should instead run
-```shell
-python setup.py generate build_ext --inplace
-```
-The Python setuptools is not yet smart enough to understand dependencies,
-and you must tell it to regenerate `cspcye0_wrap.c` whenever any of the files
-that affect it have changed.
-
-The first time you run one of these commands will be slow, as the build
-system also recompiles all of the spice code and generates a shared libray
-for it.
-Subsequent builds should be fast.
-
+If you modify any of the templates, you will need to re-run the "generate"
+command above (using Python3) and the "build_ext" command.
+The Python setuptools is not yet smart enough to understand dependencies.
 
 Once you have built `cspyce`, you should confirm that it works.
 ```shell
@@ -61,7 +71,7 @@ python
 > cspyce.tkvrsn('toolkit')
 ```
 
-## CREATING a DISTRIBUTION
+## CREATING A DISTRIBUTION
 
 ### Source Distributions
 

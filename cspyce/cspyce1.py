@@ -104,12 +104,9 @@
 ################################################################################
 
 import sys
-import os
 import numpy as np
 import textwrap
 
-# import cspyce.cspyce0 as cspyce0
-# from cspyce.cspyce0 import *
 from cspyce import cspyce0
 from cspyce.cspyce0 import *
 
