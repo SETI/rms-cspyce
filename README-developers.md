@@ -29,7 +29,7 @@ Confirm that `pds-cspyce/cspice/include` has a bunch of `.h` files and that
 
 ## BUILDING CSPYCE
 Whenever we use the program `python` as a command, we mean your specific Python
-runtime.  If you have multiple versions of Python installed on your computer,
+runtime. If you have multiple versions of Python installed on your computer,
 you may need to be running `python2` and `python3`, or `python3.7` and
 `python3.8`.
 
@@ -43,13 +43,13 @@ for the first step:
 python3 setup.py build generate
 ```
 This step re-creates all the generated files .py and .c needed to implement
-the templates.  
+the templates. 
 
 You compile the c-implementation of the Spice library by running:
 ```shell
 python setup.py build build_clib
 ```
-This will execute somewhat slowly because it is compiling several thousand files.  
+This will execute somewhat slowly because it is compiling several thousand files. 
 You should only need to do this once.
 
 You then build `cspyce` by running the command
@@ -69,10 +69,17 @@ Once you have built `cspyce`, you should confirm that it works.
 python
 > import cspyce
 > cspyce.tkvrsn('toolkit')
+'CSPICE_N0067'
 ```
-
+Your actual toolkit version will depends on what you downloaded from NAIF.
 ## CREATING A DISTRIBUTION
 
+### Before you begin
+
+Make sure you have the latest versions of the necessary Python software:
+```shell
+python -m pip install --upgrade pip setuptools wheel twine
+```
 ### Source Distributions
 
 The simplist type of distribution is a source distribution:
@@ -82,7 +89,7 @@ python setup.py sdist
 ```
 This will create a filel named `dist/cspyce-<version>.tar.gz`.
 This file can be uploaded at PyPI and then downloaded by any version of
-Python on any operating system.  The `.tar.gz` contains all the sources needed
+Python on any operating system. The `.tar.gz` contains all the sources needed
 to compile and run `cspyce`.
 It includes the necessary pieces of the `cspice/` source tree as well as an
 already generated `cspyce0_wrap.c` file so that they do not need to install 
@@ -93,7 +100,7 @@ library are being compiled.
 
 ### Wheel distributions
 
-A second type of distribution is the "wheel".  
+A second type of distribution is the "wheel". 
 ```shell
 python setup.py bdist_wheel
 ```
@@ -106,10 +113,6 @@ The installation of a wheel, if you have the correct one, is incredibly quick.
 All binaries have been pre-compiled, and the various files simply need to be put
 into the correct place.
 
-### Tags
-
-To be written
-
 ### Multiple distributions
 
 Multiple distributions can be created with a single command:
@@ -118,6 +121,62 @@ python setup.py bdist_wheel sdist
 ```
 This is particularly useful with tags.
 
+### Tags
+
+If you are planning on uploading your distributions to PyPI or test.PyPI, you
+must ensure that it has a unique version number.
+Neither site allows you to upload the same same source distribution twice,
+even if you have deleted a version.
+
+By default, the version is that given in the `setup.py`.
+You add a suffix to this command by including `egginfo -b <tag>` where the tag
+is either one of the letters a (for alpha), b (for beta), or c (for release
+candidate). The digit can optionally be followed by a number. 
+
+Hence a series of releases can be created by
+```
+python setup.py egg_info -b a1 sdist bdist_wheel
+```
+```
+python setup.py egg_info -b a2 sdist bdist_wheel
+```
+etc. without causing a naming conflict at the distribution sites.
+
 ## UPLOADING A DISTRIBUTION TO PyPI
 
-To be written.
+Although `setup.py` supports the command `upload`, this usage has been deprecated.
+You should instead use twine.
+
+The distributions you created above will be in a subdirectory `dist/`. 
+
+You upload a distribution to test.pypi
+```shell
+twine upload --repository testpypi <file1>, <file2>, <file3>, ...
+```
+(`--repository` can be shorted to `-r`)
+You upload a distribution to the main PyPI repository by simply running
+```shell
+twine upload <file1>, <file2>, ...
+```
+In either case, you will be asked for your name and password.
+The name and password for test.pypi are separate from the name and password for the
+main PyPI repository.
+
+You can create the following file at `~/.pypirc`
+```
+[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+repository = https://upload.pypi.org/legacy/
+username = your_pypi_username
+password = your_pypi_password
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = your_test_pypi_usename
+password = your_test_pypi_password
+```
+Be sure to make this file publicly unreadable since it contains your passwords.
