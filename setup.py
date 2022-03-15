@@ -10,6 +10,8 @@
 
 
 # We prefer setuptools, but will use distutils if setuptools isn't available
+import math
+
 try:
     from setuptools import Command, setup, Extension
     from setuptools.command.build_py import build_py
@@ -55,31 +57,21 @@ class GenerateCommand(Command):
             subprocess.check_call(command)
 
 
-if not IS_WINDOWS:
-    cspice_cflags = ['-Wno-incompatible-pointer-types', '-Wno-parentheses',
-                     '-Wno-implicit-int', "-Wno-shift-op-parentheses",
-                     '-Wno-logical-op-parentheses', '-Wno-sign-compare',
-                     '-Wno-pointer-to-int-cast', '-Wno-strict-prototypes']
-    lib_cspice = ("cspice", {
-        "sources": glob("cspice/src/cspice/*.c"),
-        "include_dirs": ["cspice/include",],
-        "cflags": cspice_cflags,
-     })
-    cspice_libraries = [lib_cspice]
-else:
-    # The Windows linker cannot seem to handle 2400 files at once.  We split the
-    # files into 5 equal sized groups, and build five libraries.
-    splits = 5
-    files = glob("cspice/src/cspice/*.c")
+# Some linkers seem to have trouble with 2400 files.  So we break it up into
+# smaller libraries with a maximum of 500 files apiece.
+
+def get_c_libraries():
+    files = sorted(glob("cspice/src/cspice/*.c"))
+    splits = int(math.ceil(len(files) / 500))
+    compiler_flags = ['-DKR_headers', '-DMSDOS', '/nowarn'] if IS_WINDOWS else ['-w']
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
             "sources": files[i::splits],
             "include_dirs": ["cspice/include", ],
-            # These seem to be the flags that Windows requires
-            "cflags": ['-DKR_headers', '-DMSDOS', '/nowarn'],
+            "cflags": compiler_flags
         })
         for i in range(splits)]
-
+    return cspice_libraries
 
 if IS_WINDOWS:
     cspyce_cflags = ['/nowarn']
@@ -107,7 +99,7 @@ setup(
     author="Mark Showalter/PDS Ring-Moon Systems Node",
     description="Low-level SWIG interface to the CSPICE library",
     ext_modules=[cspyce0_module, typemap_samples_module],
-    libraries=cspice_libraries,
+    libraries=get_c_libraries(),
     packages=["cspyce"],
     install_requires=['numpy'],
     cmdclass={

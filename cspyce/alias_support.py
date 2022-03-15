@@ -481,7 +481,7 @@ def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
 
     If the list of alias indices is empty, then recursion stops and this
     evaluates the function with the given set of alias values. On success, it
-    returns the result. On failure, it raises a NotImplementedError, which will
+    returns the result. On failure, it raises a _AliasFailure, which will
     cause the "parent" of this function to try again its next possible value
     of the alias.
     """
@@ -516,7 +516,7 @@ def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
             raise NotImplementedError()
 
     except Exception:
-        raise NotImplementedError()
+        raise _AliasFailure()
 
     # Make sure the results correspond to the proper version of the function
     if func is func.error:

@@ -118,7 +118,7 @@ from cspyce.cspyce_info import \
 
 # Global variables used below
 import __main__
-INTERACTIVE = not hasattr(__main__, '__file__');
+INTERACTIVE = not hasattr(__main__, '__file__')
 CSPYCE_ERRACT = 'EXCEPTION'         # A local copy of the requested erract.
 
 PYTHON2 = sys.version_info[0] < 3
@@ -497,7 +497,7 @@ def gnpool_error(name, start=0):
         return []
 
     if start > len(kvars):
-        setmsg('kernel pool has only %s ' % count +
+        setmsg('kernel pool has only %s ' % len(kvars) +
                'variables matching template "%s";' % name +
                'start index value %s is too large' % start)
         sigerr('SPICE(INDEXOUTOFRANGE)')
@@ -657,13 +657,6 @@ def ckgp_vector_error(inst, sclkdp, tol, ref):
         chkout('ckgp_vector_error')
 
     return [cmat, clkout]
-
-def ckgpav_vector_error(inst, sclkdp, tol, ref):
-    (cmat, av, clkout, found) = cspyce0.ckgpav_vector(inst, sclkdp, tol, ref)
-    if not np.all(found):
-        raise ValueError('Error in ckgpav_vector(): C matrix not found')
-
-    return [cmat, av, clkout]
 
 def ckgpav_vector_error(inst, sclkdp, tol, ref):
     (cmat, av, clkout, found) = cspyce0.ckgpav_vector(inst, sclkdp, tol, ref)

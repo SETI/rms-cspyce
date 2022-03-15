@@ -177,12 +177,12 @@ def _get_func_names(funcs=[], source=None):
 ################################################################################
 
 def get_all_funcs(source=None, cspyce_dict=None):
-    """Return a dictionary of all cspyce functions, keyed by their names.
+    """ dictionary of all cspyce functions, keyed by their names.
 
     Inputs:
         source      the dictionary to search, which defaults to globals().
         cspyce_dict is used internally for recursion; it should not be
-                    referenced in internal calls.
+                    referenced in external calls.
     """
 
     source = source or globals()
