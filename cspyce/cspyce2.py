@@ -96,7 +96,7 @@ def populate_cspyce2():
     def wrapper(f):
         @wraps(f)
         def runner(*args, **kwargs):
-            f(*args, **kwargs)
+            return f(*args, **kwargs)
         return runner
     for name, func in cspyce1.__dict__.items():
         if callable(func) and hasattr(func, 'ARGNAMES'):
