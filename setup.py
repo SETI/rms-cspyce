@@ -28,6 +28,7 @@ import numpy
 
 PYTHON2 = sys.version_info[0] < 3
 IS_WINDOWS = os.name == 'nt'
+IS_POSIX = os.name == 'posix'
 
 
 class GenerateCommand(Command):
@@ -62,7 +63,7 @@ class GenerateCommand(Command):
 
 def get_c_libraries():
     files = sorted(glob("cspice/src/cspice/*.c"))
-    splits = int(math.ceil(len(files) / 500))
+    splits = 1 if IS_POSIX else int(math.ceil(len(files) / 500))
     compiler_flags = ['-DKR_headers', '-DMSDOS', '/nowarn'] if IS_WINDOWS else ['-w']
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
