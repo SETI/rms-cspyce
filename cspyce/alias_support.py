@@ -6,6 +6,7 @@
 import sys
 import re
 import inspect
+from collections import deque
 
 import cspyce
 import cspyce.cspyce1 as cspyce1
@@ -98,21 +99,20 @@ def define_body_aliases(*items):
     should be given exactly as you wish them to appear.
     """
 
-    queue = list(items) # Make a copy
+    queue = deque(items) # Make a copy
     code_list = []
     name_list = []  # Stripped of surrounding whitespace; not otherwise modified
     aliases = set()
 
     # Expand lists to include everything
     while len(queue) > 0:
-        item = queue[0]
-        queue = queue[1:]
+        item = queue.popleft()
 
         if item in aliases:
             continue
 
         (codes, names) = get_body_aliases(item)
-        queue += codes + names
+        queue.extend(codes + names)
 
         if isinstance(item, int):
             code_list.append(item)
@@ -154,21 +154,20 @@ def define_frame_aliases(*items):
     should be given exactly as you wish them to appear.
     """
 
-    queue = list(items) # Make a copy
+    queue = deque(items) # Make a copy
     code_list = []
     name_list = []  # Stripped of surrounding whitespace; not otherwise modified
     aliases = set()
 
     # Expand lists to include everything
     while len(queue) > 0:
-        item = queue[0]
-        queue = queue[1:]
+        item = queue.popleft()
 
         if item in aliases:
             continue
 
         (codes, names) = get_frame_aliases(item)
-        queue += codes + names
+        queue.extend(codes + names)
 
         if isinstance(item, int):
             code_list.append(item)
@@ -196,16 +195,16 @@ def define_frame_aliases(*items):
     if needed > 0:
         code_list = code_list + needed * [code_list[-1]]
 
-    # Otherwise, add these pairs to the dictionary of frame overrides
+    # Otherwise, add these pairs to the dictionary of frame overrides`
     else:
         for (name, code) in zip(name_list, code_list):
             key = _as_key(name)
-            spice1.FRAME_NAME_OVERRIDES[code] = name
-            spice1.FRAME_NAME_OVERRIDES[name] = name
-            spice1.FRAME_NAME_OVERRIDES[key ] = name
-            spice1.FRAME_CODE_OVERRIDES[code] = code
-            spice1.FRAME_CODE_OVERRIDES[name] = code
-            spice1.FRAME_CODE_OVERRIDES[key ] = code
+            cspyce1.FRAME_NAME_OVERRIDES[code] = name
+            cspyce1.FRAME_NAME_OVERRIDES[name] = name
+            cspyce1.FRAME_NAME_OVERRIDES[key ] = name
+            cspyce1.FRAME_CODE_OVERRIDES[code] = code
+            cspyce1.FRAME_CODE_OVERRIDES[name] = code
+            cspyce1.FRAME_CODE_OVERRIDES[key ] = code
 
 def _as_key(name):
     """Convert names to upper case and replace duplicated spaces with one;
