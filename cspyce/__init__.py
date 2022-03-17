@@ -44,6 +44,7 @@ GLOBAL_STATUS = set()
 # Define functions to select between error and flag versions of functions
 ################################################################################
 
+
 def use_errors(*funcs):
     """Switch the listed functions or names of functions to use the "error"
     version by default. If the list is empty, apply this operation to all cspyce
@@ -155,7 +156,7 @@ def use_scalars(*funcs):
                                  and 'array' not in name):
             globals()[name] = globals()[name].scalar
 
-def _get_func_names(funcs=[], source=None):
+def _get_func_names(funcs=(), source=None):
     """Convert a list of cspyce functions or names to a set of unique names,
     including all version suffixes.
     """
@@ -244,7 +245,7 @@ def validate_func(func, source=None):
             raise KeyError('Unrecognized function name "%s"' % full_name)
 
     if not callable(func):
-        raise ValueError('Not a function: "%s"' % full_name)
+        raise ValueError('Not a function: "%s"' % func.__name__)
 
     if not hasattr(func, 'SIGNATURE'):
         raise ValueError('Not a cspyce function: "%s"' % func.__name__)

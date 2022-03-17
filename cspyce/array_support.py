@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import numpy as np
 import sys
-import warnings
 import inspect
 
 import cspyce
@@ -289,7 +288,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
         arg = arg.reshape((-1,) + item)
 
         # Restore into the function arguments
-        _setarg(indx, args, keywords)
+        _setarg(indx, arg, args, keywords)
 
     # Execute the function
     cspyce1.chkin(func.array.__name__)
