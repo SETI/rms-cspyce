@@ -1,7 +1,7 @@
 # `cspyce` MODULE OVERVIEW
-Version 0.9
+Version 2.0
 
-December, 2017
+March, 2022
 
 Mark Showalter, PDS Ring-Moon Systems Node, SETI Institute
 
