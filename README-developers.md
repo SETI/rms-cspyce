@@ -34,20 +34,20 @@ you may need to be running `python2` and `python3`, or `python3.7` and
 `python3.8`.
 
 In general, our `.py` and `.c` sources should work across all implementations of 
-Python beyond 2.7. There is no expectation of binary compatibility between
+Python beyond 2.7. However, there is no expectation of binary compatibility between
 multiple versions.
 
-You must have swig and at least one version of Python3 running on your computer
-for the first step:
+You must have swig and at least one newer version (≥ 3.8) of Python3 running on 
+your computer for the first step:
 ```shell
-python3 setup.py build generate
+python3 setup.py generate
 ```
 This step re-creates all the generated files .py and .c needed to implement
 the templates. 
 
 You compile the c-implementation of the Spice library by running:
 ```shell
-python setup.py build build_clib
+python setup.py build_clib
 ```
 This will execute somewhat slowly because it is compiling several thousand files. 
 You should only need to do this once.
@@ -71,7 +71,7 @@ python
 > cspyce.tkvrsn('toolkit')
 'CSPICE_N0067'
 ```
-Your actual toolkit version will depends on what you downloaded from NAIF.
+Your actual result will depends on which toolkit version you downloaded from NAIF.
 ## CREATING A DISTRIBUTION
 
 ### Before you begin
