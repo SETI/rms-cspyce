@@ -5,19 +5,8 @@
 #
 # This module implements support for multidimensional arrays by building upon
 # all of the vectorized functions in the cspyce module. Upon importing this
-# module, a new function is defined with for each "_vector" function, with
-# "_array" replacing "_vector".
-
-TBD
-#  a more powerful overlay onThe low-level "_vector" versions of cspyce routines allow a CSPICE function to
-# be called iteratively with 1-D list of inputs. Calling the _vector version of
-# a cspyce function can be much faster than looping through the calls in Python.
-# However, the _vector versions only allow one extra dimension on each floating-
-# point input.
-#
-# Upon importing this module, a new function is defined for every cspyce
-# "_vector" function. The new function has the same name as the
-# pre-existing function, but with "_array" replacing "_vector".
+# module, a new function is defined for each "_vector" function, with the same
+# name except "_array" replacing "_vector".
 #
 # The key difference is that the "_array" functions follow all of the standard
 # NumPy rules for array broadcasting. Input arguments to cspyce _array functions

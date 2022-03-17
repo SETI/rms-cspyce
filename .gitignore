@@ -1,5 +1,9 @@
-*.pyc
-*.so
-*/*.pyc
-*/*.so
-cspyce/cspyce0/cspice
+**/*.pyc
+**/*.so
+**/cspice/
+**/build/
+/.idea/
+cspice
+dist/
+cspyce.egg-info/
+**/*wrap.c

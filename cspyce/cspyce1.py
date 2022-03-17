@@ -17,7 +17,9 @@
 # DOCSTRINGS
 # - All cspyce functions have informative docstrings, so typing
 #       help(function)
-#   provides useful information.
+#   provides useful information. However, the call signature appearing in the
+#   first line of the help text is still defined by cspyce0 and may not make
+#   sense to the reader. This issue is fixed by module cspyce2.
 #
 # DEFAULTS
 # - Many cspyce functions take sensible default values if input arguments are
@@ -102,13 +104,13 @@
 ################################################################################
 
 import sys
-import os
 import numpy as np
 import textwrap
 
-import cspyce.cspyce0 as cspyce0
+from cspyce import cspyce0
 from cspyce.cspyce0 import *
 
+# from cspyce.cspyce_info import \
 from cspyce.cspyce_info import \
     CSPYCE_SIGNATURES, CSPYCE_ARGNAMES, CSPYCE_DEFAULTS, \
     CSPYCE_RETURNS, CSPYCE_RETNAMES, CSPYCE_DEFINITIONS, \
@@ -116,8 +118,10 @@ from cspyce.cspyce_info import \
 
 # Global variables used below
 import __main__
-INTERACTIVE = not hasattr(__main__, '__file__');
+INTERACTIVE = not hasattr(__main__, '__file__')
 CSPYCE_ERRACT = 'EXCEPTION'         # A local copy of the requested erract.
+
+PYTHON2 = sys.version_info[0] < 3
 
 ################################################################################
 # GET/SET handling
@@ -132,7 +136,8 @@ def erract(op, action):
     traceback_name = 'erract_wrapper'
 
     # Clear an existing error first
-    if failed(): return None
+    if failed():
+        return None
 
     # GET...
     op = op.upper().strip()
@@ -492,7 +497,7 @@ def gnpool_error(name, start=0):
         return []
 
     if start > len(kvars):
-        setmsg('kernel pool has only %s ' % count +
+        setmsg('kernel pool has only %s ' % len(kvars) +
                'variables matching template "%s";' % name +
                'start index value %s is too large' % start)
         sigerr('SPICE(INDEXOUTOFRANGE)')
@@ -656,13 +661,6 @@ def ckgp_vector_error(inst, sclkdp, tol, ref):
 def ckgpav_vector_error(inst, sclkdp, tol, ref):
     (cmat, av, clkout, found) = cspyce0.ckgpav_vector(inst, sclkdp, tol, ref)
     if not np.all(found):
-        raise ValueError('Error in ckgpav_vector(): C matrix not found')
-
-    return [cmat, av, clkout]
-
-def ckgpav_vector_error(inst, sclkdp, tol, ref):
-    (cmat, av, clkout, found) = cspyce0.ckgpav_vector(inst, sclkdp, tol, ref)
-    if not np.all(found):
         name = cspyce0.frmnam(inst)
         if name:
             namestr = ' (' + name + ')'
@@ -706,6 +704,17 @@ def invert_vector_error(m1):
         chkout('invert_error')
 
     return inverses
+
+################################################################################
+# This is the one function that takes an array of strings as input. This fix
+# allows it to work in a sensible way if a single input string is provided.
+################################################################################
+
+def pcpool(name, cvals):
+    if isinstance(cvals, str):
+        cspyce0.pcpool(name, [cvals])
+    else:
+        cspyce0.pcpool(name, cvals)
 
 ################################################################################
 # Prepare for the possible use of aliases
@@ -782,12 +791,15 @@ def assign_docstring(func, note=""):
 
     ltype = 0
     types = []
-    for type in func.SIGNATURE + func.RETURNS:
-        type = type.replace('time','float').replace('rotmat','float')
-        type = type.replace('body_code','int').replace('body_name','string')
-        type = type.replace('frame_code','int').replace('frame_name','string')
-        ltype = max(ltype, len(type))
-        types.append(type)
+    for arg_type in func.SIGNATURE + func.RETURNS:
+        arg_type = (arg_type.replace('time', 'float')
+                            .replace('rotmat', 'float')
+                            .replace('body_code', 'int')
+                            .replace('body_name', 'string')
+                            .replace('frame_code', 'int')
+                            .replace('frame_name', 'string'))
+        ltype = max(ltype, len(arg_type))
+        types.append(arg_type)
 
     indent = 2 + ltype + 1 + lname + 3
     ldefs = 72 - indent
@@ -800,9 +812,9 @@ def assign_docstring(func, note=""):
     else:
         doclist += ['\n']
 
-    for (name, type) in zip(names[:inputs], types[:inputs]):
+    for (name, arg_type) in zip(names[:inputs], types[:inputs]):
         desc = textwrap.wrap(func.DEFINITIONS[name], ldefs)
-        doclist += ['  ', type, (ltype - len(type))*' ', ' ']
+        doclist += ['  ', arg_type, (ltype - len(arg_type))*' ', ' ']
         doclist += [name, (lname - len(name))*' ', ' = ']
         doclist += [desc[0], '\n']
         for k in range(1, len(desc)):
@@ -814,9 +826,9 @@ def assign_docstring(func, note=""):
     else:
         doclist += ['\n']
 
-    for (name, type) in zip(names[inputs:], types[inputs:]):
+    for (name, arg_type) in zip(names[inputs:], types[inputs:]):
         desc = textwrap.wrap(func.DEFINITIONS[name], ldefs)
-        doclist += ['  ', type, (ltype - len(type))*' ', ' ']
+        doclist += ['  ', arg_type, (ltype - len(arg_type))*' ', ' ']
         doclist += [name, (lname - len(name))*' ', ' = ']
         doclist += [desc[0], '\n']
         for k in range(1, len(desc)):
@@ -844,7 +856,10 @@ for name in CSPYCE_SIGNATURES:
     func.DEFINITIONS = CSPYCE_DEFINITIONS[name]
 
     if name in CSPYCE_DEFAULTS:
-        func.func_defaults = tuple(CSPYCE_DEFAULTS[name])
+        if PYTHON2:
+            func.func_defaults = tuple(CSPYCE_DEFAULTS[name])
+        else:
+            func.__defaults__ = tuple(CSPYCE_DEFAULTS[name])
 
     assign_docstring(func)
 
@@ -855,23 +870,29 @@ CSPYCE_BASENAMES = {n for n in CSPYCE_ABSTRACT.keys() if not n.endswith('_error'
 # Assign docstrings, signatures, etc. to the _vector functions
 ################################################################################
 
-# type -> (type for input, type for output)
+# arg_type -> (arg_type for input, arg_type for output)
 VECTORIZED_ARGS = {
-    'time'       : ('time[*]'      , 'time[*]'      ),
-    'float'      : ('float[*]'     , 'float[*]'     ),
-    'float[2]'   : ('float[*,2]'   , 'float[*,2]'   ),
-    'float[3]'   : ('float[*,3]'   , 'float[*,3]'   ),
-    'float[4]'   : ('float[*,4]'   , 'float[*,4]'   ),
-    'float[6]'   : ('float[*,6]'   , 'float[*,6]'   ),
-    'float[8]'   : ('float[*,8]'   , 'float[*,8]'   ),
-    'float[9]'   : ('float[*,9]'   , 'float[*,9]'   ),
-    'float[2,2]' : ('float[*,2,2]' , 'float[*,2,2]' ),
-    'float[3,3]' : ('float[*,3,3]' , 'float[*,3,3]' ),
-    'float[6,6]' : ('float[*,6,6]' , 'float[*,6,6]' ),
-    'rotmat[3,3]': ('rotmat[*,3,3]', 'rotmat[*,3,3]'),
-    'rotmat[6,6]': ('rotmat[*,6,6]', 'rotmat[*,6,6]'),
-    'int'        : ('int'          , 'int[*]'       ),
-    'bool'       : ('bool'         , 'bool[*]'      ),
+    'time'       : ('time[_]'      , 'time[_]'      ),
+    'float'      : ('float[_]'     , 'float[_]'     ),
+    'float[2]'   : ('float[_,2]'   , 'float[_,2]'   ),
+    'float[3]'   : ('float[_,3]'   , 'float[_,3]'   ),
+    'float[4]'   : ('float[_,4]'   , 'float[_,4]'   ),
+    'float[6]'   : ('float[_,6]'   , 'float[_,6]'   ),
+    'float[8]'   : ('float[_,8]'   , 'float[_,8]'   ),
+    'float[9]'   : ('float[_,9]'   , 'float[_,9]'   ),
+    'float[2,2]' : ('float[_,2,2]' , 'float[_,2,2]' ),
+    'float[3,3]' : ('float[_,3,3]' , 'float[_,3,3]' ),
+    'float[6,6]' : ('float[_,6,6]' , 'float[_,6,6]' ),
+    'float[*]'   : ('float[_,*]'   , 'float[_,*]'   ),
+    'float[*,*]' : ('float[_,*,*]' , 'float[_,*,*]' ),
+    'rotmat[3,3]': ('rotmat[_,3,3]', 'rotmat[_,3,3]'),
+    'rotmat[6,6]': ('rotmat[_,6,6]', 'rotmat[_,6,6]'),
+    'int'        : ('int'          , 'int[_]'       ),
+    'bool'       : ('bool'         , 'bool[_]'      ),
+    'body_code'  : ('body_code'    , 'body_code[_]' ), # not used (yet)
+    'frame_code' : ('frame_code'   , 'frame_code[_]'), # not used (yet)
+    'body_name'  : ('body_name'    , 'body_name[_]' ), # not used (yet)
+    'frame_name' : ('frame_name'   , 'frame_name[_]'), # not used (yet)
 }
 
 def _vectorize_signature(signature):

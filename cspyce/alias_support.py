@@ -3,9 +3,14 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
+import sys
 import re
+import inspect
+
 import cspyce
 import cspyce.cspyce1 as cspyce1
+
+PYTHON2 = sys.version_info[0] < 3
 
 # Global dictionaries used to track aliases
 BODY_CODE_ALIASES = {}
@@ -26,7 +31,7 @@ def get_body_aliases(item):
         pass
 
     try:
-        if type(item) == str:
+        if isinstance(item, str):
             item = cspyce1.bodn2c_error(item)
 
         return ([item], [cspyce1.bodc2n_error(item)]) # this corrects name case
@@ -34,7 +39,7 @@ def get_body_aliases(item):
         pass
 
     try:
-        if type(item) == str:
+        if isinstance(item, str):
             item = int(item)
 
         return ([item], [cspyce1.bodc2n_error(item)])
@@ -56,7 +61,7 @@ def get_frame_aliases(item):
         pass
 
     try:
-        if type(item) == str:
+        if isinstance(item, str):
             item = cspyce1.namfrm_error(item)
 
         return ([item], [cspyce1.frmnam_error(item)]) # this corrects name case
@@ -64,7 +69,7 @@ def get_frame_aliases(item):
         pass
 
     try:
-        if type(item) == str:
+        if isinstance(item, str):
             item = int(item)
 
         return ([item], [cspyce1.frmnam_error(item)])
@@ -103,12 +108,13 @@ def define_body_aliases(*items):
         item = queue[0]
         queue = queue[1:]
 
-        if item in aliases: continue
+        if item in aliases:
+            continue
 
         (codes, names) = get_body_aliases(item)
         queue += codes + names
 
-        if type(item) == int:
+        if isinstance(item, int):
             code_list.append(item)
             aliases.add(item)
 
@@ -158,12 +164,13 @@ def define_frame_aliases(*items):
         item = queue[0]
         queue = queue[1:]
 
-        if item in aliases: continue
+        if item in aliases:
+            continue
 
         (codes, names) = get_frame_aliases(item)
         queue += codes + names
 
-        if type(item) == int:
+        if isinstance(item, int):
             code_list.append(item)
             aliases.add(item)
 
@@ -205,7 +212,8 @@ def _as_key(name):
     return ints unchanged.
     """
 
-    if type(name) == int: return name
+    if isinstance(name, int):
+        return name
 
     name = name.upper().strip()
     while ('  ' in name):
@@ -224,7 +232,8 @@ def _expand_name_list(code_list, name_list):
     """Make sure there is at least one name for each code."""
 
     lcodes = len(code_list)
-    if lcodes <= len(name_list): return name_list
+    if lcodes <= len(name_list):
+        return name_list
 
     # Remove versioned names (ending with " Vn" for integer n)
     unversioned_names = []
@@ -268,10 +277,37 @@ def _alias_signature(func):
 
 def _alias_name(name):
     parts = name.split('_')
-    if len(parts) > 1 and parts[1] == 'alias': return name
+    if len(parts) > 1 and parts[1] == 'alias':
+        return name
 
     parts = [parts[0], 'alias'] + parts[1:]
     return '_'.join(parts)
+
+def _validate_args(func, args, keywords):
+    """Signal error if an alias is of the wrong type."""
+
+    for indx in list(range(len(args))) + list(keywords.keys()):
+
+        if indx not in func.ALIAS_ARGS:
+            continue
+
+        # Get argument type and translate
+        arg = _getarg(indx, args, keywords)
+        argtype = func.ALIAS_ARGS[indx]
+
+        if isinstance(arg, int) and not argtype[-4:] == 'code':
+            name = indx if isinstance(indx, str) else func.ARGNAMES[indx]
+            body_or_frame = argtype.split('_')[0]
+            cspyce1.setmsg('%s code %d not found in kernel pool' %
+                           (body_or_frame, arg))
+            cspyce1.sigerr('SPICE(' + body_or_frame.upper() + 'IDNOTFOUND)')
+
+        elif isinstance(arg, str) and not argtype[-4:] == 'name':
+            name = indx if isinstance(indx, str) else func.ARGNAMES[indx]
+            body_or_frame = argtype.split('_')[0]
+            cspyce1.setmsg('%s name "%s" not found in kernel pool' %
+                           (body_or_frame, arg))
+            cspyce1.sigerr('SPICE(' + body_or_frame.upper() + 'NAMENOTFOUND)')
 
 def alias_version(func):
     """Wrapper function to support aliasing of SPICE body names or codes.
@@ -285,7 +321,8 @@ def alias_version(func):
         for k in range(len(func.ARGNAMES)):
             sig = func.SIGNATURE[k]
             if sig not in ('body_name', 'body_code',
-                           'frame_name', 'frame_code'): continue
+                           'frame_name', 'frame_code'):
+                continue
 
             alias_args[k] = sig
             alias_args[func.ARGNAMES[k]] = sig
@@ -301,16 +338,20 @@ def alias_version(func):
         return _exec_with_aliases(wrapper, func, *args, **keywords)
 
     # Copy type info but not function version links
-    for (key, value) in func.__dict__.iteritems():
-        if type(value).__name__ != 'function':
+    for (key, value) in func.__dict__.items():
+        if not callable(value):
             wrapper.__dict__[key] = value
 
     _alias_signature(wrapper)   # Add asterisks on aliased inputs
 
     # Save key attributes of the wrapper function before returning
-    cspyce.assign_docstring(wrapper, ALIAS_NOTE)
+    cspyce1.assign_docstring(wrapper, ALIAS_NOTE)
     wrapper.__name__ = _alias_name(func.__name__)
-    wrapper.func_defaults = func.func_defaults
+    if PYTHON2:
+        wrapper.func_defaults = func.func_defaults
+    else:
+        wrapper.__defaults__ = func.__defaults__
+        wrapper.__signature__ = inspect.signature(func)
 
     # Insert mutual links
     wrapper.alias   = wrapper
@@ -322,20 +363,20 @@ def alias_version(func):
     return wrapper
 
 ALIAS_LOOKUP_DICT = {    # returns (function, index)
-    'body_code'  : (get_body_aliases , 0),
-    'body_name'  : (get_body_aliases , 1),
-    'frame_code' : (get_frame_aliases, 0),
-    'frame_name' : (get_frame_aliases, 1),
+    'body_code' : (get_body_aliases , 0),
+    'body_name' : (get_body_aliases , 1),
+    'frame_code': (get_frame_aliases, 0),
+    'frame_name': (get_frame_aliases, 1),
 }
 
 def _getarg(indx, args, keywords):
-    if type(indx) == int:
+    if isinstance(indx, int):
         return args[indx]
     else:
         return keywords[indx]
 
 def _setarg(indx, value, args, keywords):
-    if type(indx) == int:
+    if isinstance(indx, int):
         args[indx] = value
     else:
         keywords[indx] = value
@@ -348,9 +389,10 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
     alias_indices = []
     alias_args = list(args)     # Make copies
     alias_keywords = keywords.copy()
-    for indx in range(len(args)) + keywords.keys():
+    for indx in list(range(len(args))) + list(keywords.keys()):
 
-        if indx not in func.ALIAS_ARGS: continue
+        if indx not in func.ALIAS_ARGS:
+            continue
 
         # Get argument type and translate
         arg = _getarg(indx, alias_args, alias_keywords)
@@ -372,7 +414,11 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
 
     # Call function now if iteration is not needed
     if not alias_indices:
-        return func.__call__(*alias_args, **alias_keywords)
+        cspyce.chkin(wrapper.__name__)
+        _validate_args(func, alias_args, alias_keywords)
+        result = func.__call__(*alias_args, **alias_keywords)
+        cspyce.chkout(wrapper.__name__)
+        return result
 
     # Iterate through the the last optional index; return if the call does not
     # fail.
@@ -394,7 +440,7 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
             wrapper.__dict__[argname] = option
             return results
 
-        except NotImplementedError: # an exception used for no other purpose
+        except _AliasFailure:
             continue
 
     # Nothing worked. Raise error from a call using original inputs, after
@@ -407,18 +453,20 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
     for indx in alias_indices:
         argtype = func.ALIAS_ARGS[indx]
         value = _getarg(indx, args, keywords)
-        if type(value) == int and argtype.endswith('_code'): continue
-        if type(value) == str and argtype.endswith('_name'): continue
+        if isinstance(value, int) and argtype.endswith('_code'):
+            continue
+        if isinstance(value, str) and argtype.endswith('_name'):
+            continue
 
         options = _getarg(indx, alias_args, alias_keywords)
         _setarg(indx, options[0], args, keywords)
 
     # Call the function
     cspyce.chkin(wrapper.__name__)
-    results = func.__call__(*args, **keywords)
+    _validate_args(func, args, keywords)
+    result = func.__call__(*args, **keywords)
     cspyce.chkout(wrapper.__name__)
-
-    return results
+    return result
 
 def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
     """Recursive function to evaluate the function using multiple aliases.
@@ -433,7 +481,7 @@ def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
 
     If the list of alias indices is empty, then recursion stops and this
     evaluates the function with the given set of alias values. On success, it
-    returns the result. On failure, it raises a NotImplementedError, which will
+    returns the result. On failure, it raises a _AliasFailure, which will
     cause the "parent" of this function to try again its next possible value
     of the alias.
     """
@@ -455,7 +503,7 @@ def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
             wrapper.__dict__[argname] = option
             return result
 
-        except NotImplementedError:
+        except _AliasFailure:
             continue
 
     # Recursion is done, so execute the function
@@ -468,13 +516,16 @@ def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
             raise NotImplementedError()
 
     except Exception:
-        raise NotImplementedError()
+        raise _AliasFailure()
 
     # Make sure the results correspond to the proper version of the function
     if func is func.error:
         return results
 
     return func.__call__(*args, **keywords)
+
+class _AliasFailure(Exception): # used for iterative attempts at a working alias
+    pass
 
 ################################################################################
 # Define the alias function selector
@@ -496,6 +547,9 @@ def use_aliases(*funcs):
         cspyce.GLOBAL_STATUS.discard('NOALIASES')
 
     for name in cspyce._get_func_names(funcs, source=SPYCE_DICT):
+        # <name>_alias must always point to the alias version
+        # Only function names that don't explicitly specify this are modified to
+        # point to the alias version.
         if 'alias' not in name:
             SPYCE_DICT[name] = SPYCE_DICT[name].alias
 
@@ -513,6 +567,9 @@ def use_noaliases(*funcs):
         cspyce.GLOBAL_STATUS.discard('NOALIASES')
 
     for name in cspyce._get_func_names(funcs, source=SPYCE_DICT):
+        # <name>_alias must always point to the alias version
+        # Only function names that don't explicitly specify this are modified to
+        # point to the noalias version.
         if 'alias' not in name:
             SPYCE_DICT[name] = SPYCE_DICT[name].noalias
 
@@ -532,10 +589,12 @@ def _define_all_alias_versions():
     alias_pairs = []
     funcs = cspyce.get_all_funcs(SPYCE_DICT).values()
     for func in funcs:
-        if hasattr(func, 'alias'): continue
+        if hasattr(func, 'alias'):
+            continue
 
         alias_func = alias_version(func)
-        if alias_func is func: continue     # function could not use aliases
+        if alias_func is func:          # function could not use aliases
+            continue
 
         alias_name = alias_func.__name__
         SPYCE_DICT[alias_name] = alias_func
@@ -552,8 +611,9 @@ def _define_all_alias_versions():
 def _define_missing_versions_for_alias(afunc, func):
     """Complete the missing version attributes for a given alias function."""
 
-    for (key, version) in func.__dict__.iteritems():
-        if type(version).__name__ != 'function': continue
+    for (key, version) in func.__dict__.items():
+        if not callable(version):
+            continue
 
         if 'noalias' in key:
             afunc.__dict__[key] = version

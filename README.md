@@ -1,7 +1,7 @@
 # `cspyce` MODULE OVERVIEW
-Version 0.9
+Version 2.0
 
-December, 2017
+March, 2022
 
 Mark Showalter, PDS Ring-Moon Systems Node, SETI Institute
 
@@ -9,6 +9,9 @@ Spyce is a Python module that provides an interface to the CSPICE library. It
 implements the most widely-used functions of CSPICE in a Python-like way. It
 also supports numerous enhancements, including support for Python exceptions,
 array inputs, and aliases.
+
+If you are looking for information on running or distributing this code from
+the github sources, look at the file `README-developers.md` in this directory.
 
 ## PYTHONIZATION
 

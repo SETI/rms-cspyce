@@ -1,0 +1,5 @@
+include cspyce/swig/*.c
+exclude cspyce/swig/*.i
+
+include cspice/include/*.h
+include cspice/src/cspice/*.c
