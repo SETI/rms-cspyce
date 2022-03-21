@@ -66,7 +66,9 @@
 #
 # - The function use_flags() takes a function name or list of names and
 #   designates the original version of each function as the default. If the
-#   input argument is missing.
+#   input argument is missing, _flag versions are selected universally.  With this
+#   option, for example, a call to cspyce.bodn2c() will actually call
+#  cspyce1.bodn2c_flag().
 #
 # - The function use_errors() takes a function name or list of names and
 #   designates the _error version of each function as the default. If the input
