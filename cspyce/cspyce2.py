@@ -14,8 +14,6 @@
 ################################################################################
 
 import sys
-from functools import wraps
-
 import cspyce.cspyce1 as cspyce1
 
 PYTHON2 = sys.version_info[0] < 3
@@ -76,33 +74,16 @@ def relink_all(new_dict, old_dict):
                 # If it's a function, locate a new one with the same name
                 func.__dict__[key] = new_dict[value.__name__]
 
-# This is the old version of populate_cspyce2().  I have replace it with a different
-# version because code should not be using exec() unless it absolutely has to.
-# I'm leaving this old version here just incase there is some incompatibility I'm not
-# aware of.
-#
-# def populate_cspyce2():
-#     snippets = [
-#         "def {name}({arglist}): return cspyce1.{name}({arglist})".format(
-#              name=name, arglist=", ".join(func.ARGNAMES))
-#         for name, func in cspyce1.__dict__.items()
-#         if callable(func) and hasattr(func, 'ARGNAMES')
-#     ]
-#     code = "\n\n".join(snippets)
-#     exec(code, globals(), globals())
-
 
 def populate_cspyce2():
-    def wrapper(f):
-        @wraps(f)
-        def runner(*args, **kwargs):
-            return f(*args, **kwargs)
-        return runner
-    for name, func in cspyce1.__dict__.items():
-        if callable(func) and hasattr(func, 'ARGNAMES'):
-            globals()[name] = wrapper(func)
-
-
+    snippets = [
+        "def {name}({arglist}): return cspyce1.{name}({arglist})\n\n".format(
+             name=name, arglist=", ".join(func.ARGNAMES))
+        for name, func in cspyce1.__dict__.items()
+        if callable(func) and hasattr(func, 'ARGNAMES')
+    ]
+    code = "".join(snippets)
+    exec(code, globals(), globals())
 
 
 populate_cspyce2()

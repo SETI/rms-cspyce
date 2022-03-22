@@ -27,7 +27,7 @@ from glob import glob
 import numpy
 
 PYTHON2 = sys.version_info[0] < 3
-IS_WINDOWS = os.name == 'nt'
+IS_WINDOWS = os.name == 'nt' or os.name == 'ce'
 IS_POSIX = os.name == 'posix'
 
 
@@ -96,7 +96,7 @@ typemap_samples_module = Extension(
 
 setup(
     name='cspyce',
-    version='2.0.0',
+    version='2.0.1',
     author="Mark Showalter/PDS Ring-Moon Systems Node",
     description="Low-level SWIG interface to the CSPICE library",
     ext_modules=[cspyce0_module, typemap_samples_module],

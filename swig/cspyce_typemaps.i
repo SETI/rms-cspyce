@@ -761,8 +761,7 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
         maxlen = max(maxlen, PyBytes_Size(obj));
     }
     // Allocate the buffer
-    buffer = (ARG_buffer_etype *) PyMem_Malloc(
-        count * (maxlen + 1) * sizeof(ARG_buffer_etype));
+    buffer = PyMem_Malloc(count * (maxlen + 1) * sizeof(ARG_buffer_etype));
     TEST_MALLOC_FAILURE(buffer);
     // Copy the strings
     for (int i = 0; i < count; i++) {
@@ -770,7 +769,7 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
         // PyBytes_AsString simply grabs a pointer out of the python object.
         strncpy((buffer + i * (maxlen+1)), PyBytes_AsString(obj), maxlen+1);
     }
-    ARG_buffer = buffer;
+    ARG_buffer = (ARG_buffer_etype *)buffer;
     ARG_count = (int) count;
     ARG_maxlen = (int)(maxlen + 1);
 }
@@ -3005,9 +3004,9 @@ TYPEMAP_INOUT_OUT(SpiceChar)
 
 %typemap(in)
     (Type *IN_STRINGS, int DIM1, int DIM2)
-        (PyObject *list = NULL, Type *buffer = NULL),
+        (PyObject *list = NULL, char *buffer = NULL),
     (Type *IN_STRINGS, SpiceInt DIM1, SpiceInt DIM2)
-        (PyObject *list = NULL, Type *buffer = NULL)
+        (PyObject *list = NULL, char *buffer = NULL)
 {
 //      (Type *IN_STRINGS, int DIM1, int DIM2)
 //  NOT CURRENTLY USED BY CSPICE
@@ -3021,13 +3020,13 @@ TYPEMAP_INOUT_OUT(SpiceChar)
 
 %typemap(in)
     (int DIM1, int DIM2, Type *IN_STRINGS)
-        (PyObject *list = NULL, Type *buffer = NULL),
+        (PyObject *list = NULL, char *buffer = NULL),
     (SpiceInt DIM1, SpiceInt DIM2, Type *IN_STRINGS)
-        (PyObject *list = NULL, Type *buffer = NULL),
+        (PyObject *list = NULL, char *buffer = NULL),
     (int DIM1, int DIM2, Type *INOUT_STRINGS)
-        (PyObject *list = NULL, Type *buffer = NULL),
+        (PyObject *list = NULL, char *buffer = NULL),
     (SpiceInt DIM1, SpiceInt DIM2, Type *INOUT_STRINGS)
-        (PyObject *list = NULL, Type *buffer = NULL)
+        (PyObject *list = NULL, char *buffer = NULL)
 {
 //      (int DIM1, int DIM2, Type *IN[OUT]_STRINGS)
 
