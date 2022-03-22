@@ -14,7 +14,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build_swig_tools:
-    if: github.repository == 'fyellin/cspyce-prod'
+    if: github.repository == 'fyellin/pds-cspyce'
     runs-on: ubuntu-latest
 
     steps:
