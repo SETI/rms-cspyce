@@ -10,7 +10,14 @@
 
 
 # We prefer setuptools, but will use distutils if setuptools isn't available
-import math
+import os
+from glob import glob
+import subprocess
+import sys
+
+from setuptools.command.build_ext import build_ext
+
+from get_spice import GetCspice
 
 try:
     from setuptools import Command, setup, Extension
@@ -19,20 +26,25 @@ except ImportError:
     from distutils.core import Command, setup, Extension
     from distutils.core import setup, Extension, build_py
 
-import os
+try:
+    import numpy
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "numpy"])
+    import numpy
+
+
 import subprocess
 import sys
-from glob import glob
-
-import numpy
+import platform
 
 PYTHON2 = sys.version_info[0] < 3
-IS_WINDOWS = os.name == 'nt' or os.name == 'ce'
-IS_POSIX = os.name == 'posix'
+IS_LINUX = platform.system() == 'Linux'
+IS_MACOS = platform.system() == 'Darwin'
+IS_WINDOWS = platform.system() == 'Windows'
+assert IS_LINUX or IS_MACOS or IS_WINDOWS
 
 
 class GenerateCommand(Command):
-    description = 'Create generated files'
     user_options = []
 
     def initialize_options(self):
@@ -61,49 +73,61 @@ class GenerateCommand(Command):
 # Some linkers seem to have trouble with 2400 files.  So we break it up into
 # smaller libraries with a maximum of 500 files apiece.
 
+cspice_directory = GetCspice().download()
+
 def get_c_libraries():
-    files = sorted(glob("cspice/src/cspice/*.c"))
-    splits = 1 if IS_POSIX else int(math.ceil(len(files) / 500))
+    files = sorted(glob(os.path.join(cspice_directory, "src", "*.c")))
+    splits = 1 if IS_LINUX else 1 + (len(files) // 250)
     compiler_flags = ['-DKR_headers', '-DMSDOS', '/nowarn'] if IS_WINDOWS else ['-w']
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
             "sources": files[i::splits],
-            "include_dirs": ["cspice/include", ],
+            "include_dirs": [os.path.join(cspice_directory, "include")],
             "cflags": compiler_flags
         })
         for i in range(splits)]
     return cspice_libraries
 
-if IS_WINDOWS:
-    cspyce_cflags = ['/nowarn']
-else:
-    cspyce_cflags = ['-Wno-incompatible-pointer-types']
+
+def get_extensions():
+    cspyce_cflags = ['/nowarn'] if IS_WINDOWS else ['-Wno-incompatible-pointer-types']
+    include_dirs = [os.path.join(cspice_directory, "include"), numpy.get_include()]
+
+    cspyce0_module = Extension(
+        'cspyce._cspyce0',
+        sources=['swig/cspyce0_wrap.c'],
+        include_dirs=include_dirs,
+        extra_compile_args=cspyce_cflags)
+
+    typemap_samples_module = Extension(
+        'cspyce._typemap_samples',
+        sources=['swig/typemap_samples_wrap.c'],
+        include_dirs=include_dirs,
+        extra_compile_args=cspyce_cflags,
+    )
+    return [cspyce0_module, typemap_samples_module]
 
 
-cspyce0_module = Extension(
-    'cspyce._cspyce0',
-    sources=['swig/cspyce0_wrap.c'],
-    include_dirs=['cspice/include', numpy.get_include()],
-    extra_compile_args=cspyce_cflags,
-)
+class MyBuildExt(build_ext):
+    def initialize_options(self):
+        build_ext.initialize_options(self)
 
-typemap_samples_module = Extension(
-    'cspyce._typemap_samples',
-    sources=['swig/typemap_samples_wrap.c'],
-    include_dirs=['cspice/include', numpy.get_include()],
-    extra_compile_args=cspyce_cflags,
-)
 
-setup(
-    name='cspyce',
-    version='2.0.1',
-    author="Mark Showalter/PDS Ring-Moon Systems Node",
-    description="Low-level SWIG interface to the CSPICE library",
-    ext_modules=[cspyce0_module, typemap_samples_module],
-    libraries=get_c_libraries(),
-    packages=["cspyce"],
-    install_requires=['numpy'],
-    cmdclass={
-        'generate': GenerateCommand,
-    }
-)
+def do_setup():
+    setup(
+        name='cspyce',
+        version='2.0.2a2',
+        author="Mark Showalter/PDS Ring-Moon Syss Node",
+        description="Low-level SWIG interface to the CSPICE library",
+        ext_modules=get_extensions(),
+        libraries=get_c_libraries(),
+        packages=["cspyce"],
+        install_requires=['numpy'],
+        cmdclass={
+            'build_ext': MyBuildExt,
+            'generate': GenerateCommand,
+        }
+    )
+
+do_setup()
+
