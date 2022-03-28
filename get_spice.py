@@ -1,9 +1,8 @@
 ################################################################################
 # get_spice.py
 ################################################################################
-# module cspyce.cspyce1
 #
-# This module is responsible for downloading the cspice source codes based on whatever
+# This module is responsible for downloading the cspice source files based on whatever
 # hardware and software it is currently running on.
 #
 # The contents of the directories
@@ -12,13 +11,10 @@
 # are put into the two directories
 #        cspice/<os>-<arch>/src
 #        cspice/<os>-<arch>/include
-#   input argument is missing, _flag versions are selected universally.  With this
-#   option, for example, a call to cspyce.bodn2c() will actually call
-#  cspyce1.bodn2c_flag().
 #
 # This module should only be called by setup.py.
 #
-# This file owes a big debut to Andrew Annex and his file.
+# This file owes a big debt to Andrew Annex and his file:
 #      https://github.com/AndrewAnnex/SpiceyPy/blob/main/get_spice.py
 # His version is much more ambitious than this and also compiles the files into a
 # shared library.
@@ -69,7 +65,7 @@ class GetCspice(object):
         architecture = platform.machine()
         self.architecture = ARCHITECTURE_TRANSLATOR.get(architecture, architecture)
 
-        # Get platform is Unix-like OS or not
+        # Check if platform is Unix-like OS or not
         self.is_unix = self.host_OS in ("Linux", "Darwin", "FreeBSD")
         # Get directory that this file is in.
         self.root_dir = str(Path(os.path.realpath(__file__)).parent)
