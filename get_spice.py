@@ -1,74 +1,29 @@
-"""
-The MIT License (MIT)
+################################################################################
+# get_spice.py
+################################################################################
+# module cspyce.cspyce1
+#
+# This module is responsible for downloading the cspice source codes based on whatever
+# hardware and software it is currently running on.
+#
+# The contents of the directories
+#        <download>/cspice/src/cspice
+#        <download>/include
+# are put into the two directories
+#        cspice/<os>-<arch>/src
+#        cspice/<os>-<arch>/include
+#   input argument is missing, _flag versions are selected universally.  With this
+#   option, for example, a call to cspyce.bodn2c() will actually call
+#  cspyce1.bodn2c_flag().
+#
+# This module should only be called by setup.py.
+#
+# This file owes a big debut to Andrew Annex and his file.
+#      https://github.com/AndrewAnnex/SpiceyPy/blob/main/get_spice.py
+# His version is much more ambitious than this and also compiles the files into a
+# shared library.
+################################################################################
 
-Copyright (c) [2015-2022] [Andrew Annex]
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-Sources for this file are mostly from DaRasch, spiceminer/getcspice.py,
-with edits by me as needed for python2/3 compatibility
-https://github.com/DaRasch/spiceminer/blob/master/getcspice.py
-
-The MIT License (MIT)
-
-Copyright (c) 2013 Philipp Rasch
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-The MIT License (MIT)
-
-Copyright (c) 2017 ODC Space
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-"""
 
 from __future__ import absolute_import, with_statement
 
@@ -89,7 +44,7 @@ except ImportError:
     from pathlib import Path
 
 
-DISTRIBUTIONS = {
+CSPICE_DISTRIBUTIONS = {
     # system   arch        distribution name           extension
     # -------- ----------  -------------------------   ---------
     ("Darwin", "x86_64"): ("MacIntel_OSX_AppleC_64bit", "tar.Z"),
@@ -98,11 +53,11 @@ DISTRIBUTIONS = {
     ("FreeBSD", "x86_64"): ("PC_Linux_GCC_64bit", "tar.Z"),
     ("Linux", "x86_64"): ("PC_Linux_GCC_64bit", "tar.Z"),
     ("Windows", "x86_64"): ("PC_Windows_VisualC_64bit", "zip"),
-    # This is just so I can test it in a docker image on my Mac
-    ("Linux", "aarch64"): ("PC_Linux_GCC_64bit", "tar.Z"),
-
+    # This is just so I can easily test it in a docker image on my Mac
+    ("Linux", "arm64"): ("PC_Linux_GCC_64bit", "tar.Z"),
 }
 
+ARCHITECTURE_TRANSLATOR = {"aarch64": "arm64", "AMD64": "x86_64"}
 
 # versions
 SPICE_VERSION = "N0067"
@@ -112,12 +67,13 @@ class GetCspice(object):
     def __init__(self):
         self.host_OS = platform.system()
         architecture = platform.machine()
-        self.architecture = "x86_64" if architecture == "AMD64" else architecture
+        self.architecture = ARCHITECTURE_TRANSLATOR.get(architecture, architecture)
+
         # Get platform is Unix-like OS or not
         self.is_unix = self.host_OS in ("Linux", "Darwin", "FreeBSD")
-        # Get current working directory
+        # Get directory that this file is in.
         self.root_dir = str(Path(os.path.realpath(__file__)).parent)
-
+        # Get directory into which we want to put all our files
         self.target_directory = os.path.join(
             self.root_dir, "cspice", self.host_OS + "-" + self.architecture)
 
@@ -125,6 +81,7 @@ class GetCspice(object):
         if Path(os.path.join(self.target_directory, "src")).is_dir() and \
            Path(os.path.join(self.target_directory, "include")).is_dir():
             return self.target_directory
+        # Note.  Once we toss 2.7 support, this can be rewritten as "with ...."
         tmpdir = tempfile.mkdtemp()
         try:
             self.download_cspice(destination=tmpdir)
@@ -140,48 +97,43 @@ class GetCspice(object):
         try:
             # Get the remote file path for the Python architecture that
             # executes the script.
-            distribution, extension = self._distribution_info()
+            assert sys.maxsize > 2 ** 32, "Machine must support 64bit"
+            system = self.host_OS
+            system = "cygwin" if "CYGWIN" in system else system
+            distribution, extension = CSPICE_DISTRIBUTIONS[(system, self.architecture)]
         except KeyError:
-            print("SpiceyPy currently does not support your system.")
-            return
+            raise RuntimeError("CSpice does not support your system")
 
-        cspice = "cspice.{}".format(extension)
+        cspice_filename = "cspice.{}".format(extension)
         url = ("https://naif.jpl.nasa.gov/pub/naif/misc/toolkit_{0}/C/{1}/packages/{2}"
-               .format(SPICE_VERSION, distribution, cspice))
+               .format(SPICE_VERSION, distribution, cspice_filename))
 
         # Download the file
-        print("Downloading CSPICE for {0}...".format(distribution))
-        target_file = os.path.join(destination, cspice)
+        target_file = os.path.join(destination, cspice_filename)
         attempts = 10  # Let's try a maximum of attempts for getting SPICE
         while attempts:
             try:
                 if extension == "zip":
-                    subprocess.check_call(["curl", url, "-o", target_file])  # -s = silent
+                    # TODO:
+                    # Do we want --connect_timeout? This curl either seems to take
+                    # 3s or several minutes, somewhat randomly.
+                    subprocess.check_call(["curl", url, "-o", target_file])
                     with ZipFile(target_file, "r") as archive:
                         archive.extractall(destination)
                 else:
-                    target_file = target_file[:-2]
+                    target_file = target_file[:-2] # remove the .Z
                     subprocess.check_call("curl {} | gzip -d > {}".format(url, target_file), shell=True)
                     with TarFile.open(target_file, "r") as archive:
                         archive.extractall(destination)
                 os.unlink(target_file)
                 break
             except (RuntimeError, subprocess.CalledProcessError) as error:
+                attempts -= 1
                 if attempts == 0:
                     raise error
-                attempts -= 1
                 print("Download failed with URLError: {0}, trying again after "
                       "15 seconds!".format(error))
                 time.sleep(15)
-        print("Download done.")
-
-    def _distribution_info(self):
-        assert sys.maxsize > 2 ** 32, "Machine must support 64bit"
-        system = self.host_OS
-        system = "cygwin" if "CYGWIN" in system else system
-        print("SYSTEM:        ", system)
-        print("ARCHITECTURE:  ", self.architecture)
-        return DISTRIBUTIONS[(system, self.architecture)]
 
 
 if __name__ == "__main__":

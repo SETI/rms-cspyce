@@ -48,20 +48,20 @@ jobs:
       matrix:
         include:
           # MacOS builds
-          - {os: macos-latest, python: 2.7, dist: bdist_wheel}
-          - {os: macos-latest, python: 3.8, dist: bdist_wheel}
-          - {os: macos-latest, python: 3.9, dist: bdist_wheel}
-          - {os: macos-latest, python: '3.10', dist: bdist_wheel}
-          # Windows builds
-          - {os: windows-latest, python: 3.8, dist: bdist_wheel}
-          - {os: windows-latest, python: 3.9, dist: bdist_wheel}
-          - {os: windows-latest, python: '3.10', dist: bdist_wheel}
-          # Source build
-          - {os: ubuntu-latest, python: 3.8, dist: sdist }
-          # Linux multi build
+#          - {os: macos-latest, python: 2.7, dist: bdist_wheel}
+#          - {os: macos-latest, python: 3.8, dist: bdist_wheel}
+#          - {os: macos-latest, python: 3.9, dist: bdist_wheel}
+#          - {os: macos-latest, python: '3.10', dist: bdist_wheel}
+#          # Windows builds
+#          - {os: windows-latest, python: 3.8, dist: bdist_wheel}
+#          - {os: windows-latest, python: 3.9, dist: bdist_wheel}
+#          - {os: windows-latest, python: '3.10', dist: bdist_wheel}
+#          # Source build
+#          - {os: ubuntu-latest, python: 3.8, dist: sdist }
+#          # Linux multi build
           - {os: ubuntu-latest, docker-python: cp38-cp38}
-          - {os: ubuntu-latest, docker-python: cp39-cp39}
-          - {os: ubuntu-latest, docker-python: cp310-cp310}
+#          - {os: ubuntu-latest, docker-python: cp39-cp39}
+#          - {os: ubuntu-latest, docker-python: cp310-cp310}
       fail-fast: false
 
     steps:
@@ -98,17 +98,10 @@ jobs:
           python-versions: ${{ matrix.docker-python }}
           build-requirements: 'numpy'
 
-      - name: Linux delete old Linux wheels
+      - name: Linux delete non manylinux wheels
         if: ${{ matrix.python == '' }}
-        # This is ugly.  dist/ has both _linux and _manylinux builds, but we only
-        # want to upload the _manylinux ones.  For reasons I don't understand, I
-        # can't "rm" the _linux builds, but this works.
         run: |
-          mv dist dist2
-          mkdir dist
-          cp dist2/*manylinux* dist
-          ls -ld dist dist2
-          sudo rm -rf dist2 || echo Cannot Delete dist2
+          find dist -type f | grep -v manylinux | xargs sudo rm
 
       - name: Publish distribution to Test PyPI
         env:
