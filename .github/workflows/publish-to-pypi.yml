@@ -14,7 +14,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build_swig_tools:
-    if: github.repository == 'fyellin/cspyce-prod'
+    if: github.repository == 'fyellin/pds-cspyce'
     runs-on: ubuntu-latest
 
     steps:
@@ -39,16 +39,29 @@ jobs:
             cspyce/typemap_samples.py
             cspyce/cspyce0.py
 
-  build:
-    if: github.repository == 'fyellin/cspyce-prod'
+  build-distribution:
+    # if: github.repository == 'fyellin/pds-cspyce'
     runs-on: ${{ matrix.os }}
     needs: [build_swig_tools]
 
     strategy:
       matrix:
-        python: [2.7, 3.9]
-        os: [macos-latest, windows-latest]
-        dist: [bdist_wheel]
+        include:
+          # MacOS builds
+#          - {os: macos-latest, python: 2.7, dist: bdist_wheel}
+#          - {os: macos-latest, python: 3.8, dist: bdist_wheel}
+#          - {os: macos-latest, python: 3.9, dist: bdist_wheel}
+#          - {os: macos-latest, python: '3.10', dist: bdist_wheel}
+#          # Windows builds
+#          - {os: windows-latest, python: 3.8, dist: bdist_wheel}
+#          - {os: windows-latest, python: 3.9, dist: bdist_wheel}
+#          - {os: windows-latest, python: '3.10', dist: bdist_wheel}
+#          # Source build
+#          - {os: ubuntu-latest, python: 3.8, dist: sdist }
+#          # Linux multi build
+          - {os: ubuntu-latest, docker-python: cp38-cp38}
+#          - {os: ubuntu-latest, docker-python: cp39-cp39}
+#          - {os: ubuntu-latest, docker-python: cp310-cp310}
       fail-fast: false
 
     steps:
@@ -58,29 +71,37 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         uses: ilammy/msvc-dev-cmd@v1.4.1
 
-      - name: Download CSPICE
-        run: |
-          curl https://naif.jpl.nasa.gov/pub/naif/toolkit//C/PC_Windows_VisualC_32bit/packages/cspice.zip -o cspice.zip
-          unzip cspice.zip
-          rm cspice.zip
-
       - name: Get already generated Swig files
         uses: actions/download-artifact@v3
         with:
           name: swig
-          path: .
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ format('{0}.x', matrix.python) }}
+          python-version: ${{ matrix.python || 3.8 }}
 
-      - name: Python Build
+      - name: Python Setup
         run: |
           python -m pip install --upgrade pip
           python -m pip install setuptools wheel twine numpy
-          python setup.py build_clib build_ext build
+
+      - name: Python Build Non Linux
+        if: ${{ matrix.python != '' }}
+        run: |
           python setup.py ${{ matrix.dist }}
+
+      - name: Python Build Linux
+        if: ${{ matrix.python == '' }}
+        uses: RalfG/python-wheels-manylinux-build@v0.3.4-manylinux2010_x86_64
+        with:
+          python-versions: ${{ matrix.docker-python }}
+          build-requirements: 'numpy'
+
+      - name: Linux delete non manylinux wheels
+        if: ${{ matrix.python == '' }}
+        run: |
+          find dist -type f | grep -v manylinux | xargs sudo rm
 
       - name: Publish distribution to Test PyPI
         env:
@@ -88,13 +109,12 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
         run:
-          python -m twine upload dist/*
+          python -m twine upload --verbose --skip-existing dist/*
 
       - name: Publish distribution to PyPI
-        if: startsWith(github.ref, 'refs/tags')
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
         run:
-          python -m twine upload dist/*
+          python -m twine upload --verbose --skip-existing dist/*
