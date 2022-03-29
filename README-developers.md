@@ -17,34 +17,38 @@ wherever it happens to be on your computer.
 
 The github source code intentionally does not include the source code to
 cspice itself.
-You should download the cspice sources from
-https://naif.jpl.nasa.gov/naif/toolkit.html. 
+Instead the build process downloads the appropriate sources from
+[NAIF](https://naif.jpl.nasa.gov/naif/toolkit.html).
 The current SPICE Toolkit version is N0067, released January 3, 2022.
-You should make a soft link from your cspice directory to `pds-cspyce/cspice`.
-```shell
-ln -s <path-to-your-cspice-directory> <path-to-your-pds-cspyce>/cspice
-```
-Confirm that `pds-cspyce/cspice/include` has a bunch of `.h` files and that
-`pds-cspyce/cspice/src/cspice` contains several thousand `.c` files.
 
 ## BUILDING CSPYCE
 Whenever we use the program `python` as a command, we mean your specific Python
 runtime. If you have multiple versions of Python installed on your computer,
-you may need to be running `python2` and `python3`, or `python3.7` and
-`python3.8`.
+you may need to be running `python2` and `python3`, or `python3.8` and
+`python3.9`.
 
 In general, our `.py` and `.c` sources should work across all implementations of 
 Python beyond 2.7. However, there is no expectation of binary compatibility between
 multiple versions.
 
-You must have swig and at least one newer version (≥ 3.8) of Python3 running on 
+### Step1: 
+
+You must have swig and ane newer version (≥ 3.8) of Python3 running on 
 your computer for the first step:
 ```shell
 python3 setup.py generate
 ```
-This step re-creates all the generated files .py and .c needed to implement
-the templates. 
+This step re-creates all the generated .py and .c files needed to implement
+the interface between Python and the CSpice code.
+This command will also determine what operating system and architecture you are running
+on, and use this information to download the appropriate CSpice sources.
+The downloaded sources will appear in two directories:
+* pds-cspyce/cspice/\<os>-\<arch>/src
+* pds-cspyce/cspice/\<os>-\<arch>/include
 
+where `<os>` and `<arch>` indicate your machine's operating system and architecture.
+
+### Step 2
 You compile the c-implementation of the Spice library by running:
 ```shell
 python setup.py build_clib
@@ -52,6 +56,7 @@ python setup.py build_clib
 This will execute somewhat slowly because it is compiling several thousand files. 
 You should only need to do this once.
 
+### Step 3
 You then build `cspyce` by running the command
 ```shell
 python setup.py build_ext --inplace
@@ -62,8 +67,9 @@ Python does not guarantee binary compatibility between Python versions.
 
 If you modify any of the templates, you will need to re-run the "generate"
 command above (using Python3) and the "build_ext" command.
-The Python setuptools is not yet smart enough to understand dependencies.
+The Python `setuptools` is not yet smart enough to understand dependencies.
 
+### Step 4
 Once you have built `cspyce`, you should confirm that it works.
 ```shell
 python
@@ -71,7 +77,6 @@ python
 > cspyce.tkvrsn('toolkit')
 'CSPICE_N0067'
 ```
-Your actual result will depends on which toolkit version you downloaded from NAIF.
 ## CREATING A DISTRIBUTION
 
 ### Before you begin
