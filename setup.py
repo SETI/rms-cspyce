@@ -55,10 +55,10 @@ class GenerateCommand(Command):
 
     def run(self):
         if not PYTHON2:
-            print("Recreating the vectorize macros")
             from swig.make_vectorize import create_vectorize_header_file
+            from swig.make_cspyce0_info import make_cspice0_info
             create_vectorize_header_file("swig/vectorize.i")
-            print("Rerunning swig")
+            make_cspice0_info("cspyce/cspyce0_info.py")
             command = "swig -python -outdir cspyce/. " \
                       "-o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
             subprocess.check_call(command)

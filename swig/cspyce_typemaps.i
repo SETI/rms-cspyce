@@ -40,21 +40,20 @@
 *******************************************************************************/
 
 // Global variables
-int USE_PYTHON_EXCEPTIONS = 1;  // 1 to turn on; 0 to turn off; 2 for
-                                // RuntimeError only.
+int USE_RUNTIME_ERRORS = 0;  //0 for default exceptions; 1 for RuntimeError only
 char SHORT_MESSAGE[ 100] = "";
 char LONG_MESSAGE[10000] = "";
 char EXPLANATION[ 10000] = "";
 char EXCEPTION_MESSAGE[10000] = "";
 
-// flag = 1 uses meaningful exception; flag = 2 uses RuntimeErrors under most
+// flag = 0 uses meaningful exception; flag = 1 uses RuntimeErrors under most
 // circumstances.
 void set_python_exception_flag(int flag) {
-    USE_PYTHON_EXCEPTIONS = flag;
+    USE_RUNTIME_ERRORS = flag;
 }
 
 int get_python_exception_flag(void) {
-    return USE_PYTHON_EXCEPTIONS;
+    return USE_RUNTIME_ERRORS;
 }
 
 char *get_message_after_reset(int option) {
@@ -430,7 +429,7 @@ static int exception_compare_function(const void* pkey, const void* pelem) {
 
 Exception select_exception(char *shortmsg) {
     // RuntimeErrors only
-    if (USE_PYTHON_EXCEPTIONS == 2) {
+    if (USE_RUNTIME_ERRORS) {
         return RuntimeError;
     }
     int element_size = sizeof(all_exception_table_entries[0]);
@@ -537,7 +536,7 @@ void handle_malloc_failure(const char* symname) {
     setmsg_c("Failed to allocate memory");
     sigerr_c("SPICE(MALLOCFAILURE)");
     chkout_c(symname);
-    PyErr_SetString(USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_MemoryError,
+    PyErr_SetString(USE_RUNTIME_ERRORS ? PyExc_MemoryError : PyExc_RuntimeError,
                     get_exception_message(symname));
     reset_c();
 }
@@ -568,7 +567,7 @@ void handle_bad_string_error(const char* symname) {
     sigerr_c("SPICE(INVALIDARGUMENT)");
     chkout_c(symname);
     PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
+        USE_RUNTIME_ERRORS ? PyExc_ValueError : PyExc_RuntimeError,
         get_exception_message(symname));
     reset_c();
 }
@@ -595,7 +594,7 @@ void handle_invalid_array_shape_1d(const char *symname, PyArrayObject *pyarr, in
     chkout_c(symname);
 
     PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
+        USE_RUNTIME_ERRORS ? PyExc_ValueError : PyExc_RuntimeError,
         get_exception_message(symname));
     reset_c();
 }
@@ -623,7 +622,7 @@ void handle_invalid_array_shape_2d(const char *symname, PyArrayObject *pyarr, in
     chkout_c(symname);
 
     PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
+        USE_RUNTIME_ERRORS ? PyExc_ValueError : PyExc_RuntimeError,
         get_exception_message(symname));
     reset_c();
 }
@@ -650,7 +649,7 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
     chkout_c(symname);
 
     PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
+        USE_RUNTIME_ERRORS ? PyExc_ValueError : PyExc_RuntimeError,
         get_exception_message(symname));
     reset_c();
 }
@@ -715,7 +714,7 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
         }
         sigerr_c("SPICE(INVALID_ARRAY_RANK)");
         PyErr_SetString(
-            USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_ValueError,
+            USE_RUNTIME_ERRORS ? PyExc_ValueError : PyExc_RuntimeError,
             get_exception_message(symname));
         reset_c();
         return;
@@ -784,7 +783,7 @@ void handle_bad_sequence_to_list(const char *symname) {
     sigerr_c("SPICE(INVALIDTYPE)");
     chkout_c(symname);
     PyErr_SetString(
-        USE_PYTHON_EXCEPTIONS == 2 ? PyExc_RuntimeError : PyExc_TypeError,
+        USE_RUNTIME_ERRORS ? PyExc_TypeError : PyExc_RuntimeError,
         get_exception_message(symname));
     reset_c();
 }
@@ -830,7 +829,6 @@ void handle_bad_sequence_to_list(const char *symname) {
             (PyArrayObject* pyarr=NULL)
 {
 //      (Type IN_ARRAY1[ANY])
-
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
     TEST_INVALID_ARRAY_SHAPE_1D(pyarr, $1_dim0);
 
@@ -1109,6 +1107,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
             (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, int DIM2, Type IN_ARRAY2[ANY][ANY])
+//   NOT CURRENTLY USED
 
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
     TEST_INVALID_ARRAY_SHAPE_2D(pyarr, $3_dim0, $3_dim1);
@@ -1211,6 +1210,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
         (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, int DIM2, Type *IN_ARRAY2)
+
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                                // ARRAY
@@ -2015,6 +2015,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
         (PyArrayObject* pyarr = NULL, int dimsize[2])
 {
 //      (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
+//  NOT CURRENTLY USED BY CSPICE
 
     npy_intp dims[2] = {$3_dim0, $3_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
@@ -2094,6 +2095,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
         (PyArrayObject* pyarr = NULL, int dimsize[2])
 {
 //      (int *SIZE1, Type OUT_ARRAY2[ANY][ANY])
+
     npy_intp dims[2] = {$2_dim0, $2_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
@@ -2445,7 +2447,11 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
     (int DIM1, Type INOUT_ARRAY1[])
         (PyArrayObject* pyarr=NULL)
 {
+
 //      (int DIM1, Type INOUT_ARRAY1)
+//  NOT CURRENTLY USED BY CSPICE
+
+
     CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
     $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
     $1 = (int) PyArray_DIM(pyarr, 0);                                   // DIM1
@@ -2456,6 +2462,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
         (PyArrayObject* pyarr=NULL)
 {
 //      (int DIM1, type INOUT_ARRAY2[][ANY])
+//  NOT CURRENTLY USED BY CSPICE
 
     // NOT CURRENTLY USED
     CONVERT_TO_CONTIGUOUS_ARRAY_WRITABLE_COPY(Typecode, $input, 2, 2, pyarr)
@@ -2464,10 +2471,23 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
     $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
 }
 
+%typemap(in)
+    (int DIM2, Type *INOUT_ARRAY2)
+        (PyArrayObject* pyarr=NULL)
+{
+//      (int DIM1, type INOUT_ARRAY2)
+//  NOT CURRENTLY USED BY CSPICE
+
+    CONVERT_TO_CONTIGUOUS_ARRAY_WRITABLE_COPY(Typecode, $input, 2, 2, pyarr)
+    $1 = (int) PyArray_DIM(pyarr, 1);                                   // DIM1
+    $2 = ($2_ltype) PyArray_DATA(pyarr);                                // ARRAY
+}
+
 %typemap(argout)
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
-    (int DIM1, Type INOUT_ARRAY2[][ANY])
+    (int DIM1, Type INOUT_ARRAY2[][ANY]),
+    (int DIM2, Type *INOUT_ARRAY2)
 {
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
     pyarr$argnum = NULL;
@@ -2476,7 +2496,9 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 %typemap(freearg)
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
-    (int DIM1, Type INOUT_ARRAY2[][ANY])
+    (int DIM1, Type INOUT_ARRAY2[][ANY]),
+    (int DIM2, Type *INOUT_ARRAY2)
+
 {
     Py_XDECREF(pyarr$argnum);
 }
@@ -2832,8 +2854,7 @@ void resize_char_array_to_minimum_size(
         (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
 {
 //      (int DIM1, char *INOUT_STRING)
-//  NOT CURRENTLY USED BY CSPICE
-
+//  TODO(FY): Add test for me
     TEST_IS_STRING($input);
     int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
     RAISE_BAD_STRING_ON_ERROR(error);
@@ -3009,7 +3030,6 @@ TYPEMAP_INOUT_OUT(SpiceChar)
         (PyObject *list = NULL, char *buffer = NULL)
 {
 //      (Type *IN_STRINGS, int DIM1, int DIM2)
-//  NOT CURRENTLY USED BY CSPICE
 
     HANDLE_TYPEMAP_IN_STRINGS($1, $*1_type, $2, $3, buffer, list)
 }
@@ -3040,7 +3060,7 @@ TYPEMAP_INOUT_OUT(SpiceChar)
 %typemap(argout)
     (Type *IN_STRINGS, int DIM1, int DIM2),
     (Type *IN_STRINGS, SpiceInt DIM1, SpiceInt DIM2),
-    (int DIM1, int DIM2, Type *IN_STRINGS)
+    (int DIM1, int DIM2, Type *IN_STRINGS),
     (SpiceInt DIM1, SpiceInt DIM2, Type *IN_STRINGS)
 ""
 
