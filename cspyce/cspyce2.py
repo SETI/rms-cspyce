@@ -15,6 +15,7 @@
 
 import sys
 import cspyce.cspyce1 as cspyce1
+import keyword
 
 PYTHON2 = sys.version_info[0] < 3
 
@@ -76,13 +77,14 @@ def relink_all(new_dict, old_dict):
 
 
 def populate_cspyce2():
-    snippets = [
-        "def {name}({arglist}): return cspyce1.{name}({arglist})\n\n".format(
-             name=name, arglist=", ".join(func.ARGNAMES))
-        for name, func in cspyce1.__dict__.items()
-        if callable(func) and hasattr(func, 'ARGNAMES')
-    ]
-    code = "".join(snippets)
+    snippets = []
+    for name, func in cspyce1.__dict__.items():
+        if callable(func) and hasattr(func, 'ARGNAMES'):
+            argnames = [(x + "_" if keyword.iskeyword(x) else x) for x in func.ARGNAMES]
+            code = "def {name}({arglist}): return cspyce1.{name}({arglist})".format(
+                       name=name, arglist=", ".join(argnames))
+            snippets.append(code)
+    code = "\n\n".join(snippets)
     exec(code, globals(), globals())
 
 

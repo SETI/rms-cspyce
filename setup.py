@@ -2,10 +2,10 @@
 
 # If you are installing this code via "pip install pds-cspyce", then you should
 # never see this file.  pip automatically determines whether you need a binary
-# distribution or source distribution, and automatically builds it as neede for
+# distribution or source distribution, and automatically builds it as needed for
 # your machine.
 #
-# If you are doing a build from sources, please read README.develoeprs.me in this
+# If you are doing a build from sources, please read README-developers.md in this
 # directory.
 
 
@@ -55,10 +55,10 @@ class GenerateCommand(Command):
 
     def run(self):
         if not PYTHON2:
-            print("Recreating the vectorize macros")
             from swig.make_vectorize import create_vectorize_header_file
+            from swig.make_cspyce0_info import make_cspice0_info
             create_vectorize_header_file("swig/vectorize.i")
-            print("Rerunning swig")
+            make_cspice0_info("cspyce/cspyce0_info.py")
             command = "swig -python -outdir cspyce/. " \
                       "-o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
             subprocess.check_call(command)
@@ -71,7 +71,7 @@ class GenerateCommand(Command):
 
 
 # Some linkers seem to have trouble with 2400 files.  So we break it up into
-# smaller libraries with a maximum of 500 files apiece.
+# smaller libraries with a maximum of 250 files apiece.
 
 cspice_directory = GetCspice().download()
 
@@ -116,8 +116,8 @@ class MyBuildExt(build_ext):
 def do_setup():
     setup(
         name='cspyce',
-        version='2.0.2',
-        author="Mark Showalter/PDS Ring-Moon Syss Node",
+        version='2.0.3',
+        author="Mark Showalter/PDS Ring-Moon Systems Node",
         description="Low-level SWIG interface to the CSPICE library",
         ext_modules=get_extensions(),
         libraries=get_c_libraries(),

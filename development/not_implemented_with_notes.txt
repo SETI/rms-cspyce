@@ -1,0 +1,72 @@
+appndc          set operation
+appndd          set operation
+appndi          set operation
+card            cell internal
+clearc          not needed
+cleard          not needed
+cleari          not needed
+copy            cell internal
+dafrda          deprecated
+diff            set operation
+elemc           set operation
+elemd           set operation
+elemi           set operation
+eqstr           not needed
+exists          not needed
+filld           not needed
+filli           not needed
+ftncls          not needed
+getcml          not needed
+gfbail          GF internal
+gfclrh          GF internal
+gfinth          GF internal
+gfrefn          GF internal
+gfrepf          GF internal
+gfrepi          GF internal
+gfrepu          GF internal
+gfsstp          GF internal
+gfstep          GF internal
+gfudb           GF internal
+gfuds           GF internal
+illum_pl02      deprecated
+illum_plid_pl02 deprecated
+insrtc          set operation
+insrtd          set operation
+insrti          set operation
+inter           set operation
+lastnb          not needed
+lcase           not needed
+limb_pl02       deprecated
+llgrid_pl02     deprecated
+lparss          not needed
+maxd            set operation
+maxi            set operation
+mind            set operation
+mini            set operation
+moved           not needed
+ordc            set operation
+ordd            set operation
+ordi            set operation
+putcml          not needed
+rdtext          not needed
+removc          set operation
+removd          set operation
+removi          set operation
+scard           cell internal
+sdiff           set operation
+set             set operation
+size            cell internal
+ssize           cell internal
+subpt_pl02      deprecated
+subsol_pl02     deprecated
+term_pl02       deprecated
+ucase           not needed
+uddc            C-specific
+uddf            C-specific
+udf             C-specific
+union           GF internal
+valid           cell internal
+wncard          cell internal
+wnfetd          cell internal
+wnvald          cell internal
+               
