@@ -2,10 +2,10 @@
 
 # If you are installing this code via "pip install pds-cspyce", then you should
 # never see this file.  pip automatically determines whether you need a binary
-# distribution or source distribution, and automatically builds it as neede for
+# distribution or source distribution, and automatically builds it as needed for
 # your machine.
 #
-# If you are doing a build from sources, please read README.develoeprs.me in this
+# If you are doing a build from sources, please read README-developers.md in this
 # directory.
 
 
@@ -71,7 +71,7 @@ class GenerateCommand(Command):
 
 
 # Some linkers seem to have trouble with 2400 files.  So we break it up into
-# smaller libraries with a maximum of 500 files apiece.
+# smaller libraries with a maximum of 250 files apiece.
 
 cspice_directory = GetCspice().download()
 
@@ -117,7 +117,7 @@ def do_setup():
     setup(
         name='cspyce',
         version='2.0.3',
-        author="Mark Showalter/PDS Ring-Moon Syss Node",
+        author="Mark Showalter/PDS Ring-Moon Systems Node",
         description="Low-level SWIG interface to the CSPICE library",
         ext_modules=get_extensions(),
         libraries=get_c_libraries(),
