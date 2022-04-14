@@ -6,13 +6,13 @@
 # This module provides several enhancements over the low-level cspyce0 interface
 # to the CSPICE library.
 #
-# The cspyce0 module contains Python interfaces to all CSPICE functions likely
+# The cspyce1 module contains Python interfaces to all CSPICE functions likely
 # to be useful to a Python programmer. Excluded are deprecated functions and
 # various low-level functions supporting character strings, cells, sets, file
 # I/O, and also all low-level "geometry finder" functions that can only be
 # implemented in C. It also includes vectorized versions (with suffix "_vector")
 # for nearly every function that receives floating-point input and does not
-# perform I/O. As of April 2022, however, some of the less-used cspyce0
+# perform I/O. As of April 2022, however, some of the less-used cspice
 # functions have not yet been fully tested.
 #
 # To use cspyce1:
@@ -42,8 +42,8 @@
 # In the CSPICE error handling mechanism, the programmer must check the value
 # of function failed() regularly to determine if an error has occurred. However,
 # Python's exception handling mechanism obviates the need for this approach. In
-# cspyce1, all CSPYCE runtime errors raise Python exceptions. You should never
-# need to call failed(), although you still can.
+# cspyce1, all CSPICE errors raise Python exceptions. You should never need to call
+# failed(), although you still can.
 #
 # In CSPICE, the programmer can control how C errors are handled using the
 # function erract(). Options include "IGNORE", "REPORT", "ABORT", "DEFAULT",
@@ -57,7 +57,7 @@
 #
 # Many CSPICE functions bypass the library's own error handling mechanism;
 # instead they return a status flag, sometimes called "found" or "ok", or else
-# an empty response moght indicate failure. The cspyce module provides
+# an empty response might indicate failure. The cspyce module provides
 # alternative options for these functions.
 #
 # Within cspyce1, functions that return error flags have an alternative
@@ -1018,7 +1018,6 @@ def assign_docstring(func, note=""):
 # Non-vector functions
 for name in CSPYCE_SIGNATURES:
     func = globals()[name]
-    func.ABSTRACT  = CSPYCE_ABSTRACT[name]
     func.ABSTRACT  = CSPYCE_ABSTRACT[name]
     func.SIGNATURE = CSPYCE_SIGNATURES[name]
     func.ARGNAMES  = CSPYCE_ARGNAMES[name]
