@@ -111,6 +111,7 @@
 #   bodn2c.vector()         same as bodn2c()
 #   bodn2c.flag()           same as bodn2c()
 ################################################################################
+from __future__ import print_function
 
 import sys
 import numpy as np
@@ -133,6 +134,7 @@ PYTHON2 = sys.version_info[0] < 3
 # GET/SET handling
 ################################################################################
 
+
 def erract(op='', action=''):
     """Allow special argument handling:
         erract()            -> erract('GET', '')
@@ -154,14 +156,15 @@ def erract(op='', action=''):
 
     action = action.upper().strip()
     if op == 'SET' and INTERACTIVE and action in ('ABORT', 'DEFAULT'):
-        print(f'ERROR action "{action}" is disabled in interactive mode; ' +
-              'using "RETURN"')
+        print('ERROR action "{}" is disabled in interactive mode; '
+              'using "RETURN"'.format(action))
         cspyce0.erract('SET', 'RETURN')
         return 'RETURN'
 
     return cspyce0.erract(op, action)
 
-def errdev(op='', device=''):
+
+def errdev(op='', action=''):
     """Allow special argument handling:
         errdev()            -> errdev('GET', '')
         errdev('GET')       -> errdev('GET', '')
@@ -216,7 +219,7 @@ def bodc2n_error(code):
     (name, found) = cspyce0.bodc2n(code)
     if not found:
         chkin('bodc2n_error')
-        setmsg(f'body code {code} not found in kernel pool')
+        setmsg('body code {} not found in kernel pool'.format(code))
         sigerr('SPICE(BODYIDNOTFOUND)')
         chkout('bodc2n_error')
 
@@ -226,7 +229,7 @@ def bodn2c_error(name):
     (code, found) = cspyce0.bodn2c(name)
     if not found:
         chkin('bodn2c_error')
-        setmsg(f'body name "{name}" not found in kernel pool')
+        setmsg('body name "{}" not found in kernel pool'.format(name))
         sigerr('SPICE(BODYNAMENOTFOUND)')
         chkout('bodn2c_error')
 
@@ -236,7 +239,7 @@ def bods2c_error(name):
     (code, found) = cspyce0.bods2c(name)
     if not found:
         chkin('bods2c_error')
-        setmsg(f'body name "{name}" not found in kernel pool')
+        setmsg('body name "{}" not found in kernel pool'.format(name))
         sigerr('SPICE(BODYNAMENOTFOUND)')
         chkout('bods2c_error')
 
@@ -246,8 +249,8 @@ def ccifrm_error(frclss, clssid):
     (frcode, frname, center, found) = cspyce0.ccifrm(frclss, clssid)
     if not found:
         chkin('ccifrm_error')
-        setmsg(f'unrecognized frame description: class {frclss}; ' +
-               f'class id {clssid}')
+        setmsg('unrecognized frame description: class {}; '
+               'class id {}'.format(frclss, clssid))
         sigerr('SPICE(INVALIDFRAMEDEF)')
         chkout('ccifrm_error')
 
@@ -257,7 +260,7 @@ def cidfrm_error(code):
     (frcode, name, found) = cspyce0.cidfrm(code)
     if not found:
         chkin('cidfrm_error')
-        setmsg(f'body code {code} not found in kernel pool')
+        setmsg('body code {} not found in kernel pool'.format(code))
         sigerr('SPICE(BODYIDNOTFOUND)')
         chkout('cidfrm_error')
 
@@ -267,7 +270,7 @@ def ckcov_error(ck, idcode, needav, level, tol, timsys):
     coverage = cspyce0.ckcov(ck, idcode, needav, level, tol, timsys)
     if coverage.size == 0:
         chkin('ckcov_error')
-        setmsg(f'body code {idcode} not found in C kernel file {ck}')
+        setmsg('body code {} not found in C kernel file {}'.format(idcode, ck))
         sigerr('SPICE(BODYIDNOTFOUND)')
         chkout('ckcov_error')
 
@@ -283,10 +286,10 @@ def ckgp_error(inst, sclkdp, tol, ref):
             namestr = ''
 
         chkin('ckgp_error')
-        setmsg('insufficient C kernel data to evaluate ' +
-               f'instrument/spacecraft {inst}{namestr} ' +
-               f'at spacecraft clock time {sclkdp} ' +
-               f'with tolerance {tol}')
+        setmsg('insufficient C kernel data to evaluate '
+               'instrument/spacecraft {}{} '
+               'at spacecraft clock time {} '
+               'with tolerance {}'.format(inst, namestr, sclkdp, tol))
         sigerr('SPICE(CKINSUFFDATA)')
         chkout('ckgp_error')
 
@@ -302,10 +305,10 @@ def ckgpav_error(inst, sclkdp, tol, ref):
             namestr = ''
 
         chkin('ckgpav_error')
-        setmsg('insufficient C kernel data to evaluate ' +
-               f'instrument/spacecraft {inst}{namestr} ' +
-               f'at spacecraft clock time {sclkdp} ' +
-               f'with tolerance {tol}')
+        setmsg('insufficient C kernel data to evaluate '
+               'instrument/spacecraft {}{} '
+               'at spacecraft clock time {} '
+               'with tolerance {}'.format(inst, namestr, sclkdp, tol))
         sigerr('SPICE(CKINSUFFDATA)')
         chkout('ckgpav_error')
 
@@ -315,7 +318,7 @@ def cnmfrm_error(cname):
     (frcode, frname, found) = cspyce0.cnmfrm(cname)
     if not found:
         chkin('cnmfrm_error')
-        setmsg(f'body name "{cname}" not found in kernel pool')
+        setmsg('body name "{}" not found in kernel pool'.format(cname))
         sigerr('SPICE(BODYNAMENOTFOUND)')
         chkout('cnmfrm_error')
 
@@ -325,7 +328,7 @@ def dtpool_error(name):
     (found, n, vtype) = cspyce0.dtpool(name)
     if not found:
         chkin('dtpool_error')
-        setmsg(f'pool variable "{name}" not found')
+        setmsg('pool variable "{}" not found'.format(name))
         sigerr('SPICE(VARIABLENOTFOUND)')
         chkout('dtpool_error')
 
@@ -335,7 +338,7 @@ def frinfo_error(frcode):
     (cent, frclss, clssid, found) = cspyce0.frinfo(frcode)
     if not found:
         chkin('frinfo_error')
-        setmsg(f'frame code {frcode} not found in kernel pool')
+        setmsg('frame code {} not found in kernel pool'.format(frcode))
         sigerr('SPICE(FRAMEIDNOTFOUND)')
         chkout('frinfo_error')
 
@@ -345,7 +348,7 @@ def frmnam1_error(frcode):  # change of name; frmnam_error is defined below
     frname = cspyce0.frmnam(frcode)
     if frname == '':
         chkin('frmnam_error')
-        setmsg(f'frame code {frcode} not found')
+        setmsg('frame code {} not found'.format(frcode))
         sigerr('SPICE(FRAMEIDNOTFOUND)')
         chkout('frmnam_error')
 
@@ -354,28 +357,28 @@ def frmnam1_error(frcode):  # change of name; frmnam_error is defined below
 def gcpool_error(name, start=0):
     (cvals, found) = cspyce0.gcpool(name, start)
     if not found:
-        [ok, count, nctype] = cspyce0.dtpool(name)
+        ok, _count, _nctype = cspyce0.dtpool(name)
         if not ok:
             chkin('gcpool_error')
-            setmsg(f'pool variable "{name}" not found')
+            setmsg('pool variable "{}" not found'.format(name))
             sigerr('SPICE(VARIABLENOTFOUND)')
             chkout('gcpool_error')
             return []
 
-    [ok, count, nctype] = cspyce0.dtpool(name)
+    _ok, count, nctype = cspyce0.dtpool(name)
     if nctype != 'C':
         chkin('gcpool_error')
         setmsg('string information not available; '
-               f'kernel pool variable "{name}" has numeric values')
+               'kernel pool variable "{}" has numeric values'.format(name))
         sigerr('SPICE(WRONGDATATYPE)')
         chkout('gcpool_error')
         return []
 
     if start > count:
         chkin('gcpool_error')
-        setmsg(f'kernel pool has only {count} ' +
-               f'values for variable "{name}";' +
-               f'start index value {start} is too large')
+        setmsg('kernel pool has only {} '
+               'values for variable "{}";'
+               'start index value {} is too large'.format(count, name, start))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('gcpool_error')
         return []
@@ -385,28 +388,28 @@ def gcpool_error(name, start=0):
 def gdpool_error(name, start=0):
     (values, found) = cspyce0.gdpool(name, start)
     if not found:
-        [ok, count, nctype] = cspyce0.dtpool(name)
+        (ok, count, nctype) = cspyce0.dtpool(name)
         if not ok:
             chkin('gdpool_error')
-            setmsg(f'pool variable "{name}" not found')
+            setmsg('pool variable "{}" not found'.format(name))
             sigerr('SPICE(VARIABLENOTFOUND)')
             chkout('gdpool_error')
             return []
 
-    [ok, count, nctype] = cspyce0.dtpool(name)
+    (ok, count, nctype) = cspyce0.dtpool(name)
     if nctype != 'N':
         chkin('gdpool_error')
         setmsg('numeric values are not available; '
-               f'kernel pool variable "{name}" has string values')
+               'kernel pool variable "{}" has string values'.format(name))
         sigerr('SPICE(WRONGDATATYPE)')
         chkout('gdpool_error')
         return []
 
     if start > count:
         chkin('gdpool_error')
-        setmsg(f'kernel pool has only {count} ' +
-               f'values for variable "{name}";' +
-               f'start index value {state} is too large')
+        setmsg('kernel pool has only {} '
+               'values for variable "{}";'
+               'start index value {} is too large'.format(count, name, start))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('gdpool_error')
         return []
@@ -416,28 +419,28 @@ def gdpool_error(name, start=0):
 def gipool_error(name, start=0):
     (ivals, found) = cspyce0.gipool(name, start)
     if not found:
-        [ok, count, nctype] = cspyce0.dtpool(name)
+        (ok, count, nctype) = cspyce0.dtpool(name)
         if not ok:
             chkin('gipool_error')
-            setmsg(f'pool variable "{name}" not found')
+            setmsg('pool variable "{}" not found'.format(name))
             sigerr('SPICE(VARIABLENOTFOUND)')
             chkout('gipool_error')
             return []
 
-    [ok, count, nctype] = cspyce0.dtpool(name)
+    (ok, count, nctype) = cspyce0.dtpool(name)
     if nctype != 'N':
         chkin('gipool_error')
         setmsg('numeric values are not available; '
-               f'kernel pool variable "{name}" has string values')
+               'kernel pool variable "{}" has string values'.format(name))
         sigerr('SPICE(WRONGDATATYPE)')
         chkout('gipool_error')
         return []
 
     if start > count:
         chkin('gipool_error')
-        setmsg(f'kernel pool has only {count} ' +
-               f'values for variable "{name}";' +
-               f'start index value {state} is too large')
+        setmsg('kernel pool has only {} '
+               'values for variable "{}";'
+               'start index value {} is too large'.format(count, name, start))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('gipool_error')
         return []
@@ -448,15 +451,15 @@ def gnpool_error(name, start=0):
     (kvars, found) = cspyce0.gnpool(name, 0)
     if not found:
         chkin('gnpool_error')
-        setmsg(f'no kernel pool variables found matching template "{name}"')
+        setmsg('no kernel pool variables found matching template "{}"'.format(name))
         sigerr('SPICE(VARIABLENOTFOUND)')
         chkout('gnpool_error')
         return []
 
     if start > len(kvars):
-        setmsg(f'kernel pool has only {len(kvars)} ' +
-               f'variables matching template "{name}";' +
-               f'start index value {state} is too large')
+        setmsg('kernel pool has only {} '
+               'variables matching template "{}";'
+               'start index value {} is too large'.format(len(kvars), name, start))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('gnpool_error')
         return []
@@ -467,7 +470,7 @@ def namfrm1_error(frname):  # change of name; namfrm_error is defined below
     frcode = cspyce0.namfrm(frname)
     if frcode == 0:
         chkin('namfrm_error')
-        setmsg(f'frame name "{frname}" not found in kernel pool')
+        setmsg('frame name "{}" not found in kernel pool'.format(frname))
         sigerr('SPICE(FRAMENAMENOTFOUND)')
         chkout('namfrm_error')
 
@@ -477,7 +480,7 @@ def pckcov_error(pck, code):
     coverage = cspyce0.pckcov(pck, code)
     if coverage.size == 0:
         chkin('pckcov_error')
-        setmsg(f'frame code {code} not found in binary PC kernel file {pck}')
+        setmsg('frame code {} not found in binary PC kernel file {}'.format(code, pck))
         sigerr('SPICE(FRAMEIDNOTFOUND)')
         chkout('pckcov_error')
 
@@ -487,7 +490,7 @@ def spkcov_error(spk, code):
     coverage = cspyce0.spkcov(spk, code)
     if coverage.size == 0:
         chkin('spkcov_error')
-        setmsg(f'body code {code} not found in SP kernel file {spk}')
+        setmsg('body code {} not found in SP kernel file {}'.format(code, spk))
         sigerr('SPICE(BODYIDNOTFOUND)')
         chkout('spkcov_error')
 
@@ -497,7 +500,7 @@ def srfc2s_error(code, bodyid):
     (srfstr, isname) = cspyce0.srfc2s(code, bodyid)
     if not isname:
         chkin('srfc2s_error')
-        setmsg(f'surface for {code}/{bodyid} not found')
+        setmsg('surface for {}/{} not found'.format(code, bodyid))
         sigerr('SPICE(NOTRANSLATION)')
         chkout('srfc2s_error')
 
@@ -507,7 +510,7 @@ def srfcss_error(code, bodstr):
     (srfstr, isname) = cspyce0.srfcss(code, bodstr)
     if not isname:
         chkin('srfcss_error')
-        setmsg(f'surface for {code}/"{bodstr}" not found')
+        setmsg('surface for {}/"{}" not found'.format(code, bodstr))
         sigerr('SPICE(NOTRANSLATION)')
         chkout('srfcss_error')
 
@@ -517,7 +520,7 @@ def srfs2c_error(srfstr, bodstr):
     (code, found) = cspyce0.srfs2c(srfstr, bodstr)
     if not found:
         chkin('srfs2c_error')
-        setmsg(f'surface for "{srfstr}"/"{bodstr}" not found')
+        setmsg('surface for "{}"/"{}" not found'.format(srfstr, bodstr))
         sigerr('SPICE(NOTRANSLATION)')
         chkout('srfs2c_error')
 
@@ -527,7 +530,7 @@ def srfscc_error(srfstr, bodyid):
     (code, found) = cspyce0.srfscc(srfstr, bodyid)
     if not found:
         chkin('srfscc_error')
-        setmsg(f'"{srfstr}"/{bodyid} not found')
+        setmsg('"{}"/{} not found'.format(srfstr, bodyid))
         sigerr('SPICE(NOTRANSLATION)')
         chkout('srfscc_error')
 
@@ -536,10 +539,10 @@ def srfscc_error(srfstr, bodyid):
 def stpool_error(item, nth, contin):
     (string, found) = cspyce0.stpool(item, nth, contin)
     if not found:
-        [ok, count, nctype] = cspyce0.dtpool(name)
+        (ok, count, nctype) = cspyce0.dtpool(name)
         if not ok:
             chkin('stpool_error')
-            setmsg(f'pool variable "{name}" not found')
+            setmsg('pool variable "{}" not found'.format(name))
             sigerr('SPICE(VARIABLENOTFOUND)')
             chkout('stpool_error')
             return ''
@@ -549,17 +552,17 @@ def stpool_error(item, nth, contin):
             if ok:
                 chkin('stpool_error')
                 setmsg('index too large; '
-                       f'kernel pool has fewer than {nth} ' +
-                       f'strings matching name "{item}" ' +
-                       f'and continuation "{contin}"')
+                       'kernel pool has fewer than {} '
+                       'strings matching name "{}" '
+                       'and continuation "{}"'.format(nth, item, contin))
                 sigerr('SPICE(INDEXOUTOFRANGE)')
                 chkout('stpool_error')
                 return ''
 
-    [ok, count, nctype] = cspyce0.dtpool(item)
+    (ok, count, nctype) = cspyce0.dtpool(item)
     if nctype != 'C':
         setmsg('string values are not available; '
-               f'kernel pool variable "{item}" has numeric values')
+               'kernel pool variable "{}" has numeric values'.format(item))
         sigerr('SPICE(WRONGDATATYPE)')
         chkout('stpool_error')
         return ''
@@ -592,7 +595,7 @@ def ckfrot_error(inst, et):
     (rotate, ref, found) = cspyce0.ckfrot(inst, et)
     if not found:
         chkin('ckfrot_error')
-        setmsg(f'Orientation data not found for instrument {inst} at time {et}')
+        setmsg('Orientation data not found for instrument {} at time {}'.format(inst, et))
         sigerr('SPICE(CKINSUFFDATA)')
         chkout('ckfrot_error')
 
@@ -602,7 +605,7 @@ def ckfxfm_error(inst, et):
     (rotate, ref, found) = cspyce0.ckfxfm(inst, et)
     if not found:
         chkin('ckfxfm_error')
-        setmsg(f'Orientation data not found for instrument {inst} at time {et}')
+        setmsg('Orientation data not found for instrument {} at time {}'.format(inst, et))
         sigerr('SPICE(CKINSUFFDATA)')
         chkout('ckfxfm_error')
 
@@ -612,28 +615,30 @@ def dafgsr_error(handle, recno, begin, end):
     (data, found) = cspyce0.dafgsr(handle, recno, begin, end)
     if not found:
         chkin('dafgsr_error')
-        setmsg(f'DAF summary content not available for handle {handle}, ' +
-               f'record {recno}, words {begin}-{end}')
+        setmsg('DAF summary content not available for handle {}, '
+               'record {}, words {}-{}'.format(handle, recno, begin, end))
         sigerr('SPICE(DAFFRNOTFOUND)')
         chkout('dafgsr_error')
 
     return data
 
-def dlabbs_error(handle):
-    (dladsc, found) = cspyce0.dafgsr(handle)
+
+def dlabbs_error(handle, recno, begin, end):
+    (dladsc, found) = cspyce0.dafgsr(handle, recno, begin, end)
     if not found:
         chkin('dlabbs_error')
-        setmsg(f'DLA segment not found for handle {handle}')
+        setmsg('DLA segment not found for handle {}'.format(handle))
         sigerr('SPICE(DASFILEREADFAILED)')
         chkout('dlabbs_error')
 
     return dladsc
 
-def dlabfs_error(handle):
-    (dladsc, found) = cspyce0.dafgsr(handle)
+
+def dlabfs_error(handle, recno, begin, end):
+    (dladsc, found) = cspyce0.dafgsr(handle, recno, begin, end)
     if not found:
         chkin('dlabfs_error')
-        setmsg(f'DLA segment not found for handle {handle}')
+        setmsg('DLA segment not found for handle {}'.format(handle))
         sigerr('SPICE(DASFILEREADFAILED)')
         chkout('dlabfs_error')
 
@@ -643,7 +648,7 @@ def dlafns_error(handle, dladsc):
     (nxtdsc, found) = cspyce0.dlafns(handle, dladsc)
     if not found:
         chkin('dlafns_error')
-        setmsg(f'DLA segment not found for handle {handle}')
+        setmsg('DLA segment not found for handle {}'.format(handle))
         sigerr('SPICE(DASFILEREADFAILED)')
         chkout('dlafns_error')
 
@@ -653,7 +658,7 @@ def dlafps_error(handle, dladsc):
     (prvdsc, found) = cspyce0.dlafps(handle, dladsc)
     if not found:
         chkin('dlafps_error')
-        setmsg(f'DLA segment not found for handle {handle}')
+        setmsg('DLA segment not found for handle {}'.format(handle))
         sigerr('SPICE(DASFILEREADFAILED)')
         chkout('dlafps_error')
 
@@ -679,8 +684,11 @@ def dskx02_error(handle, dladsc, vertex, raydir):
 
     return [plid, xpt]
 
-def dskxsi_error(pri, target, srflst, et, fixref, vertex, raydir):
-    (xpt, handle, dladsc, dskdsc, dc, ic, found) = cspyce0.dskxsi(pri, target, srflst, et, fixref, vertex, raydir)
+
+def dskxsi_error(pri, target, nsurf, srflst, et, fixref, vertex, raydir):
+    (xpt, handle, dladsc, dskdsc, dc, ic, found) = cspyce0.dskxsi(pri, target, nsurf,
+                                                                  srflst, et, fixref,
+                                                                  vertex, raydir)
     if not found:
         chkin('dskxsi_error')
         setmsg('Intercept plate ID not found')
@@ -703,8 +711,8 @@ def ekgc_error(selidx, row, elment):
     (cdata, null, found) = cspyce0.ekgc(selidx, row, elment)
     if not found:
         chkin('ekgc_error')
-        setmsg(f'EK item not found: column index {selidx}, ' +
-               f'row {row}, element {elment}')
+        setmsg('EK item not found: column index {}, '
+               'row {}, element {}'.format(selidx, row, elment))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('ekgc_error')
 
@@ -714,8 +722,8 @@ def ekgd_error(selidx, row, elment):
     (ddata, null, found) = cspyce0.ekgd(selidx, row, elment)
     if not found:
         chkin('ekgd_error')
-        setmsg(f'EK item not found: column index {selidx}, ' +
-               f'row {row}, element {elment}')
+        setmsg('EK item not found: column index {}, '
+               'row {}, element {}'.format(selidx, row, elment))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('ekgd_error')
 
@@ -725,16 +733,18 @@ def ekgi_error(selidx, row, elment):
     (idata, null, found) = cspyce0.ekgi(selidx, row, elment)
     if not found:
         chkin('ekgi_error')
-        setmsg(f'EK item not found: column index {selidx}, ' +
-               f'row {row}, element {elment}')
+        setmsg('EK item not found: column index {}, '
+               'row {}, element {}'.format(selidx, row, elment))
         sigerr('SPICE(INDEXOUTOFRANGE)')
         chkout('ekgi_error')
 
     return [idata, null]
 
-def ekpsel_error(query):
-    (xbegs, xends, xtypes, xclass, tabs, cols,
-     error, errmsg) = cspyce0.ekpsel(query)
+
+def ekpsel_error(query, tabs, n4, cols, n5):
+    (xbegs, xends, xtypes, xclass, tabs, cols, error, errmsg) = cspyce0.ekpsel(query,
+                                                                               tabs, n4,
+                                                                               cols, n5)
     if error:
         chkin('ekpsel_error')
         setmsg(errmsg)
@@ -753,11 +763,14 @@ def hx2dp_error(string):
 
     return number
 
-def kdata_error(which, kind, file, filtyp, srcfil):
-    (handle, found) = cspyce0.kdata(which, kind, file, filtyp, srcfil)
+
+def kdata_error(which, kind, fileln, file, filtln, filtyp, srclen, srcfil):
+    (handle, found) = cspyce0.kdata(which, kind, fileln, file, filtln, filtyp, srclen,
+                                    srcfil)
     if not found:
         chkin('kdata_error')
-        setmsg(f'kernel not found: {which}, {kind}, {file}, {filtyp}, {srcfil}')
+        setmsg('kernel not found: {}, {}, {}, {}, {}'.format(which, kind, file, filtyp,
+                                                             srcfil))
         sigerr('SPICE(FILENOTFOUND)')
         chkout('kdata_error')
 
@@ -773,11 +786,12 @@ def kinfo_error(file):
 
     return [filtyp, srcfil, handle]
 
-def spksfs_error(body, et):
-    (handle, descr, ident, found) = cspyce0.spksfs(body, et, idlen)
+
+def spksfs_error(body, et, idlen, ident):
+    (handle, descr, ident, found) = cspyce0.spksfs(body, et, idlen, ident)
     if not found:
         chkin('spksfs_error')
-        setmsg(f'SPK segment not found for body "{body}", time {et}')
+        setmsg('SPK segment not found for body "{}", time {}'.format(body, et))
         sigerr('SPICE(SPKINSUFFDATA)')
         chkout('spksfs_error')
 
@@ -787,7 +801,7 @@ def szpool_error(name):
     (n, found) = cspyce0.szpool(name)
     if not found:
         chkin('szpool_error')
-        setmsg(f'kernel pool size limit "{name}" not found')
+        setmsg('kernel pool size limit "{}" not found'.format(name))
         sigerr('SPICE(KERNELVARNOTFOUND)')
         chkout('szpool_error')
 
@@ -797,7 +811,7 @@ def tkfram_error(frcode):
     (rot, frame, found) = cspyce0.tkfram(frcode)
     if not found:
         chkin('tkfram_error')
-        setmsg(f'rotation matrix for frame {frcode} not found')
+        setmsg('rotation matrix for frame {} not found'.format(frcode))
         sigerr('SPICE(FRAMEIDNOTFOUND)')
         chkout('tkfram_error')
 
@@ -1053,20 +1067,20 @@ VECTORIZED_ARGS = {
     'float[4]'   : ('float[_,4]'   , 'float[_,4]'   ),
     'float[6]'   : ('float[_,6]'   , 'float[_,6]'   ),
     'float[8]'   : ('float[_,8]'   , 'float[_,8]'   ),
-    'float[9]'   : ('float[_,9]'   , 'float[_,9]'   ),
-    'float[2,2]' : ('float[_,2,2]' , 'float[_,2,2]' ),
-    'float[3,3]' : ('float[_,3,3]' , 'float[_,3,3]' ),
-    'float[6,6]' : ('float[_,6,6]' , 'float[_,6,6]' ),
-    'float[*]'   : ('float[_,*]'   , 'float[_,*]'   ),
-    'float[*,*]' : ('float[_,*,*]' , 'float[_,*,*]' ),
+    'float[9]': ('float[_,9]', 'float[_,9]'),
+    'float[2,2]': ('float[_,2,2]', 'float[_,2,2]'),
+    'float[3,3]': ('float[_,3,3]', 'float[_,3,3]'),
+    'float[6,6]': ('float[_,6,6]', 'float[_,6,6]'),
+    'float[*]': ('float[_,*]', 'float[_,*]'),
+    'float[*,*]': ('float[_,*,*]', 'float[_,*,*]'),
     'rotmat[3,3]': ('rotmat[_,3,3]', 'rotmat[_,3,3]'),
     'rotmat[6,6]': ('rotmat[_,6,6]', 'rotmat[_,6,6]'),
-    'int'        : ('int'          , 'int[_]'       ),
-    'bool'       : ('bool'         , 'bool[_]'      ),
-    'body_code'  : ('body_code'    , 'body_code[_]' ), # not used (yet)
-    'frame_code' : ('frame_code'   , 'frame_code[_]'), # not used (yet)
-    'body_name'  : ('body_name'    , 'body_name[_]' ), # not used (yet)
-    'frame_name' : ('frame_name'   , 'frame_name[_]'), # not used (yet)
+    'int': ('int', 'int[_]'),
+    'bool': ('bool', 'bool[_]'),
+    'body_code': ('body_code', 'body_code[_]'),  # not used (yet)
+    'frame_code': ('frame_code', 'frame_code[_]'),  # not used (yet)
+    'body_name': ('body_name', 'body_name[_]'),  # not used (yet)
+    'frame_name': ('frame_name', 'frame_name[_]'),  # not used (yet)
 }
 
 def _vectorize_signature(signature):
@@ -1097,17 +1111,18 @@ it returns results identical to the un-vectorized version.
 for basename in CSPYCE_BASENAMES:
     for suffix in ('', '_error'):
         vname = basename + '_vector' + suffix
-        if vname not in globals(): continue
+        if vname not in globals():
+            continue
 
         name = basename + suffix
         func = globals()[name]
         vfunc = globals()[vname]
 
-        vfunc.ABSTRACT  = func.ABSTRACT
+        vfunc.ABSTRACT = func.ABSTRACT
         vfunc.SIGNATURE = _vectorize_signature(func.SIGNATURE)
-        vfunc.ARGNAMES  = func.ARGNAMES
-        vfunc.RETURNS   = _vectorize_signature(func.RETURNS)
-        vfunc.RETNAMES  = func.RETNAMES
+        vfunc.ARGNAMES = func.ARGNAMES
+        vfunc.RETURNS = _vectorize_signature(func.RETURNS)
+        vfunc.RETNAMES = func.RETNAMES
         vfunc.PS        = func.PS
         vfunc.URL       = func.URL
         vfunc.DEFINITIONS = func.DEFINITIONS

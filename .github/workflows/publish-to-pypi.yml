@@ -59,7 +59,7 @@ jobs:
 #          # Source build
 #          - {os: ubuntu-latest, python: 3.8, dist: sdist }
 #          # Linux multi build
-          - {os: ubuntu-latest, docker-python: cp38-cp38}
+#          - {os: ubuntu-latest, docker-python: cp38-cp38}
 #          - {os: ubuntu-latest, docker-python: cp39-cp39}
 #          - {os: ubuntu-latest, docker-python: cp310-cp310}
       fail-fast: false
