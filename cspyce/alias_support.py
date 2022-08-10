@@ -271,8 +271,8 @@ def _alias_signature(func):
     for (sig, name) in zip(func.SIGNATURE, func.ARGNAMES):
         if sig in ('body_name', 'body_code', 'frame_name', 'frame_code'):
             definition = func.DEFINITIONS[name]
-            if not definition.endswith('**'):
-                func.DEFINITIONS[name] = definition + '**'
+            if not definition[1].endswith('**'):
+                func.DEFINITIONS[name] = (definition[0], definition[1] + '**')
 
 def _alias_name(name):
     parts = name.split('_')
