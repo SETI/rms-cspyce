@@ -113,7 +113,7 @@ jobs:
           python -m twine upload --verbose --skip-existing dist/*
 
       - name: Publish distribution to PyPI
-        if: false
+        if: true
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
