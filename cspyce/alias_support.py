@@ -6,6 +6,7 @@
 import sys
 import re
 import inspect
+import numbers
 from collections import deque
 
 import cspyce
@@ -25,9 +26,9 @@ def get_body_aliases(item):
     """Return a tuple containing the list of equivalent codes and the list of
     equivalent names for a given body name or code."""
 
+    item = _as_key(item)
     try:
-        key = _as_key(item)
-        return (BODY_CODE_ALIASES[key], BODY_NAME_ALIASES[key])
+        return (BODY_CODE_ALIASES[item], BODY_NAME_ALIASES[item])
     except KeyError:
         pass
 
@@ -55,9 +56,9 @@ def get_frame_aliases(item):
     identifies a body instead of a frame, then return the aliases of the
     associated frame."""
 
+    item = _as_key(item)
     try:
-        key = _as_key(item)
-        return (FRAME_CODE_ALIASES[key], FRAME_NAME_ALIASES[key])
+        return (FRAME_CODE_ALIASES[item], FRAME_NAME_ALIASES[item])
     except KeyError:
         pass
 
@@ -114,9 +115,9 @@ def define_body_aliases(*items):
         (codes, names) = get_body_aliases(item)
         queue.extend(codes + names)
 
-        if isinstance(item, int):
+        if isinstance(item, numbers.Integral):
             code_list.append(item)
-            aliases.add(item)
+            aliases.add(int(item))
 
         else:
             key = _as_key(item)
@@ -169,9 +170,9 @@ def define_frame_aliases(*items):
         (codes, names) = get_frame_aliases(item)
         queue.extend(codes + names)
 
-        if isinstance(item, int):
+        if isinstance(item, numbers.Integral):
             code_list.append(item)
-            aliases.add(item)
+            aliases.add(int(item))
 
         else:
             key = _as_key(item)
@@ -211,12 +212,13 @@ def _as_key(name):
     return ints unchanged.
     """
 
-    if isinstance(name, int):
-        return name
+    if isinstance(name, numbers.Integral):
+        return int(name)
 
-    name = name.upper().strip()
-    while ('  ' in name):
-        name = name.replace('  ', ' ')
+    if isinstance(name, str):
+        name = name.upper().strip()
+        while ('  ' in name):
+            name = name.replace('  ', ' ')
 
     return name
 
@@ -369,13 +371,13 @@ ALIAS_LOOKUP_DICT = {    # returns (function, index)
 }
 
 def _getarg(indx, args, keywords):
-    if isinstance(indx, int):
+    if isinstance(indx, numbers.Integral):
         return args[indx]
     else:
         return keywords[indx]
 
 def _setarg(indx, value, args, keywords):
-    if isinstance(indx, int):
+    if isinstance(indx, numbers.Integral):
         args[indx] = value
     else:
         keywords[indx] = value
@@ -452,7 +454,7 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
     for indx in alias_indices:
         argtype = func.ALIAS_ARGS[indx]
         value = _getarg(indx, args, keywords)
-        if isinstance(value, int) and argtype.endswith('_code'):
+        if isinstance(value, numbers.Integral) and argtype.endswith('_code'):
             continue
         if isinstance(value, str) and argtype.endswith('_name'):
             continue
