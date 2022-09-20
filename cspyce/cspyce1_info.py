@@ -13,7 +13,7 @@ from cspyce.cspyce0_info import \
     CSPYCE_RETURNS, CSPYCE_RETNAMES, CSPYCE_DEFINITIONS, \
     CSPYCE_ABSTRACT, CSPYCE_PS, CSPYCE_URL
 
-ERROR_INFO = [     # (function name, return value to remove if any, postscript text for docstring)
+ERROR_INFO = [      # (function name, return value to remove if any, postscript text for docstring)
 
 # Functions defined in cspyce0.i
     ('bodc2n', 'found' , 'Raise KeyError(BODYIDNOTFOUND) if name could not be translated.'),
@@ -41,9 +41,9 @@ ERROR_INFO = [     # (function name, return value to remove if any, postscript t
                          'TypeError(WRONGDATATYPE) if it has the wrong type; ' +
                          'IndexError(INDEXOUTOFRANGE) if the start index is out of range.'),
     ('invert', ''      , 'Raise ValueError(SINGULARMATRIX) if the matrix is singular.'),
-    ('namfrm', ''      , 'Raise KeyError((FRAMENAMENOTFOUND) if the frame name is not recognized.'),
-    ('pckcov', ''      , 'Raise KeyError((FRAMEIDNOTFOUND) if the frame is not found.'),
-    ('spkcov', ''      , 'Raise KeyError((BODYIDNOTFOUND) if the body is not found.'),
+    ('namfrm', ''      , 'Raise KeyError(FRAMENAMENOTFOUND) if the frame name is not recognized.'),
+    ('pckcov', ''      , 'Raise KeyError(FRAMEIDNOTFOUND) if the frame is not found.'),
+    ('spkcov', ''      , 'Raise KeyError(BODYIDNOTFOUND) if the body is not found.'),
     ('srfc2s', ''      , 'Raise KeyError(NOTRANSLATION) if surface not found.'),
     ('srfcss', 'isname', 'Raise KeyError(NOTRANSLATION) if surface not found.'),
     ('srfs2c', 'found' , 'Raise KeyError(NOTRANSLATION) if surface not found.'),
@@ -77,7 +77,7 @@ ERROR_INFO = [     # (function name, return value to remove if any, postscript t
     ('kdata' ,  'found', 'Raise IOError(FILENOTFOUND) if the specified file could be located.'),
     ('kinfo' ,  'found', 'Raise IOError(FILENOTFOUND) if the specified file could be located.'),
     ('spksfs',  'found', 'Raise IOError(SPKINSUFFDATA) if the requested information is unavailable.'),
-    ('szpool',  'found', 'Raise KeyError((KERNELVARNOTFOUND) if the parameter name is not recognized.'),
+    ('szpool',  'found', 'Raise KeyError(KERNELVARNOTFOUND) if the parameter name is not recognized.'),
     ('tkfram',  'found', 'Raise KeyError(FRAMEIDNOTFOUND) if the frame transformation could not be found.'),
 ]
 
@@ -86,6 +86,7 @@ for (func, name, message) in ERROR_INFO:
     key = func + '_error'
     CSPYCE_ARGNAMES[key] = CSPYCE_ARGNAMES[func]
     CSPYCE_ABSTRACT[key] = CSPYCE_ABSTRACT[func]
+    CSPYCE_URL[key] = CSPYCE_URL[func]
 
     if func in CSPYCE_DEFAULTS:
         CSPYCE_DEFAULTS[key] = CSPYCE_DEFAULTS[func]

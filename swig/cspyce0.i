@@ -2493,7 +2493,7 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
                  trgepc, obspos, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -2614,7 +2614,7 @@ VECTORIZE_2d_dX_2d__dN(eqncpv, eqncpv_c, 6)
 *                "ABORT", or "DEFAULT" (which is similar to "ABORT").
 *                Note that options "ABORT" and "DEFAULT" are not supported
 *                in interactive Python. CSPICE options "REPORT" and "IGNORE"
-*                not safe and are not supported under any circumstances.
+*                are not safe and are not supported under any circumstances.
 ***********************************************************************/
 
 %rename (erract) my_erract_c;
@@ -2653,12 +2653,12 @@ VECTORIZE_2d_dX_2d__dN(eqncpv, eqncpv_c, 6)
                 strncpy(action, "RUNTIME", lenout);
             }
             else if (eqstr_c(action, "REPORT")) {
-                printf("Error action \"REPORT\" is not supported; using \"RETURN\"");
+                printf("CSPICE error action \"REPORT\" is not supported; using \"RETURN\"\n");
                 erract_c("SET", lenout, "RETURN");
                 strncpy(action, "RETURN", lenout);
             }
             else if (eqstr_c(action, "IGNORE")) {
-                printf("Error action \"IGNORE\" is not supported; using \"RETURN\"");
+                printf("CSPICE error action \"IGNORE\" is not supported; using \"RETURN\"\n");
                 erract_c("SET", lenout, "RETURN");
                 strncpy(action, "RETURN", lenout);
             }
@@ -3473,7 +3473,7 @@ extern void gcpool_c(
 );
 
 //CSPYCE_DEFAULT:name:""
-//CSPYCE_DEFAULT:start:1
+//CSPYCE_DEFAULT:start:0
 
 /***********************************************************************
 * -Procedure gdpool_c (Get d.p. values from the kernel pool)
@@ -3515,7 +3515,7 @@ extern void gdpool_c(
 );
 
 //CSPYCE_DEFAULT:name:""
-//CSPYCE_DEFAULT:start:1
+//CSPYCE_DEFAULT:start:0
 
 /***********************************************************************
 * -Procedure georec_c ( Geodetic to rectangular coordinates )
@@ -3711,6 +3711,9 @@ extern void gipool_c(
         SpiceBoolean   *OUT_BOOLEAN
 );
 
+//CSPYCE_DEFAULT:name:""
+//CSPYCE_DEFAULT:start:0
+
 /***********************************************************************
 * -Procedure gnpool_c (Get names of kernel pool variables)
 *
@@ -3754,6 +3757,9 @@ extern void gnpool_c(
 
 //CSPYCE_PS:Raise a SPICE error condition if the variable is not in the pool,
 //CSPYCE_PS:if it has the wrong type, or if the start index is out of range.
+
+//CSPYCE_DEFAULT:name:""
+//CSPYCE_DEFAULT:start:0
 
 /***********************************************************************
 * -Procedure halfpi_c ( Half the value of pi )
@@ -4646,7 +4652,7 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
         latsrf_c(method, target, et, fixref, npts, lonlat, srfpts1);
 
         if (failed_c()) {
-            free(srfpts1);
+            PyMem_Free(srfpts1);
             return;
         }
 
@@ -4835,10 +4841,10 @@ extern void ldpool_c(
         SpiceDouble *tangts1 = my_malloc(maxn * 3, "limbpt");
 
         if (!tangts1) {
-            free(npts1);
-            free(points1);
-            free(epochs1);
-            free(tangts1);
+            PyMem_Free(npts1);
+            PyMem_Free(points1);
+            PyMem_Free(epochs1);
+            PyMem_Free(tangts1);
             return;
         }
 
@@ -4847,10 +4853,10 @@ extern void ldpool_c(
                  npts1, points1, epochs1, tangts1);
 
         if (failed_c()) {
-            free(npts1);
-            free(points1);
-            free(epochs1);
-            free(tangts1);
+            PyMem_Free(npts1);
+            PyMem_Free(points1);
+            PyMem_Free(epochs1);
+            PyMem_Free(tangts1);
             return;
         }
 
@@ -5108,7 +5114,7 @@ VECTORIZE_dXY__dMN(mequ, mequ_c, 3, 3)
         mequg_c(m1, nr, nc, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -5224,7 +5230,7 @@ VECTORIZE_dXY_dXY__dMN(mtxm, mtxm_c, 3, 3)
         mtxmg_c(m1, m2, nc1, nr1, nc2, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -5341,7 +5347,7 @@ VECTORIZE_dXY_dX__dN(mtxv, mtxv_c, 3)
         mtxvg_c(m1, v2, nc1, nr1, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -5458,7 +5464,7 @@ VECTORIZE_dXY_dXY__dMN(mxm, mxm_c, 3, 3)
         mxmg_c(m1, m2, nr1, nc1, nc2, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -5578,7 +5584,7 @@ VECTORIZE_dXY_dXY__dMN(mxmt, mxmt_c, 3, 3)
         mxmtg_c(m1, m2, nr1, nc1, nr2, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -5694,7 +5700,7 @@ VECTORIZE_dXY_dX__dN(mxv, mxv_c, 3)
         mxvg_c(m1, v2, nr1, nc1, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -9401,7 +9407,7 @@ extern void srfcss_c(
         srfnrm_c(method, target, et, fixref, npts, srfpts, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -10447,10 +10453,10 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
         SpiceDouble *trmvcs1 = my_malloc(maxn * 3, "termpt");
 
         if (!trmvcs1) {
-            free(npts1);
-            free(points1);
-            free(epochs1);
-            free(trmvcs1);
+            PyMem_Free(npts1);
+            PyMem_Free(points1);
+            PyMem_Free(epochs1);
+            PyMem_Free(trmvcs1);
             return;
         }
 
@@ -10459,10 +10465,10 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
                  npts1, points1, epochs1, trmvcs1);
 
         if (failed_c()) {
-            free(npts1);
-            free(points1);
-            free(epochs1);
-            free(trmvcs1);
+            PyMem_Free(npts1);
+            PyMem_Free(points1);
+            PyMem_Free(epochs1);
+            PyMem_Free(trmvcs1);
             return;
         }
 
@@ -10523,7 +10529,7 @@ extern void timdef_c(
 );
 
 //CSPYCE_DEFAULT:action:"GET"
-//CSPYCE_DEFAULT:item:"SYSTEM"
+//CSPYCE_DEFAULT:item:""
 //CSPYCE_DEFAULT:value:""
 
 /***********************************************************************
@@ -11160,7 +11166,7 @@ VECTORIZE_dX__dN_d(unorm, unorm_c, 3)
         unormg_c(v1, ndim, result, vmag);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -11297,7 +11303,7 @@ VECTORIZE_dX_dX__dN(vadd, vadd_c, 3)
         vaddg_c(v1, v2, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -11590,7 +11596,7 @@ VECTORIZE_dX__dN(vequ, vequ_c, 3)
         vequg_c(v1, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -11686,7 +11692,7 @@ VECTORIZE_dX__dN(vhat, vhat_c, 3)
         vhatg_c(v1, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -11857,7 +11863,7 @@ VECTORIZE_d_dX_d_dX__dN(vlcom, vlcom_c, 3)
         vlcomg_c(n, a, v1, b, v2, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -11926,7 +11932,7 @@ VECTORIZE_d_di_d_di__di(vlcomg, my_vlcomg_nomalloc)
         vminug_c(v1, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -12431,7 +12437,7 @@ VECTORIZE_d_dX__dN(vscl, vscl_c, 3)
         vsclg_c(s, v1, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -12622,7 +12628,7 @@ VECTORIZE_dX_dX__dN(vsub, vsub_c, 3)
         vsubg_c(v1, v2, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -13080,7 +13086,7 @@ VECTORIZE_dXY__dMN(xpose, xpose_c, 3, 3)
         xposeg_c(matrix, nrow, ncol, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 

@@ -116,8 +116,8 @@ class MyBuildExt(build_ext):
 def do_setup():
     setup(
         name='cspyce',
-        version='2.0.4',
-        author="Mark Showalter/PDS Ring-Moon Systems Node",
+        version='2.0.5',
+        author="PDS Ring-Moon Systems Node",
         description="Low-level SWIG interface to the CSPICE library",
         ext_modules=get_extensions(),
         libraries=get_c_libraries(),
