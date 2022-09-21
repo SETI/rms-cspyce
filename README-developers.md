@@ -185,3 +185,141 @@ username = your_test_pypi_usename
 password = your_test_pypi_password
 ```
 Be sure to make this file publicly unreadable since it contains your passwords.
+
+## USING GITHUB TO CREATE A DISTRIBUTION
+
+### One-time steps
+
+#### Create an account on PyPI and Test PyPI
+
+Follow the steps for creating a new account at [Test PyPI](https://test.pypi.org/)
+and at [PyPi](https://pypi.org/)
+
+#### Get Permission to access cspyce
+
+Separate permission needs to be provided for both PyPI and Test PyPI.
+For now, only Frank and Rob can do this.
+They should visit the two folloing URLs in turn and add you as a collaborator.
+- https://pypi.org/manage/project/cspyce/collaboration/
+- https://test.pypi.org/manage/project/cspyce/collaboration
+
+
+#### Create tokens for PyPI and Test PyPI
+
+Perform the following steps for both PyPI and Test PyPI.
+
+Visit the following two URLs in turn:
+  - https://pypi.org/manage/account/token/
+  - https://test.pypi.org/manage/account/token
+
+For each of the URLs, 
+1. Fill in the two fields. The token name can be whatever you want.
+The scope should be `Project: cspyce`
+2. Click "Add token"
+3. Keep a copy of the text that is generated. This is your API Token.
+PyPI and Test PyPI have separate API tokens.
+
+####  (Optional) Update your `.pypirc` file.
+You can use the tokens created in the previous step in your `~/.pypirc` configuration
+file. 
+Use `__token__` as the username and the tokens generated above as the
+password.
+
+#### Tell GitHub these secrets.
+1. Log into your github repository for pds-cspyce
+2. Click "settings", then "secrets" on the left-hand menu, then "actions".
+3. Use the "New Repository Secret" button to add two secrets, named `PYPI_API_TOKEN` 
+and `TEST_PYPI_API_TOKEN`. The values of these two tokens should be the two API tokens
+generated above.
+
+### Creating a new distribution.
+
+#### Step 1
+When you are planning on creating a pull request that requires a new distribution, make
+sure that you update the version number in `setup.py`.
+The version number appears in the `do_setup()` function at the very end of the file.
+
+    Note to Rob: When a new distribution is needed, make sure the pull request includes 
+    an updated version number.
+
+#### Step 2
+Make a branch of the pull request called `GitActions`. 
+
+   * If you are the creator of the pull requestion, you simply need to checkout your
+      `master` branch, and then create a new branch at that point.
+
+   * If the pull request belongs to someone else, you need to get a copy of that
+      branch and name it `GitActions` locally.  (Help. I know how to do this in 
+      GitKraken, but not generally.)
+
+  **This step needs to be expanded a little further by someone who knows git commands better
+  than I do.**
+
+#### Step 3
+You should first try releasing to Test PyPI before attempting to release to the public. 
+Each release needs a separate version number.
+
+Modify the version number in `setup.py`.
+If the version number is `2.0.5`, change it to `2.0.5a1` indicating
+that this is the alpha-1 version of 2.0.5.
+If you find problems in your alpha-1 release
+and create a second Test PyPI, the versions should be `2.0.5a2`, `2.0.5a3`, etc.
+If you feel like you're getting closer, switch from alpha to beta by changing the
+`a` to a `b` and start the numbering again from 1.
+
+When you are finally ready to release to the public on PyPI, change the version number back to
+the original value.
+
+#### Step 4
+Look at the file `.github/workflows/publish_to_pypi.yml´.
+
+Change the line (approximately line 17)
+```
+    if: github.repository == 'fyellin/pds-cspyce'
+```
+to be the name of your github repository.
+
+Modify the line immediately after each of 
+```
+- name: Publish distribution to Test PyPI
+```
+and 
+```
+- name: Publish distribution to PyPI
+```
+as appropriate.
+The first says whether to release to Test PyPI.
+The latter says whether to publish to release to the public PyPI.
+The line following each of these should be either `if: true` or `if: false`.
+      
+      I typically release test versions just to Test PyPI, but the final version to both
+      TestPyPI and to PyPI.
+   
+By default, we generate four MacOS builds (2.7, 3.8, 3.9, 3.10), three Windows
+builds (3.8, 3.9, 3.10), three Linux builds (3.8, 3.9, 3.10), and a source build.
+Fell free to comment out the obvious lines if needed.
+
+     When new Python images become available, modify the above list in the `master`
+     version of this file.
+
+#### Step 5
+
+Commit the changes to `setup.py` and `publish_to_pypi.yml`.
+Push the changes to github.
+
+#### Step 6
+
+Log into github.
+Go to your workspace and click 'Actions'.
+Within a few minutes,
+you should see your actions being run.
+Investigate any errors, and go back to Step 3.
+
+#### Step 7
+Test. If there are any problems, fix and go back to Step 3.
+
+#### Step 8
+When you are done, you should delete the `GitActions` branch from your local workspace
+and from github.
+
+
