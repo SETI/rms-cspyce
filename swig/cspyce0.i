@@ -18,8 +18,8 @@
 
 #define CLAUSES 100     // max number of expressions in a SELECT clause
 #define COLLEN 100      // max length of string columns or parsed items
-#define COMMENTLEN 100  // max length of a comment including null
-#define COMMENTS 200    // max number of comments
+#define COMMENTLEN 256  // max length of a comment including null
+#define COMMENTS 1000   // max number of comments
 #define FILELEN 1000    // max length of a file path including null
 #define FOVSHAPE 40     // max number of vertices in the shape of an FOV
 #define KERVALLEN 80    // max length of a kernel string value
