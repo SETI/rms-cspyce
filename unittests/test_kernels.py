@@ -8,10 +8,10 @@ import unittest
 from cspyce import *
 PATH_ = os.path.split(__file__)[0] + '/../unittest_support/'
 
-class Test_spyce1_kernels(unittest.TestCase):
+class Test_cspyce1_kernels(unittest.TestCase):
 
   @staticmethod
-  def furnish():
+  def furnish_kernels():
     furnsh(PATH_ + 'naif0012.tls')
     furnsh(PATH_ + 'pck00010.tpc')
     furnsh(PATH_ + 'de432s.bsp')
@@ -25,7 +25,7 @@ class Test_spyce1_kernels(unittest.TestCase):
     furnsh(PATH_ + 'cas_iss_v10.ti')
 
   @staticmethod
-  def unload():
+  def unload_kernels():
     unload(PATH_ + 'naif0012.tls')
     unload(PATH_ + 'pck00010.tpc')
     unload(PATH_ + 'de432s.bsp')
@@ -72,6 +72,11 @@ class Test_spyce1_kernels(unittest.TestCase):
   def assertAllClose(self, arg1, arg2, tol=1.e-8):
         return self.assertAllEqual(arg1, arg2, tol, frac=True)
 
+  def tearDown(self):
+    # Be sure the kernel pool is completely empty upon exit
+    for k in range(ktotal()-1, -1, -1):
+        unload(kdata(k)[0])
+
   def runTest(self):
 
     INTMAX = intmax()
@@ -89,7 +94,7 @@ class Test_spyce1_kernels(unittest.TestCase):
     #### Not tested: stcf01, stcg01, stcl01, stcl01
 
     ### furnsh
-    self.furnish()
+    self.furnish_kernels()
 
     #### pool functions
 
@@ -162,7 +167,8 @@ class Test_spyce1_kernels(unittest.TestCase):
     self.assertFalse(bodfnd(699, 'RADII'))
     ldpool(PATH_ + 'pck00010.tpc')
     self.assertTrue(bodfnd(699, 'RADII'))
-    self.furnish()
+    self.unload_kernels()
+    self.furnish_kernels()
 
     #### expool, dtpool
     self.assertTrue(expool('BODY699_RADII'))
@@ -956,13 +962,15 @@ class Test_spyce1_kernels(unittest.TestCase):
     self.assertEqual(timdef('calendar'), 'GREGORIAN')
     self.assertEqual(timdef('get', 'calendar'), 'GREGORIAN')
 
-    timdef('set', 'system', 'tdb')
-    self.assertEqual(timdef('system'), 'TDB')
-    self.assertEqual(timdef('get', 'system'), 'TDB')
-    timdef('system', 'utc')
-    self.assertEqual(timdef('system'), 'UTC')
-    self.assertEqual(timdef('get', 'system'), 'UTC')
-    timdef('set', 'system', 'tdb')
+    try:
+        timdef('set', 'system', 'tdb')
+        self.assertEqual(timdef('system'), 'TDB')
+        self.assertEqual(timdef('get', 'system'), 'TDB')
+        timdef('system', 'utc')
+        self.assertEqual(timdef('system'), 'UTC')
+        self.assertEqual(timdef('get', 'system'), 'UTC')
+    finally:
+        timdef('set', 'system', 'utc')  # DO NOT LEAVE TIME SYSTEM OTHER THAN UTC!!!
 
     ### tsetyr
     tsetyr(2000)
@@ -974,452 +982,6 @@ class Test_spyce1_kernels(unittest.TestCase):
     self.assertAllClose(unitim(0., 'TAI', 'TDB'), 32.183927274)
     self.assertAllClose(unitim(0., 'TAI', 'JED'), 2451545.00037)
 
-    #### unload
-#     et = 17.65 * 365.25 * 86400.
-#     print spkez(-82, et, 'J2000', 'NONE', 699)
-#     print dtpool('BODY699_RADII')
-#
-#     self.unload()
-#     print spkez(-82, et, 'J2000', 'NONE', 699)
-#     print dtpool('BODY699_RADII')
-
-################################################################################
-#########################################
-# CSPICE1_SIGNATURES["fovray"] = ["string", "float[3]", "frame_name", "string",
-#                                 "body_name", "time"]
-# CSPICE1_RETURNS   ["fovray"] = ["bool"]
-# CSPICE1_DOCSTRINGS["fovray"] = """
-# Determine if a specified ray is within the field-of-view (FOV) of a
-# specified instrument at a given time.
-#
-# fovray(<string> inst, <float[3]> raydir, <string> rframe,
-#                       <string> abcorr, <string> observer, <float> et)
-#         -> <bool> visible
-#
-# inst     = Name or ID code string of the instrument.
-# raydir   = Ray's direction vector.
-# rframe   = Body-fixed, body-centered frame for target body.
-# abcorr   = Aberration correction flag.
-# observer = Name or ID code string of the observer.
-# et       = Time of the observation (seconds past J2000).
-# visible  = Visibility flag (True/False).
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["fovtrg"] = ["string", "body_name", "string", "frame_name",
-#                                 "string", "body_name", "time"]
-# CSPICE1_RETURNS   ["fovtrg"] = ["bool"]
-# CSPICE1_DOCSTRINGS["fovtrg"] = """
-# Determine if a specified ephemeris object is within the field-of-view (FOV)
-# of a specified instrument at a given time.
-#
-# fovtrg(<string> inst, <string> target, <string> tshape, <string> tframe,
-#                       <string> abcorr, <string> obsrvr, <float> et)
-#         -> <bool> visible
-#
-# inst    = Name or ID code string of the instrument.
-# target  = Name or ID code string of the target.
-# tshape  = Type of shape model used for the target.
-# tframe  = Body-fixed, body-centered frame for target body.
-# abcorr  = Aberration correction flag.
-# obsrvr  = Name or ID code string of the observer.
-# et      = Time of the observation (seconds past J2000).
-# visible = Visibility flag (True/False).
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["getfov"] = ["int"]
-# CSPICE1_RETURNS   ["getfov"] = ["string", "string", "float[3]", "float[*,3]"]
-# CSPICE1_DOCSTRINGS["getfov"] = """
-# This subroutine returns the field-of-view (FOV) configuration for a
-# specified instrument.
-#
-# getfov(<int> instid)
-#         -> [<string> shape, <string> frame,
-#                             <float[3]> bsight, <float[*,3]> bounds]
-#
-# instid = NAIF ID of an instrument.
-# shape  = Instrument FOV shape.
-# frame  = Name of the frame in which FOV vectors are defined.
-# bsight = Boresight vector.
-# bounds = FOV boundary vectors.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["occult"] = 2*["body_name", "string", "frame_name"] + \
-#                                ["string", "body_name", "time"]
-# CSPICE1_RETURNS   ["occult"] = ["int"]
-# CSPICE1_DOCSTRINGS["occult"] = """
-# Determines the occultation condition (not occulted, partially, etc.) of one
-# target relative to another target as seen by an observer at a given time.
-#
-# The surfaces of the target bodies may be represented by triaxial ellipsoids
-# or by topographic data provided by DSK files.
-#
-# occult(<string> targ1, <string> shape1,  <string> frame1,
-#         <string> targ2,  <string> shape2,  <string> frame2,
-#         <string> abcorr, <string> obsrvr, <float> et)
-#         -> <int> ocltid
-#
-# targ1  = Name or ID of first target.
-# shape1 = Type of shape model used for first target.
-# frame1 = Body-fixed, body-centered frame for first body.
-# targ2  = Name or ID of second target.
-# shape2 = Type of shape model used for second target.
-# frame2 = Body-fixed, body-centered frame for second body.
-# abcorr = Aberration correction flag.
-# obsrvr = Name or ID of the observer.
-# et     = Time of the observation (seconds past J2000).
-# ocltid = Occultation identification code.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["pckcov"] = ["string", "frame_code"]
-# CSPICE1_RETURNS   ["pckcov"] = ["float[*,2]"]
-# CSPICE1_DOCSTRINGS["pckcov"] = """
-# Find the coverage window for a specified reference frame in a specified
-# binary PCK file.
-#
-# pckcov(<string> pck, <int> idcode)
-#         -> <float[:,2]> cover
-#
-# pck    = Name of PCK file.
-# idcode = Class ID code of PCK reference frame.
-# cover  = An array of shape (n,2), where cover[:,0] are start times and
-#          cover[:,1] are stop times.
-# """
-#
-# CSPICE1_SIGNATURES["pckcov_error"] = ["string", "frame_code"]
-# CSPICE1_RETURNS   ["pckcov_error"] = ["float[*,2]"]
-# CSPICE1_DOCSTRINGS["pckcov_error"] = """
-# Find the coverage window for a specified reference frame in a specified
-# binary PCK file.
-#
-# pckcov(<string> pck, <int> idcode)
-#         -> <float[:,2]> cover
-#
-# pck    = Name of PCK file.
-# idcode = Class ID code of PCK reference frame.
-# cover  = An array of shape (n,2), where cover[:,0] are start times and
-#          cover[:,1] are stop times.
-#
-# Raise KeyError if the idcode is not found.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["sincpt"] = ["string", "body_name", "time", "frame_name",
-#                                 "string", "body_name", "frame_name", "float[3]"]
-# CSPICE1_RETURNS   ["sincpt"] = ["float[3]", "time", "float[3]", "bool"]
-# CSPICE1_DOCSTRINGS["sincpt"] = """
-# Given an observer and a direction vector defining a ray, compute the
-# surface intercept of the ray on a target body at a specified epoch,
-# optionally corrected for light time and stellar aberration.
-#
-# The surface of the target body may be represented by a triaxial ellipsoid
-# or by topographic data provided by DSK files.
-#
-# This routine supersedes srfxpt.
-#
-# sincpt(<string> method, <string> target, <float> et, <string> fixref,
-#        <string> abcorr, <string> obsrvr, dref, <float[3]> dvec)
-#         -> [<float[3]> spoint, <float> trgepc,
-#             <float[3]> srfvec, <bool> found]
-#
-# method = Computation method.
-# target = Name of target body.
-# et     = Epoch in TDB seconds past J2000 TDB.
-# fixref = Body-fixed, body-centered target body frame.
-# abcorr = Aberration correction flag.
-# obsrvr = Name of observing body.
-# dref   = Reference frame of ray's direction vector.
-# dvec   = Ray's direction vector.
-# spoint = Surface intercept point on the target body.
-# trgepc = Intercept epoch.
-# srfvec = Vector from observer to intercept point.
-# found  = Flag indicating whether intercept was found.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["subpnt"] = ["string", "body_name", "time", "frame_name",
-#                                 "string", "body_name"]
-# CSPICE1_RETURNS   ["subpnt"] = ["float[3]", "time", "float[3]"]
-# CSPICE1_DOCSTRINGS["subpnt"] = """
-# Compute the rectangular coordinates of the sub-observer point on a target
-# body at a specified epoch, optionally corrected for light time and stellar
-# aberration.
-#
-# The surface of the target body may be represented by a triaxial ellipsoid
-# or by topographic data provided by DSK files.
-#
-# This routine supersedes subpt.
-#
-# subpnt(<string> method, <string> target, <float> et,
-#        <string> fixref, <string> abcorr, <string> obsrvr)
-#         -> [<float[3]> spoint, <float> trgepc, <float[3]> srfvec]
-#
-# method = Computation method.
-# target = Name of target body.
-# et     = Epoch in TDB seconds past J2000 TDB.
-# fixref = Body-fixed, body-centered target body frame.
-# abcorr = Aberration correction flag.
-# obsrvr = Name of observing body.
-# spoint = Sub-observer point on the target body.
-# trgepc = Sub-observer point epoch.
-# srfvec = Vector from observer to sub-observer point.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["subpt"] = ["string", "body_name", "time", "string",
-#                                "body_name"]
-# CSPICE1_RETURNS   ["subpt"] = ["float[3]", "float"]
-# CSPICE1_DOCSTRINGS["subpt"] = """
-# Compute the rectangular coordinates of the sub-observer point on a target
-# body at a particular epoch, optionally corrected for planetary (light time)
-# and stellar aberration.  Retur nn these coordinates expressed in the
-# body-fixed frame associated with the target body.  Also, return the
-# observer's altitude above the target body.
-#
-# subpt(<string> method, <string> target, <float> et,
-#       <string> abcorr, <string> obsrvr)
-#         -> [<float[3]> spoint, <float> alt]
-#
-# method = Computation method.
-# target = Name of target body.
-# et     = Epoch in ephemeris seconds past J2000 TDB.
-# abcorr = Aberration correction.
-# obsrvr = Name of observing body.
-# spoint = Sub-observer point on the target body.
-# alt    = Altitude of the observer above the target body.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["subslr"] = ["string", "body_name", "time", "string",
-#                                 "body_name"]
-# CSPICE1_RETURNS   ["subslr"] = ["float[3]", "time", "float[3]"]
-# CSPICE1_DOCSTRINGS["subslr"] = """
-# Compute the rectangular coordinates of the sub-solar point on a target body
-# at a specified epoch, optionally corrected for light time and stellar
-# aberration.
-#
-# The surface of the target body may be represented by a triaxial ellipsoid
-# or by topographic data provided by DSK files.
-#
-# This routine supersedes subsol.
-#
-# subslr(<string> method, <string> target, <float> et,
-#        <string> fixref, <string> abcorr, <string> obsrvr)
-#         -> [<float[3]> spoint, <float> trgepc, <float[3]> srfvec]
-#
-# method = Computation method.
-# target = Name of target body.
-# et     = Epoch in ephemeris seconds past J2000 TDB.
-# fixref = Body-fixed, body-centered target body frame.
-# abcorr = Aberration correction.
-# obsrvr = Name of observing body.
-# spoint = Sub-solar point on the target body.
-# trgepc = Sub-solar point epoch.
-# srfvec = Vector from observer to sub-solar point.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["subsol"] = ["string", "body_name", "time", "string",
-#                                 "body_name"]
-# CSPICE1_RETURNS   ["subsol"] = ["float[3]"]
-# CSPICE1_DOCSTRINGS["subsol"] = """
-# Determine the coordinates of the sub-solar point on a target body as seen
-# by a specified observer at a specified epoch, optionally corrected for
-# planetary (light time) and stellar aberration.
-#
-# subsol(<string> method, <string> target, <float> et,
-#        <string> abcorr, <string> obsrvr)
-#         -> <float[3]> spoint
-#
-# method = Computation method.
-# target = Name of target body.
-# et     = Epoch in ephemeris seconds past J2000 TDB.
-# abcorr = Aberration correction.
-# obsrvr = Name of observing body.
-# spoint = Sub-solar point on the target body.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["surfnm"] = 3*["float"] + ["float[3]"]
-# CSPICE1_RETURNS   ["surfnm"] = ["float[3]"]
-# CSPICE1_DOCSTRINGS["surfnm"] = """
-# This routine computes the outward-pointing, unit normal vector from a point
-# on the surface of an ellipsoid.
-#
-# surfnm(<float> a, <float> b, <float> s, <float[3]> point)
-#         -> <float[3]> normal
-#
-# a      = Length of the ellisoid semi-axis along the x-axis.
-# b      = Length of the ellisoid semi-axis along the y-axis.
-# s      = Length of the ellisoid semi-axis along the z-axis.
-# point  = Body-fixed coordinates of a point on the ellipsoid
-# normal = Outward pointing unit normal to ellipsoid at point
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["surfpt"] = 2*["float[3]"] + 3*["float"]
-# CSPICE1_RETURNS   ["surfpt"] = ["float[3]", "bool"]
-# CSPICE1_DOCSTRINGS["surfpt"] = """
-# Determine the intersection of a line-of-sight vector with the surface of an
-# ellipsoid.
-#
-# surfpt(<float[3]> positn, <float[3]> u,
-#        <float> a, <float> b, <float> s)
-#         -> [<float[3]> point, <bool> found]
-#
-# positn = Position of the observer in body-fixed frame.
-# u      = Vector from the observer in some direction.
-# a      = Length of the ellipsoid semi-axis along the x-axis.
-# b      = Length of the ellipsoid semi-axis along the y-axis.
-# s      = Length of the ellipsoid semi-axis along the z-axis.
-# point  = Point on the ellipsoid pointed to by u.
-# found  = Flag indicating if u points at the ellipsoid.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["surfpv"] = 2*["float[6]"] + 3*["float"]
-# CSPICE1_RETURNS   ["surfpv"] = ["float[6]", "bool"]
-# CSPICE1_DOCSTRINGS["surfpv"] = """
-# Find the state (position and velocity) of the surface intercept defined by a
-# specified ray, ray velocity, and ellipsoid.
-#
-# surfpv(<float[6]> stvrtx, <float[6]> stdir,
-#        <float> a, <float> b, <float> s)
-#         -> [<float[6]> stx, <bool> found]
-#
-# stvrtx = State of ray's vertex.
-# stdir  = State of ray's direction vector.
-# a      = Length of ellipsoid semi-axis along the x-axis.
-# b      = Length of ellipsoid semi-axis along the y-axis.
-# s      = Length of ellipsoid semi-axis along the z-axis.
-# stx    = State of surface intercept.
-# found  = Flag indicating whether intercept state was found.
-# """
-#
-# #########################################
-# SPYCE_SIGNATURES["termpt"] = ["string", "body_name", "body_name", "time",
-#                               "frame_name", "string", "string", "body_name",
-#                               "float[3]", "float", "int", "float", "float",
-#                               "int"]
-# SPYCE_ARGNAMES  ["termpt"] = ["method", "ilusrc", "target", "et", "fixref",
-#                               "abcorr", "corloc", "obsrvr", "refvec",
-#                               "rolstp", "ncuts", "schstp", "soltol", "maxn"]
-# SPYCE_RETURNS   ["termpt"] = ["int[*]", "float[*,3]", "float[*]",
-#                               "float[*,3]"]
-# SPYCE_DOCSTRINGS["termpt"] = """
-# Find terminator points on a target body. The caller specifies
-# half-planes, bounded by the illumination source center-target center
-# vector, in which to search for terminator points.
-#
-# The terminator can be either umbral or penumbral. The umbral
-# terminator is the boundary of the region on the target surface where
-# no light from the source is visible. The penumbral terminator is the
-# boundary of the region on the target surface where none of the light
-# from the source is blocked by the target itself.
-#
-# The surface of the target body may be represented either by a triaxial
-# ellipsoid or by topographic data.
-#
-# limbpt(<string> method, <string> ilusrc, <string> target, <float> et,
-#                         <string> fixref, <string> abcorr, <string> corloc,
-#                         <string> obsrvr, <float[3]> refvec, <float> rolstp,
-#                         <int> ncuts, <float> schstp, <float> soltol,
-#                         <int> maxn)
-#     -> [<int[*]> npts, <float[*,3]> points, <float[*]> epochs,
-#                        <float[*,3]> tangts]
-#
-# method = Computation method.
-# ilusrc = Illumination source.
-# target = Name of target body.
-# et     = Epoch in ephemeris seconds past J2000 TDB.
-# fixref = Body-fixed, body-centered target body frame.
-# abcorr = Aberration correction.
-# corloc = Aberration correction locus.
-# obsrvr = Name of observing body.
-# refvec = Reference vector for cutting half-planes.
-# rolstp = Roll angular step for cutting half-planes.
-# ncuts  = Number of cutting planes.
-# schstp = Angular step size for searching.
-# soltol = Solution convergence tolerance.
-# maxn   = Maximum number of entries in output arrays.
-# npts   = Counts of terminator points corresponding to cuts.
-# points = Terminator points.
-# epochs = Times associated with terminator points.
-# trmvcs = Terminator vectors emanating from the observer.
-#
-# https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/termpt_c.html
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["tipbod"] = ["frame_code", "body_code", "time"]
-# CSPICE1_RETURNS   ["tipbod"] = ["rotmat[3,3]"]
-# CSPICE1_DOCSTRINGS["tipbod"] = """
-# Return a 3x3 matrix that transforms positions in inertial coordinates to
-# positions in body-equator-and-prime-meridian coordinates.
-#
-# tipbod(<int> ref, <int> body, <float> et)
-#         -> <float[3,3]> tipm
-#
-# ref  = ID of inertial reference frame to transform from.
-# body = ID code of body.
-# et   = Epoch of transformation.
-# tipm = Transformation (position), inertial to prime meridian.
-# """
-#
-# #########################################
-# CSPICE1_SIGNATURES["tisbod"] = ["frame_code", "body_code", "time"]
-# CSPICE1_RETURNS   ["tisbod"] = ["rotmat[6,6]"]
-# CSPICE1_DOCSTRINGS["tisbod"] = """
-# Return a 6x6 matrix that transforms states in inertial coordinates to
-# states in body-equator-and-prime-meridian coordinates.
-#
-# tisbod(<int> ref, <int> body, <float> et)
-#         -> <float[6,6]> tsipm
-#
-# ref   = ID of inertial reference frame to transform from
-# body  = ID code of body
-# et    = Epoch of transformation
-# tsipm = Transformation (state), inertial to prime meridian
-# """
-#
-#
-# #########################################
-# CSPICE1_SIGNATURES["unload"] = ["string"]
-# CSPICE1_RETURNS   ["unload"] = []
-# CSPICE1_DOCSTRINGS["unload"] = """
-# Unload a SPICE kernel.
-#
-# unload(<string> file)
-#
-# file = The name of a kernel to unload.
-# """
-#
-# #########################################
-# SPYCE_SIGNATURES["xfmsta"] = ["float[6]", "string", "string", "string"]
-# SPYCE_ARGNAMES  ["xfmsta"] = ["input_state", "input_coord_sys",
-#                               "output_coord_sys", "body"]
-# SPYCE_RETURNS   ["xfmsta"] = ["float[6]"]
-# SPYCE_DOCSTRINGS["xfmsta"] = """
-# Transform a state between coordinate systems.
-#
-# xfmsta(<float[6]> input_state, <string> input_coord_sys,
-#                                <string> output_coord_sys)
-#                                <string> body)
-#     -> <float[6] output_state
-#
-# input_state      = Input state.
-# input_coord_sys  = Current (input) coordinate system.
-# output_coord_sys = Desired (output) coordinate system.
-# body             = Name or NAIF ID of body with which coordinates are
-#                    associated (if applicable).
-# output_state     = Converted output state.
-#
-# https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/C/cspice/xfmsta_c.html
-# """
-#
 ################################################################################
 
 import unittest

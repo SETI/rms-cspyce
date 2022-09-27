@@ -10,7 +10,7 @@ import numbers
 import cspyce as s
 import unittest
 
-class Test_spyce_errors(unittest.TestCase):
+class Test_cspyce_errors(unittest.TestCase):
 
   def runTest(self):
 

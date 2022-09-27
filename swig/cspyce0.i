@@ -19,7 +19,7 @@
 #define CLAUSES 100     // max number of expressions in a SELECT clause
 #define COLLEN 100      // max length of string columns or parsed items
 #define COMMENTLEN 256  // max length of a comment including null
-#define COMMENTS 1000   // max number of comments
+#define COMMENTS 100    // max number of comments read at a time
 #define FILELEN 1000    // max length of a file path including null
 #define FOVSHAPE 40     // max number of vertices in the shape of an FOV
 #define KERVALLEN 80    // max length of a kernel string value
@@ -34,7 +34,7 @@
 #define NAMELEN 65      // table names can be 64 plus one null
 #define NPLATES 10000   // max number of DSK plates or vertices
 #define TIMELEN 60      // max length of a time string including null
-#define WINDOWS 2000    // max time windows returned
+#define WINDOWS 30000   // max time windows returned
 
 /* Define NAN for Microsoft C compiler if necessary */
 #ifdef _MSC_VER

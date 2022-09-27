@@ -139,7 +139,6 @@ PYTHON2 = sys.version_info[0] < 3
 # GET/SET handling
 ################################################################################
 
-
 def erract(op='', action=''):
     """Allow special argument handling:
         erract()            -> erract('GET', '')
@@ -167,7 +166,6 @@ def erract(op='', action=''):
         return 'RETURN'
 
     return cspyce0.erract(op, action)
-
 
 def errdev(op='', action=''):
     """Allow special argument handling:
@@ -636,8 +634,8 @@ def dlabbs_error(handle, recno, begin, end):
 
     return dladsc
 
-def dlabfs_error(handle, recno, begin, end):
-    (dladsc, found) = cspyce0.dafgsr(handle, recno, begin, end)
+def dlabfs_error(handle):
+    (dladsc, found) = cspyce0.dlabfs(handle)
     if not found:
         chkin('dlabfs_error')
         setmsg('DLA segment not found for handle {}'.format(handle))
@@ -665,16 +663,6 @@ def dlafps_error(handle, dladsc):
         chkout('dlafps_error')
 
     return prvdsc
-
-def dnearp_error(state, a, b, c):
-    (dnear, dalt, found) = cspyce0.dnearp(state, a, b, c)
-    if not found:
-        chkin('dnearp_error')
-        setmsg('Ellipsoid point is degenerate')
-        sigerr('SPICE(DEGENERATESURFACE)')
-        chkout('dnearp_error')
-
-    return [dnear, dalt]
 
 def dskx02_error(handle, dladsc, vertex, raydir):
     (plid, xpt, found) = cspyce0.dskx02(handle, dladsc, vertex, raydir)
@@ -767,8 +755,13 @@ def kdata_error(which, kind):
     (file, filtype, srcfil, handle, found) = cspyce0.kdata(which, kind)
     if not found:
         chkin('kdata_error')
-        setmsg('kernel not found: {}, {}'.format(which, kind))
-        sigerr('SPICE(FILENOTFOUND)')
+        count = cspyce0.ktotal(kind)
+        if which >= count:
+            setmsg('index out of range: {}/{}, {}'.format(which, count, kind))
+            sigerr('SPICE(INVALIDINDEX)')
+        else:
+            setmsg('kernel not found: {}, {}'.format(which, kind))
+            sigerr('SPICE(FILENOTFOUND)')
         chkout('kdata_error')
 
     return [file, filtype, srcfil, handle]
@@ -900,6 +893,37 @@ def pcpool(name, cvals):
         cspyce0.pcpool(name, cvals)
 
 ################################################################################
+# These wrappers on the comment readers dafec an dasec ensure that the entire
+# comment field is read. They eliminate the "done" return value.
+################################################################################
+
+def dafec(handle):
+    records = []
+    while True:
+        (buffer, done) = cspyce0.dafec(handle)
+        records += buffer
+        if done:
+            return records
+
+# Update the call signature for help
+del CSPYCE_RETURNS['dafec'][1]
+del CSPYCE_RETNAMES['dafec'][1]
+del CSPYCE_DEFINITIONS['dafec']['done']
+
+def dasec(handle):
+    records = []
+    while True:
+        (buffer, done) = cspyce0.dasec(handle)
+        records += buffer
+        if done:
+            return records
+
+# Update the call signature for help
+del CSPYCE_RETURNS['dasec'][1]
+del CSPYCE_RETNAMES['dasec'][1]
+del CSPYCE_DEFINITIONS['dasec']['done']
+
+################################################################################
 # For functions that return only a list of strings, don't embed the results in
 # an additional layer [].
 ################################################################################
@@ -913,6 +937,54 @@ def lparsm(list_, delims):
     result = cspyce0.lparsm(list_, delims)
     if len(result) == 1 and isinstance(result[0], list):
         return result[0]
+
+################################################################################
+# When a function returns a value and a "found" flag, and the flag is False,
+# the unused return values contain random values. We change these to something
+# sensible.
+################################################################################
+
+def bodn2c(name):
+    (code, found) = cspyce0.bodn2c(name)
+    return [code if found else 0, found]
+
+def bods2c(name):
+    (code, found) = cspyce0.bods2c(name)
+    return [code if found else 0, found]
+
+def ccifrm(frclss, clssid):
+    (frcode, frname, center, found) = cspyce0.ccifrm(frclss, clssid)
+    return [frcode if found else 0, frname, center if found else 0, found]
+
+def cnmfrm(cname):
+    (frcode, frname, found) = cspyce0.cnmfrm(cname)
+    return [frcode if found else 0, frname if found else '', found]
+
+def frinfo(frcode):
+    (cent, frclss, clssid, found) = cspyce0.frinfo(frcode)
+    return [cent if found else 0,
+            frclss if found else 0,
+            clssid if found else 0, found]
+
+def srfs2c(srfstr, bodstr):
+    (code, found) = cspyce0.srfs2c(srfstr, bodstr)
+    return [code if found else 0, found]
+
+def tparse(string):
+    (sp2000, msg) = cspyce0.tparse(string)
+    return [0. if msg else sp2000, msg]
+
+def ckfrot(inst, et):
+    (rotate, ref, found) = cspyce0.ckfrot(inst, et)
+    return [rotate if found else np.diag(3*[1.]), ref if found else 0, found]
+
+def ckfxfm(inst, et):
+    (rotate, ref, found) = cspyce0.ckfrot(inst, et)
+    return [rotate if found else np.diag(6*[1.]), ref if found else 0, found]
+
+def hx2dp(string):
+    (number, error, errmsg) = cspyce0.hx2dp(string)
+    return [0. if error else number, error, errmsg]
 
 ################################################################################
 # Handle "GET"/"SET" inputs to timdef().

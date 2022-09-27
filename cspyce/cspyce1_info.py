@@ -62,7 +62,7 @@ ERROR_INFO = [      # (function name, return value to remove if any, postscript 
     ('dlabfs',  'found', 'Raise IOError(DASFILEREADFAILED) if the file read failed.'),
     ('dlafns',  'found', 'Raise IOError(DASFILEREADFAILED) if the file read failed.'),
     ('dlafps',  'found', 'Raise IOError(DASFILEREADFAILED) if the file read failed.'),
-    ('dnearp',  'found', 'Raise ValueError(DEGENERATESURFACE) if the point is degenerate.'),
+#     ('dnearp',  'found', 'Raise ValueError(DEGENERATESURFACE) if the point is degenerate.'),  removed, not really an error condition
     ('dskx02',  'found', 'Raise ValueError(NOINTERCEPT) if the intercept does not exist.'),
     ('dskxsi',  'found', 'Raise ValueError(NOINTERCEPT) if the intercept does not exist.'),
     ('ekfind', ('error',

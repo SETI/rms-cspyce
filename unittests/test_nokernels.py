@@ -8,7 +8,7 @@ import numbers
 import cspyce as s
 import unittest
 
-class Test_spyce1_nokernels(unittest.TestCase):
+class Test_cspyce1_nokernels(unittest.TestCase):
 
   PATH = s.__path__[0] + '/../unittest_support/'
 

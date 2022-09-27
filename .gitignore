@@ -9,3 +9,6 @@ cspyce.egg-info/
 **/*wrap.c
 wheelhouse/
 .DS_Store
+cspyce/cspyce0.py
+cspyce/cspye0_info.py
+swig/vectorize.i
