@@ -4,11 +4,19 @@ name: Public Python distribution to TestPyPI
 
 # Controls when the workflow will run
 on:
-  pull_request:
-    branches: [ GitActions ]
-  push:
-    branches: [ GitActions ]
   workflow_dispatch:
+    inputs:
+      pypi:
+        description: 'Release to PyPI'
+        required: false
+        default: false
+        type: boolean
+
+      test_pypi:
+        description: 'Release to Test PyPI'
+        required: false
+        default: true
+        type: boolean
 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -104,7 +112,7 @@ jobs:
           find dist -type f | grep -v manylinux | xargs sudo rm
 
       - name: Publish distribution to Test PyPI
-        if: true
+        if: ${{ inputs.test_pypi }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -113,7 +121,7 @@ jobs:
           python -m twine upload --verbose --skip-existing dist/*
 
       - name: Publish distribution to PyPI
-        if: true
+        if: ${{ inputs.pypi }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
