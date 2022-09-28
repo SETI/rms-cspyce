@@ -3,7 +3,7 @@
 ################################################################################
 # CSPYCE OVERVIEW
 #
-# Cspyce is a Python module that provides an interface to the CSPICE library. It
+# cspyce is a Python module that provides an interface to the CSPICE library. It
 # implements the most widely-used functions of CSPICE in a Python-like way. It
 # also supports numerous enhancements, including support for Python exceptions,
 # array inputs, and aliases.
