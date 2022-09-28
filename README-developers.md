@@ -1,22 +1,22 @@
 # `cspyce` DEVELOPERS' GUIDE
 March 2022
 
-Frank Yellin, PDS Ring-Moon Systems Node, SETI Institute volunteer.
+Frank Yellin.
 
 This guide is intended for those who have downloaded the 
-[github source code](https://github.com/SETI/pds-cspyce/) and are modifying
+[GitHub source code](https://github.com/SETI/pds-cspyce/) and are modifying
 or extending the `cspyce` toolkit.
 You do not need to read this if you are installing an existing `PyPI`
 distribition of the sources.
 
 ## SETTING UP
 
-The root of the github tree is called `pds-cspyce`.
+The root of the GitHub tree is called `pds-cspyce`.
 When we use `pds-cspyce` in this document, we are referring to that directory,
 wherever it happens to be on your computer.
 
-The github source code intentionally does not include the source code to
-cspice itself.
+The GitHub source code intentionally does not include the source code to
+CSPICE itself.
 Instead the build process downloads the appropriate sources from
 [NAIF](https://naif.jpl.nasa.gov/naif/toolkit.html).
 The current SPICE Toolkit version is N0067, released January 3, 2022.
@@ -33,15 +33,15 @@ multiple versions.
 
 ### Step1: 
 
-You must have swig and ane newer version (≥ 3.8) of Python3 running on 
+You must have swig and a newer version (≥ 3.8) of Python3 running on 
 your computer for the first step:
 ```shell
 python3 setup.py generate
 ```
 This step re-creates all the generated .py and .c files needed to implement
-the interface between Python and the CSpice code.
+the interface between Python and the CSPICE code.
 This command will also determine what operating system and architecture you are running
-on, and use this information to download the appropriate CSpice sources.
+on, and use this information to download the appropriate CSPICE sources.
 The downloaded sources will appear in two directories:
 * pds-cspyce/cspice/\<os>-\<arch>/src
 * pds-cspyce/cspice/\<os>-\<arch>/include
@@ -49,11 +49,11 @@ The downloaded sources will appear in two directories:
 where `<os>` and `<arch>` indicate your machine's operating system and architecture.
 
 ### Step 2
-You compile the c-implementation of the Spice library by running:
+You compile the C implementation of the Spice library by running:
 ```shell
 python setup.py build_clib
 ```
-This will execute somewhat slowly because it is compiling several thousand files. 
+This may execute somewhat slowly because it is compiling several thousand files. 
 You should only need to do this once.
 
 ### Step 3
@@ -77,6 +77,14 @@ python
 > cspyce.tkvrsn('toolkit')
 'CSPICE_N0067'
 ```
+If you have previously installed cspyce via pip, you should also look at the value of
+```shell
+> cspyce.__file__
+```
+to confirm that you area loading at the cspyce you have just built rather than the
+pip-installed cspyce.  The value returned should be 
+`"<your current directory>/cspyce/__init.py"`
+
 ## CREATING A DISTRIBUTION
 
 ### Before you begin
@@ -92,15 +100,15 @@ The simplist type of distribution is a source distribution:
 ```
 python setup.py sdist
 ```
-This will create a filel named `dist/cspyce-<version>.tar.gz`.
-This file can be uploaded at PyPI and then downloaded by any version of
+This will create a file named `dist/cspyce-<version>.tar.gz`.
+This file can be uploaded to PyPI and then downloaded by any version of
 Python on any operating system. The `.tar.gz` contains all the sources needed
 to compile and run `cspyce`.
 It includes the necessary pieces of the `cspice/` source tree as well as an
 already generated `cspyce0_wrap.c` file so that they do not need to install 
 `swig.`
 
-The installing process takes a few minutes because 2000 files from the Cspice
+The installing process may take a few minutes because 2000 files from the CSPICE
 library are being compiled.
 
 ### Wheel distributions
@@ -109,6 +117,11 @@ A second type of distribution is the "wheel".
 ```shell
 python setup.py bdist_wheel
 ```
+
+This will create a file in the `dist/` subdirectory with suffix `.whl` and
+whose name indicates the Python version,
+the operating system, and the operating system version.
+
 A wheel includes binaries that have been compiled specifically for this version
 of Python running on this specific operating system.
 Some web sites indicate that there is no guarantee of compatibility between
@@ -130,13 +143,13 @@ This is particularly useful with tags.
 
 If you are planning on uploading your distributions to PyPI or test.PyPI, you
 must ensure that it has a unique version number.
-Neither site allows you to upload the same same source distribution twice,
+Neither site allows you to upload the same source distribution twice,
 even if you have deleted a version.
 
-By default, the version is that given in the `setup.py`.
+By default, the version is that given in `setup.py`.
 You add a suffix to this command by including `egginfo -b <tag>` where the tag
 is either one of the letters a (for alpha), b (for beta), or c (for release
-candidate). The digit can optionally be followed by a number. 
+candidate). The letter can optionally be followed by a number. 
 
 Hence a series of releases can be created by
 ```
@@ -149,12 +162,22 @@ etc. without causing a naming conflict at the distribution sites.
 
 ## UPLOADING A DISTRIBUTION TO PyPI
 
+> These instructions do not work for wheels built on Linux. PyPI and TestPyPI have
+> special rules for Linux to ensure that Linux releases can work on all the various
+> versions of Linux.  
+> 
+> You can continue to use Linux wheels on your own computer. 
+> Releases must be built on GitHub.
+> See the next section.
+
+
 Although `setup.py` supports the command `upload`, this usage has been deprecated.
-You should instead use twine.
+You should instead use `twine`.
+You should already have installed `twine` above.
 
 The distributions you created above will be in a subdirectory `dist/`. 
 
-You upload a distribution to test.pypi
+You upload a distribution to test.pypi by running:
 ```shell
 twine upload --repository testpypi <file1>, <file2>, <file3>, ...
 ```
@@ -186,7 +209,7 @@ password = your_test_pypi_password
 ```
 Be sure to make this file publicly unreadable since it contains your passwords.
 
-## USING GITHUB TO CREATE A DISTRIBUTION
+## USING GitHub TO CREATE A DISTRIBUTION
 
 ### One-time steps
 
@@ -228,7 +251,7 @@ password.
 
 #### Tell GitHub these secrets.
 
-1. Log into your github repository for pds-cspyce
+1. Log into your GitHub repository for pds-cspyce
 2. Click "settings", then "secrets" on the left-hand menu, then "actions".
 3. Use the "New Repository Secret" button to add two secrets named `PYPI_API_TOKEN` 
 and `TEST_PYPI_API_TOKEN`. 
@@ -248,25 +271,24 @@ The version number appears in the `do_setup()` function at the very end of the f
 > 
 #### Step 2: Create a new branch
 
-Make a new branch that is a clone of the pull request. 
-I've been calling my clone `GitActions` (and will use that name in the rest of this
+Make a new branch that points to the same commit as the pull request. 
+I've been calling my branch `GitActions` (and will use that name in the rest of this
 document).
 
 Do the following:
 
-  1. You should have a local copy of the pull request.
+  1. You should have a local copy of the development branch.
 If you are the creator of the pull requestion, then you should already have it.
-If you are not the creator, then do a pull of the pull request.  (Instructions?)
+If you are not the creator, then do a pull of the development branch from the
+GitHub repository.
 
-  2. If you already have a branch named `GitActions`, then in GitKraken, checkout that
-branch, then right click on the branch you want to clone, then select
-"Reset GitActions to this branch" and "hard".
+  2. If you already have a branch named `GitActions`, delete it by typing to the shell 
+`git branch -D GitActions`
 
-  3. If you do not already have a branch named `GitActions`, then checkout the branch
-that you want to clone, right click on it and select "Create branch here" and give it
-the name `GitActions`.
+  3. Checkout the development branch by typing to the shell `git checkout <branchname>`
+
+  4. Create a branch of the development branch by typing: `git branch GitActions`
   
-
 #### Step 3: Modify the version.
 
 You should first try releasing to Test PyPI before attempting to release to the public. 
@@ -294,7 +316,7 @@ Change the line (approximately line 17)
 ```
     if: github.repository == 'fyellin/pds-cspyce'
 ```
-to be the name of your github repository.
+to be the name of your GitHub repository.
 
 Change the second line of 
 ```
@@ -310,7 +332,7 @@ We are not performing the public release to PyPI yet.
 
 By default, we generate four MacOS builds (2.7, 3.8, 3.9, 3.10), three Windows
 builds (3.8, 3.9, 3.10), three Linux builds (3.8, 3.9, 3.10), and a source build.
-Fell free to comment out the obvious lines if needed.
+Feel free to comment out the obvious lines if needed.
 
 > When new Python images become available, modify the above list in the `master` version of this file.
 >
@@ -320,17 +342,20 @@ Fell free to comment out the obvious lines if needed.
 #### Step 5: Commit and push to GitHub
 
 Commit the changes to `setup.py` and `publish_to_pypi.yml`.
-Push the changes to your github workspace.
+Push the changes to your GitHub repository.
 
-Note that if you updated `GitActions` by doing a hard reset in Step 2, you may get an 
+Note that if you updated `GitActions` by deleting the branch in Step 2, you may get an 
 error when doing the push. Perform a `push --force` and ignore the warnings.
 
 #### Step 6: Verify actions
 
 Log into GitHub.
-Go to your workspace and click 'Actions'.
+Go to your repository and click 'Actions'.
 Within a few minutes,
 you should see your actions being run.
+
+You may see a message saying that actions aren't being run in this forked repository.
+If so, just click on "I understand" to continue.
 
 You *will* see the error message that Python 2.7 isn't supported; thse can be ignored.
 If there are any other errors, then investigate.
@@ -338,7 +363,7 @@ If there are any other errors, then investigate.
 #### Step 7: Test and retry
 
 Test the results.  If there are any problems, fix them.  Ensure that `GitActions` and
-the pull request stay in sync, and that the only difference between the two branches
+the development branch stay in sync, and that the only difference between the two branches
 are the version number (which must be updated each time you do a new release) and the
 changes to `publush_to_pypi.yml`.  Each time you do a push to GitHub, a new release
 will be build.
@@ -346,6 +371,7 @@ will be build.
 #### Step 8: Publish to PyPI
 
 Once everything is working, undo the change to the version number in `setup.py`
-and change the `false` back to `true` in `publish_to_pypi.yml`.  
+and change the `false` back to `true` in `publish_to_pypi.yml`.
+Do not change back the branch name (if you changed it) or the repository name.
 Perform one more commit and push.  
 
