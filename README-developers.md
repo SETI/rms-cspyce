@@ -199,16 +199,16 @@ and at [PyPi](https://pypi.org/)
 
 Separate permission needs to be provided for both PyPI and Test PyPI.
 For now, only Frank and Rob can do this.
-They should visit the two folloing URLs in turn and add you as a collaborator.
+They should visit these two URLs and add you as a collaborator.
 - https://pypi.org/manage/project/cspyce/collaboration/
 - https://test.pypi.org/manage/project/cspyce/collaboration
 
 
 #### Create tokens for PyPI and Test PyPI
 
-Perform the following steps for both PyPI and Test PyPI.
+PyPI and Test PyPI have separate API tokens.
 
-Visit the following two URLs in turn:
+Visit each of the following two URLs in turn:
   - https://pypi.org/manage/account/token/
   - https://test.pypi.org/manage/account/token
 
@@ -217,19 +217,22 @@ For each of the URLs,
 The scope should be `Project: cspyce`
 2. Click "Add token"
 3. Keep a copy of the text that is generated. This is your API Token.
-PyPI and Test PyPI have separate API tokens.
+
 
 ####  (Optional) Update your `.pypirc` file.
+
 You can use the tokens created in the previous step in your `~/.pypirc` configuration
-file. 
-Use `__token__` as the username and the tokens generated above as the
+file rather than a username and password.
+Use `__token__` as the username and the appropriate token generated above as the
 password.
 
 #### Tell GitHub these secrets.
+
 1. Log into your github repository for pds-cspyce
 2. Click "settings", then "secrets" on the left-hand menu, then "actions".
-3. Use the "New Repository Secret" button to add two secrets, named `PYPI_API_TOKEN` 
-and `TEST_PYPI_API_TOKEN`. The values of these two tokens should be the two API tokens
+3. Use the "New Repository Secret" button to add two secrets named `PYPI_API_TOKEN` 
+and `TEST_PYPI_API_TOKEN`. 
+The value of each of these two secrets should be the appropriate API token
 generated above.
 
 ### Creating a new distribution.
@@ -264,19 +267,20 @@ that you want to clone, right click on it and select "Create branch here" and gi
 the name `GitActions`.
   
 
-#### Step 3: Set the version to alpha or beta.
+#### Step 3: Modify the version.
 
 You should first try releasing to Test PyPI before attempting to release to the public. 
 Each release needs a separate version number.
 
-Ensure that you are modifying `GitActions` or whatever you named your clone.
+Ensure that you are in the branch `GitActions` or whatever you named your clone.
 
 Modify the version number in `setup.py`.
 If the version number is, for example `2.0.5`, change it to `2.0.5a1` indicating
 that this is the alpha-1 version of 2.0.5.
 If you find problems in your alpha-1 release
 and create a second Test PyPI, the versions should be `2.0.5a2`, `2.0.5a3`, etc.
-If you feel like you're getting closer, switch from alpha to beta by changing the
+If you feel like you're getting close to the public release version,
+switch from alpha to beta by changing the
 `a` to a `b` and start the numbering again from 1.
 
 #### Step 4: Modify the actions file
@@ -302,7 +306,7 @@ to
       - name: Publish distribution to PyPI
         if: false
 ```
-We are not releasing to PyPI yet.
+We are not performing the public release to PyPI yet.
 
 By default, we generate four MacOS builds (2.7, 3.8, 3.9, 3.10), three Windows
 builds (3.8, 3.9, 3.10), three Linux builds (3.8, 3.9, 3.10), and a source build.
@@ -318,8 +322,8 @@ Fell free to comment out the obvious lines if needed.
 Commit the changes to `setup.py` and `publish_to_pypi.yml`.
 Push the changes to your github workspace.
 
-Note that if you updated `GitActions` by doing a hard reset in Step 2, you may need to
-do a "forced" push.  This is okay.
+Note that if you updated `GitActions` by doing a hard reset in Step 2, you may get an 
+error when doing the push. Perform a `push --force` and ignore the warnings.
 
 #### Step 6: Verify actions
 
@@ -328,8 +332,7 @@ Go to your workspace and click 'Actions'.
 Within a few minutes,
 you should see your actions being run.
 
-You *will* see the error message that Python 2.7 isn't supported.
-You can ignore this.
+You *will* see the error message that Python 2.7 isn't supported; thse can be ignored.
 If there are any other errors, then investigate.
 
 #### Step 7: Test and retry
