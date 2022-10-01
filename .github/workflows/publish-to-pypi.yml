@@ -1,20 +1,34 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Public Python distribution to TestPyPI
+name: Publish to PyPI
+run-name: Publish ${{ inputs.prelease_version }} by ${{ github.actor }}
 
 # Controls when the workflow will run
 on:
-  pull_request:
-    branches: [ GitActions ]
-  push:
-    branches: [ GitActions ]
   workflow_dispatch:
+    inputs:
+      prerelease_version:
+        description: 'Prerelease Version'
+        required: true
+        default: ''
+        type: string
+
+      test_pypi:
+        description: 'Release to Test PyPI'
+        required: true
+        default: true
+        type: boolean
+
+      pypi:
+        description: 'Release to PyPI'
+        required: true
+        default: false
+        type: boolean
 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build_swig_tools:
-    if: github.repository == 'fyellin/pds-cspyce'
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +43,9 @@ jobs:
           python3 -m pip install --upgrade pip
           python3 -m pip install setuptools numpy
           python3 setup.py generate
+          echo $PRERELEASE_VERSION > prerelease_version.txt
+        env:
+          PRERELEASE_VERSION: ${{ inputs.prerelease_version }}
 
       - name: Upload SWIG to artifacts
         uses: actions/upload-artifact@v3
@@ -38,9 +55,9 @@ jobs:
             swig/*_wrap.c
             cspyce/typemap_samples.py
             cspyce/cspyce0.py
+            ./prerelease_version.txt
 
   build-distribution:
-    # if: github.repository == 'fyellin/pds-cspyce'
     runs-on: ${{ matrix.os }}
     needs: [build_swig_tools]
 
@@ -104,16 +121,16 @@ jobs:
           find dist -type f | grep -v manylinux | xargs sudo rm
 
       - name: Publish distribution to Test PyPI
-        if: true
+        if: inputs.test_pypi
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-        run:
+        run: |
           python -m twine upload --verbose --skip-existing dist/*
 
-      - name: Publish distribution to PyPI
-        if: true
+      - name: Publish distribution to PyPI2
+        if: inputs.pypi
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}

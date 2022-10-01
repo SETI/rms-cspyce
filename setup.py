@@ -114,9 +114,18 @@ class MyBuildExt(build_ext):
 
 
 def do_setup():
+    try:
+        directory = os.path.dirname(os.path.abspath(__file__))
+        prerelease_version_file = os.path.join(directory, "prerelease_version.txt")
+        with open(prerelease_version_file, "r")  as f:
+            prerelease_version = f.read().strip()
+            if prerelease_version == 'release':
+                prerelease_version = ''
+    except IOError:
+        prerelease_version = ''
     setup(
         name='cspyce',
-        version='2.0.4',
+        version='2.0.4' + prerelease_version,
         author="Mark Showalter/PDS Ring-Moon Systems Node",
         description="Low-level SWIG interface to the CSPICE library",
         ext_modules=get_extensions(),
