@@ -82,8 +82,8 @@ If you have previously installed cspyce via pip, you should also look at the val
 > cspyce.__file__
 ```
 to confirm that you area loading at the cspyce you have just built rather than the
-pip-installed cspyce.  The value returned should be 
-`"<your current directory>/cspyce/__init.py"`
+pip-installed cspyce.
+The value returned should be `"<your current directory>/cspyce/__init__.py"`
 
 ## CREATING A DISTRIBUTION
 
@@ -164,7 +164,7 @@ etc. without causing a naming conflict at the distribution sites.
 
 > These instructions do not work for wheels built on Linux. PyPI and TestPyPI have
 > special rules for Linux to ensure that Linux releases can work on all the various
-> versions of Linux.  
+> versions of Linux.
 > 
 > You can continue to use Linux wheels on your own computer. 
 > Releases must be built on GitHub.
@@ -221,11 +221,10 @@ and at [PyPi](https://pypi.org/)
 #### Get Permission to access cspyce
 
 Separate permission needs to be provided for both PyPI and Test PyPI.
-For now, only Frank and Rob can do this.
+For now, only Frank Yellin and Rob French can do this.
 They should visit these two URLs and add you as a collaborator.
 - https://pypi.org/manage/project/cspyce/collaboration/
 - https://test.pypi.org/manage/project/cspyce/collaboration
-
 
 #### Create tokens for PyPI and Test PyPI
 
@@ -241,8 +240,7 @@ The scope should be `Project: cspyce`
 2. Click "Add token"
 3. Keep a copy of the text that is generated. This is your API Token.
 
-
-####  (Optional) Update your `.pypirc` file.
+#### (Optional) Update your `.pypirc` file.
 
 You can use the tokens created in the previous step in your `~/.pypirc` configuration
 file rather than a username and password.
@@ -258,15 +256,15 @@ and `TEST_PYPI_API_TOKEN`.
 The value of each of these two secrets should be the appropriate API token
 generated above.
 
-#### (Optional) Install `GH`, the GitHub command-line interface
+#### (Optional) Install `gh`, the GitHub command-line interface
 
-The GitHub commands to run the necessary actions can be executed either using a 
-command-line interface (CLI), or by visiting the github website.
+The GitHub commands to run the actions can be executed either using a 
+command-line interface (CLI), or by visiting the GitHub website.
 
-If you want to use the CLI, visit https://github.com/cli/cli for information on 
+To use the CLI, visit https://github.com/cli/cli for information on 
 installing `gh` on your machine.
 
-After installation, run the command `gh auth login` and follow the instructions to 
+After installation, you must run the command `gh auth login` and follow the instructions to 
 authorize `gh` to access your account.
 
 ### Creating a new distribution.
@@ -282,26 +280,28 @@ The version number appears in the `do_setup()` function at the very end of the f
 > 
 #### Step 2: Ensure you have a local branch.
 
-Make sure you have a local branch that points to the same commit as th development branch.
+Make sure you have a local branch that points to the same commit as the development branch.
 
-If you are the creator of the branch, then you are done.  If you are not the creator, 
-then do a pull of the development branch from the GitHub repository.
+If you are the creator of the branch, then you are done.
+If you are not the creator, then do a pull of the development branch from the GitHub repository.
 
-#### Step 3: Modify the version.
+#### Step 3: Understand version numbers
 
-You should first try releasing to Test PyPI before attempting to release to the public. 
-Each release needs a separate version number.
+You should first try releasing alpha and beta versions of your code to Test PyPI 
+before attempting to release to the public. Each release needs a separate version number.
 
-Ensure that you are the development branch
+You can find the version number in `setup.py`.
 
-Modify the version number in `setup.py`.
-If the version number is, for example `2.0.5`, change it to `2.0.5a1` indicating
-that this is the alpha-1 version of 2.0.5.
-If you find problems in your alpha-1 release
-and create a second Test PyPI, the versions should be `2.0.5a2`, `2.0.5a3`, etc.
-If you feel like you're getting close to the public release version,
-switch from alpha to beta by changing the
-`a` to a `b` and start the numbering again from 1.
+If the version number is, for example `2.0.5`, we would want the first release sent to 
+Test PyPI to be `2.0.5a1` indicating that this is the alpha-1 version of 2.0.5.
+This would be followed by `2.0.5a2`, `2.0.5a3`, etc.
+
+As we got closer to a final version, we would change `a` to `b`, and restart the numbering
+from 1, indicating we are at beta.  Then we would change the `b` to `rc`, indicating that
+this is a release candidate (again, restarting the numbering from 1).
+
+We call the suffix you append to the `version` listed in `setup.py` 
+as the "Prerelease Version"
 
 #### Step 4: Build a Test PyPI release
 
@@ -309,55 +309,102 @@ By default, we generate four MacOS builds (2.7, 3.8, 3.9, 3.10), three Windows
 builds (3.8, 3.9, 3.10), three Linux builds (3.8, 3.9, 3.10), and a source build.
 Feel free to comment out the obvious lines if needed.
 
-> When new Python images become available, modify the above list in the `master` version of this file.
->
+> When new Python images become available, modify the above list in the `master`
+> version of this file.
+
 > Note that 3.10 needs to be quoted because yml thinks 3.10 is just 3.1.
 > When 3.11 is released, this shouldn't be a problem
 
-Commit and push the changes you made in the previous step. 
+Ensure that your development branch is committed and pushed to your GitHub repository.
 
 If using web interface, 
 
-1. Log into your GitHub account, 
-2. Select your repository,
-3. Click the Actions "Button"
-4. On the left-hand side, you will see "All Workflows" followed
-by an entry whose name starts with "Public Python Distribution".  Click on the entry.
-5. Click "Run Workflow". Leave the checked boxes alone.  Select the appropriate branch.
-6. Click the green "Run Workflow" button.
+   1. Log into your GitHub account.
+   2. Select your repository.
+   3. Click the Actions "Button".
+   4. On the left-hand side, you will see "All Workflows" followed by "Publish to PyPI".
+   Click on that entry.
+   5. Click "Run Workflow".
+   6. Fill in the form:
+      1. Select your development branch.
+      2. Set "Prerelease Version" to be "a2" or "b0" or whatever is the current
+         prerelease version as described in the previous step.
+      3. Leave the buttons as is. For debugging, you want to release only to Test PyPI.
+   7. Click Run workflow
 
-If using the CLI command, run the following command:
+If using the CLI, run the following command:
 
 ```
-gh workflow run publish-to-pypi.yml --ref <branch> -f pypi=false
+gh workflow run publish-to-pypi.yml --ref <branch> -f prerelease_version=<xx> -f test_pypi=true -f pypi=false
 ```
+where `<branch>` is the name of your development branch and `<xx>` is the prerelease version
+as described above.
 
-
-#### Step 6: Verify actions
-
-Log into GitHub.
-Go to your repository and click 'Actions'.
-Within a few minutes,
-you should see your actions being run.
+When you create a new workflow, using either the GUI or the CLI,
+a new line will appear on the table of the Actions page.
+Click on the left side of a row, and it will take you to a page showing the status of
+the run.
 
 You may see a message saying that actions aren't being run in this forked repository.
 If so, just click on "I understand" to continue.
 
-You *will* see the error message that Python 2.7 isn't supported; thse can be ignored.
+You *will* see the error message that Python 2.7 isn't supported; these can be ignored.
 If there are any other errors, then investigate.
 
-#### Step 7: Test and retry
+If you see any other error messages, please investigate. 
+Otherwise, your build has been released to TestPyPI.
 
-Test the results.  If there are any problems, fix them.  Ensure that `GitActions` and
-the development branch stay in sync, and that the only difference between the two branches
-are the version number (which must be updated each time you do a new release) and the
-changes to `publush_to_pypi.yml`.  Each time you do a push to GitHub, a new release
-will be build.
+#### Step 5: Test and retry
 
-#### Step 8: Publish to PyPI
+Test the results.
 
-Once everything is working, undo the change to the version number in `setup.py`
-and change the `false` back to `true` in `publish_to_pypi.yml`.
-Do not change back the branch name (if you changed it) or the repository name.
-Perform one more commit and push.  
+You should generally create a new virtual environment for testing a prerelease cspyce.
 
+```
+$ python -m venv tester
+$ cd tester
+$ source bin/activate
+$ pip install numpy
+$ pip install -i https://test.pypi.org/simple/ cspyce==2.0.5a1
+$ python
+> import cspyce
+```
+Of course, replease `2.0.5a1` with whatever is your current pre-release.
+
+> Note: For release images on PyPI, `numpy` is installed automatically when installing
+> `cspyce`.  This does not work when installing from Test PyPI.
+> 
+If there are any problems, fix them.
+
+Repeat Steps 4 and 5 as many times as necessary.
+Remember that you need to update the value of the prerelease version  in step 6ii
+each time you create a new release.
+
+#### Step 6: Publish to PyPI
+
+Repeat the instructions of Step 4, but fill in the form as follows:
+
+  6. Fill in the form:
+     1. Select your appropriate branch
+     2. Set "Prerelease Version" to be the string `release`
+     3. Click both "Release to PyPI" and "Release to Test PyPI"
+
+If using the CLI, run the following command:
+```
+gh workflow run publish-to-pypi.yml --ref <branch> -f prerelease_version=release -f test_pypi=true -f pypi=true
+```
+where `<branch>` is the name of your development branch and `<xx>` is the prerelease suffix
+you would have entered in step 6ii above.
+
+
+> Note: I am trying to figure out how to get rid of "Release to PyPI" and make
+> it depending on whether the prerelease version is "release" or not.
+> No one's answered my question on stackoverflow yet. 
+
+> Note: It seems the "Prerelease Version" field cannot be empty.
+> I would have liked
+> to leave this empty for the release, but the GUI won't let me.
+
+> Question: Should we *always* send a release to Test PyPI.
+> I can't think of a reason
+> not to, but it was easy enough to always have a button.

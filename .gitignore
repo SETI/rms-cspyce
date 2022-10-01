@@ -8,3 +8,4 @@ dist/
 cspyce.egg-info/
 **/*wrap.c
 wheelhouse/
+prerelease_version.txt
