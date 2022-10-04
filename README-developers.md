@@ -240,14 +240,14 @@ The scope should be `Project: cspyce`
 2. Click "Add token"
 3. Keep a copy of the text that is generated. This is your API Token.
 
-#### (Optional) Update your `.pypirc` file.
+#### (Optional) Update your `.pypirc` file
 
 You can use the tokens created in the previous step in your `~/.pypirc` configuration
 file rather than a username and password.
 Use `__token__` as the username and the appropriate token generated above as the
 password.
 
-#### Tell GitHub these secrets.
+#### Tell GitHub these secrets
 
 1. Log into your GitHub repository for pds-cspyce
 2. Click "settings", then "secrets" on the left-hand menu, then "actions".
@@ -267,7 +267,7 @@ installing `gh` on your machine.
 After installation, you must run the command `gh auth login` and follow the instructions to 
 authorize `gh` to access your account.
 
-### Creating a new distribution.
+### Creating a new distribution
 
 #### Step 1: Update the version
 
@@ -278,11 +278,11 @@ The version number appears in the `do_setup()` function at the very end of the f
 > Note to Rob: When approving a request that will require making a new distribution, 
 > ensure that the version number is updated.
 > 
-#### Step 2: Ensure you have a local branch.
+#### Step 2: Ensure you have a local branch
 
-Make sure you have a local branch that points to the same commit as the development branch.
+Make sure you have a local branch that points to the commit where you want to create the distribution.
 
-If you are the creator of the branch, then you are done.
+If you are the creator of the development branch, then you are done.
 If you are not the creator, then do a pull of the development branch from the GitHub repository.
 
 #### Step 3: Understand version numbers
@@ -292,7 +292,7 @@ before attempting to release to the public. Each release needs a separate versio
 
 You can find the version number in `setup.py`.
 
-If the version number is, for example `2.0.5`, we would want the first release sent to 
+If the version number is, for example, `2.0.5`, we would want the first release sent to 
 Test PyPI to be `2.0.5a1` indicating that this is the alpha-1 version of 2.0.5.
 This would be followed by `2.0.5a2`, `2.0.5a3`, etc.
 
@@ -301,7 +301,7 @@ from 1, indicating we are at beta.  Then we would change the `b` to `rc`, indica
 this is a release candidate (again, restarting the numbering from 1).
 
 We call the suffix you append to the `version` listed in `setup.py` 
-as the "Prerelease Version"
+as the "Prerelease Version".
 
 #### Step 4: Build a Test PyPI release
 
@@ -315,7 +315,8 @@ Feel free to comment out the obvious lines if needed.
 > Note that 3.10 needs to be quoted because yml thinks 3.10 is just 3.1.
 > When 3.11 is released, this shouldn't be a problem
 
-Ensure that your development branch is committed and pushed to your GitHub repository.
+Ensure that your development branch is committed and pushed to your GitHub repository,
+including setting the appropriate version number in `setup.py`.
 
 If using web interface, 
 
@@ -329,7 +330,7 @@ If using web interface,
       1. Select your development branch.
       2. Set "Prerelease Version" to be "a2" or "b0" or whatever is the current
          prerelease version as described in the previous step.
-      3. Leave the buttons as is. For debugging, you want to release only to Test PyPI.
+      3. Leave the checkboxes as is. For debugging, you want to release only to Test PyPI.
    7. Click Run workflow
 
 If using the CLI, run the following command:
@@ -349,8 +350,6 @@ You may see a message saying that actions aren't being run in this forked reposi
 If so, just click on "I understand" to continue.
 
 You *will* see the error message that Python 2.7 isn't supported; these can be ignored.
-If there are any other errors, then investigate.
-
 If you see any other error messages, please investigate. 
 Otherwise, your build has been released to TestPyPI.
 
@@ -362,14 +361,13 @@ You should generally create a new virtual environment for testing a prerelease c
 
 ```
 $ python -m venv tester
-$ cd tester
-$ source bin/activate
+$ source tester/bin/activate
 $ pip install numpy
 $ pip install -i https://test.pypi.org/simple/ cspyce==2.0.5a1
 $ python
 > import cspyce
 ```
-Of course, replease `2.0.5a1` with whatever is your current pre-release.
+Of course, replace `2.0.5a1` with your current pre-release version number.
 
 > Note: For release images on PyPI, `numpy` is installed automatically when installing
 > `cspyce`.  This does not work when installing from Test PyPI.
@@ -398,7 +396,7 @@ you would have entered in step 6ii above.
 
 
 > Note: I am trying to figure out how to get rid of "Release to PyPI" and make
-> it depending on whether the prerelease version is "release" or not.
+> it depend on whether the prerelease version is "release" or not.
 > No one's answered my question on stackoverflow yet. 
 
 > Note: It seems the "Prerelease Version" field cannot be empty.
