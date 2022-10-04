@@ -110,7 +110,7 @@ jobs:
 
       - name: Python Build Linux
         if: ${{ matrix.python == '' }}
-        uses: RalfG/python-wheels-manylinux-build@v0.3.4-manylinux2010_x86_64
+        uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux2014_x86_64
         with:
           python-versions: ${{ matrix.docker-python }}
           build-requirements: 'numpy'
