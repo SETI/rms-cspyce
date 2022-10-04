@@ -108,8 +108,9 @@ It includes the necessary pieces of the `cspice/` source tree as well as an
 already generated `cspyce0_wrap.c` file so that they do not need to install 
 `swig.`
 
-The installing process may take a few minutes because 2000 files from the CSPICE
-library are being compiled.
+Although building a source distribution is very quick, 
+the installing process (`pip install cspyce`) may take a few minutes because 
+2000 files from the CSPICE library are being compiled.
 
 ### Wheel distributions
 
@@ -323,8 +324,10 @@ If using web interface,
    1. Log into your GitHub account.
    2. Select your repository.
    3. Click the Actions "Button".
+      You may see a message saying that actions aren't being run in this forked repository.
+      If so, just click on "I understand" to continue.
    4. On the left-hand side, you will see "All Workflows" followed by "Publish to PyPI".
-   Click on that entry.
+      Click on that entry.
    5. Click "Run Workflow".
    6. Fill in the form:
       1. Select your development branch.
@@ -346,10 +349,8 @@ a new line will appear on the table of the Actions page.
 Click on the left side of a row, and it will take you to a page showing the status of
 the run.
 
-You may see a message saying that actions aren't being run in this forked repository.
-If so, just click on "I understand" to continue.
-
-You *will* see the error message that Python 2.7 isn't supported; these can be ignored.
+You *may* see the several error messages that Python 2.7 isn't supported;
+these can be ignored.
 If you see any other error messages, please investigate. 
 Otherwise, your build has been released to TestPyPI.
 
