@@ -55,6 +55,7 @@ jobs:
             swig/*_wrap.c
             cspyce/typemap_samples.py
             cspyce/cspyce0.py
+            cpsyce/cspyce0_info.py
             ./prerelease_version.txt
 
   build-distribution:
