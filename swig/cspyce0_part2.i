@@ -472,16 +472,15 @@ extern SpiceInt bsrchi_c(
         SpiceDouble *result = my_malloc(nderiv_plus_1, "chbder");
         SpiceDouble *partdp = my_malloc(3 * nderiv_plus_1, "chbder");
         if (!partdp) {
-            free(result);
-            free(partdp);
+            PyMem_Free(result);
             return;
         }
 
         chbder_c(cp, deg_plus_1 - 1, x2s, x, nderiv, partdp, result);
-        free(partdp);
+        PyMem_Free(partdp);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -524,7 +523,7 @@ extern SpiceInt bsrchi_c(
 
         SpiceDouble *partdp = my_malloc(3 * nderiv_plus_1, my_name);
         if (!partdp) {
-            free(out21_buffer);
+            PyMem_Free(out21_buffer);
             return;
         }
 
@@ -539,10 +538,10 @@ extern SpiceInt bsrchi_c(
             );
         }
 
-        free(partdp);
+        PyMem_Free(partdp);
 
         if (failed_c()) {
-            free(out21_buffer);
+            PyMem_Free(out21_buffer);
             return;
         }
 
@@ -905,7 +904,7 @@ extern void ckgr02_c(
         ckgr03_c(handle, descr, recno, buffer);
 
         if (failed_c()) {
-            free(buffer);
+            PyMem_Free(buffer);
             *size = 0;
             *record = NULL;
         } else {
@@ -4083,7 +4082,7 @@ extern void dskx02_c(
         SpiceBoolean *found = my_malloc(nrays, "dskxv");
         SpiceDouble *vector = my_malloc(nrays * 3, "dskxv");
         if (!vector) {
-            free(found);
+            PyMem_Free(found);
             found = NULL;
             return;
         }
@@ -4092,8 +4091,8 @@ extern void dskx02_c(
                 vtxarr, dirarr, vector, found);
 
         if (failed_c()) {
-            free(found);
-            free(vector);
+            PyMem_Free(found);
+            PyMem_Free(vector);
             return;
         }
 
@@ -7533,7 +7532,7 @@ VECTORIZE_2d_di_d__2d(hrmesp, my_hrmesp_c)
         if (!work) return;
 
         hrmint_c(n, xvals, yvals, x, work, f, df);
-        free(work);
+        PyMem_Free(work);
     }
 %}
 
@@ -7833,7 +7832,9 @@ extern void kclear_c(void);
 * filtln     I   Maximum length of output string `filtln'.
 * srclen     I   Maximum length of output string `srcfil'.
 * file       O   The name of the kernel file.
-* filtyp     O   The type of the kernel.
+* filtyp     O   The type of the kernel, one of "SPK", "SK", "DSK", "PCK",
+*                "EK", "TEXT", "META", or "ALL". Default is "ALL".
+*                To get multiple kinds, join them inside a string, separated by spaces.
 * srcfil     O   Name of the source file used to load `file'.
 * handle     O   The handle attached to `file'.
 * found      O   True if the specified file could be located.
@@ -7842,19 +7843,19 @@ extern void kclear_c(void);
 %rename (kdata) my_kdata_c;
 %apply (void RETURN_VOID) {void my_kdata_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *kind};
-%apply (SpiceInt DIM1, SpiceChar *IN_STRING) {(SpiceInt fileln, SpiceChar *file)};
-%apply (SpiceInt DIM1, SpiceChar *IN_STRING) {(SpiceInt filtln, SpiceChar *filtyp)};
-%apply (SpiceInt DIM1, SpiceChar *IN_STRING) {(SpiceInt srclen, SpiceChar *srcfil)};
+%apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt fileln, SpiceChar file[FILELEN])};
+%apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt filtln, SpiceChar filtyp[NAMELEN])};
+%apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt srclen, SpiceChar srcfil[FILELEN])};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
-%apply (SpiceBoolean  *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
 
 %inline %{
     void my_kdata_c(
         SpiceInt       which,
         ConstSpiceChar *kind,
-        SpiceInt       fileln, SpiceChar *file,
-        SpiceInt       filtln, SpiceChar *filtyp,
-        SpiceInt       srclen, SpiceChar *srcfil,
+        SpiceInt       fileln, SpiceChar file[FILELEN],
+        SpiceInt       filtln, SpiceChar filtyp[NAMELEN],
+        SpiceInt       srclen, SpiceChar srcfil[FILELEN],
         SpiceInt       *handle,
         SpiceBoolean   *found)
     {
@@ -7862,6 +7863,9 @@ extern void kclear_c(void);
                 file, filtyp, srcfil, handle, found);
     }
 %}
+
+//CSPYCE_DEFAULT:which:0
+//CSPYCE_DEFAULT:kind:"ALL"
 
 /***********************************************************************
 * -Procedure kinfo_c ( Kernel Information )
@@ -7886,7 +7890,8 @@ extern void kclear_c(void);
 * file       I   Name of a kernel to fetch information for
 * filtln     I   Available space in output kernel type string.
 * srclen     I   Available space in output `srcfil' string.
-* filtyp     O   The type of the kernel.
+* filtyp     O   The type of the kernel, one of "SPK", "SK", "DSK", "PCK",
+*                "EK", "TEXT", "META", or "ALL".
 * srcfil     O   Name of the source file used to load `file'.
 * handle     O   The handle attached to `file'.
 * found      O   True if the specified file could be located.
@@ -7928,7 +7933,10 @@ extern void kclear_c(void);
 *
 * Variable  I/O  Description
 * --------  ---  --------------------------------------------------
-* kind       I   A list of kinds of kernels to count.
+* kind       I   The kind of kernels to count, one of
+*                "SPK", "SK", "DSK", "PCK", "EK", "TEXT", "META", or "ALL".
+*                To count multiple kinds, join them inside a string, separated by spaces.
+*                Default is "ALL".
 * count      O   The number of kernels of type `kind'.
 ***********************************************************************/
 
@@ -7940,6 +7948,8 @@ extern void ktotal_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *OUTPUT
 );
+
+//CSPYCE_DEFAULT:kind:"ALL"
 
 /***********************************************************************
 * -Procedure kxtrct_c ( Extract a substring starting with a keyword )
@@ -8103,7 +8113,7 @@ VECTORIZE_2d_di_d__RETURN_d(lgresp, my_lgresp_c)
         if (!work) return;
 
         lgrind_c(n, xvals, yvals, work, x, p, dp);
-        free(work);
+        PyMem_Free(work);
     }
 %}
 
@@ -8328,7 +8338,7 @@ extern SpiceInt lstlec_c(
 
 %rename (lstled) lstled_c;
 %apply (SpiceInt RETURN_INT) {SpiceInt lstled_c};
-%apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1)
+%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1)
                 {(SpiceInt n, ConstSpiceDouble *array)};
 
 extern SpiceInt lstled_c(
@@ -8429,7 +8439,7 @@ extern SpiceInt lstltc_c(
 
 %rename (lstltd) lstltd_c;
 %apply (SpiceInt RETURN_INT) {SpiceInt lstltd_c};
-%apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1)
+%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1)
                 {(SpiceInt n, ConstSpiceDouble *array)};
 
 extern SpiceInt lstltd_c(
@@ -9291,7 +9301,7 @@ VECTORIZE_dX_dX_dX__dN(pltnrm, pltnrm_c, 3)
         }
 
         if (failed_c()) {
-            free(out21_buffer);
+            PyMem_Free(out21_buffer);
             return;
         }
 
@@ -9507,7 +9517,7 @@ extern void prsint_c(
         qderiv_c(ndim, f0, f2, delta, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 
@@ -11721,7 +11731,7 @@ VECTORIZE_dX_i_dX_i__dMN(twovxf, twovxf_c, 6, 6)
         vprojg_c(a, b, ndim, result);
 
         if (failed_c()) {
-            free(result);
+            PyMem_Free(result);
             return;
         }
 

@@ -1,48 +1,35 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Public Python distribution to TestPyPI
+name: Publish to PyPI
+run-name: Publish ${{ inputs.prelease_version }} by ${{ github.actor }}
 
 # Controls when the workflow will run
 on:
-  pull_request:
-    branches: [ GitActions ]
-  push:
-    branches: [ GitActions ]
   workflow_dispatch:
+    inputs:
+      prerelease_version:
+        description: 'Prerelease Version'
+        required: true
+        default: ''
+        type: string
+
+      test_pypi:
+        description: 'Release to Test PyPI'
+        required: true
+        default: true
+        type: boolean
+
+      pypi:
+        description: 'Release to PyPI'
+        required: true
+        default: false
+        type: boolean
 
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build_swig_tools:
-    if: github.repository == 'fyellin/pds-cspyce'
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: Build Swig Files
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install setuptools numpy
-          python3 setup.py generate
-
-      - name: Upload SWIG to artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: swig
-          path: |
-            swig/*_wrap.c
-            cspyce/typemap_samples.py
-            cspyce/cspyce0.py
-
-  build-distribution:
-    # if: github.repository == 'fyellin/pds-cspyce'
+  build-macos-windows-source:
     runs-on: ${{ matrix.os }}
-    needs: [build_swig_tools]
 
     strategy:
       matrix:
@@ -52,16 +39,12 @@ jobs:
           - {os: macos-latest, python: 3.8, dist: bdist_wheel}
           - {os: macos-latest, python: 3.9, dist: bdist_wheel}
           - {os: macos-latest, python: '3.10', dist: bdist_wheel}
-          # Windows builds
+#          # Windows builds
           - {os: windows-latest, python: 3.8, dist: bdist_wheel}
           - {os: windows-latest, python: 3.9, dist: bdist_wheel}
           - {os: windows-latest, python: '3.10', dist: bdist_wheel}
-          # Source build
+#          # Source build
           - {os: ubuntu-latest, python: 3.8, dist: sdist }
-          # Linux multi build
-          - {os: ubuntu-latest, docker-python: cp38-cp38}
-          - {os: ubuntu-latest, docker-python: cp39-cp39}
-          - {os: ubuntu-latest, docker-python: cp310-cp310}
       fail-fast: false
 
     steps:
@@ -71,52 +54,105 @@ jobs:
         if: ${{ matrix.os == 'windows-latest' }}
         uses: ilammy/msvc-dev-cmd@v1.4.1
 
-      - name: Get already generated Swig files
-        uses: actions/download-artifact@v3
+      - name: Set up Build Python
+        if: matrix.python == 2.7
+        uses: actions/setup-python@v2
         with:
-          name: swig
+          python-version: 3.8
 
-      - name: Set up Python
+      - name: Set up Requested Python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python || 3.8 }}
 
-      - name: Python Setup
+      - name: Initialize Python
         run: |
           python -m pip install --upgrade pip
           python -m pip install setuptools wheel twine numpy
+        env:
+          PRERELEASE_VERSION: ${{ inputs.prerelease_version }}
 
-      - name: Python Build Non Linux
-        if: ${{ matrix.python != '' }}
+      - name: Generate swig files
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install setuptools wheel twine numpy
+          echo $PRERELEASE_VERSION > prerelease_version.txt
+          python3 setup.py generate
+        env:
+          PRERELEASE_VERSION: ${{ inputs.prerelease_version }}
+
+      - name: Build distribution
         run: |
           python setup.py ${{ matrix.dist }}
 
-      - name: Python Build Linux
-        if: ${{ matrix.python == '' }}
-        uses: RalfG/python-wheels-manylinux-build@v0.3.4-manylinux2010_x86_64
-        with:
-          python-versions: ${{ matrix.docker-python }}
-          build-requirements: 'numpy'
-
-      - name: Linux delete non manylinux wheels
-        if: ${{ matrix.python == '' }}
-        run: |
-          find dist -type f | grep -v manylinux | xargs sudo rm
-
       - name: Publish distribution to Test PyPI
-        if: true
+        if: inputs.test_pypi
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
-        run:
+        run: |
           python -m twine upload --verbose --skip-existing dist/*
 
-      - name: Publish distribution to PyPI
-        if: true
+      - name: Publish distribution to PyPI2
+        if: inputs.pypi
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
           TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
         run:
           python -m twine upload --verbose --skip-existing dist/*
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+           - {docker-python: cp38-cp38}
+           - {docker-python: cp39-cp39}
+           - {docker-python: cp310-cp310}
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Python Setup
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install setuptools wheel twine numpy
+          echo "prerelease version" $PRERELEASE_VERSION
+          echo $PRERELEASE_VERSION > prerelease_version.txt
+        env:
+          PRERELEASE_VERSION: ${{ inputs.prerelease_version }}
+
+      - name: Python Build Linux
+        uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux2014_x86_64
+        with:
+          python-versions: ${{ matrix.docker-python }}
+          build-requirements: 'numpy'
+          system-packages: 'swig'
+          pre-build-command: '/opt/python/cp38-cp38/bin/python setup.py generate'
+
+      - name: Publish distribution to Test PyPI
+        if: inputs.test_pypi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          TWINE_REPOSITORY_URL: https://test.pypi.org/legacy/
+        run: |
+          python -m twine upload --verbose --skip-existing dist/*manylinux*.whl
+
+      - name: Publish distribution to PyPI2
+        if: inputs.pypi
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_REPOSITORY_URL: https://upload.pypi.org/legacy/
+        run:
+          python -m twine upload --verbose --skip-existing dist/*manylinux*.whl

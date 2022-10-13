@@ -42,16 +42,21 @@
 # In the CSPICE error handling mechanism, the programmer must check the value
 # of function failed() regularly to determine if an error has occurred. However,
 # Python's exception handling mechanism obviates the need for this approach. In
-# cspyce1, all CSPICE errors raise Python exceptions. You should never need to call
-# failed(), although you still can.
+# cspyce1, all CSPICE errors raise Python exceptions.
 #
 # In CSPICE, the programmer can control how C errors are handled using the
 # function erract(). Options include "IGNORE", "REPORT", "ABORT", "DEFAULT",
-# and "RETURN", In cspyce1, all of these options are disabled except "RETURN",
-# which is the only safe option in an interactive environment. Two additional
-# options are supported, "EXCEPTION" and "RUNTIME". The only difference is that
-# "RUNTIME" consistently raises RuntimeError exceptions, whereas "EXCEPTION"
-# tailors the type of the exception to the situation.
+# and "RETURN", In cspyce1, the "IGNORE" and "REPORT" options are disabled,
+# because they can leave behind corrupted memory. In interactive Python, the
+# "ABORT" and "DEFAULT" options are also disabled, because aborting an
+# interactive session would be pointless. The "ABORT" and "DEFAULT" options are
+# still available, though not recommended, when running programs
+# non-interactively.
+#
+# The cspyce1 module supports two additional error actions, which are variants
+# on "RETURN". These are "EXCEPTION" and "RUNTIME". The only difference between
+# them is that "RUNTIME" consistently raises RuntimeError exceptions, whereas
+# "EXCEPTION" tailors the type of the exception to the situation.
 #
 # HANDLING OF ERROR FLAGS
 #
@@ -134,7 +139,6 @@ PYTHON2 = sys.version_info[0] < 3
 # GET/SET handling
 ################################################################################
 
-
 def erract(op='', action=''):
     """Allow special argument handling:
         erract()            -> erract('GET', '')
@@ -163,7 +167,6 @@ def erract(op='', action=''):
 
     return cspyce0.erract(op, action)
 
-
 def errdev(op='', action=''):
     """Allow special argument handling:
         errdev()            -> errdev('GET', '')
@@ -171,19 +174,18 @@ def errdev(op='', action=''):
         errdev('SCREEN')    -> errdev('SET', 'SCREEN')
     """
 
-    op = op.upper().strip()
     if not op:
-        op = 'GET'
-
-    if op == 'GET':
         return cspyce0.errdev('GET', '')
 
-    if op != 'SET' and not action:  # single input value, assume 'SET'
+    op_upper = op.upper()
+    if op_upper == 'GET':
+        return cspyce0.errdev('GET', '')
+
+    if op_upper != 'SET' and not action:  # single input value, assume 'SET'
         cspyce0.errdev('SET', op)
         return op
 
-    action = action.upper().strip()
-    return cspyce0.erract(op, action)
+    return cspyce0.errdev(op, action)
 
 def errprt(op='', list_=''):
     """Allow special argument handling:
@@ -622,7 +624,6 @@ def dafgsr_error(handle, recno, begin, end):
 
     return data
 
-
 def dlabbs_error(handle, recno, begin, end):
     (dladsc, found) = cspyce0.dafgsr(handle, recno, begin, end)
     if not found:
@@ -633,9 +634,8 @@ def dlabbs_error(handle, recno, begin, end):
 
     return dladsc
 
-
-def dlabfs_error(handle, recno, begin, end):
-    (dladsc, found) = cspyce0.dafgsr(handle, recno, begin, end)
+def dlabfs_error(handle):
+    (dladsc, found) = cspyce0.dlabfs(handle)
     if not found:
         chkin('dlabfs_error')
         setmsg('DLA segment not found for handle {}'.format(handle))
@@ -664,16 +664,6 @@ def dlafps_error(handle, dladsc):
 
     return prvdsc
 
-def dnearp_error(state, a, b, c):
-    (dnear, dalt, found) = cspyce0.dnearp(state, a, b, c)
-    if not found:
-        chkin('dnearp_error')
-        setmsg('Ellipsoid point is degenerate')
-        sigerr('SPICE(DEGENERATESURFACE)')
-        chkout('dnearp_error')
-
-    return [dnear, dalt]
-
 def dskx02_error(handle, dladsc, vertex, raydir):
     (plid, xpt, found) = cspyce0.dskx02(handle, dladsc, vertex, raydir)
     if not found:
@@ -683,7 +673,6 @@ def dskx02_error(handle, dladsc, vertex, raydir):
         chkout('dskx02_error')
 
     return [plid, xpt]
-
 
 def dskxsi_error(pri, target, nsurf, srflst, et, fixref, vertex, raydir):
     (xpt, handle, dladsc, dskdsc, dc, ic, found) = cspyce0.dskxsi(pri, target, nsurf,
@@ -740,7 +729,6 @@ def ekgi_error(selidx, row, elment):
 
     return [idata, null]
 
-
 def ekpsel_error(query, tabs, n4, cols, n5):
     (xbegs, xends, xtypes, xclass, tabs, cols, error, errmsg) = cspyce0.ekpsel(query,
                                                                                tabs, n4,
@@ -763,18 +751,20 @@ def hx2dp_error(string):
 
     return number
 
-
-def kdata_error(which, kind, fileln, file, filtln, filtyp, srclen, srcfil):
-    (handle, found) = cspyce0.kdata(which, kind, fileln, file, filtln, filtyp, srclen,
-                                    srcfil)
+def kdata_error(which, kind):
+    (file, filtype, srcfil, handle, found) = cspyce0.kdata(which, kind)
     if not found:
         chkin('kdata_error')
-        setmsg('kernel not found: {}, {}, {}, {}, {}'.format(which, kind, file, filtyp,
-                                                             srcfil))
-        sigerr('SPICE(FILENOTFOUND)')
+        count = cspyce0.ktotal(kind)
+        if which >= count:
+            setmsg('index out of range: {}/{}, {}'.format(which, count, kind))
+            sigerr('SPICE(INVALIDINDEX)')
+        else:
+            setmsg('kernel not found: {}, {}'.format(which, kind))
+            sigerr('SPICE(FILENOTFOUND)')
         chkout('kdata_error')
 
-    return handle
+    return [file, filtype, srcfil, handle]
 
 def kinfo_error(file):
     (filtyp, srcfil, handle, found) = cspyce0.kinfo(file)
@@ -785,7 +775,6 @@ def kinfo_error(file):
         chkout('kinfo_error')
 
     return [filtyp, srcfil, handle]
-
 
 def spksfs_error(body, et, idlen, ident):
     (handle, descr, ident, found) = cspyce0.spksfs(body, et, idlen, ident)
@@ -902,6 +891,118 @@ def pcpool(name, cvals):
         cspyce0.pcpool(name, [cvals])
     else:
         cspyce0.pcpool(name, cvals)
+
+################################################################################
+# These wrappers on the comment readers dafec an dasec ensure that the entire
+# comment field is read. They eliminate the "done" return value.
+################################################################################
+
+def dafec(handle):
+    records = []
+    while True:
+        (buffer, done) = cspyce0.dafec(handle)
+        records += buffer
+        if done:
+            return records
+
+# Update the call signature for help
+del CSPYCE_RETURNS['dafec'][1]
+del CSPYCE_RETNAMES['dafec'][1]
+del CSPYCE_DEFINITIONS['dafec']['done']
+
+def dasec(handle):
+    records = []
+    while True:
+        (buffer, done) = cspyce0.dasec(handle)
+        records += buffer
+        if done:
+            return records
+
+# Update the call signature for help
+del CSPYCE_RETURNS['dasec'][1]
+del CSPYCE_RETNAMES['dasec'][1]
+del CSPYCE_DEFINITIONS['dasec']['done']
+
+################################################################################
+# For functions that return only a list of strings, don't embed the results in
+# an additional layer [].
+################################################################################
+
+def lparse(list_, delim):
+    result = cspyce0.lparse(list_, delim)
+    if len(result) == 1 and isinstance(result[0], list):
+        return result[0]
+
+def lparsm(list_, delims):
+    result = cspyce0.lparsm(list_, delims)
+    if len(result) == 1 and isinstance(result[0], list):
+        return result[0]
+
+################################################################################
+# When a function returns a value and a "found" flag, and the flag is False,
+# the unused return values contain random values. We change these to something
+# sensible.
+################################################################################
+
+def bodn2c(name):
+    (code, found) = cspyce0.bodn2c(name)
+    return [code if found else 0, found]
+
+def bods2c(name):
+    (code, found) = cspyce0.bods2c(name)
+    return [code if found else 0, found]
+
+def ccifrm(frclss, clssid):
+    (frcode, frname, center, found) = cspyce0.ccifrm(frclss, clssid)
+    return [frcode if found else 0, frname, center if found else 0, found]
+
+def cnmfrm(cname):
+    (frcode, frname, found) = cspyce0.cnmfrm(cname)
+    return [frcode if found else 0, frname if found else '', found]
+
+def frinfo(frcode):
+    (cent, frclss, clssid, found) = cspyce0.frinfo(frcode)
+    return [cent if found else 0,
+            frclss if found else 0,
+            clssid if found else 0, found]
+
+def srfs2c(srfstr, bodstr):
+    (code, found) = cspyce0.srfs2c(srfstr, bodstr)
+    return [code if found else 0, found]
+
+def tparse(string):
+    (sp2000, msg) = cspyce0.tparse(string)
+    return [0. if msg else sp2000, msg]
+
+def ckfrot(inst, et):
+    (rotate, ref, found) = cspyce0.ckfrot(inst, et)
+    return [rotate if found else np.diag(3*[1.]), ref if found else 0, found]
+
+def ckfxfm(inst, et):
+    (rotate, ref, found) = cspyce0.ckfrot(inst, et)
+    return [rotate if found else np.diag(6*[1.]), ref if found else 0, found]
+
+def hx2dp(string):
+    (number, error, errmsg) = cspyce0.hx2dp(string)
+    return [0. if error else number, error, errmsg]
+
+################################################################################
+# Handle "GET"/"SET" inputs to timdef().
+################################################################################
+
+def timdef(action='', item='', value=''):
+
+    action = action.upper().strip()
+    if action not in ('GET', 'SET'):
+        if item == '':
+            item = action
+            action = 'GET'
+        else:
+            value = item
+            item = action
+            action = 'SET'
+
+    return cspyce0.timdef(action, item, value)
 
 ################################################################################
 # Prepare for the possible use of aliases
@@ -1067,20 +1168,20 @@ VECTORIZED_ARGS = {
     'float[4]'   : ('float[_,4]'   , 'float[_,4]'   ),
     'float[6]'   : ('float[_,6]'   , 'float[_,6]'   ),
     'float[8]'   : ('float[_,8]'   , 'float[_,8]'   ),
-    'float[9]': ('float[_,9]', 'float[_,9]'),
-    'float[2,2]': ('float[_,2,2]', 'float[_,2,2]'),
-    'float[3,3]': ('float[_,3,3]', 'float[_,3,3]'),
-    'float[6,6]': ('float[_,6,6]', 'float[_,6,6]'),
-    'float[*]': ('float[_,*]', 'float[_,*]'),
-    'float[*,*]': ('float[_,*,*]', 'float[_,*,*]'),
+    'float[9]'   : ('float[_,9]'   , 'float[_,9]'   ),
+    'float[2,2]' : ('float[_,2,2]' , 'float[_,2,2]' ),
+    'float[3,3]' : ('float[_,3,3]' , 'float[_,3,3]' ),
+    'float[6,6]' : ('float[_,6,6]' , 'float[_,6,6]' ),
+    'float[*]'   : ('float[_,*]'   , 'float[_,*]'   ),
+    'float[*,*]' : ('float[_,*,*]' , 'float[_,*,*]' ),
     'rotmat[3,3]': ('rotmat[_,3,3]', 'rotmat[_,3,3]'),
     'rotmat[6,6]': ('rotmat[_,6,6]', 'rotmat[_,6,6]'),
-    'int': ('int', 'int[_]'),
-    'bool': ('bool', 'bool[_]'),
-    'body_code': ('body_code', 'body_code[_]'),  # not used (yet)
-    'frame_code': ('frame_code', 'frame_code[_]'),  # not used (yet)
-    'body_name': ('body_name', 'body_name[_]'),  # not used (yet)
-    'frame_name': ('frame_name', 'frame_name[_]'),  # not used (yet)
+    'int'        : ('int'          , 'int[_]'       ),
+    'bool'       : ('bool'         , 'bool[_]'      ),
+    'body_code'  : ('body_code'    , 'body_code[_]' ),  # not used (yet)
+    'frame_code' : ('frame_code'   , 'frame_code[_]'),  # not used (yet)
+    'body_name'  : ('body_name'    , 'body_name[_]' ),  # not used (yet)
+    'frame_name' : ('frame_name'   , 'frame_name[_]'),  # not used (yet)
 }
 
 def _vectorize_signature(signature):

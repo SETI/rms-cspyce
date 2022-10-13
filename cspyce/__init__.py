@@ -1,9 +1,9 @@
 ################################################################################
 # cspyce/__init__.py
 ################################################################################
-# SPYCE OVERVIEW
+# CSPYCE OVERVIEW
 #
-# Spyce is a Python module that provides an interface to the CSPICE library. It
+# cspyce is a Python module that provides an interface to the CSPICE library. It
 # implements the most widely-used functions of CSPICE in a Python-like way. It
 # also supports numerous enhancements, including support for Python exceptions,
 # array inputs, and aliases.
@@ -43,7 +43,6 @@ GLOBAL_STATUS = set()
 ################################################################################
 # Define functions to select between error and flag versions of functions
 ################################################################################
-
 
 def use_errors(*funcs):
     """Switch the listed functions or names of functions to use the "error"
