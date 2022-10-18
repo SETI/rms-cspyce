@@ -10,13 +10,13 @@ on:
       prerelease_version:
         description: 'Prerelease Version'
         required: true
-        default: 'release'
+        default: ''
         type: string
 
       test_pypi:
         description: 'Release to Test PyPI'
         required: true
-        default: false
+        default: true
         type: boolean
 
       pypi:
