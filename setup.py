@@ -12,6 +12,7 @@
 # We prefer setuptools, but will use distutils if setuptools isn't available
 import os
 from glob import glob
+import os
 import subprocess
 import sys
 
@@ -115,15 +116,10 @@ class MyBuildExt(build_ext):
 
 
 def do_setup():
-    try:
-        directory = os.path.dirname(os.path.abspath(__file__))
-        prerelease_version_file = os.path.join(directory, "prerelease_version.txt")
-        with open(prerelease_version_file, "r")  as f:
-            prerelease_version = f.read().strip()
-            if prerelease_version == 'release':
-                prerelease_version = ''
-    except IOError:
+    prerelease_version = os.getenv('PRERELEASE_VERSION', '')
+    if prerelease_version == 'release':
         prerelease_version = ''
+
     setup(
         name='cspyce',
         version='2.0.5' + prerelease_version,
