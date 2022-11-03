@@ -122,7 +122,7 @@ def do_setup():
 
     setup(
         name='cspyce',
-        version='2.0.5' + prerelease_version,
+        version='2.0.7' + prerelease_version,
         author="Mark Showalter/PDS Ring-Moon Systems Node",
         description="Low-level SWIG interface to the CSPICE library",
         ext_modules=get_extensions(),
