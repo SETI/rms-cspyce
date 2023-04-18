@@ -8,6 +8,7 @@ from __future__ import print_function
 import numpy as np
 import sys
 import inspect
+import warnings
 
 import cspyce
 import cspyce.cspyce1 as cspyce1
@@ -16,7 +17,7 @@ from cspyce.alias_support import alias_version
 PYTHON2 = sys.version_info[0] < 3
 
 # This isn't how we want to handle a ragged array
-np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 ################################################################################
 # cspyce array function wrapper
@@ -141,7 +142,7 @@ def array_version(func):
     wrapper.NOTES     = [ARRAY_NOTE] + wrapper.NOTES[1:] # replace vector note
 
     # Save key attributes of the wrapper function before returning
-    cspyce.assign_docstring(wrapper)
+    cspyce1.assign_docstring(wrapper)
     wrapper.__name__ = _array_name(func.__name__)
     if PYTHON2:
         wrapper.func_defaults = func.func_defaults
@@ -240,7 +241,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
 
     # Call function now if iteration is not needed
     if not array_args:
-        return func.scalar.__call__(*args, **keywords)
+        return func.vector.__call__(*args, **keywords)
 
     # Determine the broadcasted shape
     try:

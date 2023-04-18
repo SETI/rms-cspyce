@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 
-# If you are installing this code via "pip install pds-cspyce", then you should
+# If you are installing this code via "pip install cspyce", then you should
 # never see this file.  pip automatically determines whether you need a binary
 # distribution or source distribution, and automatically builds it as needed for
 # your machine.
 #
-# If you are doing a build from sources, please read README-developers.md in this
-# directory.
+# If you are doing a build from sources, please read README-developers.md in
+# this directory.
 
 
 # We prefer setuptools, but will use distutils if setuptools isn't available
 import os
 from glob import glob
 import os
+import platform
 import subprocess
 import sys
 
@@ -22,10 +23,8 @@ from get_spice import GetCspice
 
 try:
     from setuptools import Command, setup, Extension
-    from setuptools.command.build_py import build_py
 except ImportError:
     from distutils.core import Command, setup, Extension
-    from distutils.core import setup, Extension, build_py
 
 try:
     import numpy
@@ -34,14 +33,10 @@ except ImportError:
     import numpy
 
 
-import subprocess
-import sys
-import platform
-
 PYTHON2 = sys.version_info[0] < 3
-IS_LINUX = platform.system() == 'Linux'
-IS_MACOS = platform.system() == 'Darwin'
-IS_WINDOWS = platform.system() == 'Windows'
+IS_LINUX = platform.system() == "Linux"
+IS_MACOS = platform.system() == "Darwin"
+IS_WINDOWS = platform.system() == "Windows"
 assert IS_LINUX or IS_MACOS or IS_WINDOWS
 
 
@@ -71,7 +66,7 @@ class GenerateCommand(Command):
             subprocess.check_call(command)
 
 
-# Some linkers seem to have trouble with 2400 files.  So we break it up into
+# Some linkers seem to have trouble with 2400 files, so we break it up into
 # smaller libraries with a maximum of 250 files apiece.
 
 cspice_directory = GetCspice().download()
@@ -122,7 +117,7 @@ def do_setup():
 
     setup(
         name='cspyce',
-        version='2.0.7' + prerelease_version,
+        version='2.0.8' + prerelease_version,
         author="Mark Showalter/PDS Ring-Moon Systems Node",
         description="Low-level SWIG interface to the CSPICE library",
         ext_modules=get_extensions(),
@@ -136,4 +131,3 @@ def do_setup():
     )
 
 do_setup()
-

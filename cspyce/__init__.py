@@ -8,11 +8,11 @@
 # also supports numerous enhancements, including support for Python exceptions,
 # array inputs, and aliases.
 #
-# This version of the library has been built for the CSPICE toolkit v. 66.
+# This version of the library has been built for the CSPICE toolkit v. 67.
 #
-# See the file AAREADME.txt for more information.
+# See the file pds-cspyce/README.md for more information.
 #
-# Mark Showalter, PDS Ring-Moons Systems Node, SETI Institute, December 2017.
+# Mark Showalter, PDS Ring-Moon Systems Node, SETI Institute, December 2017.
 #   - Adapted for Python 3, February 2022.
 ################################################################################
 
