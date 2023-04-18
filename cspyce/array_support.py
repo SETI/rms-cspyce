@@ -184,7 +184,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
     for indx in list(range(len(args))) + list(keywords.keys()):
 
         item = func.INPUT_ITEMS.get(indx, None)
-        if not item:
+        if item is None:
             continue
 
         rank = len(item)
