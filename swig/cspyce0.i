@@ -25,7 +25,7 @@
 #define KERVALLEN 80    // max length of a kernel string value
 #define KERVALS 40      // max number of values associated with a kernel name
 #define LONGMSGLEN 10000// max length of a long error message including null
-#define MAXIDS 200      // max body or frame IDs returned
+#define MAXIDS 500      // max body or frame IDs returned
 #define MAXRECS 1000    // max number of records returned in a DAS read
 #define MAXROWS 1000    // max number of records/rows returned in an EK query
 #define MAXVALS 100     // max number of values in a column or parsed string
@@ -34,7 +34,7 @@
 #define NAMELEN 65      // table names can be 64 plus one null
 #define NPLATES 10000   // max number of DSK plates or vertices
 #define TIMELEN 60      // max length of a time string including null
-#define WINDOWS 30000   // max time windows returned
+#define WINDOWS 120000  // max time windows returned
 
 /* Define NAN for Microsoft C compiler if necessary */
 #ifdef _MSC_VER
@@ -853,7 +853,7 @@ extern void chkout_c(
 * needav     I   Flag indicating whether angular velocity is needed.
 * level      I   Coverage level:  "SEGMENT" OR "INTERVAL".
 * tol        I   Tolerance in ticks.
-* timsys     I   Time system used to represent coverage.
+* timsys     I   Time system used to represent coverage: "SCLK" or "TDB".
 * cover      O   Array giving start/stop time pairs for the intervals covered.
 ***********************************************************************/
 
