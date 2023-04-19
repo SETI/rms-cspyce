@@ -1,121 +1,12 @@
 ################################################################################
 # cspyce/cspyce1.py
-################################################################################
-# module cspyce.cspyce1
 #
 # This module provides several enhancements over the low-level cspyce0 interface
-# to the CSPICE library.
+# to the CSPICE library. See cspyce/__init__.py for a full explanation.
 #
-# The cspyce1 module contains Python interfaces to all CSPICE functions likely
-# to be useful to a Python programmer. Excluded are deprecated functions and
-# various low-level functions supporting character strings, cells, sets, file
-# I/O, and also all low-level "geometry finder" functions that can only be
-# implemented in C. It also includes vectorized versions (with suffix "_vector")
-# for nearly every function that receives floating-point input and does not
-# perform I/O. As of April 2022, however, some of the less-used cspice
-# functions have not yet been fully tested.
-#
-# To use cspyce1:
-#   import cspyce.cspyce1
-# or
-#   import cspyce.cspyce1 as cspyce
-#
-# ADDED FEATURES
-#
-# DOCSTRINGS
-# - All cspyce functions have informative docstrings, so typing
-#       help(function)
-#   provides useful information. However, the call signature appearing in the
-#   first line of the help text is still defined by cspyce0 and may not make
-#   sense to the reader. This issue is fixed by module cspyce2.
-#
-# DEFAULTS
-# - Many cspyce functions take sensible default values if input arguments are
-#   omitted.
-#   - In gcpool, gdpool, gipool, and gnpool, start values default to 1.
-#   - The functions that take "SET" or "GET" as their first argument (erract,
-#     errdev, errprt, and timdef) have simplified calling options, which are
-#     summarized in their docstrings.
-#
-# RUNTIME ERROR HANDLING
-#
-# In the CSPICE error handling mechanism, the programmer must check the value
-# of function failed() regularly to determine if an error has occurred. However,
-# Python's exception handling mechanism obviates the need for this approach. In
-# cspyce1, all CSPICE errors raise Python exceptions.
-#
-# In CSPICE, the programmer can control how C errors are handled using the
-# function erract(). Options include "IGNORE", "REPORT", "ABORT", "DEFAULT",
-# and "RETURN", In cspyce1, the "IGNORE" and "REPORT" options are disabled,
-# because they can leave behind corrupted memory. In interactive Python, the
-# "ABORT" and "DEFAULT" options are also disabled, because aborting an
-# interactive session would be pointless. The "ABORT" and "DEFAULT" options are
-# still available, though not recommended, when running programs
-# non-interactively.
-#
-# The cspyce1 module supports two additional error actions, which are variants
-# on "RETURN". These are "EXCEPTION" and "RUNTIME". The only difference between
-# them is that "RUNTIME" consistently raises RuntimeError exceptions, whereas
-# "EXCEPTION" tailors the type of the exception to the situation.
-#
-# HANDLING OF ERROR FLAGS
-#
-# Many CSPICE functions bypass the library's own error handling mechanism;
-# instead they return a status flag, sometimes called "found" or "ok", or else
-# an empty response might indicate failure. The cspyce module provides
-# alternative options for these functions.
-#
-# Within cspyce1, functions that return error flags have an alternative
-# implementation with a suffix of "_error", which uses cspyce1's Python
-# exception handling instead. For example, bodn2c(name) is the function that
-# returns two values given the name of a body, its body ID and a True/False flag
-# indicating whether the name was recognized. bodn2c_error() instead just
-# returns a single value, the body ID. However, it raises a Python exception
-# (KeyError or RuntimeError, depending on the erract setting) if the name is not
-# recognized.
-#
-# The cspyce1 module provides several ways to control which version of the
-# function to use:
-#
-# - The function use_flags() takes a function name or list of names and
-#   designates the original version of each function as the default. If the
-#   input argument is missing, _flag versions are selected universally.  With this
-#   option, for example, a call to cspyce.bodn2c() will actually call
-#   cspyce1.bodn2c_flag().
-#
-# - The function use_errors() takes a function name or list of names and
-#   designates the _error version of each function as the default. If the input
-#   argument is missing, _error versions are selected universally. With this
-#   option, for example, a call to cspyce1.bodn2c() will actuall call
-#   cspyce1.bodn2c_error() instead.
-#
-# You can also close between the "flag" and "error" versions of a function using
-# cspyce function attributes, as discussed below.
-#
-# FUNCTION ATTRIBUTES
-#
-# Like any other Python class, functions can have attributes. These are used to
-# simplify the choices of function options in cspyce1. Every cspyce1 function
-# has these attributes:
-#
-#   error   = the version of this function that raises errors intead of
-#             returning flags.
-#   flag    = the version that returns flags instead of raising errors.
-#   vector  = the vectorized version of this function.
-#   scalar  = the un-vectorized version of this function.
-#
-# If a particular option is not relevant to a function, the attribute still
-# exists, and instead simply returns the function itself. This makes it trivial
-# to choose a particular combination of features for a particular function call.
-# For example:
-#   ckgpav.vector()         same as ckgpav_vector()
-#   ckgpav.vector.flag()    same as ckgpav_vector()
-#   ckgpav.vector.error()   same as ckgpav_vector_error()
-#   ckgpav.error.scalar()   same as ckgpav_error()
-#   ckgpav.flag()           same as ckgpav()
-#   bodn2c.vector()         same as bodn2c()
-#   bodn2c.flag()           same as bodn2c()
+# Used internally by cspyce; not intended for direct import.
 ################################################################################
+
 from __future__ import print_function
 
 import sys

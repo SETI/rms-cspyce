@@ -2,8 +2,8 @@
 # get_spice.py
 ################################################################################
 #
-# This module is responsible for downloading the cspice source files based on whatever
-# hardware and software it is currently running on.
+# This module is responsible for downloading the CSPICE source files based on
+# whatever hardware and software it is currently running on.
 #
 # The contents of the directories
 #        <download>/cspice/src/cspice
@@ -14,10 +14,10 @@
 #
 # This module should only be called by setup.py.
 #
-# This file owes a big debt to Andrew Annex and his file:
+# This file owes a big debt to Dr. Andrew Annex and his file:
 #      https://github.com/AndrewAnnex/SpiceyPy/blob/main/get_spice.py
-# His version is much more ambitious than this and also compiles the files into a
-# shared library.
+# His version is much more ambitious than this and also compiles the files into
+# a shared library.
 ################################################################################
 
 
@@ -74,10 +74,10 @@ class GetCspice(object):
             self.root_dir, "cspice", self.host_OS + "-" + self.architecture)
 
     def download(self):
-        if Path(os.path.join(self.target_directory, "src")).is_dir() and \
-           Path(os.path.join(self.target_directory, "include")).is_dir():
+        if (Path(os.path.join(self.target_directory, "src")).is_dir() and
+            Path(os.path.join(self.target_directory, "include")).is_dir()):
             return self.target_directory
-        # Note.  Once we toss 2.7 support, this can be rewritten as "with ...."
+        # Note: Once we toss 2.7 support, this can be rewritten as "with ...."
         tmpdir = tempfile.mkdtemp()
         try:
             self.download_cspice(destination=tmpdir)
@@ -118,7 +118,8 @@ class GetCspice(object):
                         archive.extractall(destination)
                 else:
                     target_file = target_file[:-2] # remove the .Z
-                    subprocess.check_call("curl {} | gzip -d > {}".format(url, target_file), shell=True)
+                    subprocess.check_call("curl {} | gzip -d > {}".format(
+                        url, target_file), shell=True)
                     with TarFile.open(target_file, "r") as archive:
                         archive.extractall(destination)
                 os.unlink(target_file)

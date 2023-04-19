@@ -335,8 +335,7 @@ def _validate_args(func, args, keywords):
             cspyce1.sigerr('SPICE(' + body_or_frame.upper() + 'NAMENOTFOUND)')
 
 def alias_version(func):
-    """Wrapper function to support aliasing of SPICE body names or codes.
-    """
+    """Wrapper function to support aliasing of SPICE body names or codes."""
 
     if hasattr(func, 'alias'):
         return func.alias
