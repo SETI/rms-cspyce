@@ -1,16 +1,12 @@
 ################################################################################
 # cspyce/cspyce2.py
-################################################################################
-# module cspyce.cspyce2
 #
 # This module re-declares every cspyce1 function explicitly, with its list of
 # argument names as used by CSPICE. The practical effect is that functions in
 # cspyce2 module can be called in a fully Python-like way, the rightmost inputs
 # in any order and identified by their names.
 #
-# NOTE: This file is generated automatically using program make_cspyce2.py:
-#   python make_cspyce2.py > cspyce2.py
-#
+# Used internally by cspyce; not intended for direct import.
 ################################################################################
 
 import sys
@@ -20,7 +16,7 @@ import keyword
 PYTHON2 = sys.version_info[0] < 3
 
 # This function makes cspyce2 look the same as cspyce1. It ensures that every
-# location in the global dictionary and every function's internal link point
+# location in the global dictionary and every function's internal link point to
 # a new function of the same name.
 
 CSPYCE_FUNCTION_LOOKUP = {}

@@ -378,5 +378,3 @@ int return_boolean(int value);
 
 %apply (void RETURN_VOID_SIGERR) {void return_sigerr};
 void return_sigerr(void);
-
-

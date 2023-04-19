@@ -41,8 +41,12 @@ def _arrayize_arglist(arglist):
     return arrayized
 
 def array_version(func):
-    """Wrapper function to apply NumPy broadcasting rules to the vectorized
-    inputs of any cspyce function.
+    """Create and return the array version of a cspyce function.
+
+    The array version is a wrapper function that applies NumPy broadcasting
+    rules to the inputs of a vector function. If the array version already
+    exists, just return it. If there is no vector version, the array version is
+    simply the scalar version.
     """
 
     if hasattr(func, 'array'):
