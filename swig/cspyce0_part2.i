@@ -8189,14 +8189,18 @@ VECTORIZE_di_di_d__RETURN_d(lgrint, my_lgrint_c)
 * n          I   The number of entries in cvals.
 ***********************************************************************/
 
-%rename (lmpool) lmpool_c;
+%rename (lmpool) my_lmpool_c;
 %apply (void RETURN_VOID) {void lmpool_c};
 %apply (ConstSpiceChar *IN_STRINGS, SpiceInt DIM1, SpiceInt DIM2)
-                {(ConstSpiceChar *cvals, SpiceInt outlen, SpiceInt n)};
+                {(ConstSpiceChar *cvals, SpiceInt n, SpiceInt cvalen)};
 
-extern void lmpool_c(
-        ConstSpiceChar *cvals, SpiceInt outlen, SpiceInt n
-);
+%inline %{
+    void my_lmpool_c(
+        ConstSpiceChar *cvals, SpiceInt n, SpiceInt cvalen)
+    {
+        lmpool_c(cvals, cvalen, n);
+    }
+%}
 
 /***********************************************************************
 * -Procedure lparse_c ( Parse items from a list )
