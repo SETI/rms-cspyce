@@ -8,6 +8,7 @@ from __future__ import print_function
 import numpy as np
 import sys
 import inspect
+import warnings
 
 import cspyce
 import cspyce.cspyce1 as cspyce1
@@ -16,7 +17,7 @@ from cspyce.alias_support import alias_version
 PYTHON2 = sys.version_info[0] < 3
 
 # This isn't how we want to handle a ragged array
-np.warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
 
 ################################################################################
 # cspyce array function wrapper
@@ -40,8 +41,12 @@ def _arrayize_arglist(arglist):
     return arrayized
 
 def array_version(func):
-    """Wrapper function to apply NumPy broadcasting rules to the vectorized
-    inputs of any cspyce function.
+    """Create and return the array version of a cspyce function.
+
+    The array version is a wrapper function that applies NumPy broadcasting
+    rules to the inputs of a vector function. If the array version already
+    exists, just return it. If there is no vector version, the array version is
+    simply the scalar version.
     """
 
     if hasattr(func, 'array'):
@@ -141,7 +146,7 @@ def array_version(func):
     wrapper.NOTES     = [ARRAY_NOTE] + wrapper.NOTES[1:] # replace vector note
 
     # Save key attributes of the wrapper function before returning
-    cspyce.assign_docstring(wrapper)
+    cspyce1.assign_docstring(wrapper)
     wrapper.__name__ = _array_name(func.__name__)
     if PYTHON2:
         wrapper.func_defaults = func.func_defaults
@@ -183,7 +188,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
     for indx in list(range(len(args))) + list(keywords.keys()):
 
         item = func.INPUT_ITEMS.get(indx, None)
-        if not item:
+        if item is None:
             continue
 
         rank = len(item)
@@ -240,7 +245,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
 
     # Call function now if iteration is not needed
     if not array_args:
-        return func.scalar.__call__(*args, **keywords)
+        return func.vector.__call__(*args, **keywords)
 
     # Determine the broadcasted shape
     try:

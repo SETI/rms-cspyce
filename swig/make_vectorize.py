@@ -10,12 +10,12 @@
 # 2. A sequence of SWIG macro defintions, one for any VECTOR_ macro found in the
 #    file cspyce0.i.  This program looks for VECTOR_ at the start of line, and
 #    treats everything up to the initial parenthesis as the name of the macro.
-#    Each macro name defines a sequence of input arguments followed by a sequence of
-#    output arguments.
+#    Each macro name defines a sequence of input arguments followed by a
+#    sequence of output arguments.
 #
-# This program interprets the name of the macro and defines a SWIG inline function that
-# handles that sequence of arguments.
-####################################################################################
+# This program interprets the name of the macro and defines a SWIG inline
+# function that handles that sequence of arguments.
+################################################################################
 
 from __future__ import annotations
 

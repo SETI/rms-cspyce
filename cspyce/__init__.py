@@ -1,20 +1,118 @@
-################################################################################
-# cspyce/__init__.py
-################################################################################
-# CSPYCE OVERVIEW
-#
-# cspyce is a Python module that provides an interface to the CSPICE library. It
-# implements the most widely-used functions of CSPICE in a Python-like way. It
-# also supports numerous enhancements, including support for Python exceptions,
-# array inputs, and aliases.
-#
-# This version of the library has been built for the CSPICE toolkit v. 66.
-#
-# See the file AAREADME.txt for more information.
-#
-# Mark Showalter, PDS Ring-Moons Systems Node, SETI Institute, December 2017.
-#   - Adapted for Python 3, February 2022.
-################################################################################
+"""
+cspyce/__init__.py
+
+CSPYCE OVERVIEW
+
+cspyce is a Python module that provides an interface to the CSPICE library. It
+implements the most widely-used functions of CSPICE in a Python-like way. It
+also supports numerous enhancements, including support for Python exceptions,
+array inputs, and aliases.
+
+This version of the library has been built for the CSPICE toolkit v. 67.
+
+cspyce contains Python interfaces to all CSPICE functions likely to be useful
+to a Python programmer. Excluded are deprecated functions and various low-level
+functions supporting character strings, cells, sets, file I/O, and also all
+low-level "geometry finder" functions that can only be implemented in C. It
+also includes vectorized versions (with suffix "_vector") for nearly every
+function that receives floating-point input and does not perform I/O.
+
+ADDED FEATURES
+
+DOCSTRINGS
+- All cspyce functions have informative docstrings, so typing
+      help(function)
+  provides useful information. However, the call signature appearing in the
+  first line of the help text is still defined by cspyce0 and may not make
+  sense to the reader. This issue is fixed by module cspyce2.
+
+DEFAULTS
+- Many cspyce functions take sensible default values if input arguments are
+  omitted.
+  - In gcpool, gdpool, gipool, and gnpool, start values default to 1.
+  - The functions that take "SET" or "GET" as their first argument (erract,
+    errdev, errprt, and timdef) have simplified calling options, which are
+    summarized in their docstrings.
+
+RUNTIME ERROR HANDLING
+
+In the CSPICE error handling mechanism, the programmer must check the value
+of function failed() regularly to determine if an error has occurred. However,
+Python's exception handling mechanism obviates the need for this approach. In
+cspyce1, all CSPICE errors raise Python exceptions.
+
+In CSPICE, the programmer can control how C errors are handled using the
+function erract(). Options include "IGNORE", "REPORT", "ABORT", "DEFAULT",
+and "RETURN", In cspyce1, the "IGNORE" and "REPORT" options are disabled,
+because they can leave behind corrupted memory. In interactive Python, the
+"ABORT" and "DEFAULT" options are also disabled, because aborting an
+interactive session would be pointless. The "ABORT" and "DEFAULT" options are
+still available, though not recommended, when running programs
+non-interactively.
+
+The cspyce1 module supports two additional error actions, which are variants
+on "RETURN". These are "EXCEPTION" and "RUNTIME". The only difference between
+them is that "RUNTIME" consistently raises RuntimeError exceptions, whereas
+"EXCEPTION" tailors the type of the exception to the situation.
+
+HANDLING OF ERROR FLAGS
+
+Many CSPICE functions bypass the library's own error handling mechanism;
+instead they return a status flag, sometimes called "found" or "ok", or else
+an empty response might indicate failure. The cspyce module provides
+alternative options for these functions.
+
+Within cspyce1, functions that return error flags have an alternative
+implementation with a suffix of "_error", which uses cspyce1's Python
+exception handling instead. For example, bodn2c(name) is the function that
+returns two values given the name of a body, its body ID and a True/False flag
+indicating whether the name was recognized. bodn2c_error() instead just
+returns a single value, the body ID. However, it raises a Python exception
+(KeyError or RuntimeError, depending on the erract setting) if the name is not
+recognized.
+
+The cspyce1 module provides several ways to control which version of the
+function to use:
+
+- The function use_flags() takes a function name or list of names and
+  designates the original version of each function as the default. If the
+  input argument is missing, _flag versions are selected universally.  With
+  this option, for example, a call to cspyce.bodn2c() will actually call
+  cspyce1.bodn2c_flag().
+
+- The function use_errors() takes a function name or list of names and
+  designates the _error version of each function as the default. If the input
+  argument is missing, _error versions are selected universally. With this
+  option, for example, a call to cspyce1.bodn2c() will actually call
+  cspyce1.bodn2c_error() instead.
+
+You can also choose between the "flag" and "error" versions of a function
+using cspyce function attributes, as discussed below.
+
+FUNCTION ATTRIBUTES
+
+Like any other Python class, functions can have attributes. These are used to
+simplify the choices of function options in cspyce1. Every cspyce1 function
+has these attributes:
+
+  error   = the version of this function that raises exceptions intead of
+            returning flags.
+  flag    = the version that returns flags instead of raising exceptions.
+  vector  = the vectorized version of this function.
+  scalar  = the un-vectorized version of this function.
+
+If a particular option is not relevant to a function, the attribute still
+exists, and instead simply returns the function itself. This makes it trivial
+to choose a particular combination of features for a particular function call.
+For example:
+  ckgpav.vector()         same as ckgpav_vector()
+  ckgpav.vector.flag()    same as ckgpav_vector()
+  ckgpav.vector.error()   same as ckgpav_vector_error()
+  ckgpav.error.scalar()   same as ckgpav_error()
+  ckgpav.flag()           same as ckgpav()
+  bodn2c.vector()         same as bodn2c()
+  bodn2c.flag()           same as bodn2c()
+"""
 
 import inspect
 import sys
@@ -177,7 +275,7 @@ def _get_func_names(funcs=(), source=None):
 ################################################################################
 
 def get_all_funcs(source=None, cspyce_dict=None):
-    """ dictionary of all cspyce functions, keyed by their names.
+    """Return a dictionary of all cspyce functions, keyed by their names.
 
     Inputs:
         source      the dictionary to search, which defaults to globals().
@@ -212,8 +310,8 @@ def get_all_funcs(source=None, cspyce_dict=None):
     return cspyce_dict
 
 def get_all_versions(func, source=None):
-    """A dictionary of all cspyce functions associated with this one, keyed by
-    their names.
+    """Return a dictionary of all cspyce functions associated with this one,
+    keyed by their names.
 
     Inputs:
         func        a cspyce function or the name of a cspyce function.
@@ -225,7 +323,7 @@ def get_all_versions(func, source=None):
     return get_all_funcs(func.__dict__)
 
 def validate_func(func, source=None):
-    """A cspyce function, given either its name or the function itself.
+    """Return a cspyce function, given either its name or the function itself.
     Otherwise, raise an exception.
 
     Inputs:

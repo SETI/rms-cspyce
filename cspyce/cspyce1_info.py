@@ -6,6 +6,8 @@
 #
 # This function reads the associated cspyce0 dictionaries and updates them for
 # the cspyce1 "_error" versions.
+#
+# Used internally by cspyce; not intended for direct import.
 ################################################################################
 
 from cspyce.cspyce0_info import \

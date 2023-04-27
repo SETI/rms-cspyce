@@ -81,10 +81,20 @@ def get_frame_aliases(item):
     # If it's not a frame, see if it's a body with an associated frame
     body_codes = get_body_aliases(item)[0]
     for body_code in body_codes:
-        frame_code = cspyce.cidfrm_error(body_code)[0]
-        results = get_frame_aliases(frame_code)
-        if results[0]:
-            return results
+
+        # If it's a spacecraft, the bus frame code is body code * 1000
+        if body_code < 0:
+            results = get_frame_aliases(body_code * 1000)
+            if results[0]:
+                return results
+
+        # If it's a planetary body...
+        else:
+            (frame_code, frame_name, found) = cspyce.cidfrm.flag(body_code)
+            if found:
+                results = get_frame_aliases(frame_code)
+                if results[0]:
+                    return results
 
     return ([], [])
 
@@ -325,8 +335,7 @@ def _validate_args(func, args, keywords):
             cspyce1.sigerr('SPICE(' + body_or_frame.upper() + 'NAMENOTFOUND)')
 
 def alias_version(func):
-    """Wrapper function to support aliasing of SPICE body names or codes.
-    """
+    """Wrapper function to support aliasing of SPICE body names or codes."""
 
     if hasattr(func, 'alias'):
         return func.alias
