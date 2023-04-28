@@ -211,3 +211,112 @@ def test_bodvar():
     radii = cs.bodvar(399, "RADII")
     expected = np.array([6378.140, 6378.140, 6356.755])
     np.testing.assert_array_almost_equal(expected, radii, decimal=1)
+
+
+def test_bodvcd():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    dim, values = 3, cs.bodvcd(399, "RADII")
+    assert dim == 3
+    expected = np.array([6378.140, 6378.140, 6356.755])
+    np.testing.assert_array_almost_equal(expected, values, decimal=1)
+    
+    
+def test_bodvrd():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    dim, values = 3, cs.bodvrd("EARTH", "RADII")
+    assert dim == 3
+    expected = np.array([6378.140, 6378.140, 6356.755])
+    np.testing.assert_array_almost_equal(expected, values, decimal=1)
+    
+    
+def test_brcktd():
+    assert cs.brcktd(-1.0, 1.0, 10.0) == 1.0
+    assert cs.brcktd(29.0, 1.0, 10.0) == 10.0
+    assert cs.brcktd(3.0, -10.0, 10.0) == 3.0
+    assert cs.brcktd(3.0, -10.0, -1.0) == -1.0
+    
+    
+def test_brckti():
+    assert cs.brckti(-1, 1, 10) == 1
+    assert cs.brckti(29, 1, 10) == 10
+    assert cs.brckti(3, -10, 10) == 3
+    assert cs.brckti(3, -10, -1) == -1
+    
+
+# This one had to be changed. Alex's version also requires string length
+# and the dimension of the array.
+def test_bschoc():
+    array = ["FEYNMAN", "BOHR", "EINSTEIN", "NEWTON", "GALILEO"]
+    order = [1, 2, 0, 4, 3]
+    assert cs.bschoc("NEWTON", array, order) == 3
+    assert cs.bschoc("EINSTEIN", array, order) == 2
+    assert cs.bschoc("GALILEO", array, order) == 4
+    assert cs.bschoc("Galileo", array, order) == -1
+    assert cs.bschoc("OBETHE", array, order) == -1
+    
+    
+# This one had to be changed. Alex's version also requires the dimension of
+# the array.
+def test_bschoi():
+    array = [100, 1, 10, 10000, 1000]
+    order = [1, 2, 0, 4, 3]
+    assert cs.bschoi(1000, array, order) == 4
+    assert cs.bschoi(1, array, order) == 1
+    assert cs.bschoi(10000, array, order) == 3
+    assert cs.bschoi(-1, array, order) == -1
+    assert cs.bschoi(17, array, order) == -1
+
+# This one had to be changed. Alex's version also requires string length
+# and the dimension of the array.
+def test_bsrchc():
+    array = ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"]
+    assert cs.bsrchc("NEWTON", array) == 4
+    assert cs.bsrchc("EINSTEIN", array) == 1
+    assert cs.bsrchc("GALILEO", array) == 3
+    assert cs.bsrchc("Galileo", array) == -1
+    assert cs.bsrchc("BETHE", array) == -1
+
+
+# This one had to be changed. Alex's version also requires the dimension of
+# the array.
+def test_bsrchd():
+    array = np.array([-11.0, 0.0, 22.0, 750.0])
+    assert cs.bsrchd(-11.0, array) == 0
+    assert cs.bsrchd(22.0, array) == 2
+    assert cs.bsrchd(751.0, array) == -1
+    
+    
+# This one had to be changed. Alex's version also requires the dimension of
+# the array.
+def test_bsrchi():
+    array = np.array([-11, 0, 22, 750])
+    assert cs.bsrchi(-11, array) == 0
+    assert cs.bsrchi(22, array) == 2
+    assert cs.bsrchi(751, array) == -1
+    
+    
+def test_ccifrm():
+    frcode, frname, center = cs.ccifrm(2, 3000)
+    assert frname == "ITRF93"
+    assert frcode == 13000
+    assert center == 399
+    
+    
+def test_cgv2el():
+    vec1 = [1.0, 1.0, 1.0]
+    vec2 = [1.0, -1.0, 1.0]
+    center = [-1.0, 1.0, -1.0]
+    ellipse = cs.cgv2el(center, vec1, vec2)
+    expected_s_major = [np.sqrt(2.0), 0.0, np.sqrt(2.0)]
+    expected_s_minor = [0.0, np.sqrt(2.0), 0.0]
+    expected_center = [-1.0, 1.0, -1.0]
+    npt.assert_array_almost_equal(expected_center, ellipse.center)
+    npt.assert_array_almost_equal(expected_s_major, ellipse.semi_major)
+    npt.assert_array_almost_equal(expected_s_minor, ellipse.semi_minor)
+    
+
+
+
+
+
+
