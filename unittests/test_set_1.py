@@ -310,9 +310,9 @@ def test_cgv2el():
     expected_s_major = [np.sqrt(2.0), 0.0, np.sqrt(2.0)]
     expected_s_minor = [0.0, np.sqrt(2.0), 0.0]
     expected_center = [-1.0, 1.0, -1.0]
-    npt.assert_array_almost_equal(expected_center, ellipse.center)
-    npt.assert_array_almost_equal(expected_s_major, ellipse.semi_major)
-    npt.assert_array_almost_equal(expected_s_minor, ellipse.semi_minor)
+    npt.assert_array_almost_equal(expected_center, ellipse[0:3])
+    npt.assert_array_almost_equal(expected_s_major, ellipse[3:6])
+    npt.assert_array_almost_equal(expected_s_minor, ellipse[6:9])
     
 
 
