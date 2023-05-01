@@ -11,7 +11,6 @@
 
 from glob import glob
 import os
-from pathlib import Path
 import platform
 import subprocess
 import sys
@@ -115,20 +114,9 @@ def do_setup():
     if prerelease_version == "release":
         prerelease_version = ""
 
-    this_directory = Path(__file__).parent
-    long_description = (this_directory / "README.md").read_text()
-    
     setup(
-        name="cspyce",
-        version="2.0.9" + prerelease_version,
-        author="Mark Showalter/PDS Ring-Moon Systems Node",
-        description="High-performance Python interface to the NAIF CSPICE library",
-        long_description=long_description,
-        long_description_content_type="text/markdown",
         ext_modules=get_extensions(),
         libraries=get_c_libraries(),
-        packages=["cspyce"],
-        install_requires=["numpy"],
         cmdclass={
             "build_ext": MyBuildExt,
             "generate": GenerateCommand,
