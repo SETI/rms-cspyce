@@ -79,7 +79,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [build_python3_wheels, build_python2_wheels, build_sdist]
+    needs: [build_python3_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
