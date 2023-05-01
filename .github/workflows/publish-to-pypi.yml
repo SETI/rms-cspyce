@@ -51,40 +51,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-
-  build_python2_wheels:
-    name: Build Python 2.7 wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        # windows-2019 doesn't seem to work for 2.7
-        os: [ ubuntu-latest, macOS-latest ]
-      fail-fast: false
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Pre-build stuff
-        run: |
-          pip install numpy setuptools
-          python setup.py generate
-
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v1.12.0
-        env:
-          CIBW_BUILD: '*cp27*'
-          CIBW_SKIP: '*musllinux* *pp27* *cp27mu*'
-          CIBW_ENVIRONMENT: PRERELEASE_VERSION=${{ inputs.prerelease_version }}
-          CIBW_ARCHS: 'auto64'
-          CIBW_ARCHS_MACOS: 'x86_64 arm64'
-
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
+  
 
   build_sdist:
     name: Build source distribution
@@ -112,7 +79,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [build_python3_wheels, build_python2_wheels, build_sdist]
+    needs: [build_python3_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3

@@ -8,9 +8,14 @@ Mark Showalter, PDS Ring-Moon Systems Node, SETI Institute
 `cspyce` is a Python module that provides an interface to the C-language CSPICE
 library produced by the Navigation and Ancillary Information Facility
 ([NAIF](https://naif.jpl.nasa.gov/naif/)) of NASA's Planetary Data System (PDS).
-It implements the most widely-used functions of CSPICE in a Python-like way,
-while also supporting numerous enhancements, including support for Python
-exceptions, array inputs, and aliases.
+It implements most functions of CSPICE in a Python-like way, while also
+supporting numerous enhancements, including support for Python exceptions,
+array inputs, and aliases.
+
+`cspyce` may be installed by running `pip install cspyce`.
+
+Python versions 3.8 thru 3.11 are currently supported, with pre-built wheels
+available for Linux, MacOS, and Windows.
 
 If you are looking for information on running or distributing this code from
 the GitHub sources, look at the file `README-developers.md` in this directory.
