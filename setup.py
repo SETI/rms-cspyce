@@ -9,10 +9,9 @@
 # this directory.
 
 
-# We prefer setuptools, but will use distutils if setuptools isn't available
-import os
 from glob import glob
 import os
+from pathlib import Path
 import platform
 import subprocess
 import sys
@@ -21,6 +20,7 @@ from setuptools.command.build_ext import build_ext
 
 from get_spice import GetCspice
 
+# We prefer setuptools, but will use distutils if setuptools isn't available
 try:
     from setuptools import Command, setup, Extension
 except ImportError:
@@ -56,13 +56,13 @@ class GenerateCommand(Command):
             create_vectorize_header_file("swig/vectorize.i")
             make_cspice0_info("cspyce/cspyce0_info.py")
             command = "swig -python -outdir cspyce/. " \
-                      "-o swig/cspyce0_wrap.c swig/cspyce0.i".split(' ')
+                      "-o swig/cspyce0_wrap.c swig/cspyce0.i".split(" ")
             subprocess.check_call(command)
             command = "swig -python -outdir cspyce/. " \
-                      "-o swig/typemap_samples_wrap.c swig/typemap_samples.i".split(' ')
+                      "-o swig/typemap_samples_wrap.c swig/typemap_samples.i".split(" ")
             subprocess.check_call(command)
         else:
-            command = "echo Cannot rebuild files in Python2".split(' ')
+            command = "echo Cannot rebuild files in Python2".split(" ")
             subprocess.check_call(command)
 
 
@@ -74,7 +74,7 @@ cspice_directory = GetCspice().download()
 def get_c_libraries():
     files = sorted(glob(os.path.join(cspice_directory, "src", "*.c")))
     splits = 1 if IS_LINUX else 1 + (len(files) // 250)
-    compiler_flags = ['-DKR_headers', '-DMSDOS', '/nowarn'] if IS_WINDOWS else ['-w']
+    compiler_flags = ["-DKR_headers", "-DMSDOS", "/nowarn"] if IS_WINDOWS else ["-w"]
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
             "sources": files[i::splits],
@@ -86,19 +86,19 @@ def get_c_libraries():
 
 
 def get_extensions():
-    cspyce_cflags = ['/nowarn', '/DSWIG_PYTHON_CAST_MODE'] if IS_WINDOWS \
-        else ['-Wno-incompatible-pointer-types', '-DSWIG_PYTHON_CAST_MODE']
+    cspyce_cflags = ["/nowarn", "/DSWIG_PYTHON_CAST_MODE"] if IS_WINDOWS \
+        else ["-Wno-incompatible-pointer-types", "-DSWIG_PYTHON_CAST_MODE"]
     include_dirs = [os.path.join(cspice_directory, "include"), numpy.get_include()]
 
     cspyce0_module = Extension(
-        'cspyce._cspyce0',
-        sources=['swig/cspyce0_wrap.c'],
+        "cspyce._cspyce0",
+        sources=["swig/cspyce0_wrap.c"],
         include_dirs=include_dirs,
         extra_compile_args=cspyce_cflags)
 
     typemap_samples_module = Extension(
-        'cspyce._typemap_samples',
-        sources=['swig/typemap_samples_wrap.c'],
+        "cspyce._typemap_samples",
+        sources=["swig/typemap_samples_wrap.c"],
         include_dirs=include_dirs,
         extra_compile_args=cspyce_cflags,
     )
@@ -111,22 +111,27 @@ class MyBuildExt(build_ext):
 
 
 def do_setup():
-    prerelease_version = os.getenv('PRERELEASE_VERSION', '')
-    if prerelease_version == 'release':
-        prerelease_version = ''
+    prerelease_version = os.getenv("PRERELEASE_VERSION", "")
+    if prerelease_version == "release":
+        prerelease_version = ""
 
+    this_directory = Path(__file__).parent
+    long_description = (this_directory / "README.md").read_text()
+    
     setup(
-        name='cspyce',
-        version='2.0.8' + prerelease_version,
+        name="cspyce",
+        version="2.0.9" + prerelease_version,
         author="Mark Showalter/PDS Ring-Moon Systems Node",
-        description="Low-level SWIG interface to the CSPICE library",
+        description="High-performance Python interface to the NAIF CSPICE library",
+        long_description=long_description,
+        long_description_content_type="text/markdown",
         ext_modules=get_extensions(),
         libraries=get_c_libraries(),
         packages=["cspyce"],
-        install_requires=['numpy'],
+        install_requires=["numpy"],
         cmdclass={
-            'build_ext': MyBuildExt,
-            'generate': GenerateCommand,
+            "build_ext": MyBuildExt,
+            "generate": GenerateCommand,
         }
     )
 
