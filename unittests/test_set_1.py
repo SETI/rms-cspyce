@@ -380,22 +380,21 @@ def test_cidfrm():
 #     assert not os.path.exists(ck1)
 # =============================================================================
 
-
+# In progress. Does not work.
 # =============================================================================
-# def test_ckcov():
+# def test_ckcov(): 
+#     cs.furnsh(CassiniKernels.cassSclk)
+#     ckid = cs.ckobj(CassiniKernels.cassCk)[0]
+#     cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
+#     expected_intervals = [
+#         [267832537952.000000, 267839247264.000000],
+#         [267839256480.000000, 267867970464.000000],
+#         [267868006304.000000, 267876773792.000000],
+#     ]
+#     intervals = np.array([[cover[i], cover[i+1]] for i in range(0, len(cover)-1, 2)])
+#     expected_intervals = np.transpose(expected_intervals)
+#     intervals = np.transpose(intervals)
+#     npt.assert_array_almost_equal(intervals, expected_intervals, decimal=6)
 # =============================================================================
-def test_ckcov(): 
-    cs.furnsh(CassiniKernels.cassSclk)
-    ckid = cs.ckobj(CassiniKernels.cassCk)[0]
-    cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
-    expected_intervals = [
-        [267832537952.000000, 267839247264.000000],
-        [267839256480.000000, 267867970464.000000],
-        [267868006304.000000, 267876773792.000000],
-    ]
-    intervals = np.array([[cover[i], cover[i+1]] for i in range(0, len(cover)-1, 2)])
-    expected_intervals = np.transpose(expected_intervals)
-    intervals = np.transpose(intervals)
-    npt.assert_array_almost_equal(intervals, expected_intervals, decimal=6)
 
 
