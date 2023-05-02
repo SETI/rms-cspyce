@@ -1,15 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Apr 21 09:49:21 2023
-
-@author: emiliesimpson
-"""
-import pytest
-import os
 import cspyce as cs
 import numpy as np
 import numpy.testing as npt
+import os
+import pytest
 
 from gettestkernels import (
     get_standard_kernels,
@@ -21,50 +14,20 @@ from gettestkernels import (
     cleanup_cassini_kernels,
     cleanup_extra_kernels,
     cleanup_core_kernels,
-    cwd,
 )
-
 
 get_standard_kernels()
 write_test_meta_kernel()
 
+def cleanup_kernel(path):
+    cs.kclear()
+    cs.reset()
+    if os.path.isfile(path):
+        os.remove(path)  # pragma: no cover
+    pass
+
 cwd = os.environ['CSPYCE_TEST_KERNELS']
 
-
-# =============================================================================
-# def setup():
-#     cs.furnsh(os.path.join(KERNELS_, 'de430.bsp'))
-#     cs.furnsh(os.path.join(KERNELS_, 'naif0011.tls'))
-#     cs.furnsh(os.path.join(KERNELS_, 'pck00010.tpc'))
-#     cs.furnsh(os.path.join(KERNELS_, 'earth_720101_070426.bpc'))
-#     cs.furnsh(os.path.join(KERNELS_, 'earthstns_itrf93_050714.bsp'))
-#     cs.furnsh(os.path.join(KERNELS_, 'earth_topo_050714.tf'))
-#     cs.furnsh(os.path.join(KERNELS_, 'pck00008.tpc'))
-# 
-# 
-# setup()
-# 
-# =============================================================================
-# =============================================================================
-# def clear_kernel_pool_and_reset():
-#     cs.kclear()
-#     cs.reset()
-#     # yield for test
-#     yield
-#     # clear kernel pool again
-#     cs.kclear()
-#     cs.reset()
-# 
-# 
-# def cleanup_kernel(path):
-#     cs.kclear()
-#     cs.reset()
-# =============================================================================
-# =============================================================================
-#     if cs.exists(path):
-#         os.remove(path)  # pragma: no cover
-#     pass
-# =============================================================================
 
 def test_axisar():
     axis = np.array([0.0, 0.0, 1.0])
@@ -243,7 +206,7 @@ def test_brckti():
     assert cs.brckti(3, -10, -1) == -1
     
 
-# This one had to be changed. Alex's version also requires string length
+# This one had to be changed. Spiceypy also requires string length
 # and the dimension of the array.
 def test_bschoc():
     array = ["FEYNMAN", "BOHR", "EINSTEIN", "NEWTON", "GALILEO"]
@@ -255,7 +218,7 @@ def test_bschoc():
     assert cs.bschoc("OBETHE", array, order) == -1
     
     
-# This one had to be changed. Alex's version also requires the dimension of
+# This one had to be changed. Spiceypy also requires the dimension of
 # the array.
 def test_bschoi():
     array = [100, 1, 10, 10000, 1000]
@@ -266,7 +229,7 @@ def test_bschoi():
     assert cs.bschoi(-1, array, order) == -1
     assert cs.bschoi(17, array, order) == -1
 
-# This one had to be changed. Alex's version also requires string length
+# This one had to be changed. Spiceypy also requires string length
 # and the dimension of the array.
 def test_bsrchc():
     array = ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"]
@@ -277,7 +240,7 @@ def test_bsrchc():
     assert cs.bsrchc("BETHE", array) == -1
 
 
-# This one had to be changed. Alex's version also requires the dimension of
+# This one had to be changed. Spiceypy also requires the dimension of
 # the array.
 def test_bsrchd():
     array = np.array([-11.0, 0.0, 22.0, 750.0])
@@ -286,7 +249,7 @@ def test_bsrchd():
     assert cs.bsrchd(751.0, array) == -1
     
     
-# This one had to be changed. Alex's version also requires the dimension of
+# This one had to be changed. Spiceypy also requires the dimension of
 # the array.
 def test_bsrchi():
     array = np.array([-11, 0, 22, 750])
@@ -301,7 +264,8 @@ def test_ccifrm():
     assert frcode == 13000
     assert center == 399
     
-    
+
+# This one had to be changed. SpiceyPy creates an Ellipse object.
 def test_cgv2el():
     vec1 = [1.0, 1.0, 1.0]
     vec2 = [1.0, -1.0, 1.0]
@@ -314,9 +278,124 @@ def test_cgv2el():
     npt.assert_array_almost_equal(expected_s_major, ellipse[3:6])
     npt.assert_array_almost_equal(expected_s_minor, ellipse[6:9])
     
+    
+# Test changed. SpiceyPy also requires the degree of the polynomial.
+def test_chbder():
+    cp = [1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0]
+    x2s = [0.5, 3.0]
+    dpdxs = cs.chbder(cp, x2s, 1.0, 3)
+    npt.assert_array_almost_equal([-0.340878, 0.382716, 4.288066, -1.514403],
+                                  dpdxs)
+    
+
+# Test changed. SpiceyPy also requires degree of input Chebyshev expansion.
+def test_chbigr():
+    p, itgrlp = cs.chbigr([0.0, 3.75, 0.0, 1.875, 0.0, 0.375], [20.0, 10.0],
+                          30.0)
+    assert p == pytest.approx(6.0)
+    assert itgrlp == pytest.approx(10.0)
+    
+    
+# Test changed. SpiceyPy also requires the degree of the polynomial.
+def test_chbint():
+    p, dpdx = cs.chbint([1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0], [0.5, 3.0], 1.0)
+    assert p == pytest.approx(-0.340878, abs=1e-6)
+    assert dpdx == pytest.approx(0.382716, abs=1e-6)
 
 
+# Test changed. SpiceyPy also requires the degree of the polynomial.  
+def test_chbval():
+    p = cs.chbval([1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0], [0.5, 3.0], 1.0)
+    assert p == pytest.approx(-0.340878, abs=1e-6)
+    
+    
+def test_chkin():
+    cs.reset()
+    assert cs.trcdep() == 0
+    cs.chkin("test")
+    assert cs.trcdep() == 1
+    cs.chkin("trcdep")
+    assert cs.trcdep() == 2
+    cs.chkout("trcdep")
+    assert cs.trcdep() == 1
+    cs.chkout("test")
+    assert cs.trcdep() == 0
+    cs.reset()
+    
+    
+def test_chkout():
+    cs.reset()
+    assert cs.trcdep() == 0
+    cs.chkin("test")
+    assert cs.trcdep() == 1
+    cs.chkin("trcdep")
+    assert cs.trcdep() == 2
+    cs.chkout("trcdep")
+    assert cs.trcdep() == 1
+    cs.chkout("test")
+    assert cs.trcdep() == 0
+    cs.reset()
 
 
+def test_cidfrm():
+    frcode, frname = cs.cidfrm(501)
+    assert frcode == 10023
+    assert frname == "IAU_IO"
+    frcode, frname = cs.cidfrm(399)
+    assert frcode == 10013
+    assert frname == "IAU_EARTH"
+    frcode, frname = cs.cidfrm(301)
+    assert frcode == 10020
+    assert frname == "IAU_MOON"
+
+
+# Test changed. SpiceyPy's ckw01 also needs the number of pointing records.
+# Test is currently commented out due to issue with cspyce.ckw01
+# =============================================================================
+# def test_ckcls():
+#     # Spice crashes if ckcls detects nothing written to ck1
+#     ck1 = os.path.join(cwd, "ckopenkernel.bc")
+#     cleanup_kernel(ck1)
+#     ifname = "Test CK type 1 segment created by cspice_ckw01"
+#     handle = cs.ckopn(ck1, ifname, 10)
+#     cs.ckw01(
+#         handle,
+#         1.0,
+#         10.0,
+#         -77701,
+#         "J2000",
+#         True,
+#         "Test type 1 CK segment",
+#         2 - 1,
+#         [1.1, 4.1],
+#         [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0]],
+#         [[0.0, 0.0, 1.0], [0.0, 0.0, 2.0]],
+#     )
+# 
+#     
+#     cs.ckcls(handle)
+#     cs.kclear()
+#     assert os.path.exists(ck1)
+#     cleanup_kernel(ck1)
+#     assert not os.path.exists(ck1)
+# =============================================================================
+
+
+# =============================================================================
+# def test_ckcov():
+# =============================================================================
+def test_ckcov(): 
+    cs.furnsh(CassiniKernels.cassSclk)
+    ckid = cs.ckobj(CassiniKernels.cassCk)[0]
+    cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
+    expected_intervals = [
+        [267832537952.000000, 267839247264.000000],
+        [267839256480.000000, 267867970464.000000],
+        [267868006304.000000, 267876773792.000000],
+    ]
+    intervals = np.array([[cover[i], cover[i+1]] for i in range(0, len(cover)-1, 2)])
+    expected_intervals = np.transpose(expected_intervals)
+    intervals = np.transpose(intervals)
+    npt.assert_array_almost_equal(intervals, expected_intervals, decimal=6)
 
 
