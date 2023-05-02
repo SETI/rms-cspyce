@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/cspyce.svg)](https://badge.fury.io/py/cspyce)
+
 # `cspyce` MODULE OVERVIEW
 Version 2.0
 
