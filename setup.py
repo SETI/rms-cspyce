@@ -115,6 +115,7 @@ def do_setup():
         prerelease_version = ""
 
     setup(
+        version='2.0.9' + prerelease_version,
         ext_modules=get_extensions(),
         libraries=get_c_libraries(),
         cmdclass={
