@@ -12,3 +12,4 @@ wheelhouse/
 cspyce/cspyce0.py
 cspyce/cspyce0_info.py
 swig/vectorize.i
+*venv*
