@@ -1,13 +1,11 @@
 # This workflow compiles CSPICE for many architectures and publishes a branch
-# to Test-PyPi or PyPi
+# to Test-PyPi
 
-name: Publish to PyPI
+name: Publish to Test PyPI
 
 # Controls when the workflow will run
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build_python3_wheels:
@@ -58,7 +56,7 @@ jobs:
           path: dist/*.tar.gz
 
 
-  upload_pypi:
+  upload_test_pypi:
     needs: [build_python3_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
@@ -70,5 +68,6 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@v1.8.6
         with:
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
           verify_metadata: false
