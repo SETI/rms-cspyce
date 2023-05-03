@@ -171,9 +171,13 @@ class test_array2_1(unittest.TestCase):
             ts.in_array2_1(array)
 
     def test_no_other_data_type(self):
-        array = np.array(range(100, 115), dtype='int64').reshape(3, 5)
+        array = np.array(range(100, 115), dtype='float').reshape(3, 5)
         with self.assertRaises(ValueError):
             ts.in_array2_1(array)
+
+    def test_long_allowed_anyway(self):
+        array = np.array(range(100, 115), dtype='int64').reshape(3, 5)
+        ts.in_array2_1(array)
 
     def test_no_other_dimension(self):
         array = np.array(range(100, 115), dtype='int64').reshape(3, 5, 1)
@@ -255,6 +259,7 @@ class test_array2_3(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array2_3(None)
 
+
 class test_array2_3(unittest.TestCase):
     # %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
     # This function takes any 2-dimensional array whose second dimension is 5.
@@ -291,6 +296,38 @@ class test_array2_3(unittest.TestCase):
     def test_requires_non_null(self):
         with self.assertRaises(TypeError):
             ts.in_array2_3(None)
+
+
+class test_array2_4(unittest.TestCase):
+    # %apply (int IN_ARRAY2[][ANY]) {(int arg[][5])};
+    # This function takes any 2-dimensional array whose second dimension is 5,
+    # and returns True.  Not much else it can do, since the array may be empty.
+    def test_basic_run(self):
+        array = np.zeros((10, 5), dtype='int32')
+        self.assertTrue(ts.in_array2_4(array))
+
+    def test_non_contiguous_array(self):
+        array = np.zeros((3, 5, 10), dtype='int32')[..., 2]
+        self.assertTrue(ts.in_array2_4(array))
+
+    def test_no_other_width(self):
+        array = np.zeros((5, 10), dtype='int32')
+        with self.assertRaises(ValueError):
+            ts.in_array2_4(array)
+
+    def test_no_bigger_dimension(self):
+        array = np.zeros((1, 10, 5), dtype='int32')
+        with self.assertRaises(ValueError):
+            ts.in_array2_4(array)
+
+    def test_no_smaller_dimension(self):
+        array = np.zeros(5, dtype='int32')
+        with self.assertRaises(ValueError):
+            ts.in_array2_4(array)
+
+    def test_requires_non_null(self):
+        with self.assertRaises(TypeError):
+            ts.in_array2_4(None)
 
 
 class test_array12(unittest.TestCase):

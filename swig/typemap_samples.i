@@ -96,6 +96,11 @@ PyObject* in_array01_1(int *arg, int dim);
        return Py_BuildValue("Nii", info, dim1, 5);
    }
 
+   PyObject *in_array2_4(int arg[][5]) {
+       /* Nothing we can return, since array might be size 0 */
+       Py_RETURN_TRUE;
+   }
+
    PyObject *in_array12(int *arg, int dim1, int dim2) {
        PyObject* info = int_array_to_tuple(arg, max(dim1, 1) * dim2);
        return Py_BuildValue("Nii", info, dim1, dim2);
@@ -115,6 +120,9 @@ PyObject *in_array2_2(int *arg, int dim1, int dim2);
 
 %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
 PyObject *in_array2_3(int arg[][5], int dim1);
+
+%apply (int IN_ARRAY2[][ANY]) {int arg[][5]};
+PyObject *in_array2_4(int arg[][5]);
 
 %apply (int *IN_ARRAY12, int DIM1, int DIM2)  {(int *arg, int dim1, int dim2)};
 PyObject *in_array12(int *arg, int dim1, int dim2);
