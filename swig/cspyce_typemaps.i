@@ -659,7 +659,7 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
  We allow the conversion of a long array to an int array.  All other unsafe conversions
  are disallowed.
 */
-inline int adjust_convert_flags(int typecode, PyObject *input, int flags) {
+int adjust_convert_flags(int typecode, PyObject *input, int flags) {
     if (typecode == NPY_INT && PyArray_Check(input) && PyArray_TYPE(input) == NPY_LONG) {
         // Allow long -> int conversions, but no other unsafe conversions
         flags |= NPY_ARRAY_FORCECAST;
