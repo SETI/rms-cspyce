@@ -83,6 +83,9 @@ def in_array2_2(arg):
 def in_array2_3(arg):
     return _typemap_samples.in_array2_3(arg)
 
+def in_array2_4(arg):
+    return _typemap_samples.in_array2_4(arg)
+
 def in_array12(arg):
     return _typemap_samples.in_array12(arg)
 

@@ -654,29 +654,36 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 }
 %}
 
+%{
+/**
+ We allow the conversion of a long array to an int array.  All other unsafe conversions
+ are disallowed.
+*/
+inline int adjust_convert_flags(int typecode, PyObject *input, int flags) {
+    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_TYPE(input) == NPY_LONG) {
+        // Allow long -> int conversions, but no other unsafe conversions
+        flags |= NPY_ARRAY_FORCECAST;
+    }
+    return flags;
+}
+%}
+
 %define CONVERT_TO_CONTIGUOUS_ARRAY(typecode, input, min, max, result)
 {
-    // NPY_ARRAY_FORCECAST is needed here so that a Python int array (C type long) can be
-    // used where C expects int. It will not check bounds! Note that it will also do
-    // float-int conversions.
-    result = PyArray_FROMANY(input, typecode, min, max, NPY_ARRAY_CARRAY_RO |
-                                                        NPY_ARRAY_FORCECAST);//readonly OK
+    int flags = adjust_convert_flags(typecode, input, NPY_ARRAY_CARRAY_RO);
+    result = PyArray_FROMANY(input, typecode, min, max, flags);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
     }
 }
 %enddef
-
 %define CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(typecode, input, min, max, result)
 {
-    // NPY_ARRAY_FORCECAST is needed here so that a Python int array (C type long) can be
-    // used where C expects int. It will not check bounds! Note that it will also do
-    // float-int conversions.
-    result = PyArray_FROMANY(input, typecode, min, max, NPY_ARRAY_CARRAY |
-                                                        NPY_ARRAY_ENSURECOPY |
-                                                        NPY_ARRAY_FORCECAST);
-    if (!result){
+    int flags = adjust_convert_flags(typecode, input,
+                                     NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
+    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
     }
@@ -1080,7 +1087,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
 //  $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
-//  $3 = (int) PyArray_DIM(pyarr, 1);                            // DIM2
+//  $3 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
 }
 
 /*******************************************************
@@ -1207,6 +1214,25 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 }
 
 /*******************************************************
+* (Type IN_ARRAY2[][ANY])
+*******************************************************/
+
+%typemap(in)
+    (Type IN_ARRAY2[][ANY])                                     // PATTERN
+            (PyArrayObject* pyarr=NULL)
+{
+//      (Type IN_ARRAY2[][ANY])
+
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 2, pyarr)
+    TEST_INVALID_ARRAY_SHAPE_x2D(pyarr, $1_dim1);
+
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+//  $2 = (int) PyArray_DIM(pyarr, 0);                           // DIM1
+//  $3 = (int) PyArray_DIM(pyarr, 1);                           // DIM2
+}
+
+
+/*******************************************************
 * (Type *IN_ARRAY2)
 * (Type IN_ARRAY2[])
 *******************************************************/
@@ -1297,6 +1323,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     (SpiceInt DIM1, Type IN_ARRAY2[][ANY]),
     (Type IN_ARRAY2[][ANY], int DIM1),
     (Type IN_ARRAY2[][ANY], SpiceInt DIM1),
+    (Type IN_ARRAY2[][ANY]),
     (Type IN_ARRAY2[]),
     (Type *IN_ARRAY2),
     (Type *IN_ARRAY12, int DIM1, int DIM2),
@@ -1319,6 +1346,7 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
     (SpiceInt DIM1, Type IN_ARRAY2[][ANY]),
     (Type IN_ARRAY2[][ANY], int DIM1),
     (Type IN_ARRAY2[][ANY], SpiceInt DIM1),
+    (Type IN_ARRAY2[][ANY]),
     (Type IN_ARRAY2[]),
     (Type *IN_ARRAY2),
     (Type *IN_ARRAY12, int DIM1, int DIM2),

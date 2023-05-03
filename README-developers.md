@@ -17,7 +17,7 @@ wherever it happens to be on your computer.
 
 The GitHub source code intentionally does not include the source code to
 CSPICE itself.
-Instead the build process downloads the appropriate sources from
+Instead, the build process downloads the appropriate sources from
 [NAIF](https://naif.jpl.nasa.gov/naif/toolkit.html).
 The current SPICE Toolkit version is N0067, released January 3, 2022.
 
@@ -82,7 +82,7 @@ If you have previously installed cspyce via pip, you should also look at the val
 ```shell
 > cspyce.__file__
 ```
-to confirm that you area looking at the `cspyce` you have just built rather than
+to confirm that you are looking at the `cspyce` you have just built rather than
 the pip-installed `cspyce`.
 The value returned should be `"<your current directory>/cspyce/__init__.py"`
 
@@ -96,7 +96,7 @@ python -m pip install --upgrade pip setuptools wheel twine
 ```
 ### Source Distributions
 
-The simplist type of distribution is a source distribution:
+The simplest type of distribution is a source distribution:
 
 ```
 python setup.py sdist
@@ -153,7 +153,7 @@ You add a suffix to this command by including `egginfo -b <tag>` where the tag
 is either one of the letters a (for alpha), b (for beta), or rc (for release
 candidate). The letter can optionally be followed by a number.
 
-Hence a series of releases can be created by
+Hence, a series of releases can be created by
 
       python setup.py egg_info -b a1 sdist bdist_wheel
       python setup.py egg_info -b a2 sdist bdist_wheel
