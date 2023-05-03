@@ -1,7 +1,2 @@
-prune .github
-prune build
-prune development
-prune dist
 include cspyce/*.py
-exclude swig/*.i
 include swig/*.c

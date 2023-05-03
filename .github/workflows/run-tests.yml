@@ -1,4 +1,4 @@
-name: Run Tests for Pulls and Merges to Master Branch
+name: Run Tests for PRs/Merges to Master
 
 on:
   workflow_dispatch:
