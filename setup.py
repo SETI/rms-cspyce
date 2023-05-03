@@ -11,9 +11,15 @@
 
 from glob import glob
 import os
+from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
+from tarfile import TarFile
+import tempfile
+import time
+from zipfile import ZipFile
 
 from setuptools.command.build_ext import build_ext
 
@@ -26,12 +32,15 @@ except ImportError:
     import numpy
 
 
+IS_LINUX = platform.system() == "Linux"
+IS_MACOS = platform.system() == "Darwin"
+IS_WINDOWS = platform.system() == "Windows"
+assert IS_LINUX or IS_MACOS or IS_WINDOWS
+
+
 ################################################################################
-# get_spice.py
-################################################################################
-#
-# This module is responsible for downloading the CSPICE source files based on
-# whatever hardware and software it is currently running on.
+# The following code is responsible for downloading the CSPICE source files
+# based on whatever hardware and software it is currently running on.
 #
 # The contents of the directories
 #        <download>/cspice/src/cspice
@@ -42,29 +51,11 @@ except ImportError:
 #
 # This module should only be called by setup.py.
 #
-# This file owes a big debt to Dr. Andrew Annex and his file:
+# This code owes a big debt to Dr. Andrew Annex and his file:
 #      https://github.com/AndrewAnnex/SpiceyPy/blob/main/get_spice.py
 # His version is much more ambitious than this and also compiles the files into
 # a shared library.
 ################################################################################
-
-
-import os
-import platform
-import shutil
-import subprocess
-import sys
-import tempfile
-import time
-from tarfile import TarFile
-from zipfile import ZipFile
-
-try:
-    from pathlib import Path
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pathlib"])
-    from pathlib import Path
-
 
 CSPICE_DISTRIBUTIONS = {
     # system   arch        distribution name           extension
@@ -151,29 +142,6 @@ class GetCspice(object):
                 print("Download failed with URLError: {0}, trying again after "
                       "15 seconds!".format(error))
                 time.sleep(15)
-
-
-if __name__ == "__main__":
-    GetCspice().download()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-IS_LINUX = platform.system() == "Linux"
-IS_MACOS = platform.system() == "Darwin"
-IS_WINDOWS = platform.system() == "Windows"
-assert IS_LINUX or IS_MACOS or IS_WINDOWS
 
 
 class GenerateCommand(Command):
