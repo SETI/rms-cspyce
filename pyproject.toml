@@ -45,4 +45,5 @@ issues = "https://github.com/SETI/pds-cspyce/issues"
 packages = ["cspyce"]
 
 [tool.setuptools_scm]
+local_scheme = "no-local-version"
 write_to = "cspyce/_version.py"
