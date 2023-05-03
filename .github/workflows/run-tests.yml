@@ -9,8 +9,7 @@ on:
 
 jobs:
   test:
-    name: Test cspice
-    needs: build
+    name: Test cspyce
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -19,29 +18,29 @@ jobs:
         os: [ubuntu-latest]
         python-version: [ '3.11' ]
     steps:
-      - name: Checkout 🌶️ 🥧
+      - name: Checkout
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - name: Download built 🏗️ libcspice 🌶️ 📚
-        uses: actions/download-artifact@v3
-        with:
-          name: artifact-${{ matrix.os }}
-          path: ./src/spiceypy/utils/
-      - name: Set up Python 🐍 ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install -r ci-requirements.txt
-      - name: Install SpiceyPy 🌶️ 🥧
+          python -m pip install -r requirements.txt
+      - name: Build cspyce
+        run: |
+          python setup.py generate
+          python setup.py build_clib
+          python setup.py build_ext --inplace
+      - name: Install cspyce
         run: |
           python -m pip install .
-      - name: Test 🧪 with coverage 📈
+      - name: Test with coverage
         run: |
-          coverage run --source spiceypy -m pytest --pyargs spiceypy
-      - name: Upload 🆙 coverage 📈 report to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          verbose: true
+          coverage run -m pytest
+      # - name: Upload coverage report to codecov
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     verbose: true
