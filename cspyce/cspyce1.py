@@ -7,9 +7,6 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
-from __future__ import print_function
-
-import sys
 import numpy as np
 import textwrap
 
@@ -24,7 +21,6 @@ from cspyce.cspyce1_info import \
 # Global variables used below
 import __main__
 INTERACTIVE = not hasattr(__main__, '__file__')
-PYTHON2 = sys.version_info[0] < 3
 
 ################################################################################
 # GET/SET handling
@@ -1035,10 +1031,7 @@ for name in CSPYCE_SIGNATURES:
     func.DEFINITIONS = CSPYCE_DEFINITIONS[name]
 
     if name in CSPYCE_DEFAULTS:
-        if PYTHON2:
-            func.func_defaults = tuple(CSPYCE_DEFAULTS[name])
-        else:
-            func.__defaults__ = tuple(CSPYCE_DEFAULTS[name])
+        func.__defaults__ = tuple(CSPYCE_DEFAULTS[name])
 
     assign_docstring(func)
 

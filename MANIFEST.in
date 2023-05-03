@@ -1,3 +1,7 @@
-include cspyce/swig/*.c
-exclude cspyce/swig/*.i
-include get_spice.py
+prune .github
+prune build
+prune development
+prune dist
+include cspyce/*.py
+exclude swig/*.i
+include swig/*.c
