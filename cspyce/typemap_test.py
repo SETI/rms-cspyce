@@ -707,7 +707,7 @@ class test_return_value_through_outvar(unittest.TestCase):
 
     def test_outvar_char(self):
         self.assertIsInstance(ts.outvar_10_char(), str)
-        self.assertEquals(len(ts.outvar_10_char()), 1)
+        self.assertEqual(len(ts.outvar_10_char()), 1)
         self.assertEqual(ts.outvar_10_char(), chr(10))
 
     def test_outvar_bool(self):
