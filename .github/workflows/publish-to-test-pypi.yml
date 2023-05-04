@@ -27,6 +27,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.3
@@ -47,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v4
         with:
@@ -59,9 +63,9 @@ jobs:
           pip install numpy setuptools setuptools-scm wheel
           pwd
           ls -al
-          git status
-          git tag -l
-          git log --decorate | head -30
+          git status || true
+          git tag -l || true
+          (git log --decorate | head -30) || true
           python3 -m setuptools_scm
           python3 setup.py generate
           python3 setup.py sdist
@@ -83,9 +87,9 @@ jobs:
       - run: |
           pwd
           ls -al
-          git status
-          git tag -l
-          git log --decorate | head -30
+          git status || true
+          git tag -l || true
+          (git log --decorate | head -30) || true
           python3 -m setuptools_scm
 
       - uses: pypa/gh-action-pypi-publish@v1.8.6
