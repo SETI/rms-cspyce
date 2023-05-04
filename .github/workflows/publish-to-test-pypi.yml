@@ -2,8 +2,12 @@
 # to Test-PyPi
 
 name: Publish to Test PyPI
+run-name: ${{ github.workflow_ref }} by ${{ github.triggering_actor }}
 
-# Controls when the workflow will run
+# Controls when the workflow will run - manually triggered
+# Note that if this workflow is run without a tag on the HEAD commit, the
+# version will be marked ".devN" where N is the number of commits since the
+# last version tag.
 on:
   workflow_dispatch:
 
@@ -26,7 +30,8 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -34,25 +39,13 @@ jobs:
         uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
-          # We restore typemap_samples.py because it is not needed for the build and
-          # is modified by 'generate' so git things there is a new file to stage
-          # and setuptools_scm things this is a dev version instead of a release
-          # version.
-          CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools setuptools_scm && python3 setup.py generate && git checkout -- cspyce/typemap_samples.py && git status && git log --decorate -n 3 && python3 -m setuptools_scm'
+          CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools setuptools_scm && python3 setup.py generate && git status && git log --decorate -n 3 && python3 -m setuptools_scm'
           CIBW_SKIP: 'pp* *musllinux* *cp27mu*'
           CIBW_ARCHS: 'auto64'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
 
-      # Generally useful for debugging version numbers
-      - run: |
-          pwd
-          ls -al
-          git status || true
-          git tag -l || true
-          (git log --decorate -n 3) || true
-          python3 -m setuptools_scm || true
-
-      - uses: actions/upload-artifact@v3
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -61,11 +54,13 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
@@ -74,17 +69,17 @@ jobs:
           printenv
           sudo apt install swig
           pip install numpy setuptools setuptools-scm wheel
-          # Generally useful for debugging version numbers
           pwd
           ls -al
-          git status || true
-          git tag -l || true
-          (git log --decorate -n 3) || true
-          python3 -m setuptools_scm || true
+          git status
+          git tag -l
+          (git log --decorate -n 3)
+          python3 -m setuptools_scm
           python3 setup.py generate
           python3 setup.py sdist
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
 
@@ -93,12 +88,14 @@ jobs:
     needs: [build_python3_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
         with:
           name: artifact   # prevents extra directory
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.8.6
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.6
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
