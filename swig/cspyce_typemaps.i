@@ -660,7 +660,8 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
  are disallowed.
 */
 int adjust_convert_flags(int typecode, PyObject *input, int flags) {
-    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_TYPE(input) == NPY_LONG) {
+    if (typecode == NPY_INT && PyArray_Check(input) &&
+        (PyArray_TYPE(input) == NPY_LONG || PyArray_TYPE(input) == NPY_LONGLONG)) {
         // Allow long -> int conversions, but no other unsafe conversions
         flags |= NPY_ARRAY_FORCECAST;
     }
