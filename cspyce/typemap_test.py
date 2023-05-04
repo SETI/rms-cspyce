@@ -689,5 +689,31 @@ class test_primitive_return_types(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             ts.return_sigerr()
 
+class test_return_value_through_outvar(unittest.TestCase):
+    # Each of the functions used here is defined in C as a void function with
+    # a single output argument of the indicated type.  The function sets that
+    # value to 10.  And we see what happens here
+    def test_outvar_int(self):
+        self.assertIsInstance(ts.outvar_10_int(), int)
+        self.assertEqual(ts.outvar_10_int(), 10)
+
+    def test_outvar_float(self):
+        self.assertIsInstance(ts.outvar_10_float(), float)
+        self.assertEqual(ts.outvar_10_float(), 10.0)
+
+    def test_outvar_double(self):
+        self.assertIsInstance(ts.outvar_10_double(), float)
+        self.assertEqual(ts.outvar_10_double(), 10.0)
+
+    def test_outvar_char(self):
+        self.assertIsInstance(ts.outvar_10_char(), str)
+        self.assertEquals(len(ts.outvar_10_char()), 1)
+        self.assertEqual(ts.outvar_10_char(), chr(10))
+
+    def test_outvar_bool(self):
+        self.assertIsInstance(ts.outvar_10_bool(), bool)
+        self.assertEqual(ts.outvar_10_bool(), bool(10))
+
+
 if __name__ == '__main__':
     unittest.main()

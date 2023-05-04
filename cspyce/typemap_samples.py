@@ -158,4 +158,19 @@ def return_boolean(value):
 def return_sigerr():
     return _typemap_samples.return_sigerr()
 
+def outvar_10_int():
+    return _typemap_samples.outvar_10_int()
+
+def outvar_10_float():
+    return _typemap_samples.outvar_10_float()
+
+def outvar_10_double():
+    return _typemap_samples.outvar_10_double()
+
+def outvar_10_char():
+    return _typemap_samples.outvar_10_char()
+
+def outvar_10_bool():
+    return _typemap_samples.outvar_10_bool()
+
 

@@ -189,7 +189,7 @@ void reset_messages(void);
 %apply char {SpiceChar, ConstSpiceChar}
 %apply double {SpiceDouble, ConstSpiceDouble};
 
-%apply int *OUTPUT {SpiceInt *OUTPUT, SpiceBoolean *OUTPUT};
+%apply int *OUTPUT {SpiceInt *OUTPUT};
 %apply char *OUTPUT {SpiceChar *OUTPUT}
 %apply double *OUTPUT {SpiceDouble *OUTPUT};
 
@@ -10747,7 +10747,7 @@ extern SpiceChar *tkvrsn_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *sample};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                   {(SpiceInt lenout, SpiceChar pictur[TIMELEN])};
-%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *ok};
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *ok};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                   {(SpiceInt lenerr, SpiceChar errmsg[MESSAGELEN])};
 

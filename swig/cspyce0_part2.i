@@ -4675,8 +4675,8 @@ extern void ekccnt_c(
 %apply (SpiceInt     *OUTPUT) {SpiceInt     *dtype};
 %apply (SpiceInt     *OUTPUT) {SpiceInt     *strlen};
 %apply (SpiceInt     *OUTPUT) {SpiceInt     *size};
-%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *indexd};
-%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *nullok};
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *indexd};
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *nullok};
 
 %inline %{
     void my_ekcii_c(
@@ -4817,7 +4817,7 @@ extern void ekffld_c(
 %apply (void RETURN_VOID) {void my_ekfind_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *query};
 %apply (SpiceInt       *OUTPUT) {SpiceInt *nmrows};
-%apply (SpiceBoolean   *OUTPUT) {SpiceBoolean *error};
+%apply (SpiceBoolean   *OUT_BOOLEAN) {SpiceBoolean *error};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar errmsg[MESSAGELEN]};
 
 %inline %{
@@ -5318,7 +5318,7 @@ extern void ekopw_c(
 %apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt xclass[CLAUSES], int *n3)};
 %apply (char OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(char tabs[CLAUSES][NAMELEN], int *n4)};
 %apply (char OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(char cols[CLAUSES][NAMELEN], int *n5)};
-%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *error};
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *error};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar errmsg[MESSAGELEN]};
 
 %inline %{
