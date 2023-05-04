@@ -57,6 +57,11 @@ jobs:
           printenv
           sudo apt install swig
           pip install numpy setuptools setuptools-scm wheel
+          pwd
+          ls -al
+          git status
+          git tag -l
+          git log --decorate | head -30
           python3 -m setuptools_scm
           python3 setup.py generate
           python3 setup.py sdist
@@ -75,12 +80,17 @@ jobs:
           name: artifact   # prevents extra directory
           path: dist
 
+      - run: |
+          pwd
+          ls -al
+          git status
+          git tag -l
+          git log --decorate | head -30
+          python3 -m setuptools_scm
+
       - uses: pypa/gh-action-pypi-publish@v1.8.6
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
           verify-metadata: false
-
-      - run: |
-          git status
