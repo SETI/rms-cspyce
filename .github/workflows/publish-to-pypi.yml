@@ -51,7 +51,7 @@ jobs:
         run: |
           printenv
           sudo apt install swig
-          pip install numpy setuptools wheel
+          pip install numpy setuptools setuptools-scm wheel
           python3 setup.py generate
           python3 setup.py sdist
 
@@ -74,4 +74,3 @@ jobs:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
           verify-metadata: false
-

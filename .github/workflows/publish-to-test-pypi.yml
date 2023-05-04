@@ -56,7 +56,7 @@ jobs:
         run: |
           printenv
           sudo apt install swig
-          pip install numpy setuptools wheel
+          pip install numpy setuptools setuptools-scm wheel
           python3 -m setuptools_scm
           python3 setup.py generate
           python3 setup.py sdist
