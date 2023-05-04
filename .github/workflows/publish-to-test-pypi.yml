@@ -16,6 +16,13 @@ jobs:
         # os: [ubuntu-latest, windows-latest, macOS-latest]
         os: [ubuntu-latest]
         python-version: [ '3.11' ]
+        exclude:
+          - os: ubuntu-latest
+            python-version: "3.8"
+          - os: ubuntu-latest
+            python-version: "3.9"
+          - os: ubuntu-latest
+            python-version: "3.10"
       fail-fast: false
 
     steps:
@@ -50,6 +57,7 @@ jobs:
           printenv
           sudo apt install swig
           pip install numpy setuptools wheel
+          python3 -m setuptools_scm
           python3 setup.py generate
           python3 setup.py sdist
 
@@ -73,3 +81,6 @@ jobs:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
           verify-metadata: false
+
+      - run: |
+          git status
