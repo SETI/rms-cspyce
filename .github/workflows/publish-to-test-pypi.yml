@@ -34,17 +34,22 @@ jobs:
         uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
-          CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools && python3 setup.py generate && git status && git tag -l && git log --decorate -n 3 && python3 -m setuptools_scm'
+          # We restore typemap_samples.py because it is not needed for the build and
+          # is modified by 'generate' so git things there is a new file to stage
+          # and setuptools_scm things this is a dev version instead of a release
+          # version.
+          CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools setuptools_scm && python3 setup.py generate && git checkout -- cspyce/typemap_samples.py && git status && git log --decorate -n 3 && python3 -m setuptools_scm'
           CIBW_SKIP: 'pp* *musllinux* *cp27mu*'
           CIBW_ARCHS: 'auto64'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
 
+      # Generally useful for debugging version numbers
       - run: |
           pwd
           ls -al
           git status || true
           git tag -l || true
-          (git log --decorate | head -30) || true
+          (git log --decorate -n 3) || true
           python3 -m setuptools_scm || true
 
       - uses: actions/upload-artifact@v3
@@ -69,11 +74,12 @@ jobs:
           printenv
           sudo apt install swig
           pip install numpy setuptools setuptools-scm wheel
+          # Generally useful for debugging version numbers
           pwd
           ls -al
           git status || true
           git tag -l || true
-          (git log --decorate | head -30) || true
+          (git log --decorate -n 3) || true
           python3 -m setuptools_scm || true
           python3 setup.py generate
           python3 setup.py sdist
