@@ -386,3 +386,26 @@ int return_boolean(int value);
 
 %apply (void RETURN_VOID_SIGERR) {void return_sigerr};
 void return_sigerr(void);
+
+%{
+    void outvar_10_int(SpiceInt* arg) { *arg = 10; }
+    void outvar_10_float(SpiceFloat* arg) { *arg = 10; }
+    void outvar_10_double(SpiceDouble *arg) { *arg = 10; }
+    void outvar_10_char(SpiceChar *arg) { *arg = 10; }
+    void outvar_10_bool(SpiceBoolean *arg) { *arg = 10; }
+%}
+
+%apply (int *OUTPUT) {SpiceInt* arg}
+void outvar_10_int(SpiceInt* arg);
+
+%apply (float *OUTPUT) {SpiceFloat* arg}
+void outvar_10_float(SpiceFloat* arg);
+
+%apply (double *OUTPUT) {SpiceDouble* arg}
+void outvar_10_double(SpiceDouble *arg);
+
+%apply (char *OUTPUT) {SpiceChar *arg}
+void outvar_10_char(SpiceChar *arg);
+
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *arg}
+void outvar_10_bool(SpiceBoolean *arg);
