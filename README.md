@@ -1,9 +1,10 @@
-[![PyPI version](https://badge.fury.io/py/cspyce.svg)](https://badge.fury.io/py/cspyce)
+| PyPI Release | Test Status | Code Coverage |
+| ------------ | ----------- | ------------- |
+| [![PyPI version](https://badge.fury.io/py/cspyce.svg)](https://badge.fury.io/py/cspyce) | [![Build status](https://img.shields.io/github/actions/workflow/status/SETI/pds-cspyce/run-tests.yml?branch=master)](https://github.com/SETI/pds-cspyce/actions) | [![Code coverage](https://img.shields.io/codecov/c/github/SETI/pds-cspyce/main?logo=codecov)](https://codecov.io/gh/SETI/pds-cspyce) |
+
 
 # `cspyce` MODULE OVERVIEW
-Version 2.0
-
-March, 2022
+Version 2.x, originally released March, 2022
 
 Mark Showalter, PDS Ring-Moon Systems Node, SETI Institute
 

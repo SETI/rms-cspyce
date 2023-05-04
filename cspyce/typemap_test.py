@@ -117,9 +117,6 @@ class test_array1_01_1(unittest.TestCase):
     SMALL_INT_ARRAY = np.array((4, 5, 6), dtype="int32")
     SMALL_FLOAT_ARRAY = np.array((4.0, 5.0, 6.0), dtype="double")
 
-    def f(self, x):
-        return ts.in_array01_1(x)
-
     def test_basic_test_scalar(self):
         self.assertEqual(1, ts.in_array01_1(1))
 
@@ -220,44 +217,6 @@ class test_array2_2(unittest.TestCase):
     def test_requires_non_null(self):
         with self.assertRaises(TypeError):
             ts.in_array2_2(None)
-
-
-class test_array2_3(unittest.TestCase):
-    # %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
-    # This function takes any 2-dimensional array whose second dimension is 5.
-    # It returns the elements, and the dimensions.
-    def test_basic_run(self):
-        array = np.arange(100, 150, dtype='int32').reshape(10, 5)
-        self.assertEqual((flatten(array), 10, 5), ts.in_array2_3(array))
-        self.assertEqual((flatten(array[1:]), 9, 5), ts.in_array2_3(array[1:]))
-
-    def test_non_contiguous_array(self):
-        array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 2]
-        self.assertEqual((flatten(array), 3, 5), ts.in_array2_3(array))
-
-    def test_no_other_width(self):
-        array = np.arange(100, 150, dtype='int32').reshape(5, 10)
-        with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
-
-    def test_no_other_data_type(self):
-        array = np.arange(100, 150, dtype='float').reshape(10, 5)
-        with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
-
-    def test_no_bigger_dimension(self):
-        array = np.arange(100, 150, dtype='int32').reshape(1, 10, 5)
-        with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
-
-    def test_no_smaller_dimension(self):
-        array = np.arange(100, 150, dtype='int32')
-        with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
-
-    def test_requires_non_null(self):
-        with self.assertRaises(TypeError):
-            ts.in_array2_3(None)
 
 
 class test_array2_3(unittest.TestCase):
@@ -484,7 +443,7 @@ class test_out_array2(unittest.TestCase):
             value = ts.out_array2_3(-1, 40, 41)
 
     # %apply (int DIM1, int *SIZE1, double OUT_ARRAY2[ANY][ANY]) {(int dim1, int *size1, double result[4][5])};
-    def test_2dim_fixed_size_array(self):
+    def test_2dim_dim1_fixed_size_array(self):
         array_length, result = ts.out_array2_4(10, 3)
         self.assertEqual(4, array_length);  # Why does the function need this?
         self.assertEqual((3, 5), result.shape)
@@ -707,7 +666,7 @@ class test_return_value_through_outvar(unittest.TestCase):
 
     def test_outvar_char(self):
         self.assertIsInstance(ts.outvar_10_char(), str)
-        self.assertEquals(len(ts.outvar_10_char()), 1)
+        self.assertEqual(len(ts.outvar_10_char()), 1)
         self.assertEqual(ts.outvar_10_char(), chr(10))
 
     def test_outvar_bool(self):

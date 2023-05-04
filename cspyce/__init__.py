@@ -115,10 +115,12 @@ For example:
 """
 
 import inspect
-import sys
 import os
 
-PYTHON2 = sys.version_info[0] < 3
+try:
+    from _version import __version__
+except ImportError as err:
+    __version__ = 'Version unspecified'
 
 # We allow the import of cspyce2 to fail because, during development, there are
 # times when cspyce2.py might be invalid. If that happens, we still want to be
@@ -353,15 +355,14 @@ def validate_func(func, source=None):
 # Add return annotations to all cspyce functions if this is Python 3
 ################################################################################
 
-if not PYTHON2:
-    for func in get_all_funcs().values():
-        retnames = func.RETNAMES
-        if retnames:
-            sig = inspect.signature(func)
-            if len(func.RETNAMES) == 1:
-                func.__signature__ = sig.replace(return_annotation=retnames[0])
-            else:
-                func.__signature__ = sig.replace(return_annotation=retnames)
+for func in get_all_funcs().values():
+    retnames = func.RETNAMES
+    if retnames:
+        sig = inspect.signature(func)
+        if len(func.RETNAMES) == 1:
+            func.__signature__ = sig.replace(return_annotation=retnames[0])
+        else:
+            func.__signature__ = sig.replace(return_annotation=retnames)
 
 ################################################################################
 
