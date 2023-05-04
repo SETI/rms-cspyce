@@ -34,10 +34,18 @@ jobs:
         uses: pypa/cibuildwheel@v2.12.3
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: '>=3.8'
-          CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools && python3 setup.py generate'
+          CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools && python3 setup.py generate && git status && git tag -l && git log --decorate -n 3 && python3 -m setuptools_scm'
           CIBW_SKIP: 'pp* *musllinux* *cp27mu*'
           CIBW_ARCHS: 'auto64'
           CIBW_ARCHS_MACOS: 'x86_64 arm64'
+
+      - run: |
+          pwd
+          ls -al
+          git status || true
+          git tag -l || true
+          (git log --decorate | head -30) || true
+          python3 -m setuptools_scm || true
 
       - uses: actions/upload-artifact@v3
         with:
@@ -66,7 +74,7 @@ jobs:
           git status || true
           git tag -l || true
           (git log --decorate | head -30) || true
-          python3 -m setuptools_scm
+          python3 -m setuptools_scm || true
           python3 setup.py generate
           python3 setup.py sdist
 
@@ -83,14 +91,6 @@ jobs:
         with:
           name: artifact   # prevents extra directory
           path: dist
-
-      - run: |
-          pwd
-          ls -al
-          git status || true
-          git tag -l || true
-          (git log --decorate | head -30) || true
-          python3 -m setuptools_scm
 
       - uses: pypa/gh-action-pypi-publish@v1.8.6
         with:
