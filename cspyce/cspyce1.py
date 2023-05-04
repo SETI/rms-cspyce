@@ -866,7 +866,7 @@ def ckfrot(inst, et):
     return [rotate if found else np.diag(3*[1.]), ref if found else 0, found]
 
 def ckfxfm(inst, et):
-    (rotate, ref, found) = cspyce0.ckfrot(inst, et)
+    (rotate, ref, found) = cspyce0.ckfxfm(inst, et)
     return [rotate if found else np.diag(6*[1.]), ref if found else 0, found]
 
 def hx2dp(string):
