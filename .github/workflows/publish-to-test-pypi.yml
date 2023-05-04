@@ -2,7 +2,7 @@
 # to Test-PyPi
 
 name: Publish to Test PyPI
-run-name: ${{ github.workflow_ref }} by ${{ github.triggering_actor }}
+run-name: Publish to Test PyPI triggered by ${{ github.triggering_actor }}
 
 # Controls when the workflow will run - manually triggered
 # Note that if this workflow is run without a tag on the HEAD commit, the

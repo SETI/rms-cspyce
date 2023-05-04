@@ -2,7 +2,7 @@
 # to Test-PyPi or PyPi
 
 name: Publish to PyPI
-run-name: ${{ github.workflow_ref }} triggered by ${{ github.ref_type }} ${{ github.ref_name }}
+run-name: Publish to PyPI triggered by ${{ github.ref_type }} ${{ github.ref_name }}
 
 # Controls when the workflow will run - push of a "v*" tag
 on:
