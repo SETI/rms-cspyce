@@ -1,7 +1,6 @@
-+--------------+-------------+---------------+
 | PyPI Release | Test Status | Code Coverage |
+| ------------ | ----------- | ------------- |
 | [![PyPI version](https://badge.fury.io/py/cspyce.svg)](https://badge.fury.io/py/cspyce) | [![Build status](https://img.shields.io/github/actions/workflow/status/SETI/pds-cspyce/run-tests.yml?branch=master)](https://github.com/SETI/pds-cspyce/actions) | [![Code coverage](https://img.shields.io/codecov/c/github/SETI/pds-cspyce/main?logo=codecov)](https://codecov.io/gh/SETI/pds-cspyce) |
-+--------------+-------------+---------------+
 
 
 # `cspyce` MODULE OVERVIEW
