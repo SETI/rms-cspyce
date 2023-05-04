@@ -18,3 +18,4 @@ swig/vectorize.i
 .coverage
 coverage.xml
 htmlcov
+cspyce-unit-test-kernels
