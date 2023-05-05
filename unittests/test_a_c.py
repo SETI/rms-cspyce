@@ -481,7 +481,7 @@ def test_ckgpav():
     assert clkout == 267832537952.0
     
 
-# Test changed. cs.cs.dafgs() does not have a parameter for the length N for the
+# Test changed. cs.dafgs() does not have a parameter for the length N for the
 # result array
 def test_ckgr02_cknr02():
     cs.kclear()
@@ -506,7 +506,7 @@ def test_ckgr02_cknr02():
     cs.kclear()
     
 
-# Test changed. cs.cs.dafgs() does not have a parameter for the length N for the
+# Test changed. cs.dafgs() does not have a parameter for the length N for the
 # result array
 def test_ckgr03_cknr03():
     cs.kclear()
