@@ -117,9 +117,6 @@ class test_array1_01_1(unittest.TestCase):
     SMALL_INT_ARRAY = np.array((4, 5, 6), dtype="int32")
     SMALL_FLOAT_ARRAY = np.array((4.0, 5.0, 6.0), dtype="double")
 
-    def f(self, x):
-        return ts.in_array01_1(x)
-
     def test_basic_test_scalar(self):
         self.assertEqual(1, ts.in_array01_1(1))
 
@@ -171,9 +168,13 @@ class test_array2_1(unittest.TestCase):
             ts.in_array2_1(array)
 
     def test_no_other_data_type(self):
-        array = np.array(range(100, 115), dtype='int64').reshape(3, 5)
+        array = np.array(range(100, 115), dtype='float').reshape(3, 5)
         with self.assertRaises(ValueError):
             ts.in_array2_1(array)
+
+    def test_long_allowed_anyway(self):
+        array = np.array(range(100, 115), dtype='int64').reshape(3, 5)
+        ts.in_array2_1(array)
 
     def test_no_other_dimension(self):
         array = np.array(range(100, 115), dtype='int64').reshape(3, 5, 1)
@@ -255,42 +256,37 @@ class test_array2_3(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array2_3(None)
 
-class test_array2_3(unittest.TestCase):
-    # %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
-    # This function takes any 2-dimensional array whose second dimension is 5.
-    # It returns the elements, and the dimensions.
+
+class test_array2_4(unittest.TestCase):
+    # %apply (int IN_ARRAY2[][ANY]) {(int arg[][5])};
+    # This function takes any 2-dimensional array whose second dimension is 5,
+    # and returns True.  Not much else it can do, since the array may be empty.
     def test_basic_run(self):
-        array = np.arange(100, 150, dtype='int32').reshape(10, 5)
-        self.assertEqual((flatten(array), 10, 5), ts.in_array2_3(array))
-        self.assertEqual((flatten(array[1:]), 9, 5), ts.in_array2_3(array[1:]))
+        array = np.zeros((10, 5), dtype='int32')
+        self.assertTrue(ts.in_array2_4(array))
 
     def test_non_contiguous_array(self):
-        array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 2]
-        self.assertEqual((flatten(array), 3, 5), ts.in_array2_3(array))
+        array = np.zeros((3, 5, 10), dtype='int32')[..., 2]
+        self.assertTrue(ts.in_array2_4(array))
 
     def test_no_other_width(self):
-        array = np.arange(100, 150, dtype='int32').reshape(5, 10)
+        array = np.zeros((5, 10), dtype='int32')
         with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
-
-    def test_no_other_data_type(self):
-        array = np.arange(100, 150, dtype='float').reshape(10, 5)
-        with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
+            ts.in_array2_4(array)
 
     def test_no_bigger_dimension(self):
-        array = np.arange(100, 150, dtype='int32').reshape(1, 10, 5)
+        array = np.zeros((1, 10, 5), dtype='int32')
         with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
+            ts.in_array2_4(array)
 
     def test_no_smaller_dimension(self):
-        array = np.arange(100, 150, dtype='int32')
+        array = np.zeros(5, dtype='int32')
         with self.assertRaises(ValueError):
-            ts.in_array2_3(array)
+            ts.in_array2_4(array)
 
     def test_requires_non_null(self):
         with self.assertRaises(TypeError):
-            ts.in_array2_3(None)
+            ts.in_array2_4(None)
 
 
 class test_array12(unittest.TestCase):
@@ -447,7 +443,7 @@ class test_out_array2(unittest.TestCase):
             value = ts.out_array2_3(-1, 40, 41)
 
     # %apply (int DIM1, int *SIZE1, double OUT_ARRAY2[ANY][ANY]) {(int dim1, int *size1, double result[4][5])};
-    def test_2dim_fixed_size_array(self):
+    def test_2dim_dim1_fixed_size_array(self):
         array_length, result = ts.out_array2_4(10, 3)
         self.assertEqual(4, array_length);  # Why does the function need this?
         self.assertEqual((3, 5), result.shape)
@@ -651,6 +647,32 @@ class test_primitive_return_types(unittest.TestCase):
     def test_sigerror(self):
         with self.assertRaises(RuntimeError):
             ts.return_sigerr()
+
+class test_return_value_through_outvar(unittest.TestCase):
+    # Each of the functions used here is defined in C as a void function with
+    # a single output argument of the indicated type.  The function sets that
+    # value to 10.  And we see what happens here
+    def test_outvar_int(self):
+        self.assertIsInstance(ts.outvar_10_int(), int)
+        self.assertEqual(ts.outvar_10_int(), 10)
+
+    def test_outvar_float(self):
+        self.assertIsInstance(ts.outvar_10_float(), float)
+        self.assertEqual(ts.outvar_10_float(), 10.0)
+
+    def test_outvar_double(self):
+        self.assertIsInstance(ts.outvar_10_double(), float)
+        self.assertEqual(ts.outvar_10_double(), 10.0)
+
+    def test_outvar_char(self):
+        self.assertIsInstance(ts.outvar_10_char(), str)
+        self.assertEqual(len(ts.outvar_10_char()), 1)
+        self.assertEqual(ts.outvar_10_char(), chr(10))
+
+    def test_outvar_bool(self):
+        self.assertIsInstance(ts.outvar_10_bool(), bool)
+        self.assertEqual(ts.outvar_10_bool(), bool(10))
+
 
 if __name__ == '__main__':
     unittest.main()

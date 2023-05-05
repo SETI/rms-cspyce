@@ -96,6 +96,11 @@ PyObject* in_array01_1(int *arg, int dim);
        return Py_BuildValue("Nii", info, dim1, 5);
    }
 
+   PyObject *in_array2_4(int arg[][5]) {
+       /* Nothing we can return, since array might be size 0 */
+       Py_RETURN_TRUE;
+   }
+
    PyObject *in_array12(int *arg, int dim1, int dim2) {
        PyObject* info = int_array_to_tuple(arg, max(dim1, 1) * dim2);
        return Py_BuildValue("Nii", info, dim1, dim2);
@@ -115,6 +120,9 @@ PyObject *in_array2_2(int *arg, int dim1, int dim2);
 
 %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
 PyObject *in_array2_3(int arg[][5], int dim1);
+
+%apply (int IN_ARRAY2[][ANY]) {int arg[][5]};
+PyObject *in_array2_4(int arg[][5]);
 
 %apply (int *IN_ARRAY12, int DIM1, int DIM2)  {(int *arg, int dim1, int dim2)};
 PyObject *in_array12(int *arg, int dim1, int dim2);
@@ -378,3 +386,26 @@ int return_boolean(int value);
 
 %apply (void RETURN_VOID_SIGERR) {void return_sigerr};
 void return_sigerr(void);
+
+%{
+    void outvar_10_int(SpiceInt* arg) { *arg = 10; }
+    void outvar_10_float(SpiceFloat* arg) { *arg = 10; }
+    void outvar_10_double(SpiceDouble *arg) { *arg = 10; }
+    void outvar_10_char(SpiceChar *arg) { *arg = 10; }
+    void outvar_10_bool(SpiceBoolean *arg) { *arg = 10; }
+%}
+
+%apply (int *OUTPUT) {SpiceInt* arg}
+void outvar_10_int(SpiceInt* arg);
+
+%apply (float *OUTPUT) {SpiceFloat* arg}
+void outvar_10_float(SpiceFloat* arg);
+
+%apply (double *OUTPUT) {SpiceDouble* arg}
+void outvar_10_double(SpiceDouble *arg);
+
+%apply (char *OUTPUT) {SpiceChar *arg}
+void outvar_10_char(SpiceChar *arg);
+
+%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *arg}
+void outvar_10_bool(SpiceBoolean *arg);
