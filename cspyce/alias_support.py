@@ -3,7 +3,6 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
-import sys
 import re
 import inspect
 import numbers
@@ -11,8 +10,6 @@ from collections import deque
 
 import cspyce
 import cspyce.cspyce1 as cspyce1
-
-PYTHON2 = sys.version_info[0] < 3
 
 # Global dictionaries used to track aliases
 BODY_CODE_ALIASES = {}
@@ -371,11 +368,8 @@ def alias_version(func):
     # Save key attributes of the wrapper function before returning
     cspyce1.assign_docstring(wrapper, ALIAS_NOTE)
     wrapper.__name__ = _alias_name(func.__name__)
-    if PYTHON2:
-        wrapper.func_defaults = func.func_defaults
-    else:
-        wrapper.__defaults__ = func.__defaults__
-        wrapper.__signature__ = inspect.signature(func)
+    wrapper.__defaults__ = func.__defaults__
+    wrapper.__signature__ = inspect.signature(func)
 
     # Insert mutual links
     wrapper.alias   = wrapper

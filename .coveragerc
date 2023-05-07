@@ -1,0 +1,24 @@
+[run]
+branch = True
+omit =
+  setup.py
+  cspyce/_version.py
+
+[html]
+Title = Coverage Report for cspyce
+
+[report]
+exclude_lines =
+  pragma: no cover
+  def __unicode__
+  if __name__ == '__main__':
+  if _swig_python_version_info
+  if __package__ or "." in __name__:
+  import _typemap_samples
+  except ImportError:
+  except ImportError as err:
+  def _swig_repr
+  def _swig_setattr_nondynamic_instance_variable
+  def _swig_setattr_nondynamic_class_variable
+  def _swig_add_metaclass
+  import _cspyce0

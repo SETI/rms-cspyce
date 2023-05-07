@@ -3,18 +3,13 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
-from __future__ import print_function
-
 import numpy as np
-import sys
 import inspect
 import warnings
 
 import cspyce
 import cspyce.cspyce1 as cspyce1
 from cspyce.alias_support import alias_version
-
-PYTHON2 = sys.version_info[0] < 3
 
 # This isn't how we want to handle a ragged array
 warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
@@ -148,11 +143,8 @@ def array_version(func):
     # Save key attributes of the wrapper function before returning
     cspyce1.assign_docstring(wrapper)
     wrapper.__name__ = _array_name(func.__name__)
-    if PYTHON2:
-        wrapper.func_defaults = func.func_defaults
-    else:
-        wrapper.__defaults__ = func.__defaults__
-        wrapper.__signature__ = inspect.signature(func)
+    wrapper.__defaults__ = func.__defaults__
+    wrapper.__signature__ = inspect.signature(func)
 
     # Insert mutual links
     wrapper.array  = wrapper

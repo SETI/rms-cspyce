@@ -13,8 +13,6 @@ import sys
 import cspyce.cspyce1 as cspyce1
 import keyword
 
-PYTHON2 = sys.version_info[0] < 3
-
 # This function makes cspyce2 look the same as cspyce1. It ensures that every
 # location in the global dictionary and every function's internal link point to
 # a new function of the same name.
@@ -58,10 +56,7 @@ def relink_all(new_dict, old_dict):
         # Copy function properties
         func.__doc__ = old_func.__doc__
 
-        if PYTHON2:
-            func.func_defaults = old_func.func_defaults
-        else:
-            func.__defaults__ = old_func.__defaults__
+        func.__defaults__ = old_func.__defaults__
 
         # Copy attributes
         for (key, value) in old_func.__dict__.items():
