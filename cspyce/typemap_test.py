@@ -653,25 +653,28 @@ class test_return_value_through_outvar(unittest.TestCase):
     # a single output argument of the indicated type.  The function sets that
     # value to 10.  And we see what happens here
     def test_outvar_int(self):
-        self.assertIsInstance(ts.outvar_10_int(), int)
-        self.assertEqual(ts.outvar_10_int(), 10)
+        temp = ts.outvar_set_from_var_int(5)
+        self.assertIsInstance(temp, int)
+        self.assertEquals(temp, 5)
 
     def test_outvar_float(self):
-        self.assertIsInstance(ts.outvar_10_float(), float)
-        self.assertEqual(ts.outvar_10_float(), 10.0)
+        self.assertIsInstance(ts.outvar_set_from_var_float(10), float)
+        self.assertEqual(ts.outvar_set_from_var_float(10), 10)
 
     def test_outvar_double(self):
-        self.assertIsInstance(ts.outvar_10_double(), float)
-        self.assertEqual(ts.outvar_10_double(), 10.0)
+        self.assertIsInstance(ts.outvar_set_from_var_double(10), float)
+        self.assertEqual(ts.outvar_set_from_var_double(10), 10.0)
 
     def test_outvar_char(self):
-        self.assertIsInstance(ts.outvar_10_char(), str)
-        self.assertEqual(len(ts.outvar_10_char()), 1)
-        self.assertEqual(ts.outvar_10_char(), chr(10))
+        self.assertIsInstance(ts.outvar_set_from_var_char(10), str)
+        self.assertEquals(len(ts.outvar_set_from_var_char(10)), 1)
+        self.assertEqual(ts.outvar_set_from_var_char(10), chr(10))
 
     def test_outvar_bool(self):
-        self.assertIsInstance(ts.outvar_10_bool(), bool)
-        self.assertEqual(ts.outvar_10_bool(), bool(10))
+        self.assertIsInstance(ts.outvar_set_from_var_bool(0), bool)
+        self.assertEqual(ts.outvar_set_from_var_bool(0), False)
+        self.assertEquals(ts.outvar_set_from_var_bool(1), True)
+        self.assertEquals(ts.outvar_set_from_var_bool(-100), True)
 
 
 if __name__ == '__main__':

@@ -184,14 +184,6 @@ void reset_messages(void);
 
 %feature("autodoc", "1");
 
-// Copy standard typemaps for Spice types
-%apply int {SpiceInt, SpiceBoolean, ConstSpiceInt, ConstSpiceBoolean};
-%apply char {SpiceChar, ConstSpiceChar}
-%apply double {SpiceDouble, ConstSpiceDouble};
-
-%apply int *OUTPUT {SpiceInt *OUTPUT};
-%apply char *OUTPUT {SpiceChar *OUTPUT}
-%apply double *OUTPUT {SpiceDouble *OUTPUT};
 
 /***********************************************************************
 * -Procedure axisar_c ( Axis and angle to rotation )
@@ -352,7 +344,7 @@ extern SpiceDouble b1950_c (void);
 extern void bodc2n_c(
         SpiceInt code,
         SpiceInt lenout, SpiceChar name[NAMELEN],
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 //CSPYCE_TYPE:name:body_name
@@ -483,7 +475,7 @@ extern SpiceBoolean bodfnd_c(
 extern void bodn2c_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_TYPE:name:body_name
@@ -517,7 +509,7 @@ extern void bodn2c_c(
 extern void bods2c_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_TYPE:name:body_name
@@ -676,7 +668,7 @@ extern void bodvrd_c(
                                    {(SpiceInt lenout, SpiceChar frname[NAMELEN])};
 %apply (SpiceInt *OUTPUT)          {SpiceInt *frcode};
 %apply (SpiceInt *OUTPUT)          {SpiceInt *center};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT)      {SpiceBoolean *found};
 
 %inline %{
     void my_ccifrm_c(
@@ -812,7 +804,7 @@ extern void chkout_c(
 %apply (SpiceInt *OUTPUT)          {SpiceInt *frcode};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                                    {(SpiceInt lenout, SpiceChar frname[NAMELEN])};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT)      {SpiceBoolean *found};
 
 %inline %{
     void my_cidfrm_c(
@@ -930,7 +922,7 @@ extern void ckgp_c(
         ConstSpiceChar *CONST_STRING,
         SpiceDouble    cmat[3][3],
         SpiceDouble    *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 // Vector version
@@ -981,7 +973,7 @@ extern void ckgpav_c(
         SpiceDouble    cmat[3][3],
         SpiceDouble    av[3],
         SpiceDouble    *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 // Vector version
@@ -1102,7 +1094,7 @@ extern void clpool_c(void);
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                                      {(SpiceInt lenout, SpiceChar frname[NAMELEN])};
 %apply (SpiceInt *OUTPUT)            {SpiceInt *frcode};
-%apply (SpiceBoolean *OUT_BOOLEAN)   {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT)        {SpiceBoolean *found};
 
 %inline %{
     void my_cnmfrm_c(
@@ -1467,7 +1459,7 @@ extern void dafgs_c(
 %apply (void RETURN_VOID) {void daffna_c};
 
 extern void daffna_c(
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -2139,7 +2131,7 @@ VECTORIZE_3d__dMN(dsphdr, dsphdr_c, 3, 3)
 
 extern void dtpool_c(
         ConstSpiceChar *CONST_STRING,
-        SpiceBoolean   *OUT_BOOLEAN,
+        SpiceBoolean   *OUTPUT,
         SpiceInt       *OUTPUT,
         SpiceChar      type[2]
 );
@@ -3096,7 +3088,7 @@ VECTORIZE_dX_3i__dMN(eul2xf, eul2xf_c, 6, 6)
 
 extern void expool_c(
         ConstSpiceChar *CONST_STRING,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 /***********************************************************************
@@ -3320,7 +3312,7 @@ extern void frinfo_c(
         SpiceInt     *OUTPUT,
         SpiceInt     *OUTPUT,
         SpiceInt     *OUTPUT,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -3469,7 +3461,7 @@ extern void gcpool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       start,
         SpiceInt room, SpiceInt lenout, SpiceInt *n, char cvals[KERVALS][KERVALLEN],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_DEFAULT:name:""
@@ -3511,7 +3503,7 @@ extern void gdpool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       start,
         SpiceInt room, SpiceInt *n, SpiceDouble values[KERVALS],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_DEFAULT:name:""
@@ -3708,7 +3700,7 @@ extern void gipool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       start,
         SpiceInt room, SpiceInt *n, SpiceInt ivals[KERVALS],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_DEFAULT:name:""
@@ -3752,7 +3744,7 @@ extern void gnpool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       start,
         SpiceInt room, SpiceInt lenout, SpiceInt *n, char kvars[KERVALS][NAMELEN],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_PS:Raise a SPICE error condition if the variable is not in the pool,
@@ -3932,8 +3924,8 @@ extern void illumf_c(
         SpiceDouble      *OUTPUT,
         SpiceDouble      *OUTPUT,
         SpiceDouble      *OUTPUT,
-        SpiceBoolean     *OUT_BOOLEAN,
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT,
+        SpiceBoolean     *OUTPUT
 );
 
 //Vector version
@@ -4113,7 +4105,7 @@ extern void inedpl_c(
         SpiceDouble      c,
         ConstSpiceDouble plane[NPLANE],
         SpiceDouble      ellipse[NELLIPSE],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 //Vector version
@@ -4236,7 +4228,7 @@ extern SpiceInt intmax_c(void);
 * Return the value of the smallest (negative) number representable
 * in an integer variable.
 *
-* SpiceInt intmin_c ()
+* SpiceInt intmin_c ()cs
 *
 * -Brief_I/O
 *
@@ -8429,7 +8421,7 @@ extern void sincpt_c(
         SpiceDouble      spoint[3],
         SpiceDouble      *OUTPUT,
         SpiceDouble      srfvec[3],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 // Vector version
@@ -9295,7 +9287,7 @@ extern void srfc2s_c(
         SpiceInt     code,
         SpiceInt     bodyid,
         SpiceInt     srflen, SpiceChar srfstr[NAMELEN],
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 //CSPYCE_TYPE:code:surface_code
@@ -9338,7 +9330,7 @@ extern void srfcss_c(
         SpiceInt       code,
         ConstSpiceChar *CONST_STRING,
         SpiceInt srflen, SpiceChar srfstr[NAMELEN],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_TYPE:code:surface_code
@@ -9487,7 +9479,7 @@ extern void srfs2c_c(
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_TYPE:code:surface_code
@@ -9524,7 +9516,7 @@ extern void srfscc_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       bodyid,
         SpiceInt       *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 //CSPYCE_TYPE:code:surface_code
@@ -9588,7 +9580,7 @@ extern void srfxpt_c(
         SpiceDouble      *OUTPUT,
         SpiceDouble      *OUTPUT,
         SpiceDouble      obspos[3],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 //Vector version
@@ -9891,7 +9883,7 @@ VECTORIZE_dX_dX__dN(stlabx, stlabx_, 3)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *contin};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                 {(SpiceInt lenout, SpiceChar string[MESSAGELEN])};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_stpool_c(
@@ -10236,7 +10228,7 @@ extern void surfpt_c(
         SpiceDouble      b,
         SpiceDouble      c,
         SpiceDouble      point[3],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 //Vector version
@@ -10285,7 +10277,7 @@ extern void surfpv_c(
         SpiceDouble      b,
         SpiceDouble      c,
         SpiceDouble      stx[6],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 //Vector version
@@ -10747,7 +10739,7 @@ extern SpiceChar *tkvrsn_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *sample};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                   {(SpiceInt lenout, SpiceChar pictur[TIMELEN])};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *ok};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *ok};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                   {(SpiceInt lenerr, SpiceChar errmsg[MESSAGELEN])};
 
@@ -12194,7 +12186,7 @@ extern void vprjpi_c(
         ConstSpiceDouble projpl[NPLANE],
         ConstSpiceDouble invpl[NPLANE],
         SpiceDouble      v2[3],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 //Vector version
@@ -12881,7 +12873,7 @@ VECTORIZE_di__RETURN_b(vzerog, vzerog_c)
 %apply (void RETURN_VOID) {void xf2eul_c};
 %apply (ConstSpiceDouble IN_ARRAY2[ANY][ANY]) {ConstSpiceDouble xform[6][6]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]     ) {SpiceDouble     eulang[6]};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *unique};
+%apply (SpiceBoolean *OUTPUT)                 {SpiceBoolean *unique};
 
 extern void xf2eul_c(
         ConstSpiceDouble xform[6][6],
