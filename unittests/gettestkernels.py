@@ -32,7 +32,7 @@ import urllib.request
 import sys
 import hashlib
 
-cwd = os.environ['CSPYCE_TEST_KERNELS']
+cwd = 'https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/'
 
 
 def get_kernel_name_from_url(url: str) -> str:
@@ -106,7 +106,7 @@ class ExtraKernels(object):
     mro2007sub_md5 = "8ed34eb77b21ac611f4680806677edfb"
     spk430sub_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/de430sub.bsp"
     spk430sub_md5 = "0b49545fa316f9053f5cfbcce155becc"
-    vexboomck_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/VEX_BOOM_V01.BC"
+    vexboomck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/VEX_BOOM_V01.BC"
     vexboomck_md5 = "2f4dba65649246d72836fb3b53823c3d"
     v02swuck_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/vo2_swu_ck2.bc"
     v02swuck_md5 = "f59ef0556dfc63b55465e152f2d6f5a4"
@@ -143,7 +143,7 @@ class CoreKernels(object):
     # note this gets updated
     currentLSK = "naif0012.tls"
     #
-    pck_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/pck00010.tpc"
+    pck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/pck00010.tpc"
     pck_md5 = "da153641f7346bd5b6a1226778e0d51b"
     spk_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/de405s_{}endian.bsp".format(
         sys.byteorder

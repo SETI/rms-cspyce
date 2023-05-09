@@ -4,16 +4,16 @@ import numpy.testing as npt
 import os
 import pytest
 
-from gettestkernels import (
-    get_standard_kernels,
-    write_test_meta_kernel,
+from kernelcache import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
+    download_kernels,
+    kernel_output
 )
 
-get_standard_kernels()
-write_test_meta_kernel()
+download_kernels()
+
 
 def cleanup_kernel(path):
     cs.kclear()
@@ -22,8 +22,7 @@ def cleanup_kernel(path):
         os.remove(path)  # pragma: no cover
     pass
 
-cwd = os.environ['CSPYCE_TEST_KERNELS']
-TEST_OUTPUT_DIR = '.'
+cwd = kernel_output
 
 
 def test_axisar():
