@@ -8,7 +8,7 @@ def flatten(array):
     return tuple(tuple(array.ravel()))
 
 # noinspection PyTypeChecker
-class test_array1_1(unittest.TestCase):
+class Test_IN_ARRAY1_FixedDimension(unittest.TestCase):
     # %apply (int IN_ARRAY1[ANY]) {int arg[3]}
     # cs.in_array1_1 just returns whatever 3 integers it was passed as a numpy array
     def test_basic_test_tuple(self):
@@ -51,7 +51,7 @@ class test_array1_1(unittest.TestCase):
                 ts.in_array1_1(array)
 
 
-class test_array1_2(unittest.TestCase):
+class Test_IN_ARRAY1_VariableDimension(unittest.TestCase):
     # %apply (int* IN_ARRAY1, int DIM1) {(int* arg, int dim)};
     # This function returns them as a list.
     def test_basic_test_tuple(self):
@@ -86,7 +86,7 @@ class test_array1_2(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array1_2(None)
 
-class test_array1_3(unittest.TestCase):
+class Test_IN_ARRAY1_GivenDimension(unittest.TestCase):
     # %apply (int* IN_ARRAY1, int DIM1) {(int* arg)};
     # This function is exactly like test_array_1_2, except the length is passed separately
     def test_basic_test_tuple(self):
@@ -122,7 +122,7 @@ class test_array1_3(unittest.TestCase):
             ts.in_array1_3(None, 0)
 
 
-class test_array1_01_1(unittest.TestCase):
+class Test_IN_ARRAY01_GivenDimension(unittest.TestCase):
     # %apply (int *IN_ARRAY01, int DIM1) {(int *arg, int dim)};
     # cs.in_array01_1 received either an int scalar or sequence of integer, and
     SMALL_INT_ARRAY = np.array((4, 5, 6), dtype="int32")
@@ -161,7 +161,7 @@ class test_array1_01_1(unittest.TestCase):
             ts.in_array01_1(None)
 
 
-class test_array2_1(unittest.TestCase):
+class Test_IN_ARRAY2_FixedDimension(unittest.TestCase):
     # %apply (int IN_ARRAY2[ANY][ANY]) {int arg[3][5]};
     # This function specifically requires a 3x5 int array.
     # It returns the first element, and the dimensions as a tuple.
@@ -197,7 +197,7 @@ class test_array2_1(unittest.TestCase):
             ts.in_array2_1(None)
 
 
-class test_array2_2(unittest.TestCase):
+class Test_IN_ARRAY2_VariableDimension(unittest.TestCase):
     # %apply (int *IN_ARRAY2, int DIM1, int DIM2) {(int *arg, int dim1, int dim2)};
     # This function takes any sized integer array.
     # It returns the elements of the array as a tuple, and the dimensions
@@ -230,7 +230,7 @@ class test_array2_2(unittest.TestCase):
             ts.in_array2_2(None)
 
 
-class test_array2_3(unittest.TestCase):
+class Test_IN_ARRAY2_FixedLastDimension(unittest.TestCase):
     # %apply (int IN_ARRAY2[][ANY], int DIM1) {(int arg[][5], int dim1)};
     # This function takes any 2-dimensional array whose second dimension is 5.
     # It returns the elements, and the dimensions.
@@ -268,7 +268,7 @@ class test_array2_3(unittest.TestCase):
             ts.in_array2_3(None)
 
 
-class test_array2_4(unittest.TestCase):
+class Test_IN_ARRAY2_FixedLastDimension2(unittest.TestCase):
     # %apply (int IN_ARRAY2[][ANY]) {(int arg[][5])};
     # This function takes any 2-dimensional array whose second dimension is 5,
     # and returns True.  Not much else it can do, since the array may be empty.
@@ -300,7 +300,7 @@ class test_array2_4(unittest.TestCase):
             ts.in_array2_4(None)
 
 
-class test_array12(unittest.TestCase):
+class Test_IN_ARRAY12_VariableDimensions(unittest.TestCase):
     # %apply (int *IN_ARRAY12, int DIM1, int DIM2)  {(int *arg, int dim1, int dim2)};
     # This function can take one- or two-dimensional arrays.  If only one dimension,
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
@@ -340,7 +340,7 @@ class test_array12(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array12(None)
 
-class test_array23(unittest.TestCase):
+class Test_IN_ARRAY23_VariableDimensions(unittest.TestCase):
     # %apply (int *IN_ARRAY23, int DIM2, int DIM3)  {(int *arg, int dim1, int dim2, int dim3)};
     # This function can take one- or two-dimensional arrays.  If only one dimension,
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
@@ -377,7 +377,7 @@ class test_array23(unittest.TestCase):
             ts.in_array23(None)
 
 
-class test_out_array1(unittest.TestCase):
+class Test_OUT_ARRAY1_GivenArray(unittest.TestCase):
     # %apply (int OUT_ARRAY1[ANY]) {(int array[100])};
     # This function fills up a 100-element int array starting at the passed argument
     def test_fixed_size_array(self):
@@ -392,7 +392,7 @@ class test_out_array1(unittest.TestCase):
         self.assertEqual(value[0], 200)
         self.assertEqual(value[-1], 204)
 
-class test_out_array1_malloced_array(unittest.TestCase):
+class Test_OUT_ARRAY1_MallocedArray(unittest.TestCase):
     # %apply (int **OUT_ARRAY1, int *SIZE1) {(int **arrayP, int *size)};
     # The function mallocs an array of whatever side it needs uses the arguments as
     # start and length
@@ -407,7 +407,7 @@ class test_out_array1_malloced_array(unittest.TestCase):
             ts.out_array1_malloc(-1, 5000)
 
 
-class test_out_array01_malloced_array(unittest.TestCase):
+class Test_OUT_ARRAY01_MallocedArray(unittest.TestCase):
     # %apply (double **OUT_ARRAY01, int *SIZE1) {(double **arrayP, int *size)};
     # Again, a malloced array, but if the function indicates size 0, then we want a scalar
     # Again, start and length, but this time we use floats
@@ -425,7 +425,7 @@ class test_out_array01_malloced_array(unittest.TestCase):
             ts.out_array01_malloc(-1.0, 10)
 
 
-class test_out_array2(unittest.TestCase):
+class Test_OUT_ARRAY2_FixedSize(unittest.TestCase):
     # %apply (int OUT_ARRAY2[ANY][ANY]) {(int array[2][3])};
     # returns a fixed size array filled with the indicated starting number
     def test_fixed_size_array(self):
@@ -467,7 +467,7 @@ class test_out_array2(unittest.TestCase):
         # This generates a boolean array in which the elements whose index is a multiple of 3
         # is true.  Just not worth dealing with this
 
-class test_out_array12(unittest.TestCase):
+class Test_OUT_ARRAY12_FixedSize(unittest.TestCase):
     # %apply (int **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
     # Same as before, but a dim1=0 indicates to return a 1-dimensional array
     def test_2d_array(self):
@@ -485,7 +485,7 @@ class test_out_array12(unittest.TestCase):
             ts.out_array2_3(-1, 40, 41)
 
 
-class test_out_array23(unittest.TestCase):
+class Test_OUT_ARRAY23_FixedSize(unittest.TestCase):
     # %apply (double **OUT_ARRAY23, int *SIZE1, int *SIZE2, int *SIZE3) {(double **result, int *size1, int *size2, int *size3)};
     # Same as before, but 2 or 3 dimensions
     def test_yields_3d(self):
@@ -502,7 +502,7 @@ class test_out_array23(unittest.TestCase):
         with self.assertRaises(MemoryError):
             ts.out_array23_1(-1, 0, 4, 5)
 
-class test_inout_array_1d(unittest.TestCase):
+class Test_INOUT_ARRAY1_FixedSize(unittest.TestCase):
     # double_in_out_array doubles each element in the array.
     # cs.in_array1_1 just returns whatever 3 integers it was passed as a numpy array
     def test_basic_test_tuple(self):
@@ -532,7 +532,7 @@ class test_inout_array_1d(unittest.TestCase):
             ts.double_in_out_array(None)
 
 
-class test_single_strings_input(unittest.TestCase):
+class Test_CONST_STRING(unittest.TestCase):
     # %apply (char *CONST_STRING) {(const char *string)};
     # our function just returns the length
     def test_const_string(self):
@@ -564,8 +564,7 @@ class test_single_strings_input(unittest.TestCase):
             ts.const_char_0(None)
 
 
-class test_single_strings_output(unittest.TestCase):
-
+class Test_INOUT_STRING(unittest.TestCase):
     def test_inout_string(self):
         # %apply (int DIM1, char INOUT_STRING[ANY]) {(int dim, char result[10])};
         # Has a buffer that's a minimum size of 10, but we grow it if necessary for the
@@ -583,7 +582,7 @@ class test_single_strings_output(unittest.TestCase):
         self.assertEqual("23", ts.out_string(23))
 
 
-class test_multiple_strings_input(unittest.TestCase):
+class Test_IN_STRINGS_FixedSize(unittest.TestCase):
     # %apply (char *IN_STRINGS, int DIM1, int DIM2) {(const char *strings, int dim1, int dim2)};
     # The string arguments are packed into an N (count) by M (longest length + 1) buffer.
     # This program recreats the original strings and also returns the value of M.
@@ -610,7 +609,7 @@ class test_multiple_strings_input(unittest.TestCase):
             ts.in_strings(("abc", None, "DEF"))
 
 
-class test_multiple_strings_output(unittest.TestCase):
+class Test_OUT_STRINGS_SizeFromArg(unittest.TestCase):
     # %apply (int DIM1, int DIM2, int *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
     #          {(int dim1, int dim2, int *size, char buffer[50][256])};
     # We are given a 50x256 buffer.  This program returns "count" strings as
@@ -624,7 +623,7 @@ class test_multiple_strings_output(unittest.TestCase):
         self.assertEqual("j" * 10, strings[9])
 
 
-class test_multiple_strings_inout(unittest.TestCase):
+class Test_INOUT_STRINGS_SizeFromArg(unittest.TestCase):
     # %apply(int DIM1, int DIM2, Type *INOUT_STRINGS)
     # because we could, we wrote a simple sorting program
     def test_basic_test_tuple(self):
@@ -646,7 +645,7 @@ class test_multiple_strings_inout(unittest.TestCase):
             ts.sort_strings(None)
 
 
-class test_primitive_return_types(unittest.TestCase):
+class TestPrimitiveReturnTypes(unittest.TestCase):
     def test_return_string(self):
         self.assertEqual("hello", ts.return_string())
 
@@ -658,7 +657,7 @@ class test_primitive_return_types(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             ts.return_sigerr()
 
-class test_return_value_through_outvar(unittest.TestCase):
+class TestReturnValueThroughOutvar(unittest.TestCase):
     # Each of the functions used here is defined in C as a void function with
     # a single output argument of the indicated type.  The function sets that
     # value to 10.  And we see what happens here

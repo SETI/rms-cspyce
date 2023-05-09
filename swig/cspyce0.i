@@ -4228,7 +4228,7 @@ extern SpiceInt intmax_c(void);
 * Return the value of the smallest (negative) number representable
 * in an integer variable.
 *
-* SpiceInt intmin_c ()cs
+* SpiceInt intmin_c ()
 *
 * -Brief_I/O
 *

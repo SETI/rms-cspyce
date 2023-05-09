@@ -655,7 +655,6 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 %}
 
 %{
-
 PyArrayObject*
 get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags) {
     if (typecode == NPY_INT && PyArray_Check(input) && PyArray_ISINTEGER(input)) {
