@@ -39,6 +39,17 @@ class test_array1_1(unittest.TestCase):
         with self.assertRaises(TypeError):
             ts.in_array1_1(None)
 
+    def test_allows_integral_types(self):
+        for dtype in ("int8", "uint8", "int16", "uint16", "uint32", "int64"):
+            array = np.arange(10, 13, dtype=dtype)
+            self.assertEquals((10, 11, 12), ts.in_array1_1(array))
+
+    def test_disallows_nonintegral_types(self):
+        for dtype in ('float', 'double', 'complex'):
+            array = np.arange(10, 13, dtype=dtype)
+            with self.assertRaises(ValueError):
+                ts.in_array1_1(array)
+
 
 class test_array1_2(unittest.TestCase):
     # %apply (int* IN_ARRAY1, int DIM1) {(int* arg, int dim)};

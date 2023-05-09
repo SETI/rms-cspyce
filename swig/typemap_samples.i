@@ -400,3 +400,4 @@ void outvar_set_from_var_float(float INPUT, SpiceFloat* OUTPUT);
 void outvar_set_from_var_double(double INPUT, SpiceDouble* OUTPUT);
 void outvar_set_from_var_char(char INPUT, SpiceChar *OUTPUT);
 void outvar_set_from_var_bool(int INPUT, SpiceBoolean *OUTPUT);
+

@@ -655,23 +655,20 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 %}
 
 %{
-/**
- We allow the conversion of a long array to an int array.  All other unsafe conversions
- are disallowed.
-*/
-int adjust_convert_flags(int typecode, PyObject *input, int flags) {
-    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_TYPE(input) == NPY_LONG) {
-        // Allow long -> int conversions, but no other unsafe conversions
+
+PyArrayObject*
+get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags) {
+    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_ISINTEGER(input)) {
+        // We allow the conversion of all integer types to integer arrays.
         flags |= NPY_ARRAY_FORCECAST;
     }
-    return flags;
+    return PyArray_FROMANY(input, typecode, min, max, flags);
 }
 %}
 
 %define CONVERT_TO_CONTIGUOUS_ARRAY(typecode, input, min, max, result)
 {
-    int flags = adjust_convert_flags(typecode, input, NPY_ARRAY_CARRAY_RO);
-    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    result = get_contiguous_array(typecode, input, min, max, NPY_ARRAY_CARRAY_RO);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
@@ -680,9 +677,8 @@ int adjust_convert_flags(int typecode, PyObject *input, int flags) {
 %enddef
 %define CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(typecode, input, min, max, result)
 {
-    int flags = adjust_convert_flags(typecode, input,
-                                     NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
-    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    result = get_contiguous_array(typecode, input, min, max,
+    NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
