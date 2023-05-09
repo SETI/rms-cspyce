@@ -8,7 +8,7 @@
 *
 * See the details in the clearly identified header sections below.
 *
-* Mark Showalter, PDS Rings Node, SETI Institute, July 2009.
+* PDS Rings Node, SETI Institute, July 2009.
 *
 * Modified 1/4/12 (MRS) to handle error messages more consistently.
 * Modified 3/21/13 (MRS) to define IN_ARRAY3.
