@@ -3296,7 +3296,7 @@ TYPEMAP_OUT(SpiceChar)
 * Python function. A zero value is False; anything else is True.
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type, converter)
+%define TYPEMAP_ARGOUT(Type)
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
@@ -3319,7 +3319,7 @@ TYPEMAP_OUT(SpiceChar)
 
 %enddef
 
-TYPEMAP_ARGOUT(SpiceBoolean,  PyBool_FromLong(value))
+TYPEMAP_ARGOUT(SpiceBoolean)
 
 #undef TYPEMAP_ARGOUT
 
