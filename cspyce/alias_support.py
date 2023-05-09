@@ -489,7 +489,7 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
 def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
     """Recursive function to evaluate the function using multiple aliases.
 
-    At each call, the first alias index is used, and this function is called
+    At each call, the first alias index is used, and this function is
     called recursively with each optional value of that input argument. It
     repeats until a NotImpementedError (a type of error not used elsewhere) is
     NOT raised. The absence of this error condition indicates success.
