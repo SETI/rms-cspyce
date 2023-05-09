@@ -1,6 +1,6 @@
 import unittest
 
-import numpy as  np
+import numpy as np
 import cspyce.typemap_samples as ts
 
 
@@ -179,16 +179,16 @@ class test_array2_1(unittest.TestCase):
             ts.in_array2_1(array)
 
     def test_no_other_data_type(self):
-        array = np.array(range(100, 115), dtype='float').reshape(3, 5)
+        array = np.array(range(100, 115), dtype='float').reshape((3, 5))
         with self.assertRaises(ValueError):
             ts.in_array2_1(array)
 
     def test_long_allowed_anyway(self):
-        array = np.array(range(100, 115), dtype='int64').reshape(3, 5)
+        array = np.array(range(100, 115), dtype='int64').reshape((3, 5))
         ts.in_array2_1(array)
 
     def test_no_other_dimension(self):
-        array = np.array(range(100, 115), dtype='int64').reshape(3, 5, 1)
+        array = np.array(range(100, 115), dtype='int64').reshape((3, 5, 1))
         with self.assertRaises(ValueError):
             ts.in_array2_1(array)
 
@@ -202,7 +202,7 @@ class test_array2_2(unittest.TestCase):
     # This function takes any sized integer array.
     # It returns the elements of the array as a tuple, and the dimensions
     def test_basic_run(self):
-        array = np.arange(100, 200, dtype='int32').reshape(5, 20)
+        array = np.arange(100, 200, dtype='int32').reshape((5, 20))
         self.assertEqual((flatten(array), 5, 20), ts.in_array2_2(array))
         self.assertEqual((flatten(array[1:]), 4, 20), ts.in_array2_2(array[1:]))
 
@@ -211,12 +211,12 @@ class test_array2_2(unittest.TestCase):
         self.assertEqual((flatten(array), 3, 5), ts.in_array2_2(array))
 
     def test_no_other_data_type(self):
-        array = np.arange(100., 200.).reshape(5, 20)
+        array = np.arange(100., 200.).reshape((5, 20))
         with self.assertRaises(ValueError):
             ts.in_array2_2(array)
 
     def test_no_bigger_dimension(self):
-        array = np.arange(100, 200, dtype='int32').reshape(5, 20, 1)
+        array = np.arange(100, 200, dtype='int32').reshape((5, 20, 1))
         with self.assertRaises(ValueError):
             ts.in_array2_2(array)
 
@@ -235,7 +235,7 @@ class test_array2_3(unittest.TestCase):
     # This function takes any 2-dimensional array whose second dimension is 5.
     # It returns the elements, and the dimensions.
     def test_basic_run(self):
-        array = np.arange(100, 150, dtype='int32').reshape(10, 5)
+        array = np.arange(100, 150, dtype='int32').reshape((10, 5))
         self.assertEqual((flatten(array), 10, 5), ts.in_array2_3(array))
         self.assertEqual((flatten(array[1:]), 9, 5), ts.in_array2_3(array[1:]))
 
@@ -244,17 +244,17 @@ class test_array2_3(unittest.TestCase):
         self.assertEqual((flatten(array), 3, 5), ts.in_array2_3(array))
 
     def test_no_other_width(self):
-        array = np.arange(100, 150, dtype='int32').reshape(5, 10)
+        array = np.arange(100, 150, dtype='int32').reshape((5, 10))
         with self.assertRaises(ValueError):
             ts.in_array2_3(array)
 
     def test_no_other_data_type(self):
-        array = np.arange(100, 150, dtype='float').reshape(10, 5)
+        array = np.arange(100, 150, dtype='float').reshape((10, 5))
         with self.assertRaises(ValueError):
             ts.in_array2_3(array)
 
     def test_no_bigger_dimension(self):
-        array = np.arange(100, 150, dtype='int32').reshape(1, 10, 5)
+        array = np.arange(100, 150, dtype='int32').reshape((1, 10, 5))
         with self.assertRaises(ValueError):
             ts.in_array2_3(array)
 
@@ -302,14 +302,14 @@ class test_array2_4(unittest.TestCase):
 
 class test_array12(unittest.TestCase):
     # %apply (int *IN_ARRAY12, int DIM1, int DIM2)  {(int *arg, int dim1, int dim2)};
-    # This function can take one or two dimensional arrays.  If only one dimension,
+    # This function can take one- or two-dimensional arrays.  If only one dimension,
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
     def test_run_1d(self):
         array = np.arange(100, 150, dtype='int32')
         self.assertEqual((flatten(array), 0, array.size), ts.in_array12(array))
 
     def test_run_2d(self):
-        array = np.arange(100, 150, dtype='int32').reshape(10, 5)
+        array = np.arange(100, 150, dtype='int32').reshape((10, 5))
         expected_result = (flatten(array),) + tuple(array.shape)
         self.assertEqual(expected_result, ts.in_array12(array))
 
@@ -332,7 +332,7 @@ class test_array12(unittest.TestCase):
             ts.in_array12(array)
 
     def test_no_bigger_dimensions(self):
-        array = np.arange(100, 150, dtype='int32').reshape(2, 5, 5)
+        array = np.arange(100, 150, dtype='int32').reshape((2, 5, 5))
         with self.assertRaises(ValueError):
             ts.in_array12(array)
 
@@ -342,15 +342,15 @@ class test_array12(unittest.TestCase):
 
 class test_array23(unittest.TestCase):
     # %apply (int *IN_ARRAY23, int DIM2, int DIM3)  {(int *arg, int dim1, int dim2, int dim3)};
-    # This function can take one or two dimensional arrays.  If only one dimension,
+    # This function can take one- or two-dimensional arrays.  If only one dimension,
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
     def test_run_2d(self):
-        array = np.arange(100, 150, dtype='int32').reshape(10, 5)
+        array = np.arange(100, 150, dtype='int32').reshape((10, 5))
         expected_result = (flatten(array), 0) + tuple(array.shape)
         self.assertEqual(expected_result, ts.in_array23(array))
 
     def test_run_3d(self):
-        array = np.arange(100, 150, dtype='int32').reshape(10, 1, 5)
+        array = np.arange(100, 150, dtype='int32').reshape((10, 1, 5))
         expected_result = (flatten(array),) + tuple(array.shape)
         self.assertEqual(expected_result, ts.in_array23(array))
 
@@ -359,16 +359,16 @@ class test_array23(unittest.TestCase):
         self.assertEqual((flatten(array), 0, 3, 5), ts.in_array23(array))
 
     def test_non_contiguous_array_3d(self):
-        array = np.empty((3, 4, 5, 8), dtype='int32')[...,2]
+        array = np.empty((3, 4, 5, 8), dtype='int32')[..., 2]
         self.assertEqual((flatten(array), 3, 4, 5), ts.in_array23(array))
 
     def test_no_other_data_type(self):
-        array = np.arange(100, 150, dtype='double').reshape(10, 5)
+        array = np.arange(100, 150, dtype='double').reshape((10, 5))
         with self.assertRaises(ValueError):
             ts.in_array23(array)
 
     def test_no_bigger_dimensions(self):
-        array = np.arange(100, 200, dtype='int32').reshape(2, 5, 5, 2)
+        array = np.arange(100, 200, dtype='int32').reshape((2, 5, 5, 2))
         with self.assertRaises(ValueError):
             ts.in_array23(array)
 
@@ -422,7 +422,7 @@ class test_out_array01_malloced_array(unittest.TestCase):
 
     def test_memory_error(self):
         with self.assertRaises(MemoryError):
-            result = ts.out_array01_malloc(-1.0, 10)
+            ts.out_array01_malloc(-1.0, 10)
 
 
 class test_out_array2(unittest.TestCase):
@@ -432,7 +432,7 @@ class test_out_array2(unittest.TestCase):
         # Returns a fixed sized 2x3 array filled with integers starting from 100
         value = ts.out_array2_1(100)
         self.assertEqual((2, 3), value.shape)
-        self.assertEqual(value[0,0], 100)
+        self.assertEqual(value[0, 0], 100)
 
     # %apply (int OUT_ARRAY2[ANY][ANY], int *SIZE1) {(int array[1000][2], int *size)};
     # returns an Nx2 array.  Arguments are start value and length
@@ -451,12 +451,12 @@ class test_out_array2(unittest.TestCase):
 
     def test_memory_error(self):
         with self.assertRaises(MemoryError):
-            value = ts.out_array2_3(-1, 40, 41)
+            ts.out_array2_3(-1, 40, 41)
 
     # %apply (int DIM1, int *SIZE1, double OUT_ARRAY2[ANY][ANY]) {(int dim1, int *size1, double result[4][5])};
     def test_2dim_dim1_fixed_size_array(self):
         array_length, result = ts.out_array2_4(10, 3)
-        self.assertEqual(4, array_length);  # Why does the function need this?
+        self.assertEqual(4, array_length)   # Why does the function need this?
         self.assertEqual((3, 5), result.shape)
         self.assertEqual(flatten(np.arange(10.0, 25.0)), flatten(result))
 
@@ -464,7 +464,7 @@ class test_out_array2(unittest.TestCase):
     def test_2dim_fixed_size_array(self):
         result = ts.out_array2_5(2)
         self.assertEqual((2, 5), result.shape)
-        # This generates a boolean array in which the elemnts whose index is a multiple of 3
+        # This generates a boolean array in which the elements whose index is a multiple of 3
         # is true.  Just not worth dealing with this
 
 class test_out_array12(unittest.TestCase):
@@ -530,7 +530,6 @@ class test_inout_array_1d(unittest.TestCase):
     def test_requires_non_null(self):
         with self.assertRaises(TypeError):
             ts.double_in_out_array(None)
-
 
 
 class test_single_strings_input(unittest.TestCase):

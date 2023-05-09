@@ -438,7 +438,7 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
         cspyce.chkout(wrapper.__name__)
         return result
 
-    # Iterate through the the last optional index; return if the call does not
+    # Iterate through the last optional index; return if the call does not
     # fail.
     temp_args = list(alias_args)
     temp_keywords = alias_keywords.copy()
