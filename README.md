@@ -4,9 +4,10 @@
 
 
 # `cspyce` MODULE OVERVIEW
-Version 2.x, originally released March, 2022
+Version 2.x, originally released March, 2022 (see above for current installable
+version)
 
-Mark Showalter, PDS Ring-Moon Systems Node, SETI Institute
+PDS Ring-Moon Systems Node, SETI Institute
 
 `cspyce` is a Python module that provides an interface to the C-language CSPICE
 library produced by the Navigation and Ancillary Information Facility
