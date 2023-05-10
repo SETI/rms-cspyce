@@ -655,24 +655,19 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 %}
 
 %{
-/**
- We allow the conversion of a long array to an int array.  All other unsafe conversions
- are disallowed.
-*/
-int adjust_convert_flags(int typecode, PyObject *input, int flags) {
-    if (typecode == NPY_INT && PyArray_Check(input) &&
-        (PyArray_TYPE(input) == NPY_LONG || PyArray_TYPE(input) == NPY_LONGLONG)) {
-        // Allow long -> int conversions, but no other unsafe conversions
+PyArrayObject*
+get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags) {
+    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_ISINTEGER(input)) {
+        // We allow the conversion of all integer types to integer arrays.
         flags |= NPY_ARRAY_FORCECAST;
     }
-    return flags;
+    return PyArray_FROMANY(input, typecode, min, max, flags);
 }
 %}
 
 %define CONVERT_TO_CONTIGUOUS_ARRAY(typecode, input, min, max, result)
 {
-    int flags = adjust_convert_flags(typecode, input, NPY_ARRAY_CARRAY_RO);
-    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    result = get_contiguous_array(typecode, input, min, max, NPY_ARRAY_CARRAY_RO);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
@@ -681,9 +676,8 @@ int adjust_convert_flags(int typecode, PyObject *input, int flags) {
 %enddef
 %define CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(typecode, input, min, max, result)
 {
-    int flags = adjust_convert_flags(typecode, input,
-                                     NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
-    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    result = get_contiguous_array(typecode, input, min, max,
+    NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
@@ -805,7 +799,16 @@ void handle_bad_sequence_to_list(const char *symname) {
 }
 %}
 
-#define Py_None_INCREF (Py_INCREF(Py_None), Py_None)
+// Copy standard typemaps for Spice types
+%apply int {SpiceInt, SpiceBoolean, ConstSpiceInt, ConstSpiceBoolean};
+%apply char {SpiceChar, ConstSpiceChar}
+%apply double {SpiceDouble, ConstSpiceDouble};
+%apply float {SpiceFloat, ConstSpiceFloat};
+
+%apply int *OUTPUT {SpiceInt *OUTPUT};
+%apply char *OUTPUT {SpiceChar *OUTPUT}
+%apply double *OUTPUT {SpiceDouble *OUTPUT};
+%apply float *OUTPUT {SpiceFloat *OUTPUT};
 
 /*******************************************************************************
 * 1-D numeric typemaps for input
@@ -3285,51 +3288,37 @@ TYPEMAP_OUT(SpiceChar)
 /*******************************************************************************
 * Typemap for boolean output
 *
-*       (Type *OUT_BOOLEAN)
+*       (Type *OUTPUT)
 *
 * This typemap allows ints to be returned by the program as Python booleans.
 * They are part of the return value and do not appear as arguments to the
 * Python function. A zero value is False; anything else is True.
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type, Typecode)
+%define TYPEMAP_ARGOUT(Type)
 
 %typemap(in, numinputs=0)
-    (Type *OUT_BOOLEAN)
-        (Type mybool)
+    (Type *OUTPUT)
+        (Type value)
 {
-//      (Type *OUT_BOOLEAN)
+//      (Type *OUTPUT)
 
-    $1 = &mybool;
+    $1 = &value;
 }
 
 %typemap(argout)
-    (Type *OUT_BOOLEAN)
+    (Type *OUTPUT)
 {
-//      (Type *OUT_BOOLEAN)
+//      (Type *OUTPUT)
 
-    long test = (*$1 != 0);
-    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong(test));
+    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong(value$argnum));
 }
 
-%typemap(freearg) (Type *OUT_BOOLEAN) ""
-
-// Now define these typemaps for every numeric type
+%typemap(freearg) (Type *OUTPUT) ""
 
 %enddef
 
-TYPEMAP_ARGOUT(char,          NPY_CHAR  )
-TYPEMAP_ARGOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_ARGOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_ARGOUT(signed char,   NPY_SBYTE )
-TYPEMAP_ARGOUT(short,         NPY_SHORT )
-TYPEMAP_ARGOUT(int,           NPY_INT   )
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
-TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
-TYPEMAP_ARGOUT(long,          NPY_LONG  )
-TYPEMAP_ARGOUT(float,         NPY_FLOAT )
-TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
-TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
+TYPEMAP_ARGOUT(SpiceBoolean)
 
 #undef TYPEMAP_ARGOUT
 
@@ -3348,7 +3337,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_FOR_EXCEPTION;
     if (!$result) {
-       $result = Py_None_INCREF;
+       Py_INCREF(Py_None);
+       $result = Py_None;
     }
 }
 
@@ -3396,7 +3386,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     RAISE_SIGERR_EXCEPTION;
     Py_XDECREF($result);
-    $result = Py_None_INCREF;
+    Py_INCREF(Py_None);
+    $result = Py_None;
 }
 
 /*******************************************************************************
