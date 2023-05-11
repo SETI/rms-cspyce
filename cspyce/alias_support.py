@@ -438,7 +438,7 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
         cspyce.chkout(wrapper.__name__)
         return result
 
-    # Iterate through the the last optional index; return if the call does not
+    # Iterate through the last optional index; return if the call does not
     # fail.
     temp_args = list(alias_args)
     temp_keywords = alias_keywords.copy()
@@ -489,7 +489,7 @@ def _exec_with_aliases(wrapper, func, *args, **keywords):
 def _exec_with_one_alias(alias_indices, wrapper, func, *args, **keywords):
     """Recursive function to evaluate the function using multiple aliases.
 
-    At each call, the first alias index is used, and this function is called
+    At each call, the first alias index is used, and this function is
     called recursively with each optional value of that input argument. It
     repeats until a NotImpementedError (a type of error not used elsewhere) is
     NOT raised. The absence of this error condition indicates success.

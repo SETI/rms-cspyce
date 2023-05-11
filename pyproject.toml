@@ -12,9 +12,6 @@ dependencies = [
     "numpy >= 1.17.0",
 ]
 license = {text = "Apache-2.0"}
-authors = [
-  {name = "Mark R. Showalter", email = "mshowalter@seti.org"}
-]
 maintainers = [
   {name = "Robert S. French", email = "rfrench@seti.org"}
 ]
