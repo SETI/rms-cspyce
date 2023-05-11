@@ -121,6 +121,10 @@ class ExtraKernels(object):
     vexboomck = get_path_from_url(vexboomck_url)
     v02swuck = get_path_from_url(v02swuck_url)    
     
+def cleanup_file(path):
+    if os.path.exists(path):
+        os.remove(path)
+    pass
     
 def get_kernel(url):
     kernel_name = get_kernel_name_from_url(url)
