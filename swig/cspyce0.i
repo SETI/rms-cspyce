@@ -1558,8 +1558,8 @@ extern void my_dafus_c(
         int *out_ic_size) {
         dafus_c(sum, nd, ni, dc, ic);
         // dc[] and ic[] are both large arrays, but we tell Python to resize them.
-        *out_dc_size = nd;
-        *out_ic_size = ni;
+        *out_dc_size = max(nd, 0);  // nd < 0 treated as 0
+        *out_ic_size = max(ni, 0);  // ni < 0 treated as 0
         }
 %}
 
