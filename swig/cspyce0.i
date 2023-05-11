@@ -1373,16 +1373,32 @@ extern void dafcls_c(
 * data       O   Data contained between `begin' and `end'.
 ***********************************************************************/
 
-%rename (dafgda) dafgda_c;
-%apply (void RETURN_VOID) {void dafgda_c};
+%rename (dafgda) my_dafgda_c;
+%apply (void RETURN_VOID) {void my_dafgda_c};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble data[DAFSIZE]};
+%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1){(SpiceDouble data[DAFSIZE], int *size)};
 
-extern void dafgda_c(
+extern void my_dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble data[DAFSIZE]
+        SpiceDouble data[DAFSIZE],
+        int         *size
 );
+
+%inline %{
+    void my_dafgda_c(
+        SpiceInt    handle,
+        SpiceInt    begin,
+        SpiceInt    end,
+        SpiceDouble data[DAFSIZE],
+        int         *size
+    ) {
+        dafgda_c(handle, begin, end, data);
+        *size = end - begin + 1;
+    }
+%}
+
 
 /***********************************************************************
 * -Procedure dafgn_c ( DAF, get array name )
@@ -1515,19 +1531,38 @@ extern void dafopr_c(
 * ic         O   Integer components.
 ***********************************************************************/
 
-%rename (dafus) dafus_c;
+%rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble sum[DAFSIZE]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble dc[DAFSIZE]};
-%apply (SpiceInt        OUT_ARRAY1[ANY]) {SpiceInt ic[DAFSIZE]};
+%apply (SpiceDouble      OUT_ARRAY1[ANY], int *SIZE1) {(SpiceDouble dc[DAFSIZE], int *out_dc_size)};
+%apply (SpiceInt         OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt ic[DAFSIZE], int *out_ic_size)};
 
-extern void dafus_c(
+extern void my_dafus_c(
         ConstSpiceDouble sum[DAFSIZE],
         SpiceInt nd,
         SpiceInt ni,
         SpiceDouble dc[DAFSIZE],
-        SpiceInt ic[DAFSIZE]
+        int *out_dc_size,
+        SpiceInt ic[DAFSIZE],
+        int *out_ic_size
 );
+
+%inline %{
+    void my_dafus_c(
+        ConstSpiceDouble sum[DAFSIZE],
+        SpiceInt nd,
+        SpiceInt ni,
+        SpiceDouble dc[DAFSIZE],
+        int *out_dc_size,
+        SpiceInt ic[DAFSIZE],
+        int *out_ic_size) {
+        dafus_c(sum, nd, ni, dc, ic);
+        // dc[] and ic[] are both large arrays, but we tell Python to resize them.
+        *out_dc_size = nd;
+        *out_ic_size = ni;
+        }
+%}
+
 
 /***********************************************************************
 * -Procedure dcyldr_c (Derivative of cylindrical w.r.t. rectangular )
