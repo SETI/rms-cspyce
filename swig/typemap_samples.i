@@ -401,3 +401,12 @@ void outvar_set_from_var_double(double INPUT, SpiceDouble* OUTPUT);
 void outvar_set_from_var_char(char INPUT, SpiceChar *OUTPUT);
 void outvar_set_from_var_bool(int INPUT, SpiceBoolean *OUTPUT);
 
+%{
+    void generated_array(int size, double array[]) {
+        for (int i = 0; i <= size; i++) {
+            array[i] = 10 + i;
+        }
+    }
+%}
+
+void generated_array(int dim, SpiceDouble GEN_OUTPUT[]);

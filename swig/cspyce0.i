@@ -1515,19 +1515,31 @@ extern void dafopr_c(
 * ic         O   Integer components.
 ***********************************************************************/
 
-%rename (dafus) dafus_c;
+%rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble sum[DAFSIZE]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble dc[DAFSIZE]};
-%apply (SpiceInt        OUT_ARRAY1[ANY]) {SpiceInt ic[DAFSIZE]};
+%apply (SpiceInt dim, SpiceDouble GEN_OUTPUT[]) {(SpiceInt nd, SpiceDouble dc[])};
+%apply (SpiceInt dim, SpiceInt GEN_OUTPUT[]) {(SpiceInt ni, SpiceInt ic[])};
 
-extern void dafus_c(
+extern void my_dafus_c(
         ConstSpiceDouble sum[DAFSIZE],
         SpiceInt nd,
+        SpiceDouble dc[],
         SpiceInt ni,
-        SpiceDouble dc[DAFSIZE],
-        SpiceInt ic[DAFSIZE]
+        SpiceInt ic[]
 );
+
+%inline %{
+     void my_dafus_c(
+        ConstSpiceDouble sum[DAFSIZE],
+        SpiceInt nd,
+        SpiceDouble dc[],
+        SpiceInt ni,
+        SpiceInt ic[]) {
+        dafus_c(sum, nd, ni, dc, ic);
+        }
+%}
+
 
 /***********************************************************************
 * -Procedure dcyldr_c (Derivative of cylindrical w.r.t. rectangular )

@@ -797,6 +797,18 @@ void handle_bad_sequence_to_list(const char *symname) {
         get_exception_message(symname));
     reset_c();
 }
+
+void handle_bad_conversion_to_int(const char *symname) {
+    chkin_c(symname);
+    setmsg_c("Input argument must be an integer in module #");
+    errch_c( "#", symname);
+    sigerr_c("SPICE(INVALIDTYPE)");
+    chkout_c(symname);
+    PyErr_SetString(
+        USE_RUNTIME_ERRORS ? PyExc_RuntimeError : PyExc_TypeError,
+        get_exception_message(symname));
+    reset_c();
+}
 %}
 
 // Copy standard typemaps for Spice types
@@ -1772,6 +1784,91 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
 #undef TYPEMAP_ARGOUT
+
+
+/*******************************************************************************
+/*******************************************************************************
+* 1-D generated typemaps for output
+*
+* This family of typemaps is used when the C-function expects an integer and
+* an output-only array of that length.  The Python function takes only the length
+* of the array and generates an numpy array.  Both the length and the array are
+* passed to the function.
+*
+* We currently support
+*    (SpiceInt dim, Type GEN_OUTPUT[])
+*    (int dim, Type GEN_OUTPUT[])
+* We can add other options as necessary.
+*******************************************************************************/
+
+%define TYPEMAP_GENOUT(Type, Typecode) // Use to fill in numeric types below!
+
+/*******************************************************
+* (SpiceInt dim, Type GEN_OUTPUT[])
+* (int dim, Type GEN_OUTPUT)
+*******************************************************/
+
+%typemap(in)
+    (SpiceInt dim, Type GEN_OUTPUT[])                         // PATTERN
+        (PyArrayObject* pyarr = NULL, int size),
+    (int dim, Type GEN_OUTPUT[])                         // PATTERN
+        (PyArrayObject* pyarr = NULL, int size)
+{
+//      (SpiceInt dim, Type GEN_OUTPUT[])
+
+    int error = SWIG_AsVal_int($input, &size);
+    if (!SWIG_IsOK(error)) {
+        handle_bad_conversion_to_int("$symname");
+        SWIG_fail;
+    }
+    npy_intp dims[1] = { size < 0 ? 0 : size };                                    // DIMENSIONS
+    pyarr = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
+    TEST_MALLOC_FAILURE(pyarr);
+
+    $1 = size;
+    $2 = PyArray_DATA(pyarr);
+}
+
+/*******************************************************
+* %typemap(argout)
+* %typemap(freearg)
+*******************************************************/
+
+%typemap(argout)
+    (SpiceInt dim, Type GEN_OUTPUT[]),
+    (int dim, Type GEN_OUTPUT[])
+{
+//      (SpiceInt dim, Type GEN_OUTPUT[])
+
+    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    // AppendOutput steals the reference to the argument.
+    pyarr$argnum = NULL;
+}
+
+%typemap(freearg)
+    (SpiceInt dim, Type GEN_OUTPUT[]),
+    (int size, Type GEN_OUTPUT[])
+{
+    Py_XDECREF(pyarr$argnum);
+}
+
+%enddef
+
+TYPEMAP_GENOUT(char,          NPY_CHAR  )
+TYPEMAP_GENOUT(SpiceChar,     NPY_CHAR  )
+TYPEMAP_GENOUT(unsigned char, NPY_UBYTE )
+TYPEMAP_GENOUT(signed char,   NPY_SBYTE )
+TYPEMAP_GENOUT(short,         NPY_SHORT )
+TYPEMAP_GENOUT(int,           NPY_INT   )
+TYPEMAP_GENOUT(SpiceInt,      NPY_INT   )
+TYPEMAP_GENOUT(SpiceBoolean,  NPY_INT   )
+TYPEMAP_GENOUT(long,          NPY_LONG  )
+TYPEMAP_GENOUT(float,         NPY_FLOAT )
+TYPEMAP_GENOUT(double,        NPY_DOUBLE)
+TYPEMAP_GENOUT(SpiceDouble,   NPY_DOUBLE)
+
+#undef TYPEMAP_GENOUT
+
 
 /*******************************************************************************
 * If the function should return a Python scalar on size = 0:

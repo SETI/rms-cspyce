@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import numpy.testing as nt
 import cspyce.typemap_samples as ts
 
 
@@ -682,8 +683,30 @@ class TestReturnValueThroughOutvar(unittest.TestCase):
     def test_outvar_bool(self):
         self.assertIsInstance(ts.outvar_set_from_var_bool(0), bool)
         self.assertEqual(ts.outvar_set_from_var_bool(0), False)
-        self.assertEquals(ts.outvar_set_from_var_bool(1), True)
-        self.assertEquals(ts.outvar_set_from_var_bool(-100), True)
+        self.assertEqual(ts.outvar_set_from_var_bool(1), True)
+        self.assertEqual(ts.outvar_set_from_var_bool(-100), True)
+
+
+class Test_GEN_OUTPUT(unittest.TestCase):
+    def test_normal_action(self):
+        result = ts.generated_array(5)
+        self.assertEqual(result.dtype, np.zeros(0, dtype='double').dtype)
+        nt.assert_equal(result, np.arange(10, 15))
+
+    def test_negative_values(self):
+        result = ts.generated_array(-1)
+        self.assertEqual(len(result), 0)
+
+    def test_bad_arguments(self):
+        with self.assertRaises(TypeError):
+            ts.generated_array((1, 2, 3))
+        with self.assertRaises(TypeError):
+            ts.generated_array(None)
+        with self.assertRaises(TypeError):
+            ts.generated_array('a')
+
+
+
 
 
 if __name__ == '__main__':
