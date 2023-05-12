@@ -9,7 +9,7 @@ from kernelcache import (
     CassiniKernels,
     ExtraKernels,
     download_kernels,
-    kernel_output
+    cwd
 )
 
 download_kernels()
@@ -21,8 +21,6 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
-
-cwd = kernel_output
 
 
 def test_axisar():
