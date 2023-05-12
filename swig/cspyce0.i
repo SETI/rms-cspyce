@@ -12,6 +12,7 @@
 #define NPLANE 4
 #define NELLIPSE 9
 #define DAFSIZE 256     // DAF size
+#define DAFSUMMARYSIZE 125 // size of DAF summary
 #define DASSIZE 256     // DAS size
 #define DLASIZE 8
 #define DSKSIZE 42
@@ -1448,10 +1449,10 @@ extern void dafgn_c(
 
 %rename (dafgs) dafgs_c;
 %apply (void RETURN_VOID) {void dafgs_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble sum[DAFSIZE]};
+%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble sum[DAFSUMMARYSIZE]};
 
 extern void dafgs_c(
-        SpiceDouble sum[DAFSIZE]
+        SpiceDouble sum[DAFSUMMARYSIZE]
 );
 
 /***********************************************************************
