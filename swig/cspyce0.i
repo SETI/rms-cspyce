@@ -11,8 +11,8 @@
 
 #define NPLANE 4
 #define NELLIPSE 9
-#define DAFSIZE 256     // DAF size
-#define DAFSUMMARYSIZE 125 // size of DAF summary
+#define DAFSIZE 125 // size of DAF summary
+#define DAFSIZE 125 // size of DAF summary
 #define DASSIZE 256     // DAS size
 #define DLASIZE 8
 #define DSKSIZE 42
@@ -1376,14 +1376,15 @@ extern void dafcls_c(
 
 %rename (dafgda) my_dafgda_c;
 %apply (void RETURN_VOID) {void my_dafgda_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble data[DAFSIZE]};
-%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1){(SpiceDouble data[DAFSIZE], int *size)};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
+
+//     (Type **OUT_ARRAY1, int *SIZE1),
 
 extern void my_dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble data[DAFSIZE],
+        SpiceDouble **data,
         int         *size
 );
 
@@ -1392,11 +1393,12 @@ extern void my_dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble data[DAFSIZE],
+        SpiceDouble **data,
         int         *size
     ) {
-        dafgda_c(handle, begin, end, data);
-        *size = end - begin + 1;
+        *size = abs(end - begin) + 1;
+        *data = PyMem_RawMalloc((*size) * sizeof(SpiceDouble));
+        dafgda_c(handle, begin, end, *data);
     }
 %}
 
@@ -1449,10 +1451,10 @@ extern void dafgn_c(
 
 %rename (dafgs) dafgs_c;
 %apply (void RETURN_VOID) {void dafgs_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble sum[DAFSUMMARYSIZE]};
+%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble sum[DAFSIZE]};
 
 extern void dafgs_c(
-        SpiceDouble sum[DAFSUMMARYSIZE]
+        SpiceDouble sum[DAFSIZE]
 );
 
 /***********************************************************************
@@ -1534,33 +1536,35 @@ extern void dafopr_c(
 
 %rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble sum[DAFSIZE]};
-%apply (SpiceDouble      OUT_ARRAY1[ANY], int *SIZE1) {(SpiceDouble dc[DAFSIZE], int *out_dc_size)};
-%apply (SpiceInt         OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt ic[DAFSIZE], int *out_ic_size)};
+%apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble sum[]};
+%apply (SpiceDouble  **OUT_ARRAY1, int *SIZE1) {(SpiceDouble **dc, int *out_dc_size)};
+%apply (SpiceInt  **OUT_ARRAY1, int *SIZE1) {(SpiceInt **ic, int *out_ic_size)};
 
 extern void my_dafus_c(
-        ConstSpiceDouble sum[DAFSIZE],
+        ConstSpiceDouble sum[],
         SpiceInt nd,
         SpiceInt ni,
-        SpiceDouble dc[DAFSIZE],
+        SpiceDouble **dc,
         int *out_dc_size,
-        SpiceInt ic[DAFSIZE],
+        SpiceInt **ic,
         int *out_ic_size
 );
 
 %inline %{
     void my_dafus_c(
-        ConstSpiceDouble sum[DAFSIZE],
+        ConstSpiceDouble sum[],
         SpiceInt nd,
         SpiceInt ni,
-        SpiceDouble dc[DAFSIZE],
+        SpiceDouble **dc,
         int *out_dc_size,
-        SpiceInt ic[DAFSIZE],
+        SpiceInt **ic,
         int *out_ic_size) {
-        dafus_c(sum, nd, ni, dc, ic);
-        // dc[] and ic[] are both large arrays, but we tell Python to resize them.
+
         *out_dc_size = max(nd, 0);  // nd < 0 treated as 0
         *out_ic_size = max(ni, 0);  // ni < 0 treated as 0
+        *dc = PyMem_RawMalloc(*out_dc_size * sizeof(SpiceDouble));
+        *ic = PyMem_RawMalloc(*out_ic_size * sizeof(SpiceInt));
+        dafus_c(sum, nd, ni, *dc, *ic);
         }
 %}
 
