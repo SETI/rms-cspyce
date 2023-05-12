@@ -1,5 +1,6 @@
 import os
 import platform
+import pytest
 import requests
 import sys
 import tempfile
@@ -7,12 +8,11 @@ import urllib3
 import warnings
 
 try:
-    kernel_output = os.environ['TEST_OUTPUT']
+    cwd = os.environ['CSPYCE_TEST_KERNELS']
 except KeyError:
-    kernel_output = "/tmp" if platform.system() == "Darwin" else tempfile.gettempdir()
+    cwd = "/tmp" if platform.system() == "Darwin" else tempfile.gettempdir()
     
 server = 'https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/'
-
 
 warnings.simplefilter('ignore', urllib3.exceptions.InsecureRequestWarning)
 
@@ -22,7 +22,8 @@ def get_kernel_name_from_url(url: str) -> str:
 
 
 def get_path_from_url(url: str) -> str:
-    return os.path.join(kernel_output, get_kernel_name_from_url(url))
+    return os.path.join(cwd, get_kernel_name_from_url(url))
+
 
 class CassiniKernels(object):
     cassPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cpck05Mar2004.tpc"
@@ -74,7 +75,7 @@ class CoreKernels(object):
     gm_pck = get_path_from_url(gm_pck_url)
     lsk = get_path_from_url(lsk_url)
     standardKernelList = [pck, spk, gm_pck, lsk]
-    testMetaKernel = os.path.join(kernel_output, "exampleKernels.txt")    
+    testMetaKernel = os.path.join(cwd, "exampleKernels.txt")    
     
     
 class ExtraKernels(object):
@@ -126,13 +127,14 @@ def cleanup_file(path):
         os.remove(path)
     pass
     
+
 def get_kernel(url):
     kernel_name = get_kernel_name_from_url(url)
     kernel_file = os.path.join(server, kernel_name)
     # does not download if files are present, which allows us to potentially cache kernels
     if not os.path.isfile(kernel_file):
         current_kernel = requests.get(url, verify=False)
-        with open(os.path.join(kernel_output, kernel_name), "wb") as kernel:
+        with open(os.path.join(cwd, kernel_name), "wb") as kernel:
             kernel.write(current_kernel.content)
             
 def get_cassini_test_kernels():
@@ -162,9 +164,16 @@ def get_extra_test_kernels() -> None:
     get_kernel(ExtraKernels.cklpfkrn_url)
 
 
+def cleanup_core_kernels() -> None:
+    cleanup_file(CoreKernels.pck)
+    cleanup_file(CoreKernels.spk)
+    cleanup_file(CoreKernels.gm_pck)
+    cleanup_file(CoreKernels.lsk)
+
+
 def write_test_meta_kernel() -> None:
     # Update the paths!
-    with open(os.path.join(kernel_output, "exampleKernels.txt"), "w") as kernelFile:
+    with open(os.path.join(cwd, "exampleKernels.txt"), "w") as kernelFile:
         kernelFile.write("\\begindata\n")
         kernelFile.write("KERNELS_TO_LOAD = (\n")
         for kernel in CoreKernels.standardKernelList:
