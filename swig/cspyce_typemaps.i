@@ -2585,7 +2585,8 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
     (Type *LOCAL_INOUT_ARRAY1),
     (Type LOCAL_INOUT_ARRAY1[])
 {
-    $result = SWIG_Python_AppendOutput($result, Py_NewRef($input));
+    Py_INCREF($input);
+    $result = SWIG_Python_AppendOutput($result, $input);
 }
 
 %typemap(free)
@@ -3359,7 +3360,8 @@ TYPEMAP_ARGOUT(PyObject*, (value$argnum))
 
     TEST_FOR_EXCEPTION;
     if (!$result) {
-       $result = Py_NewRef(Py_None);
+       Py_INCREF(Py_None);
+       $result = Py_None;
     }
 }
 
@@ -3406,7 +3408,8 @@ TYPEMAP_ARGOUT(PyObject*, (value$argnum))
 %typemap(out) (void RETURN_VOID_SIGERR) {
     RAISE_SIGERR_EXCEPTION;
     Py_XDECREF($result);
-    $result = Py_NewRef(Py_None);
+    Py_INCREF(Py_None);
+    $result = Py_None;
 }
 
 /*******************************************************************************
