@@ -29,12 +29,6 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-#if PY_VERSION_HEX >= 0x03000000
-#    define is_python_3xx 1
-#else
-#    define is_python_3xx 0
-#endif
-
 /*******************************************************************************
 *******************************************************************************/
 
@@ -543,7 +537,7 @@ void handle_malloc_failure(const char* symname) {
 
 %define TEST_IS_STRING(obj)
 {
-    if (is_python_3xx ? !PyUnicode_Check(obj) : !PyString_Check(obj)) {
+    if (!PyUnicode_Check(obj)) {
         handle_bad_string_error("$symname");
         SWIG_fail;
     }
@@ -762,11 +756,9 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
     for (int i = 0; i < count; i++) {
         PyObject *obj = PyList_GetItem(list, i);  // Note, we don't own this object
         TEST_IS_STRING(obj);
-        if (is_python_3xx) {
-            obj = PyUnicode_AsUTF8String(obj);   // We own this item
-            TEST_MALLOC_FAILURE(obj);
-            PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
-        }
+        obj = PyUnicode_AsUTF8String(obj);   // We own this item
+        TEST_MALLOC_FAILURE(obj);
+        PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
         maxlen = max(maxlen, PyBytes_Size(obj));
     }
     // Allocate the buffer
@@ -2921,7 +2913,6 @@ void resize_char_array_to_minimum_size(
         (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
 {
 //      (int DIM1, char *INOUT_STRING)
-//  TODO(FY): Add test for me
     TEST_IS_STRING($input);
     int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
     RAISE_BAD_STRING_ON_ERROR(error);
@@ -3026,7 +3017,7 @@ void resize_char_array_to_minimum_size(
 //      (... Type OUT_STRING[ANY] ...)
 
     buffer$argnum[dim1$argnum-1] = '\0';  // Make sure string is terminated
-    PyObject *obj = PyString_FromString((Type *) buffer$argnum);
+    PyObject *obj = PyUnicode_FromString((Type *) buffer$argnum);
     $result = SWIG_Python_AppendOutput($result, obj);
 }
 
@@ -3377,8 +3368,7 @@ TYPEMAP_ARGOUT(SpiceBoolean)
     (SpiceChar *RETURN_STRING) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result,
-                                       PyString_FromString((char *) $1));
+    $result = SWIG_Python_AppendOutput($result, PyUnicode_FromString((char *) $1));
 }
 
 // Special handler just for direct calls to sigerr()
