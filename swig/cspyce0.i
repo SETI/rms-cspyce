@@ -11,8 +11,7 @@
 
 #define NPLANE 4
 #define NELLIPSE 9
-#define DAFSIZE 125 // size of DAF summary
-#define DAFSIZE 125 // size of DAF summary
+#define DAFSIZE 125      // size of DAF summary
 #define DASSIZE 256     // DAS size
 #define DLASIZE 8
 #define DSKSIZE 42
@@ -1382,7 +1381,7 @@ extern void dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble*data
+        SpiceDouble *data
 );
 
 /***********************************************************************

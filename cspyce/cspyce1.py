@@ -810,6 +810,11 @@ del CSPYCE_RETURNS['dasec'][1]
 del CSPYCE_RETNAMES['dasec'][1]
 del CSPYCE_DEFINITIONS['dasec']['done']
 
+################################################################################
+# These functions need to be passed a fixed-size array that's based on the value of
+# other arguments.  It is simpler to create those arrays in Python and pass them.
+################################################################################
+
 def dafgda(handle, begin, end):
     size = abs(end - begin) + 1
     data = np.empty(size, dtype='double')
@@ -818,7 +823,6 @@ def dafgda(handle, begin, end):
 CSPYCE_SIGNATURES['dafgda'] = CSPYCE_SIGNATURES['dafgda'][0:3]
 CSPYCE_ARGNAMES['dafgda'] = CSPYCE_ARGNAMES['dafgda'][0:3]
 
-# FY: Something goes here!
 def dafus(handle, nd, ni):
     dc = np.empty(max(nd, 0), dtype='double')
     ic = np.empty(max(ni, 0), dtype='int32')
