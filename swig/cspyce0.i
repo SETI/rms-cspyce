@@ -1374,34 +1374,16 @@ extern void dafcls_c(
 * data       O   Data contained between `begin' and `end'.
 ***********************************************************************/
 
-%rename (dafgda) my_dafgda_c;
+%rename (dafgda) dafgda_c;
 %apply (void RETURN_VOID) {void my_dafgda_c};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
+%apply (SpiceDouble *LOCAL_INOUT_ARRAY1){SpiceDouble *data};
 
-//     (Type **OUT_ARRAY1, int *SIZE1),
-
-extern void my_dafgda_c(
+extern void dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble **data,
-        int         *size
+        SpiceDouble*data
 );
-
-%inline %{
-    void my_dafgda_c(
-        SpiceInt    handle,
-        SpiceInt    begin,
-        SpiceInt    end,
-        SpiceDouble **data,
-        int         *size
-    ) {
-        *size = abs(end - begin) + 1;
-        *data = PyMem_RawMalloc((*size) * sizeof(SpiceDouble));
-        dafgda_c(handle, begin, end, *data);
-    }
-%}
-
 
 /***********************************************************************
 * -Procedure dafgn_c ( DAF, get array name )
@@ -1534,39 +1516,19 @@ extern void dafopr_c(
 * ic         O   Integer components.
 ***********************************************************************/
 
-%rename (dafus) my_dafus_c;
+%rename (dafus) dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
 %apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble sum[]};
-%apply (SpiceDouble  **OUT_ARRAY1, int *SIZE1) {(SpiceDouble **dc, int *out_dc_size)};
-%apply (SpiceInt  **OUT_ARRAY1, int *SIZE1) {(SpiceInt **ic, int *out_ic_size)};
+%apply (SpiceDouble *LOCAL_INOUT_ARRAY1) {SpiceDouble *dc};
+%apply (SpiceInt *LOCAL_INOUT_ARRAY1) {SpiceInt *ic};
 
-extern void my_dafus_c(
+extern void dafus_c(
         ConstSpiceDouble sum[],
         SpiceInt nd,
         SpiceInt ni,
-        SpiceDouble **dc,
-        int *out_dc_size,
-        SpiceInt **ic,
-        int *out_ic_size
+        SpiceDouble *dc,
+        SpiceInt *ic
 );
-
-%inline %{
-    void my_dafus_c(
-        ConstSpiceDouble sum[],
-        SpiceInt nd,
-        SpiceInt ni,
-        SpiceDouble **dc,
-        int *out_dc_size,
-        SpiceInt **ic,
-        int *out_ic_size) {
-
-        *out_dc_size = max(nd, 0);  // nd < 0 treated as 0
-        *out_ic_size = max(ni, 0);  // ni < 0 treated as 0
-        *dc = PyMem_RawMalloc(*out_dc_size * sizeof(SpiceDouble));
-        *ic = PyMem_RawMalloc(*out_ic_size * sizeof(SpiceInt));
-        dafus_c(sum, nd, ni, *dc, *ic);
-        }
-%}
 
 
 /***********************************************************************

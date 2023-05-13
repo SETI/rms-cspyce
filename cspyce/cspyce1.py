@@ -810,6 +810,23 @@ del CSPYCE_RETURNS['dasec'][1]
 del CSPYCE_RETNAMES['dasec'][1]
 del CSPYCE_DEFINITIONS['dasec']['done']
 
+def dafgda(handle, begin, end):
+    size = abs(end - begin) + 1
+    data = np.empty(size, dtype='double')
+    return cspyce0.dafgda(handle, begin, end, data)
+
+CSPYCE_SIGNATURES['dafgda'] = CSPYCE_SIGNATURES['dafgda'][0:3]
+CSPYCE_ARGNAMES['dafgda'] = CSPYCE_ARGNAMES['dafgda'][0:3]
+
+# FY: Something goes here!
+def dafus(handle, nd, ni):
+    dc = np.empty(max(nd, 0), dtype='double')
+    ic = np.empty(max(ni, 0), dtype='int32')
+    return cspyce0.dafus(handle, nd, ni, dc, ic)
+
+CSPYCE_SIGNATURES['dafus'] = CSPYCE_SIGNATURES['dafus'][0:3]
+CSPYCE_ARGNAMES['dafus'] = CSPYCE_ARGNAMES['dafus'][0:3]
+
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in
 # an additional layer [].
