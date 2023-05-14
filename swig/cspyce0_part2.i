@@ -2477,26 +2477,16 @@ extern void dasrdc_c(
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdd) my_dasrdd_c;
-%apply (void RETURN_VOID) {void my_dasrdd_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1)
-                            {(SpiceDouble data[MAXRECS], int *size)};
+%rename (dasrdd) dasrdd_c;
+%apply (void RETURN_VOID) {void dasrdd_c};
+%apply (SpiceDouble LOCAL_INOUT_ARRAY1[]){SpiceDouble data[]};
 
-%inline %{
-    void my_dasrdd_c(
-        SpiceInt    handle,
-        SpiceInt    first,
-        SpiceInt    last,
-        SpiceDouble data[MAXRECS], int *size)
-    {
-        if (!my_assert_ge(MAXRECS, last - first + 1, "dasrdd",
-            "Array dimension is too small: "
-            "provided = #; required = #")) return;
-
-        dasrdd_c(handle, first, last, data);
-        *size = last - first + 1;
-    }
-%}
+extern void dasrdd_c (
+        SpiceInt            handle,
+        SpiceInt            first,
+        SpiceInt            last,
+        SpiceDouble         data[]
+);
 
 /***********************************************************************
 * -Procedure dasrdi_c ( DAS, read data, integer )
@@ -2521,26 +2511,16 @@ extern void dasrdc_c(
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdi) my_dasrdi_c;
-%apply (void RETURN_VOID) {void my_dasrdi_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1)
-                            {(SpiceInt data[MAXRECS], int *size)};
+%rename (dasrdi) dasrdi_c;
+%apply (void RETURN_VOID) {void dasrdi_c};
+%apply (SpiceInt LOCAL_INOUT_ARRAY1[]){SpiceInt data[]};
 
-%inline %{
-    void my_dasrdi_c(
-        SpiceInt handle,
-        SpiceInt first,
-        SpiceInt last,
-        SpiceInt data[MAXRECS], int *size)
-    {
-        if (!my_assert_ge(MAXRECS, last - first + 1, "dasrdi",
-            "Array dimension is too small: "
-            "provided = #; required = #")) return;
-
-        dasrdi_c(handle, first, last, data);
-        *size = last - first + 1;
-    }
-%}
+extern void dasrdi_c (
+        SpiceInt            handle,
+        SpiceInt            first,
+        SpiceInt            last,
+        SpiceInt            data[]
+);
 
 /***********************************************************************
 * -Procedure dasrfr_c ( DAS, read file record )
@@ -2671,15 +2651,23 @@ extern void dasudc_c(
 * data       I   An array of d.p. numbers.
 ***********************************************************************/
 
-%rename (dasudd) dasudd_c;
-%apply (void RETURN_VOID) {void dasudd_c};
+%rename (dasudd) my_dasudd_c;
+%apply (void RETURN_VOID) {void my_dasudd_c};
+%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1) {(SpiceInt n, ConstSpiceDouble *data)};
 
-extern void dasudd_c(
+%inline %{
+    void my_dasudd_c(
         SpiceInt         handle,
         SpiceInt         first,
         SpiceInt         last,
-        ConstSpiceDouble *IN_ARRAY1
-);
+        SpiceInt n, ConstSpiceDouble *data)
+    {
+        if (!my_assert_ge(n, last - first + 1, "dasudd",
+                          "Array is not long enough for update")) return;
+        dasudd_c(handle, first, last, data);
+    }
+
+%}
 
 /***********************************************************************
 * -Procedure dasudi_c ( DAS, update data, integer )
@@ -2705,15 +2693,22 @@ extern void dasudd_c(
 * data       I   An array of integers.
 ***********************************************************************/
 
-%rename (dasudi) dasudi_c;
-%apply (void RETURN_VOID) {void dasudi_c};
+%rename (dasudi) my_dasudi_c;
+%apply (void RETURN_VOID) {void my_dasudi_c};
+%apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1) {(SpiceInt n, ConstSpiceInt *data)};
 
-extern void dasudi_c(
+%inline %{
+    void my_dasudi_c(
         SpiceInt      handle,
         SpiceInt      first,
         SpiceInt      last,
-        ConstSpiceInt *IN_ARRAY1
-);
+        SpiceInt n, ConstSpiceInt *data)
+    {
+        if (!my_assert_ge(n, last - first + 1, "dasudi",
+                          "Array is not long enough for update")) return;
+        dasudi_c(handle, first, last, data);
+    }
+%}
 
 /***********************************************************************
 * -Procedure daswbr_c ( DAS, write buffered records )

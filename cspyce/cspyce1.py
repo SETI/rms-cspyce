@@ -831,6 +831,21 @@ def dafus(handle, nd, ni):
 CSPYCE_SIGNATURES['dafus'] = CSPYCE_SIGNATURES['dafus'][0:3]
 CSPYCE_ARGNAMES['dafus'] = CSPYCE_ARGNAMES['dafus'][0:3]
 
+def dasrdi(handle, first, last):
+    size = last - first + 1
+    return cspyce0.dasrdi(handle, first, last, np.empty(size, dtype='int32'))
+
+CSPYCE_SIGNATURES['dasrdi'].pop()
+CSPYCE_ARGNAMES['dasrdi'].pop()
+
+def dasrdd(handle, first, last):
+    size = last - first + 1
+    return cspyce0.dasrdd(handle, first, last, np.empty(size, dtype='double'))
+
+CSPYCE_SIGNATURES['dasrdd'].pop()
+CSPYCE_ARGNAMES['dasrdd'].pop()
+
+
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in
 # an additional layer [].
