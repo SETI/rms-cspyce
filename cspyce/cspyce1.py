@@ -816,7 +816,7 @@ del CSPYCE_DEFINITIONS['dasec']['done']
 ################################################################################
 
 def dafgda(handle, begin, end):
-    size = abs(end - begin) + 1
+    size = max(end - begin + 1, 0)
     data = np.empty(size, dtype='double')
     return cspyce0.dafgda(handle, begin, end, data)
 
