@@ -32,7 +32,7 @@ import urllib.request
 import sys
 import hashlib
 
-cwd = 'https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/'
+cwd = "/tmp" if platform.system() == "Darwin" else tempfile.gettempdir()
 
 
 def get_kernel_name_from_url(url: str) -> str:
@@ -44,11 +44,8 @@ def get_path_from_url(url: str) -> str:
 
 
 def cleanup_file(path: str) -> None:
-    # =============================================================================
-    #     if os.path.exists(path):
-    #         os.remove(path)
-    # =============================================================================
-    pass
+    if os.path.exists(path):
+        os.remove(path)
 
 
 class CassiniKernels(object):
@@ -106,7 +103,7 @@ class ExtraKernels(object):
     mro2007sub_md5 = "8ed34eb77b21ac611f4680806677edfb"
     spk430sub_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/de430sub.bsp"
     spk430sub_md5 = "0b49545fa316f9053f5cfbcce155becc"
-    vexboomck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/VEX_BOOM_V01.BC"
+    vexboomck_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/VEX_BOOM_V01.BC"
     vexboomck_md5 = "2f4dba65649246d72836fb3b53823c3d"
     v02swuck_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/vo2_swu_ck2.bc"
     v02swuck_md5 = "f59ef0556dfc63b55465e152f2d6f5a4"
@@ -143,7 +140,7 @@ class CoreKernels(object):
     # note this gets updated
     currentLSK = "naif0012.tls"
     #
-    pck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/pck00010.tpc"
+    pck_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/pck00010.tpc"
     pck_md5 = "da153641f7346bd5b6a1226778e0d51b"
     spk_url = "https://raw.githubusercontent.com/AndrewAnnex/SpiceyPyTestKernels/main/de405s_{}endian.bsp".format(
         sys.byteorder
@@ -163,7 +160,7 @@ class CoreKernels(object):
     standardKernelList = [pck, spk, gm_pck, lsk]
     testMetaKernel = os.path.join(cwd, "exampleKernels.txt")
 
-#standardKernelList is mission 'spk', 'gm_pck' mention
+
 def cleanup_core_kernels() -> None:
     cleanup_file(CoreKernels.pck)
     cleanup_file(CoreKernels.spk)
@@ -176,8 +173,7 @@ def get_kernel(url: str, provided_hash: str = None):
     kernel_file = os.path.join(cwd, kernel_name)
     # does not download if files are present, which allows us to potentially cache kernels
     if not os.path.isfile(kernel_file):
-        attempt_download(url, kernel_name, kernel_file,
-                         5, provided_hash=provided_hash)
+        attempt_download(url, kernel_name, kernel_file, 5, provided_hash=provided_hash)
 
 
 def attempt_download(
@@ -187,12 +183,10 @@ def attempt_download(
     num_attempts: int,
     provided_hash: str = None,
 ) -> None:
-    assert False, kernel_name
     current_attempt = 0
     while current_attempt < num_attempts:
         try:
-            print("Attempting to Download kernel: {}".format(
-                kernel_name), flush=True)
+            print("Attempting to Download kernel: {}".format(kernel_name), flush=True)
             current_kernel = urllib.request.urlopen(url, timeout=10)
             with open(target_file_name, "wb") as kernel:
                 kernel.write(current_kernel.read())
@@ -264,8 +258,7 @@ def get_extra_test_kernels() -> None:
     get_kernel(ExtraKernels.voyagerSclk_url, ExtraKernels.voyagerSclk_md5)
     get_kernel(ExtraKernels.earthTopoTf_url, ExtraKernels.earthTopoTf_md5)
     get_kernel(ExtraKernels.earthStnSpk_url, ExtraKernels.earthStnSpk_md5)
-    get_kernel(ExtraKernels.earthHighPerPck_url,
-               ExtraKernels.earthHighPerPck_md5)
+    get_kernel(ExtraKernels.earthHighPerPck_url, ExtraKernels.earthHighPerPck_md5)
     get_kernel(ExtraKernels.phobosDsk_url, ExtraKernels.phobosDsk_md5)
     get_kernel(ExtraKernels.marsSpk_url, ExtraKernels.marsSpk_md5)
     get_kernel(ExtraKernels.mroFk_url, ExtraKernels.mroFk_md5)
@@ -292,9 +285,7 @@ def write_test_meta_kernel() -> None:
         kernelFile.write("\\begindata\n")
         kernelFile.write("KERNELS_TO_LOAD = (\n")
         for kernel in CoreKernels.standardKernelList:
-            filename = os.path.join(cwd, kernel)
-            lines = ["'"+filename[i:i+75] for i in range(0, len(filename), 75)]
-            kernelFile.write("+'\n".join(lines) + "'\n")
+            kernelFile.write("'{0}'\n".format(os.path.join(cwd, kernel)))
         kernelFile.write(")\n")
         kernelFile.write("\\begintext")
     print("\nDone writing test meta kernel.", flush=True)

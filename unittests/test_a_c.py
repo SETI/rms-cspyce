@@ -4,7 +4,7 @@ import numpy.testing as npt
 import os
 import pytest
 
-from kernelcache import (
+from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
