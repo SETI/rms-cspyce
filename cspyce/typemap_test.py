@@ -564,18 +564,31 @@ class Test_CONST_STRING(unittest.TestCase):
             ts.const_char_0(None)
 
 
-class Test_INOUT_STRING(unittest.TestCase):
+class Test_INOUT_STRING_SIZED(unittest.TestCase):
     def test_inout_string(self):
         # %apply (int DIM1, char INOUT_STRING[ANY]) {(int dim, char result[10])};
         # Has a buffer that's a minimum size of 10, but we grow it if necessary for the
         # argument.  We return the size of the buffer
-        self.assertEqual("10", ts.inout_string("abcd"))
-        self.assertEqual("101", ts.inout_string("a" * 100))
+        self.assertEqual("10", ts.inout_string_10("abcd"))
+        self.assertEqual("101", ts.inout_string_10("a" * 100))
 
     def test_inout_string_bad_argument(self):
         with self.assertRaises(ValueError):
-            ts.inout_string(5.8)
+            ts.inout_string_10(5.8)
 
+
+class Test_INOUT_STRING_PTR(unittest.TestCase):
+    def test_inout_string(self):
+        # %apply (int DIM1, char *INOUT_STRING) {(int dim, char *result)};
+        self.assertEqual("5", ts.inout_string_ptr("abcd"))
+        self.assertEqual("101", ts.inout_string_ptr("a" * 100))
+
+    def test_inout_string_bad_argument(self):
+        with self.assertRaises(ValueError):
+            ts.inout_string_ptr(5.8)
+
+
+class Test_OUT_STRING(unittest.TestCase):
     def test_out_string(self):
         # %apply (char OUT_STRING[ANY]) {(char result[10])};
         # A fixed size buffer.  We return a string representing the value passed
