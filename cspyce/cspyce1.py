@@ -6,8 +6,6 @@
 #
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
-from collections.abc import Sequence
-
 import numpy as np
 import textwrap
 
@@ -816,7 +814,7 @@ del CSPYCE_DEFINITIONS['dasec']['done']
 # other arguments.  It is simpler to create those arrays in Python and pass them.
 ################################################################################
 
-def dasadc(handle, n, bpos, epos, data: Sequence[str]):
+def dasadc(handle, n, bpos, epos, data):
     byte_data = [string.encode('utf-8') for string in data]
     stride = max(epos + 1, max(len(x) for x in byte_data))
     array = np.array(byte_data, dtype=np.dtype(('S', stride)))
@@ -825,7 +823,7 @@ def dasadc(handle, n, bpos, epos, data: Sequence[str]):
 del CSPYCE_SIGNATURES['dasadc'][4]
 del CSPYCE_ARGNAMES['dasadc'][4]
 
-def dasudc(handle, first, last, bpos, epos, data: Sequence[str]):
+def dasudc(handle, first, last, bpos, epos, data):
     byte_data = [string.encode('utf-8') for string in data]
     stride = max(epos + 1, max(len(x) for x in byte_data))
     array = np.array(byte_data, dtype=np.dtype(('S', stride)))
