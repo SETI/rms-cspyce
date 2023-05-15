@@ -295,7 +295,11 @@ void out_array23_1(int start, int length1, int length2, int length3, double **re
         return (int)value;
     }
 
-    void inout_string(int dim, char* result) {
+    void inout_string_10(int dim, char* result) {
+        sprintf(result, "%d", dim);
+    }
+
+    void inout_string_ptr(int dim, char* result) {
         sprintf(result, "%d", dim);
     }
 
@@ -311,7 +315,10 @@ int const_string_0(const char *string);
 int const_char_0(char value);
 
 %apply (int DIM1, char INOUT_STRING[ANY]) {(int dim, char result[10])};
-void inout_string(int dim, char result[10]);
+void inout_string_10(int dim, char result[10]);
+
+%apply (int DIM1, char *INOUT_STRING) {(int dim, char* result)};
+void inout_string_ptr(int dim, char *result);
 
 %apply (char OUT_STRING[ANY]) {(char result[10])};
 void out_string(int value, char result[10]);
@@ -388,24 +395,16 @@ int return_boolean(int value);
 void return_sigerr(void);
 
 %{
-    void outvar_10_int(SpiceInt* arg) { *arg = 10; }
-    void outvar_10_float(SpiceFloat* arg) { *arg = 10; }
-    void outvar_10_double(SpiceDouble *arg) { *arg = 10; }
-    void outvar_10_char(SpiceChar *arg) { *arg = 10; }
-    void outvar_10_bool(SpiceBoolean *arg) { *arg = 10; }
+    void outvar_set_from_var_int(int in, SpiceInt* out) { *out = in; }
+    void outvar_set_from_var_float(float in, SpiceFloat* out) { *out = in; }
+    void outvar_set_from_var_double(double in, SpiceDouble* out) { *out = in; }
+    void outvar_set_from_var_char(char in, SpiceChar *out) { *out = in; }
+    void outvar_set_from_var_bool(int in, SpiceBoolean *out) { *out = in; }
 %}
 
-%apply (int *OUTPUT) {SpiceInt* arg}
-void outvar_10_int(SpiceInt* arg);
+void outvar_set_from_var_int(int INPUT, SpiceInt* OUTPUT);
+void outvar_set_from_var_float(float INPUT, SpiceFloat* OUTPUT);
+void outvar_set_from_var_double(double INPUT, SpiceDouble* OUTPUT);
+void outvar_set_from_var_char(char INPUT, SpiceChar *OUTPUT);
+void outvar_set_from_var_bool(int INPUT, SpiceBoolean *OUTPUT);
 
-%apply (float *OUTPUT) {SpiceFloat* arg}
-void outvar_10_float(SpiceFloat* arg);
-
-%apply (double *OUTPUT) {SpiceDouble* arg}
-void outvar_10_double(SpiceDouble *arg);
-
-%apply (char *OUTPUT) {SpiceChar *arg}
-void outvar_10_char(SpiceChar *arg);
-
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *arg}
-void outvar_10_bool(SpiceBoolean *arg);

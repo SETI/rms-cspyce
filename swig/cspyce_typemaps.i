@@ -8,7 +8,7 @@
 *
 * See the details in the clearly identified header sections below.
 *
-* Mark Showalter, PDS Rings Node, SETI Institute, July 2009.
+* PDS Rings Node, SETI Institute, July 2009.
 *
 * Modified 1/4/12 (MRS) to handle error messages more consistently.
 * Modified 3/21/13 (MRS) to define IN_ARRAY3.
@@ -28,12 +28,6 @@
 #include <numpy/arrayobject.h>
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
-
-#if PY_VERSION_HEX >= 0x03000000
-#    define is_python_3xx 1
-#else
-#    define is_python_3xx 0
-#endif
 
 /*******************************************************************************
 *******************************************************************************/
@@ -543,7 +537,7 @@ void handle_malloc_failure(const char* symname) {
 
 %define TEST_IS_STRING(obj)
 {
-    if (is_python_3xx ? !PyUnicode_Check(obj) : !PyString_Check(obj)) {
+    if (!PyUnicode_Check(obj)) {
         handle_bad_string_error("$symname");
         SWIG_fail;
     }
@@ -655,24 +649,19 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 %}
 
 %{
-/**
- We allow the conversion of a long array to an int array.  All other unsafe conversions
- are disallowed.
-*/
-int adjust_convert_flags(int typecode, PyObject *input, int flags) {
-    if (typecode == NPY_INT && PyArray_Check(input) &&
-        (PyArray_TYPE(input) == NPY_LONG || PyArray_TYPE(input) == NPY_LONGLONG)) {
-        // Allow long -> int conversions, but no other unsafe conversions
+PyArrayObject*
+get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags) {
+    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_ISINTEGER(input)) {
+        // We allow the conversion of all integer types to integer arrays.
         flags |= NPY_ARRAY_FORCECAST;
     }
-    return flags;
+    return PyArray_FROMANY(input, typecode, min, max, flags);
 }
 %}
 
 %define CONVERT_TO_CONTIGUOUS_ARRAY(typecode, input, min, max, result)
 {
-    int flags = adjust_convert_flags(typecode, input, NPY_ARRAY_CARRAY_RO);
-    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    result = get_contiguous_array(typecode, input, min, max, NPY_ARRAY_CARRAY_RO);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
@@ -681,9 +670,8 @@ int adjust_convert_flags(int typecode, PyObject *input, int flags) {
 %enddef
 %define CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(typecode, input, min, max, result)
 {
-    int flags = adjust_convert_flags(typecode, input,
-                                     NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
-    result = PyArray_FROMANY(input, typecode, min, max, flags);
+    result = get_contiguous_array(typecode, input, min, max,
+    NPY_ARRAY_CARRAY | NPY_ARRAY_ENSURECOPY);
     if (!result) {
         handle_bad_array_conversion("$symname", typecode, input, min, max);
         SWIG_fail;
@@ -768,11 +756,9 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
     for (int i = 0; i < count; i++) {
         PyObject *obj = PyList_GetItem(list, i);  // Note, we don't own this object
         TEST_IS_STRING(obj);
-        if (is_python_3xx) {
-            obj = PyUnicode_AsUTF8String(obj);   // We own this item
-            TEST_MALLOC_FAILURE(obj);
-            PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
-        }
+        obj = PyUnicode_AsUTF8String(obj);   // We own this item
+        TEST_MALLOC_FAILURE(obj);
+        PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
         maxlen = max(maxlen, PyBytes_Size(obj));
     }
     // Allocate the buffer
@@ -805,7 +791,16 @@ void handle_bad_sequence_to_list(const char *symname) {
 }
 %}
 
-#define Py_None_INCREF (Py_INCREF(Py_None), Py_None)
+// Copy standard typemaps for Spice types
+%apply int {SpiceInt, SpiceBoolean, ConstSpiceInt, ConstSpiceBoolean};
+%apply char {SpiceChar, ConstSpiceChar}
+%apply double {SpiceDouble, ConstSpiceDouble};
+%apply float {SpiceFloat, ConstSpiceFloat};
+
+%apply int *OUTPUT {SpiceInt *OUTPUT};
+%apply char *OUTPUT {SpiceChar *OUTPUT}
+%apply double *OUTPUT {SpiceDouble *OUTPUT};
+%apply float *OUTPUT {SpiceFloat *OUTPUT};
 
 /*******************************************************************************
 * 1-D numeric typemaps for input
@@ -2918,7 +2913,6 @@ void resize_char_array_to_minimum_size(
         (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
 {
 //      (int DIM1, char *INOUT_STRING)
-//  TODO(FY): Add test for me
     TEST_IS_STRING($input);
     int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
     RAISE_BAD_STRING_ON_ERROR(error);
@@ -3023,7 +3017,7 @@ void resize_char_array_to_minimum_size(
 //      (... Type OUT_STRING[ANY] ...)
 
     buffer$argnum[dim1$argnum-1] = '\0';  // Make sure string is terminated
-    PyObject *obj = PyString_FromString((Type *) buffer$argnum);
+    PyObject *obj = PyUnicode_FromString((Type *) buffer$argnum);
     $result = SWIG_Python_AppendOutput($result, obj);
 }
 
@@ -3285,51 +3279,37 @@ TYPEMAP_OUT(SpiceChar)
 /*******************************************************************************
 * Typemap for boolean output
 *
-*       (Type *OUT_BOOLEAN)
+*       (Type *OUTPUT)
 *
 * This typemap allows ints to be returned by the program as Python booleans.
 * They are part of the return value and do not appear as arguments to the
 * Python function. A zero value is False; anything else is True.
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type, Typecode)
+%define TYPEMAP_ARGOUT(Type)
 
 %typemap(in, numinputs=0)
-    (Type *OUT_BOOLEAN)
-        (Type mybool)
+    (Type *OUTPUT)
+        (Type value)
 {
-//      (Type *OUT_BOOLEAN)
+//      (Type *OUTPUT)
 
-    $1 = &mybool;
+    $1 = &value;
 }
 
 %typemap(argout)
-    (Type *OUT_BOOLEAN)
+    (Type *OUTPUT)
 {
-//      (Type *OUT_BOOLEAN)
+//      (Type *OUTPUT)
 
-    long test = (*$1 != 0);
-    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong(test));
+    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong(value$argnum));
 }
 
-%typemap(freearg) (Type *OUT_BOOLEAN) ""
-
-// Now define these typemaps for every numeric type
+%typemap(freearg) (Type *OUTPUT) ""
 
 %enddef
 
-TYPEMAP_ARGOUT(char,          NPY_CHAR  )
-TYPEMAP_ARGOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_ARGOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_ARGOUT(signed char,   NPY_SBYTE )
-TYPEMAP_ARGOUT(short,         NPY_SHORT )
-TYPEMAP_ARGOUT(int,           NPY_INT   )
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
-TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
-TYPEMAP_ARGOUT(long,          NPY_LONG  )
-TYPEMAP_ARGOUT(float,         NPY_FLOAT )
-TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
-TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
+TYPEMAP_ARGOUT(SpiceBoolean)
 
 #undef TYPEMAP_ARGOUT
 
@@ -3348,7 +3328,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_FOR_EXCEPTION;
     if (!$result) {
-       $result = Py_None_INCREF;
+       Py_INCREF(Py_None);
+       $result = Py_None;
     }
 }
 
@@ -3387,8 +3368,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (SpiceChar *RETURN_STRING) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result,
-                                       PyString_FromString((char *) $1));
+    $result = SWIG_Python_AppendOutput($result, PyUnicode_FromString((char *) $1));
 }
 
 // Special handler just for direct calls to sigerr()
@@ -3396,7 +3376,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     RAISE_SIGERR_EXCEPTION;
     Py_XDECREF($result);
-    $result = Py_None_INCREF;
+    Py_INCREF(Py_None);
+    $result = Py_None;
 }
 
 /*******************************************************************************

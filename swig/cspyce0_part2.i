@@ -761,7 +761,7 @@ extern void ckfrot_c(
         SpiceDouble  et,
         SpiceDouble  rotate[3][3],
         SpiceInt     *OUTPUT,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 //Vector version
@@ -804,7 +804,7 @@ extern void ckfxfm_c(
         SpiceDouble  et,
         SpiceDouble  xform[6][6],
         SpiceInt     *OUTPUT,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 //Vector version
@@ -1500,7 +1500,7 @@ extern SpiceInt cposr_c(
 
 extern void cvpool_c(
         ConstSpiceChar *CONST_STRING,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 /***********************************************************************
@@ -1646,7 +1646,7 @@ extern void dafdc_c(
 extern void dafec_c(
         SpiceInt     handle,
         SpiceInt     bufsiz, SpiceInt buffln, SpiceInt *n, char buffer[COMMENTS][COMMENTLEN],
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -1670,7 +1670,7 @@ extern void dafec_c(
 %apply (void RETURN_VOID) {void daffpa_c};
 
 extern void daffpa_c(
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -2150,7 +2150,7 @@ extern void dasdc_c(
 extern void dasec_c(
         SpiceInt     handle,
         SpiceInt     bufsiz, SpiceInt buffln, SpiceInt *n, char buffer[COMMENTS][COMMENTLEN],
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -2811,7 +2811,7 @@ VECTORIZE_3d_2b__dMN(dazldr, dazldr_c, 3, 3)
 extern void dlabbs_c(
         SpiceInt      handle,
         SpiceInt      dladsc[DLASIZE],
-        SpiceBoolean  *OUT_BOOLEAN
+        SpiceBoolean  *OUTPUT
 );
 
 /***********************************************************************
@@ -2842,7 +2842,7 @@ extern void dlabbs_c(
 extern void dlabfs_c(
         SpiceInt      handle,
         SpiceInt      dladsc[DLASIZE],
-        SpiceBoolean  *OUT_BOOLEAN
+        SpiceBoolean  *OUTPUT
 );
 
 /***********************************************************************
@@ -2925,7 +2925,7 @@ extern void dlafns_c(
         SpiceInt      handle,
         ConstSpiceInt dladsc[DLASIZE],
         SpiceInt      nxtdsc[DLASIZE],
-        SpiceBoolean  *OUT_BOOLEAN
+        SpiceBoolean  *OUTPUT
 );
 
 /***********************************************************************
@@ -2960,7 +2960,7 @@ extern void dlafps_c(
         SpiceInt      handle,
         ConstSpiceInt dladsc[DLASIZE],
         SpiceInt      prvdsc[DLASIZE],
-        SpiceBoolean  *OUT_BOOLEAN
+        SpiceBoolean  *OUTPUT
 );
 
 /***********************************************************************
@@ -3042,7 +3042,7 @@ extern void dnearp_c(
         SpiceDouble  c,
         SpiceDouble  dnear[6],
         SpiceDouble  dalt[2],
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 //Vector version
@@ -3904,7 +3904,7 @@ extern void dskx02_c(
         ConstSpiceDouble raydir[3],
         SpiceInt         *OUTPUT,
         SpiceDouble      xpt[3],
-        SpiceBoolean     *OUT_BOOLEAN
+        SpiceBoolean     *OUTPUT
 );
 
 /***********************************************************************
@@ -3977,7 +3977,7 @@ extern void dskx02_c(
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dskdsc[DSKSIZE]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dc[SPICE_DSKXSI_DCSIZE]};
 %apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt ic[SPICE_DSKXSI_ICSIZE]};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_dskxsi_c(
@@ -4675,8 +4675,8 @@ extern void ekccnt_c(
 %apply (SpiceInt     *OUTPUT) {SpiceInt     *dtype};
 %apply (SpiceInt     *OUTPUT) {SpiceInt     *strlen};
 %apply (SpiceInt     *OUTPUT) {SpiceInt     *size};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *indexd};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *nullok};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *indexd};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *nullok};
 
 %inline %{
     void my_ekcii_c(
@@ -4817,7 +4817,7 @@ extern void ekffld_c(
 %apply (void RETURN_VOID) {void my_ekfind_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *query};
 %apply (SpiceInt       *OUTPUT) {SpiceInt *nmrows};
-%apply (SpiceBoolean   *OUT_BOOLEAN) {SpiceBoolean *error};
+%apply (SpiceBoolean   *OUTPUT) {SpiceBoolean *error};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar errmsg[MESSAGELEN]};
 
 %inline %{
@@ -4871,8 +4871,8 @@ extern void ekgc_c(
         SpiceInt     row,
         SpiceInt     elment,
         SpiceInt     cdatln,        SpiceChar cdata[COLLEN],
-        SpiceBoolean *OUT_BOOLEAN,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT,
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -4911,8 +4911,8 @@ extern void ekgd_c(
         SpiceInt     row,
         SpiceInt     elment,
         SpiceDouble  *OUTPUT,
-        SpiceBoolean *OUT_BOOLEAN,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT,
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -4951,8 +4951,8 @@ extern void ekgi_c(
         SpiceInt     row,
         SpiceInt     elment,
         SpiceInt     *OUTPUT,
-        SpiceBoolean *OUT_BOOLEAN,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT,
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
@@ -5318,7 +5318,7 @@ extern void ekopw_c(
 %apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt xclass[CLAUSES], int *n3)};
 %apply (char OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(char tabs[CLAUSES][NAMELEN], int *n4)};
 %apply (char OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(char cols[CLAUSES][NAMELEN], int *n5)};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *error};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *error};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar errmsg[MESSAGELEN]};
 
 %inline %{
@@ -5405,7 +5405,7 @@ extern void ekrcec_c(
         SpiceInt       recno,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       cvalen, SpiceInt *nvals, char cvals[MAXVALS][COLLEN],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 /***********************************************************************
@@ -5449,7 +5449,7 @@ extern void ekrced_c(
         SpiceInt       recno,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *nvals, SpiceDouble dvals[MAXVALS],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 /***********************************************************************
@@ -5492,7 +5492,7 @@ extern void ekrcei_c(
         SpiceInt       recno,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *nvals, SpiceInt ivals[MAXVALS],
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 /***********************************************************************
@@ -7571,7 +7571,7 @@ VECTORIZE_di_dij_d__2d(hrmint, my_hrmint_c)
 %apply (void RETURN_VOID) {void my_hx2dp_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *string};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *number};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *error};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *error};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                 {(SpiceInt errmln, SpiceChar errmsg[MESSAGELEN])};
 
@@ -7847,7 +7847,7 @@ extern void kclear_c(void);
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt filtln, SpiceChar filtyp[NAMELEN])};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt srclen, SpiceChar srcfil[FILELEN])};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_kdata_c(
@@ -7903,7 +7903,7 @@ extern void kclear_c(void);
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt filtln, SpiceChar filtyp[NAMELEN])};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt srclen, SpiceChar srcfil[FILELEN])};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
-%apply (SpiceBoolean *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_kinfo_c(
@@ -10447,7 +10447,7 @@ extern void spkpvn_c(
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble descr[5]};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt idlen, SpiceChar ident[SIDLEN])};
-%apply (SpiceInt *OUT_BOOLEAN) {SpiceBoolean *found};
+%apply (SpiceInt *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_spksfs_c(
@@ -11440,7 +11440,7 @@ extern void swpool_c(
 extern void szpool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       *OUTPUT,
-        SpiceBoolean   *OUT_BOOLEAN
+        SpiceBoolean   *OUTPUT
 );
 
 /***********************************************************************
@@ -11554,7 +11554,7 @@ extern void tkfram_c(
         SpiceInt     frcode,
         SpiceDouble  rot[3][3],
         SpiceInt     *OUTPUT,
-        SpiceBoolean *OUT_BOOLEAN
+        SpiceBoolean *OUTPUT
 );
 
 /***********************************************************************
