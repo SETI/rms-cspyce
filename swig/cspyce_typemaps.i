@@ -2629,33 +2629,6 @@ TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
 }
 
 /***********************************************
-* (char *STRING_IN_ARRAY)
-* Special numpy arrays in which the elements are fixed length strings.
-***********************************************/
-
-%typemap(in)
-    (Type *IN_STRING_ARRAY1),
-    (Type *INOUT_STRING_ARRAY1)
-{
-//      (Type *IN_STRING_ARRAY1) (Type *INOUT_STRING_ARRAY1)
-    $1 = PyArray_DATA($input);
-}
-
-%typemap(argout) (Type *IN_STRING_ARRAY1) ""
-
-%typemap(argout)
-    (Type *INOUT_STRING_ARRAY1)
-{
-    Py_INCREF($input);
-    $result = SWIG_Python_AppendOutput($result, $input);
-}
-
-%typemap(freearg)
-    (Type *IN_STRING_ARRAY1),
-    (Type *INOUT_STRING_ARRAY1) ""
-
-
-/***********************************************
 * (char IN_STRING)
 ***********************************************/
 
