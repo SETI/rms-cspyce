@@ -789,6 +789,27 @@ void handle_bad_sequence_to_list(const char *symname) {
         get_exception_message(symname));
     reset_c();
 }
+
+void capsule_cleanup(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    PyMem_Free(memory);
+}
+
+int give_array_data_ownership(PyArrayObject *array, void** data) {
+    PyObject *capsule = PyCapsule_New(*data, NULL, capsule_cleanup);
+    if (!capsule) {
+        return 0;
+    }
+    // At this point, the capsule owns the data, so we don't worry about it anymore
+    // PyArray_SetBaseObject steals the reference.
+    int result = PyArray_SetBaseObject(array, capsule);
+    if (result == 0) {
+        *data = NULL;
+        return 1;
+    }
+    return 0;
+}
+
 %}
 
 // Copy standard typemaps for Spice types
@@ -1714,11 +1735,12 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[1] = {dimsize$argnum[0]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
+    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(1, dims, Typecode, buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum, dims[0] * sizeof(Type));
+    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
+
+    // AppendOutput steals the reference ount.
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
-    // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
 
@@ -2333,11 +2355,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
+    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(2, dims, Typecode, buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-         PyArray_SIZE(pyarr$argnum) * sizeof(Type));
-
+    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2351,14 +2371,12 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    if (dimsize$argnum[0] == 0) {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, dims + 1, Typecode);
-    } else {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
-    }
+    int is_short = (dims[0] == 0);
+    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(
+          2 - is_short, dims + is_short, Typecode, buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-        PyArray_SIZE(pyarr$argnum) * sizeof(Type));
+    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2431,14 +2449,11 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[3] = {dimsize$argnum[0], dimsize$argnum[1], dimsize$argnum[2]};
-    if (dims[0] == 0) {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims + 1, Typecode);
-    } else  {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(3, dims, Typecode);
-    }
+    int is_short = (dims[0] == 0);
+    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(
+        3 - is_short, dims + is_short, Typecode, buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-           PyArray_SIZE(pyarr$argnum) * sizeof(Type));
+    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
     pyarr$argnum = NULL;
 }

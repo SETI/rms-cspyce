@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import numpy.testing as npt
 import cspyce.typemap_samples as ts
 
 
@@ -42,7 +43,7 @@ class Test_IN_ARRAY1_FixedDimension(unittest.TestCase):
     def test_allows_integral_types(self):
         for dtype in ("int8", "uint8", "int16", "uint16", "uint32", "int64"):
             array = np.arange(10, 13, dtype=dtype)
-            self.assertEquals((10, 11, 12), ts.in_array1_1(array))
+            self.assertEqual((10, 11, 12), ts.in_array1_1(array))
 
     def test_disallows_nonintegral_types(self):
         for dtype in ('float', 'double', 'complex'):
@@ -496,6 +497,7 @@ class Test_OUT_ARRAY23_FixedSize(unittest.TestCase):
     def test_yields_2d(self):
         value2 = ts.out_array23_1(25, 0, 4, 5)
         self.assertEqual((4, 5), value2.shape)
+        print(value2)
         self.assertEqual(25, value2[0, 0])
 
     def test_memory_error(self):
@@ -677,7 +679,7 @@ class TestReturnValueThroughOutvar(unittest.TestCase):
     def test_outvar_int(self):
         temp = ts.outvar_set_from_var_int(5)
         self.assertIsInstance(temp, int)
-        self.assertEquals(temp, 5)
+        self.assertEqual(temp, 5)
 
     def test_outvar_float(self):
         self.assertIsInstance(ts.outvar_set_from_var_float(10), float)
@@ -689,14 +691,14 @@ class TestReturnValueThroughOutvar(unittest.TestCase):
 
     def test_outvar_char(self):
         self.assertIsInstance(ts.outvar_set_from_var_char(10), str)
-        self.assertEquals(len(ts.outvar_set_from_var_char(10)), 1)
+        self.assertEqual(len(ts.outvar_set_from_var_char(10)), 1)
         self.assertEqual(ts.outvar_set_from_var_char(10), chr(10))
 
     def test_outvar_bool(self):
         self.assertIsInstance(ts.outvar_set_from_var_bool(0), bool)
         self.assertEqual(ts.outvar_set_from_var_bool(0), False)
-        self.assertEquals(ts.outvar_set_from_var_bool(1), True)
-        self.assertEquals(ts.outvar_set_from_var_bool(-100), True)
+        self.assertEqual(ts.outvar_set_from_var_bool(1), True)
+        self.assertEqual(ts.outvar_set_from_var_bool(-100), True)
 
 
 if __name__ == '__main__':
