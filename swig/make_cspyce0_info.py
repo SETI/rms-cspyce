@@ -344,6 +344,8 @@ def handle_one_function(out, records):
                 argdefs = record.rstrip(',) ').split(',')
                 for argdef in argdefs:
                     match = ARG_DEF.fullmatch(argdef.rstrip(' ,)'))
+                    if not match:
+                        raise ValueError(f"Bad match on record {argdef}")
                     (const, argtype, star, name, dim) = match.groups()
                     argtype = (const + ' ' + argtype).lstrip()
                     dim = dim.replace(' ', '')

@@ -1992,15 +1992,15 @@ extern void dasac_c(
 
 %rename (dasadc) dasadc_c;
 %apply (void RETURN_VOID) {void dasadc_c};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_ARRAY2)
-                    {(SpiceInt datlen, ConstSpiceChar *data)};
+%apply (ConstSpiceChar *IN_ARRAY1) {ConstSpiceChar *data};
 
 extern void dasadc_c(
         SpiceInt handle,
         SpiceInt n,
         SpiceInt bpos,
         SpiceInt epos,
-        SpiceInt datlen, ConstSpiceChar *data
+        SpiceInt datlen,
+        ConstSpiceChar *data
 );
 
 //CSPYCE_TYPE:data:byte_array[][]
@@ -2441,7 +2441,7 @@ extern void dasopw_c(
 
 %rename (dasrdc) dasrdc_c;
 %apply (void RETURN_VOID) {void dasrdc_c};
-%apply (SpiceInt DIM2, char *INOUT_ARRAY2) {(SpiceInt datlen, char *data)};
+%apply (char *INOUT_ARRAY1) {char *data};
 
 extern void dasrdc_c(
         SpiceInt handle,
@@ -2449,7 +2449,8 @@ extern void dasrdc_c(
         SpiceInt last,
         SpiceInt bpos,
         SpiceInt epos,
-        SpiceInt datlen, char *data
+        SpiceInt datlen,
+        char *data
 );
 
 //CSPYCE_TYPE:data:byte_array[][]
@@ -2477,16 +2478,27 @@ extern void dasrdc_c(
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdd) dasrdd_c;
-%apply (void RETURN_VOID) {void dasrdd_c};
-%apply (SpiceDouble LOCAL_INOUT_ARRAY1[]){SpiceDouble data[]};
+%rename (dasrdd) my_dasrdd_c;
+%apply (void RETURN_VOID) {void my_dasrdd_c};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
 
-extern void dasrdd_c (
+%inline %{
+extern void my_dasrdd_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
-        SpiceDouble         data[]
-);
+        SpiceDouble         **data,
+        int                 *size)
+    {
+        my_assert_ge(first, 1, "dasrdd", "first (#) must be at least 1");
+        my_assert_ge(last, first, "dasrdd", "last (#) must be as large as first (#)");
+        *size = last - first + 1;
+        *data = my_malloc(*size, "dasrdd");
+        if (data) {
+           dasrdd_c(handle, first, last,  *data);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure dasrdi_c ( DAS, read data, integer )
@@ -2511,16 +2523,27 @@ extern void dasrdd_c (
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdi) dasrdi_c;
-%apply (void RETURN_VOID) {void dasrdi_c};
-%apply (SpiceInt LOCAL_INOUT_ARRAY1[]){SpiceInt data[]};
+%rename (dasrdi) my_dasrdi_c;
+%apply (void RETURN_VOID) {void my_dasrdi_c};
+%apply (SpiceInt **OUT_ARRAY1, int *SIZE1){(SpiceInt **data, int *size)};
 
-extern void dasrdi_c (
+%inline %{
+extern void my_dasrdi_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
-        SpiceInt            data[]
-);
+        SpiceInt            **data,
+        int                 *size)
+    {
+        my_assert_ge(first, 1, "dasrdi", "first (#) must be at least 1");
+        my_assert_ge(last, first, "dasrdi", "last (#) must be as large as first (#)");
+        *size = last - first + 1;
+        *data = my_int_malloc(*size, "dasrdi");
+        if (data) {
+           dasrdi_c(handle, first, last,  *data);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure dasrfr_c ( DAS, read file record )
@@ -2613,8 +2636,7 @@ extern void dasrdi_c (
 
 %rename (dasudc) dasudc_c;
 %apply (void RETURN_VOID) {void dasudc_c};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_ARRAY2)
-                    {(SpiceInt datlen, ConstSpiceChar *data)};
+%apply (ConstSpiceChar *IN_ARRAY1) {ConstSpiceChar *data};
 
 extern void dasudc_c(
         SpiceInt handle,

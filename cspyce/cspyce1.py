@@ -6,6 +6,7 @@
 #
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
+from collections.abc import Sequence
 
 import numpy as np
 import textwrap
@@ -815,36 +816,35 @@ del CSPYCE_DEFINITIONS['dasec']['done']
 # other arguments.  It is simpler to create those arrays in Python and pass them.
 ################################################################################
 
-def dafgda(handle, begin, end):
-    size = max(end - begin + 1, 0)
-    data = np.empty(size, dtype='double')
-    return cspyce0.dafgda(handle, begin, end, data)
+def dasadc(handle, n, bpos, epos, data: Sequence[str]):
+    byte_data = [string.encode('utf-8') for string in data]
+    stride = max(epos + 1, max(len(x) for x in byte_data))
+    array = np.array(byte_data, dtype=np.dtype(('S', stride)))
+    cspyce0.dasadc(handle, n, bpos, epos, stride, array)
 
-CSPYCE_SIGNATURES['dafgda'] = CSPYCE_SIGNATURES['dafgda'][0:3]
-CSPYCE_ARGNAMES['dafgda'] = CSPYCE_ARGNAMES['dafgda'][0:3]
+del CSPYCE_SIGNATURES['dasadc'][4]
+del CSPYCE_ARGNAMES['dasadc'][4]
 
-def dafus(handle, nd, ni):
-    dc = np.empty(max(nd, 0), dtype='double')
-    ic = np.empty(max(ni, 0), dtype='int32')
-    return cspyce0.dafus(handle, nd, ni, dc, ic)
+def dasudc(handle, first, last, bpos, epos, data: Sequence[str]):
+    byte_data = [string.encode('utf-8') for string in data]
+    stride = max(epos + 1, max(len(x) for x in byte_data))
+    array = np.array(byte_data, dtype=np.dtype(('S', stride)))
+    cspyce0.dasudc(handle, first, last, bpos, epos, stride, array)
 
-CSPYCE_SIGNATURES['dafus'] = CSPYCE_SIGNATURES['dafus'][0:3]
-CSPYCE_ARGNAMES['dafus'] = CSPYCE_ARGNAMES['dafus'][0:3]
+del CSPYCE_SIGNATURES['dasudc'][5]
+del CSPYCE_ARGNAMES['dasudc'][5]
 
-def dasrdi(handle, first, last):
-    size = last - first + 1
-    return cspyce0.dasrdi(handle, first, last, np.empty(size, dtype='int32'))
+def dasrdc(handle, first, last, bpos, epos):
+    char_count = last - first + 1
+    record_size = epos - bpos + 1
+    records = (char_count + (record_size - 1)) // record_size
+    array = np.zeros(records, dtype=np.dtype(('S', epos + 1)))
+    result = cspyce0.dasrdc(handle, first, last, bpos, epos, array.itemsize, array)
+    assert result is array
+    return array
 
-CSPYCE_SIGNATURES['dasrdi'].pop()
-CSPYCE_ARGNAMES['dasrdi'].pop()
-
-def dasrdd(handle, first, last):
-    size = last - first + 1
-    return cspyce0.dasrdd(handle, first, last, np.empty(size, dtype='double'))
-
-CSPYCE_SIGNATURES['dasrdd'].pop()
-CSPYCE_ARGNAMES['dasrdd'].pop()
-
+del CSPYCE_SIGNATURES['dasrdc'][5:]
+del CSPYCE_ARGNAMES['dasrdc'][5:]
 
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in

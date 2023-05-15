@@ -1373,16 +1373,29 @@ extern void dafcls_c(
 * data       O   Data contained between `begin' and `end'.
 ***********************************************************************/
 
-%rename (dafgda) dafgda_c;
+%rename (dafgda) my_dafgda_c;
 %apply (void RETURN_VOID) {void my_dafgda_c};
-%apply (SpiceDouble *LOCAL_INOUT_ARRAY1){SpiceDouble *data};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
 
-extern void dafgda_c(
+%inline %{
+    void my_dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble *data
-);
+        SpiceDouble **data,
+        int         *size)
+    {
+        my_assert_ge(begin, 1, "dafgda", "begin (#) must be at least 1");
+        my_assert_ge(end, begin, "dafgda", "end (#) must at least as large as begin (#)");
+        *size = end - begin + 1;
+        *data = my_malloc(*size, "dafgda");
+        if (*data) {
+            dafgda_c(handle, begin, end, *data);
+        }
+    }
+
+%}
+
 
 /***********************************************************************
 * -Procedure dafgn_c ( DAF, get array name )
@@ -1515,20 +1528,32 @@ extern void dafopr_c(
 * ic         O   Integer components.
 ***********************************************************************/
 
-%rename (dafus) dafus_c;
+%rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
 %apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble sum[]};
-%apply (SpiceDouble *LOCAL_INOUT_ARRAY1) {SpiceDouble *dc};
-%apply (SpiceInt *LOCAL_INOUT_ARRAY1) {SpiceInt *ic};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **dc, int *dc_size)};
+%apply (SpiceInt **OUT_ARRAY1, int *SIZE1){(SpiceInt **ic, int *ic_size)};
 
-extern void dafus_c(
+%inline %{
+    void my_dafus_c(
         ConstSpiceDouble sum[],
         SpiceInt nd,
         SpiceInt ni,
-        SpiceDouble *dc,
-        SpiceInt *ic
-);
+        SpiceDouble **dc,
+        int *dc_size,
+        SpiceInt **ic,
+        int *ic_size)
+    {
+        *dc = my_malloc(max(nd, 0), "dafus");
+        *ic = my_malloc(max(ni, 0), "dafus");
+        if (dc && ic) {
+            *dc_size = max(nd, 0);
+            *ic_size = max(ni, 0);
+            dafus_c(sum, nd, ni, *dc, *ic);
+        }
+    }
 
+%}
 
 /***********************************************************************
 * -Procedure dcyldr_c (Derivative of cylindrical w.r.t. rectangular )
