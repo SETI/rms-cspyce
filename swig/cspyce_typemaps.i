@@ -2477,6 +2477,15 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 *******************************************************/
 
 %typemap(in)
+    (Type *INOUT_ARRAY1)
+        (PyArrayObject* pyarr=NULL)
+{
+//      (Type *INOUT_ARRAY1)
+    CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(in)
     (int DIM1, Type *INOUT_ARRAY1)
         (PyArrayObject* pyarr=NULL),
     (int DIM1, Type INOUT_ARRAY1[])
@@ -2517,6 +2526,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 }
 
 %typemap(argout)
+    (Type *INOUT_ARRAY1),
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY]),
@@ -2527,6 +2537,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 }
 
 %typemap(freearg)
+    (Type *INOUT_ARRAY1),
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY]),

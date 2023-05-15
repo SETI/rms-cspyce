@@ -838,8 +838,9 @@ def dasrdc(handle, first, last, bpos, epos):
     records = (char_count + (record_size - 1)) // record_size
     array = np.zeros(records, dtype=np.dtype(('S', epos + 1)))
     result = cspyce0.dasrdc(handle, first, last, bpos, epos, array.itemsize, array)
-    assert result is array
-    return array
+    # assert result is array
+    return [item.decode() for item in result]
+
 
 del CSPYCE_SIGNATURES['dasrdc'][5:]
 del CSPYCE_ARGNAMES['dasrdc'][5:]
