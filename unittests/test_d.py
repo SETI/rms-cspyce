@@ -13,7 +13,9 @@ from gettestkernels import (
     cwd
 )
 
-@pytest.fixture(autouse=True)
+# =============================================================================
+# @pytest.fixture(autouse=True)
+# =============================================================================
 def clear_kernel_pool_and_reset():
     cs.kclear()
     cs.reset()
@@ -551,7 +553,7 @@ def test_dasudd_dasrdd():
         
 
 # Fails due to unknown reason
-def fail_dasrdi():
+def fail_dasudi_dasrdi():
     daspath = os.path.join(cwd, "ex_dasudi.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasudi", 140)
@@ -570,6 +572,47 @@ def fail_dasrdi():
 # Fails due to bytearray reliance.
 def test_dasudc():
     pass
+    
+
+def test_dlaopn_dlabns_dlaens_daswbr():
+    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
+    cleanup_kernel(path)
+    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
+    cs.dlabns(handle)  # start segm
+    datai = np.arange(100, dtype=int)
+    datad = np.arange(100.0, dtype=float)
+    cs.dasadi(handle, datai)
+    cs.dasadd(handle, datad)
+    cs.dlaens(handle)  # end the segment
+    cs.daswbr(handle)
+    cs.dasllc(handle)
+    # now read the file to check data
+    handle = cs.dasopr(path)
+    dladsc = cs.dlabfs(handle)
+    assert dladsc.isize == 100
+    assert dladsc.dsize == 100
+    cs.dascls(handle)
+    # now clean up
+    cleanup_kernel(path)
+    
+# =============================================================================
+# dazldr
+# dcyldr
+# deltet
+# det
+# dgeodr
+# diags2
+# dlabbs
+# dlabfs
+# dlafns
+# dlafps
+# dlaopn
+# dlatdr
+# dnearp
+# dp2hx
+# dpgrdr
+# =============================================================================
+
 
 
 
