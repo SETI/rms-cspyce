@@ -795,21 +795,23 @@ void capsule_cleanup(PyObject *capsule) {
     PyMem_Free(memory);
 }
 
-int give_array_data_ownership(PyArrayObject *array, void** data) {
+PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int typenum, void **data) {
+    PyArrayObject* array = PyArray_SimpleNewFromData(nd, dims, typenum, *data);
     PyObject *capsule = PyCapsule_New(*data, NULL, capsule_cleanup);
-    if (!capsule) {
-        return 0;
+    if (array && capsule) {
+        int result = PyArray_SetBaseObject(array, capsule);
+        if (result == 0) {  // 0 means success
+            // The array owns the capsule, and the capsule owns the data.  We
+            // reset the data to None so it won't be freed by someone else.
+            *data = NULL;
+            return array;
+        }
     }
-    // At this point, the capsule owns the data, so we don't worry about it anymore
-    // PyArray_SetBaseObject steals the reference.
-    int result = PyArray_SetBaseObject(array, capsule);
-    if (result == 0) {
-        *data = NULL;
-        return 1;
-    }
-    return 0;
+    // Something went wrong.  Make sure that both of these are freed.
+    Py_XDECREF(array);
+    Py_XDECREF(capsule);
+    return NULL;
 }
-
 %}
 
 // Copy standard typemaps for Spice types
@@ -1735,9 +1737,8 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[1] = {dimsize$argnum[0]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(1, dims, Typecode, buffer$argnum);
+    pyarr$argnum = create_array_with_owned_data(1, dims, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
 
     // AppendOutput steals the reference ount.
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
@@ -2355,9 +2356,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(2, dims, Typecode, buffer$argnum);
+    pyarr$argnum = create_array_with_owned_data(2, dims, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2372,10 +2372,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
     int is_short = (dims[0] == 0);
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(
-          2 - is_short, dims + is_short, Typecode, buffer$argnum);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(
+          2 - is_short, dims + is_short, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
@@ -2450,10 +2449,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[3] = {dimsize$argnum[0], dimsize$argnum[1], dimsize$argnum[2]};
     int is_short = (dims[0] == 0);
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNewFromData(
-        3 - is_short, dims + is_short, Typecode, buffer$argnum);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(
+        3 - is_short, dims + is_short, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    TEST_MALLOC_FAILURE(give_array_data_ownership(pyarr$argnum, &buffer$argnum));
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
     pyarr$argnum = NULL;
 }

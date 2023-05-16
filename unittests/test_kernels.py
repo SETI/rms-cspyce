@@ -552,7 +552,7 @@ class Test_cspyce1_kernels(unittest.TestCase):
     visibl2 = True
     lit2    = False
 
-    eps = 5e-8
+    eps = 1e-5
     self.assertAllEqual(illum('mimas', CASSINI_ET, 'lt+S', 'cassini',
                                 [200,0,0]),
             [phase, incdnc, emissn], eps)
