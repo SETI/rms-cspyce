@@ -100,7 +100,7 @@ def cleanup_cassini_kernels() -> None:
 
 
 class ExtraKernels(object):
-    voyagerSclk_url = "vg200022.tsc"
+    voyagerSclk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/vg200022.tsc"
     voyagerSclk_md5 = "4bcaf22788efbd86707c4b3c4d63c0c3"
     earthTopoTf_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/earth_topo_050714.tf"
     earthTopoTf_md5 = "fbde06c5abc5da969db984bb4ce5e6e0"
