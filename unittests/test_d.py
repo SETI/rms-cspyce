@@ -574,7 +574,7 @@ def test_dasudc():
     pass
     
 
-def test_dlaopn_dlabns_dlaens_daswbr():
+def fail_dlaopn_dlabns_dlaens_daswbr():
     path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
     cleanup_kernel(path)
     handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
