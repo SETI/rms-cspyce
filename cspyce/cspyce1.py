@@ -815,35 +815,39 @@ del CSPYCE_DEFINITIONS['dasec']['done']
 ################################################################################
 
 def dasadc(handle, n, bpos, epos, data):
-    byte_data = [string.encode('utf-8') for string in data]
-    stride = max(epos + 1, max(len(x) for x in byte_data))
-    array = np.array(byte_data, dtype=np.dtype(('S', stride)))
-    cspyce0.dasadc(handle, n, bpos, epos, stride, array)
+    array = _create_das_char_array(data, epos)
+    cspyce0.dasadc(handle, n, bpos, epos, array.itemsize, array)
 
 del CSPYCE_SIGNATURES['dasadc'][4]
 del CSPYCE_ARGNAMES['dasadc'][4]
 
 def dasudc(handle, first, last, bpos, epos, data):
-    byte_data = [string.encode('utf-8') for string in data]
-    stride = max(epos + 1, max(len(x) for x in byte_data))
-    array = np.array(byte_data, dtype=np.dtype(('S', stride)))
-    cspyce0.dasudc(handle, first, last, bpos, epos, stride, array)
+    array = _create_das_char_array(data, epos)
+    cspyce0.dasudc(handle, first, last, bpos, epos, array.itemsize, array)
 
 del CSPYCE_SIGNATURES['dasudc'][5]
 del CSPYCE_ARGNAMES['dasudc'][5]
 
-def dasrdc(handle, first, last, bpos, epos):
+def dasrdc(handle, first, last, bpos, epos, data=None):
     char_count = last - first + 1
     record_size = epos - bpos + 1
     records = (char_count + (record_size - 1)) // record_size
-    array = np.zeros(records, dtype=np.dtype(('S', epos + 1)))
+    if data is None:
+        array =  np.zeros(records, dtype=np.dtype(('S', epos + 1)))
+    else:
+        array = _create_das_char_array(data, epos)
+        if len(array) < records:
+            raise ValueError("Array not long enough")
     result = cspyce0.dasrdc(handle, first, last, bpos, epos, array.itemsize, array)
-    # assert result is array
     return [item.decode() for item in result]
 
+del CSPYCE_SIGNATURES['dasrdc'][5]
+del CSPYCE_ARGNAMES['dasrdc'][5]
 
-del CSPYCE_SIGNATURES['dasrdc'][5:]
-del CSPYCE_ARGNAMES['dasrdc'][5:]
+def _create_das_char_array(data, epos):
+    byte_data = [string.encode('utf-8') for string in data]
+    itemsize = max(epos + 1, max(len(x) for x in byte_data))
+    return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in

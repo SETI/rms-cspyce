@@ -60,6 +60,10 @@ def test_read_write_char(das_handle):
     result = cs.dasrdc(das_handle, 2, 19, 1, 7)
     assert result == ['\x00cdefghi', '\x00jkBCDEF', '\x00GHIJ']
 
+    # Same test as above, but we're overwriting a string
+    result = cs.dasrdc(das_handle, 2, 19, 1, 7, ['123456789'] * 4)
+    assert result == ['1cdefghi9', '1jkBCDEF9', '1GHIJ6789', '123456789']
+
     # replace characters 1 and 2 with ??
     cs.dasudc(das_handle, 1, 2, 0, 2, ['?????'])
     result = cs.dasrdc(das_handle, 1, 5, 0, 4)
