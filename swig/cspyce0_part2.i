@@ -1986,7 +1986,7 @@ extern void dasac_c(
 * bpos       I   Begin position of substrings in byte array.
 * epos       I   End position of substrings in byte array.
 * datlen     I   Common length of the character arrays in `data'.
-* data       I   Byte array providing the set of substrings to be added
+* data       I   Sequence of strings providing the set of substrings to be added
 *                to the character data in the DAS file.
 ***********************************************************************/
 
@@ -2435,8 +2435,7 @@ extern void dasopw_c(
 * bpos       I   Beginning position of substrings.
 * epos       I   End position of substrings.
 * datlen     I   Common length of the character arrays in `data'.
-* data      I-O  Byte array having updated values in rows `first' through `last'
-*                at positions `bpos' to `epos'.
+* data      I-O  Sequence of strings to be updated by the character data in the DAS file.
 ***********************************************************************/
 
 %rename (dasrdc) dasrdc_c;
@@ -2474,7 +2473,7 @@ extern void dasrdc_c(
 * --------  ---  --------------------------------------------------
 * handle     I   DAS file handle.
 * first      I   Beginning of range of DAS floating-point logical addresses.
-* last       I   End of range of DAS character floating-point addresses.
+* last       I   End of range of DAS floating-point logical addresses.
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
@@ -2519,7 +2518,7 @@ extern void my_dasrdd_c (
 * --------  ---  --------------------------------------------------
 * handle     I   DAS file handle.
 * first      I   Beginning of range of DAS integer logical addresses.
-* last       I   End of range of DAS character integer addresses.
+* last       I   End of range of DAS integer logical addresses.
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
@@ -2631,7 +2630,8 @@ extern void my_dasrdi_c (
 * bpos       I   Begin position of substrings in byte array.
 * epos       I   End position of substrings in byte array.
 * datlen     I   Common length of the character arrays in `data'.
-* data       I   Byte array having addresses `first' through `last'.
+* data       I   Sequence of strings providing the set of substrings to be updated
+*                in the character data in the DAS file.
 ***********************************************************************/
 
 %rename (dasudc) dasudc_c;
