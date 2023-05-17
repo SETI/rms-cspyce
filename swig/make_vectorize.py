@@ -298,6 +298,7 @@ class MacroGenerator:
         out(f'if (!{last_name}_buffer) {{')
         with self.indent:
             out('handle_malloc_failure("NAME" "_vector");')
+            out('return;')
         out('}')
         out()
 
