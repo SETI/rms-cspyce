@@ -1986,21 +1986,21 @@ extern void dasac_c(
 * bpos       I   Begin position of substrings in byte array.
 * epos       I   End position of substrings in byte array.
 * datlen     I   Common length of the character arrays in `data'.
-* data       I   Byte array providing the set of substrings to be added
+* data       I   Sequence of strings providing the set of substrings to be added
 *                to the character data in the DAS file.
 ***********************************************************************/
 
 %rename (dasadc) dasadc_c;
 %apply (void RETURN_VOID) {void dasadc_c};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_ARRAY2)
-                    {(SpiceInt datlen, ConstSpiceChar *data)};
+%apply (ConstSpiceChar *IN_ARRAY1) {ConstSpiceChar *data};
 
 extern void dasadc_c(
         SpiceInt handle,
         SpiceInt n,
         SpiceInt bpos,
         SpiceInt epos,
-        SpiceInt datlen, ConstSpiceChar *data
+        SpiceInt datlen,
+        ConstSpiceChar *data
 );
 
 //CSPYCE_TYPE:data:byte_array[][]
@@ -2435,13 +2435,12 @@ extern void dasopw_c(
 * bpos       I   Beginning position of substrings.
 * epos       I   End position of substrings.
 * datlen     I   Common length of the character arrays in `data'.
-* data      I-O  Byte array having updated values in rows `first' through `last'
-*                at positions `bpos' to `epos'.
+* data      I-O  Sequence of strings to be updated by the character data in the DAS file.
 ***********************************************************************/
 
 %rename (dasrdc) dasrdc_c;
 %apply (void RETURN_VOID) {void dasrdc_c};
-%apply (SpiceInt DIM2, char *INOUT_ARRAY2) {(SpiceInt datlen, char *data)};
+%apply (char *INOUT_ARRAY1) {char *data};
 
 extern void dasrdc_c(
         SpiceInt handle,
@@ -2449,7 +2448,8 @@ extern void dasrdc_c(
         SpiceInt last,
         SpiceInt bpos,
         SpiceInt epos,
-        SpiceInt datlen, char *data
+        SpiceInt datlen,
+        char *data
 );
 
 //CSPYCE_TYPE:data:byte_array[][]
@@ -2473,28 +2473,29 @@ extern void dasrdc_c(
 * --------  ---  --------------------------------------------------
 * handle     I   DAS file handle.
 * first      I   Beginning of range of DAS floating-point logical addresses.
-* last       I   End of range of DAS character floating-point addresses.
+* last       I   End of range of DAS floating-point logical addresses.
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
 %rename (dasrdd) my_dasrdd_c;
 %apply (void RETURN_VOID) {void my_dasrdd_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1)
-                            {(SpiceDouble data[MAXRECS], int *size)};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
 
 %inline %{
-    void my_dasrdd_c(
-        SpiceInt    handle,
-        SpiceInt    first,
-        SpiceInt    last,
-        SpiceDouble data[MAXRECS], int *size)
+extern void my_dasrdd_c (
+        SpiceInt            handle,
+        SpiceInt            first,
+        SpiceInt            last,
+        SpiceDouble         **data,
+        int                 *size)
     {
-        if (!my_assert_ge(MAXRECS, last - first + 1, "dasrdd",
-            "Array dimension is too small: "
-            "provided = #; required = #")) return;
-
-        dasrdd_c(handle, first, last, data);
+        my_assert_ge(first, 1, "dasrdd", "first (#) must be at least 1");
+        my_assert_ge(last, first, "dasrdd", "last (#) must be as large as first (#)");
         *size = last - first + 1;
+        *data = my_malloc(*size, "dasrdd");
+        if (data) {
+           dasrdd_c(handle, first, last,  *data);
+        }
     }
 %}
 
@@ -2517,28 +2518,29 @@ extern void dasrdc_c(
 * --------  ---  --------------------------------------------------
 * handle     I   DAS file handle.
 * first      I   Beginning of range of DAS integer logical addresses.
-* last       I   End of range of DAS character integer addresses.
+* last       I   End of range of DAS integer logical addresses.
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
 %rename (dasrdi) my_dasrdi_c;
 %apply (void RETURN_VOID) {void my_dasrdi_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1)
-                            {(SpiceInt data[MAXRECS], int *size)};
+%apply (SpiceInt **OUT_ARRAY1, int *SIZE1){(SpiceInt **data, int *size)};
 
 %inline %{
-    void my_dasrdi_c(
-        SpiceInt handle,
-        SpiceInt first,
-        SpiceInt last,
-        SpiceInt data[MAXRECS], int *size)
+extern void my_dasrdi_c (
+        SpiceInt            handle,
+        SpiceInt            first,
+        SpiceInt            last,
+        SpiceInt            **data,
+        int                 *size)
     {
-        if (!my_assert_ge(MAXRECS, last - first + 1, "dasrdi",
-            "Array dimension is too small: "
-            "provided = #; required = #")) return;
-
-        dasrdi_c(handle, first, last, data);
+        my_assert_ge(first, 1, "dasrdi", "first (#) must be at least 1");
+        my_assert_ge(last, first, "dasrdi", "last (#) must be as large as first (#)");
         *size = last - first + 1;
+        *data = my_int_malloc(*size, "dasrdi");
+        if (data) {
+           dasrdi_c(handle, first, last,  *data);
+        }
     }
 %}
 
@@ -2628,13 +2630,13 @@ extern void dasrdc_c(
 * bpos       I   Begin position of substrings in byte array.
 * epos       I   End position of substrings in byte array.
 * datlen     I   Common length of the character arrays in `data'.
-* data       I   Byte array having addresses `first' through `last'.
+* data       I   Sequence of strings providing the set of substrings to be updated
+*                in the character data in the DAS file.
 ***********************************************************************/
 
 %rename (dasudc) dasudc_c;
 %apply (void RETURN_VOID) {void dasudc_c};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_ARRAY2)
-                    {(SpiceInt datlen, ConstSpiceChar *data)};
+%apply (ConstSpiceChar *IN_ARRAY1) {ConstSpiceChar *data};
 
 extern void dasudc_c(
         SpiceInt handle,
@@ -2671,15 +2673,23 @@ extern void dasudc_c(
 * data       I   An array of d.p. numbers.
 ***********************************************************************/
 
-%rename (dasudd) dasudd_c;
-%apply (void RETURN_VOID) {void dasudd_c};
+%rename (dasudd) my_dasudd_c;
+%apply (void RETURN_VOID) {void my_dasudd_c};
+%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1) {(SpiceInt n, ConstSpiceDouble *data)};
 
-extern void dasudd_c(
+%inline %{
+    void my_dasudd_c(
         SpiceInt         handle,
         SpiceInt         first,
         SpiceInt         last,
-        ConstSpiceDouble *IN_ARRAY1
-);
+        SpiceInt n, ConstSpiceDouble *data)
+    {
+        if (!my_assert_ge(n, last - first + 1, "dasudd",
+                          "Array is not long enough for update")) return;
+        dasudd_c(handle, first, last, data);
+    }
+
+%}
 
 /***********************************************************************
 * -Procedure dasudi_c ( DAS, update data, integer )
@@ -2705,15 +2715,22 @@ extern void dasudd_c(
 * data       I   An array of integers.
 ***********************************************************************/
 
-%rename (dasudi) dasudi_c;
-%apply (void RETURN_VOID) {void dasudi_c};
+%rename (dasudi) my_dasudi_c;
+%apply (void RETURN_VOID) {void my_dasudi_c};
+%apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1) {(SpiceInt n, ConstSpiceInt *data)};
 
-extern void dasudi_c(
+%inline %{
+    void my_dasudi_c(
         SpiceInt      handle,
         SpiceInt      first,
         SpiceInt      last,
-        ConstSpiceInt *IN_ARRAY1
-);
+        SpiceInt n, ConstSpiceInt *data)
+    {
+        if (!my_assert_ge(n, last - first + 1, "dasudi",
+                          "Array is not long enough for update")) return;
+        dasudi_c(handle, first, last, data);
+    }
+%}
 
 /***********************************************************************
 * -Procedure daswbr_c ( DAS, write buffered records )

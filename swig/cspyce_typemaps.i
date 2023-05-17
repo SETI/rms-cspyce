@@ -953,6 +953,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 {
 //      (Type *IN_ARRAY01, int DIM1)
 
+
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 0, 1, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
@@ -1010,11 +1011,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 %enddef
 
 // Define concrete examples of the TYPEMAP_IN1 macros
-TYPEMAP_IN(char,             NPY_CHAR  )
-TYPEMAP_IN(SpiceChar,        NPY_CHAR  )
-TYPEMAP_IN(unsigned char,    NPY_UBYTE )
-TYPEMAP_IN(signed char,      NPY_SBYTE )
-TYPEMAP_IN(short,            NPY_SHORT )
+TYPEMAP_IN(ConstSpiceChar,   NPY_STRING )
 TYPEMAP_IN(int,              NPY_INT   )
 TYPEMAP_IN(SpiceInt,         NPY_INT   )
 TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
@@ -1025,7 +1022,6 @@ TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
 TYPEMAP_IN(SpiceDouble,      NPY_DOUBLE)
 TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
-TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 #undef TYPEMAP_IN
 
@@ -1362,12 +1358,6 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 %enddef
 
 // Define concrete examples of the TYPEMAP_IN1 macros
-TYPEMAP_IN(char,             NPY_CHAR  )
-TYPEMAP_IN(SpiceChar,        NPY_CHAR  )
-TYPEMAP_IN(ConstSpiceChar,   NPY_CHAR  )
-TYPEMAP_IN(unsigned char,    NPY_UBYTE )
-TYPEMAP_IN(signed char,      NPY_SBYTE )
-TYPEMAP_IN(short,            NPY_SHORT )
 TYPEMAP_IN(int,              NPY_INT   )
 TYPEMAP_IN(SpiceInt,         NPY_INT   )
 TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
@@ -1378,7 +1368,6 @@ TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
 TYPEMAP_IN(SpiceDouble,      NPY_DOUBLE)
 TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
-TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 #undef TYPEMAP_IN
 
@@ -1749,11 +1738,6 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %enddef
 
-TYPEMAP_ARGOUT(char,          NPY_CHAR  )
-TYPEMAP_ARGOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_ARGOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_ARGOUT(signed char,   NPY_SBYTE )
-TYPEMAP_ARGOUT(short,         NPY_SHORT )
 TYPEMAP_ARGOUT(int,           NPY_INT   )
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
@@ -1761,7 +1745,6 @@ TYPEMAP_ARGOUT(long,          NPY_LONG  )
 TYPEMAP_ARGOUT(float,         NPY_FLOAT )
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
 #undef TYPEMAP_ARGOUT
 
@@ -1833,7 +1816,6 @@ TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 * Now define these typemaps for every numeric type
 *******************************************************/
 
-TYPEMAP_ARGOUT(short,         NPY_SHORT)
 TYPEMAP_ARGOUT(int,           NPY_INT)
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT)
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT)
@@ -2400,11 +2382,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %enddef
 
-TYPEMAP_ARGOUT(char,          NPY_CHAR  )
-TYPEMAP_ARGOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_ARGOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_ARGOUT(signed char,   NPY_SBYTE )
-TYPEMAP_ARGOUT(short,         NPY_SHORT )
 TYPEMAP_ARGOUT(int,           NPY_INT   )
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
@@ -2412,7 +2389,6 @@ TYPEMAP_ARGOUT(long,          NPY_LONG  )
 TYPEMAP_ARGOUT(float,         NPY_FLOAT )
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
 #undef TYPEMAP_ARGOUT
 
@@ -2501,15 +2477,22 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 *******************************************************/
 
 %typemap(in)
+    (Type *INOUT_ARRAY1)
+        (PyArrayObject* pyarr=NULL)
+{
+//      (Type *INOUT_ARRAY1)
+    CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(in)
     (int DIM1, Type *INOUT_ARRAY1)
         (PyArrayObject* pyarr=NULL),
     (int DIM1, Type INOUT_ARRAY1[])
         (PyArrayObject* pyarr=NULL)
 {
-
-//      (int DIM1, Type INOUT_ARRAY1)
+//      (int DIM1, Type *INOUT_ARRAY1)
 //  NOT CURRENTLY USED BY CSPICE
-
 
     CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
     $2 = ($2_ltype) PyArray_DATA(pyarr);                        // ARRAY
@@ -2543,6 +2526,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 }
 
 %typemap(argout)
+    (Type *INOUT_ARRAY1),
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY]),
@@ -2553,11 +2537,11 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 }
 
 %typemap(freearg)
+    (Type *INOUT_ARRAY1),
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY]),
     (int DIM2, Type *INOUT_ARRAY2)
-
 {
     Py_XDECREF(pyarr$argnum);
 }
@@ -2565,11 +2549,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 %enddef
 
 // Define concrete examples of the TYPEMAP_INOUT macros
-TYPEMAP_INOUT(char,          NPY_CHAR  )
-TYPEMAP_INOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_INOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_INOUT(signed char,   NPY_SBYTE )
-TYPEMAP_INOUT(short,         NPY_SHORT )
+TYPEMAP_INOUT(char,          NPY_STRING)
 TYPEMAP_INOUT(int,           NPY_INT   )
 TYPEMAP_INOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_INOUT(SpiceBoolean,  NPY_INT   )
@@ -2577,10 +2557,9 @@ TYPEMAP_INOUT(long,          NPY_LONG  )
 TYPEMAP_INOUT(float,         NPY_FLOAT )
 TYPEMAP_INOUT(double,        NPY_DOUBLE)
 TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
-
 
 #undef TYPEMAP_INOUT
+
 
 /*******************************************************************************
 * Typemap for string input
@@ -2640,10 +2619,10 @@ TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
     RAISE_BAD_STRING_ON_ERROR(error);
 }
 
-%typemap(argout) (char *CONST_STRING) {
+%typemap(argout) (Type *CONST_STRING) {
 }
 
-%typemap(freearg) (char *CONST_STRING) {
+%typemap(freearg) (Type *CONST_STRING) {
     if (SWIG_IsNewObj(alloc$argnum)) {
         PyMem_Free((void *)$1);
   }
@@ -2655,17 +2634,14 @@ TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
 
 %typemap(in) (Type IN_STRING) {
 //      (Type IN_STRING)
-
     TEST_IS_STRING($input);
     int error  = SWIG_AsVal_char($input, &$1);
     RAISE_BAD_STRING_ON_ERROR(error);
  }
 
-%typemap(argout) (Type IN_STRING) {
-}
+%typemap(argout) (Type IN_STRING) ""
 
-%typemap(freearg) (Type IN_STRING) {
-}
+%typemap(freearg) (Type IN_STRING) ""
 
 /*******************************************************
 * Now apply to all data types
@@ -3286,14 +3262,13 @@ TYPEMAP_OUT(SpiceChar)
 * Python function. A zero value is False; anything else is True.
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type)
+%define TYPEMAP_ARGOUT(Type, converter)
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
         (Type value)
 {
 //      (Type *OUTPUT)
-
     $1 = &value;
 }
 
@@ -3302,14 +3277,15 @@ TYPEMAP_OUT(SpiceChar)
 {
 //      (Type *OUTPUT)
 
-    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong(value$argnum));
+    $result = SWIG_Python_AppendOutput($result, converter);
 }
 
 %typemap(freearg) (Type *OUTPUT) ""
 
 %enddef
 
-TYPEMAP_ARGOUT(SpiceBoolean)
+TYPEMAP_ARGOUT(SpiceBoolean, PyBool_FromLong(value$argnum))
+TYPEMAP_ARGOUT(PyObject*, (value$argnum))
 
 #undef TYPEMAP_ARGOUT
 
@@ -3373,7 +3349,6 @@ TYPEMAP_ARGOUT(SpiceBoolean)
 
 // Special handler just for direct calls to sigerr()
 %typemap(out) (void RETURN_VOID_SIGERR) {
-
     RAISE_SIGERR_EXCEPTION;
     Py_XDECREF($result);
     Py_INCREF(Py_None);

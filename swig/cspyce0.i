@@ -11,7 +11,7 @@
 
 #define NPLANE 4
 #define NELLIPSE 9
-#define DAFSIZE 256     // DAF size
+#define DAFSIZE 125     // size of DAF summary
 #define DASSIZE 256     // DAS size
 #define DLASIZE 8
 #define DSKSIZE 42
@@ -1373,16 +1373,29 @@ extern void dafcls_c(
 * data       O   Data contained between `begin' and `end'.
 ***********************************************************************/
 
-%rename (dafgda) dafgda_c;
-%apply (void RETURN_VOID) {void dafgda_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble data[DAFSIZE]};
+%rename (dafgda) my_dafgda_c;
+%apply (void RETURN_VOID) {void my_dafgda_c};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
 
-extern void dafgda_c(
+%inline %{
+    void my_dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble data[DAFSIZE]
-);
+        SpiceDouble **data,
+        int         *size)
+    {
+        my_assert_ge(begin, 1, "dafgda", "begin (#) must be at least 1");
+        my_assert_ge(end, begin, "dafgda", "end (#) must at least as large as begin (#)");
+        *size = end - begin + 1;
+        *data = my_malloc(*size, "dafgda");
+        if (*data) {
+            dafgda_c(handle, begin, end, *data);
+        }
+    }
+
+%}
+
 
 /***********************************************************************
 * -Procedure dafgn_c ( DAF, get array name )
@@ -1515,19 +1528,32 @@ extern void dafopr_c(
 * ic         O   Integer components.
 ***********************************************************************/
 
-%rename (dafus) dafus_c;
+%rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble sum[DAFSIZE]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble dc[DAFSIZE]};
-%apply (SpiceInt        OUT_ARRAY1[ANY]) {SpiceInt ic[DAFSIZE]};
+%apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble sum[]};
+%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **dc, int *dc_size)};
+%apply (SpiceInt **OUT_ARRAY1, int *SIZE1){(SpiceInt **ic, int *ic_size)};
 
-extern void dafus_c(
-        ConstSpiceDouble sum[DAFSIZE],
+%inline %{
+    void my_dafus_c(
+        ConstSpiceDouble sum[],
         SpiceInt nd,
         SpiceInt ni,
-        SpiceDouble dc[DAFSIZE],
-        SpiceInt ic[DAFSIZE]
-);
+        SpiceDouble **dc,
+        int *dc_size,
+        SpiceInt **ic,
+        int *ic_size)
+    {
+        *dc = my_malloc(max(nd, 0), "dafus");
+        *ic = my_malloc(max(ni, 0), "dafus");
+        if (dc && ic) {
+            *dc_size = max(nd, 0);
+            *ic_size = max(ni, 0);
+            dafus_c(sum, nd, ni, *dc, *ic);
+        }
+    }
+
+%}
 
 /***********************************************************************
 * -Procedure dcyldr_c (Derivative of cylindrical w.r.t. rectangular )
