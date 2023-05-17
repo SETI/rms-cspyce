@@ -259,9 +259,8 @@ class MacroGenerator:
         with self.indent:
             self.generate_cspice_call()
         # End of loop
-        out('}\n')
-        # Return pointers to the allocated buffers
-        self.generate_return_results_to_caller()
+        out('}')
+        # And we're done.
 
     def get_maxdim_and_size(self):
         out = self.out
@@ -315,14 +314,6 @@ class MacroGenerator:
             for k, arg in enumerate(funcargs):
                 suffix = ',' if k < len(funcargs) - 1 else ");"
                 out(f'{arg.get_call(sizer_count)}{suffix}')
-
-    def generate_return_results_to_caller(self):
-        # We only need to change those values that have changed from the default
-        # return values.  The buffer needs to point to the actual buffer, and the
-        # first dimension set to maxdim.
-        out = self.out
-        for arg in self.outargs:
-            out(f'*{arg.name} = {arg.name}_buffer; *{arg.dim_names[0]} = maxdim;')
 
     def __get_out_letters(self):
         out_letters = []
