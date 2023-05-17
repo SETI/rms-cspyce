@@ -789,6 +789,35 @@ void handle_bad_sequence_to_list(const char *symname) {
         get_exception_message(symname));
     reset_c();
 }
+
+void capsule_cleanup(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    PyMem_Free(memory);
+}
+
+// A wrapper around PyArray_SimpleNewFromData that gives the PyArray ownership
+// of the data. The buffer pointed to by *data will be freed when the array is freed.
+//
+// On success, this function returns the newly created array and set *data to NULL.
+// On failure, this function returns False, and *data is unchanged.
+//
+PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int typenum, void **data) {
+    PyArrayObject* array = PyArray_SimpleNewFromData(nd, dims, typenum, *data);
+    PyObject *capsule = array ? PyCapsule_New(*data, NULL, capsule_cleanup) : NULL;
+    // If this is successful, it steals ownership of capsule.
+    int result = capsule ? PyArray_SetBaseObject(array, capsule) : -1;
+    if (result == 0) {
+        // The array owns capsule, and capsule owns the data. The caller is no longer
+        // responsible for freeing data.
+        *data = NULL;
+        return array;
+    } else {
+        // Something went wrong.  Clear both of these.
+        Py_XDECREF(array);
+        Py_XDECREF(capsule);
+        return NULL;
+    }
+}
 %}
 
 // Copy standard typemaps for Spice types
@@ -1714,9 +1743,9 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[1] = {dimsize$argnum[0]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
+    pyarr$argnum = create_array_with_owned_data(1, dims, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum, dims[0] * sizeof(Type));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -1786,9 +1815,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dim = max(dimsize$argnum[0], 1);
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, &dim, Typecode);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum, dim * sizeof(Type));
+
     if (dimsize$argnum[0] == 0) {
         PyObject* value = PyArray_GETITEM(pyarr$argnum, PyArray_DATA(pyarr$argnum));
         TEST_MALLOC_FAILURE(value);
@@ -2333,10 +2362,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(2, dims, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-         PyArray_SIZE(pyarr$argnum) * sizeof(Type));
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
@@ -2351,14 +2378,10 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    if (dimsize$argnum[0] == 0) {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, dims + 1, Typecode);
-    } else {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
-    }
+    int nd = dims[0] == 0 ? 1 : 2;
+    pyarr$argnum = create_array_with_owned_data(nd, &dims[2 - nd], Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-        PyArray_SIZE(pyarr$argnum) * sizeof(Type));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2431,15 +2454,12 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[3] = {dimsize$argnum[0], dimsize$argnum[1], dimsize$argnum[2]};
-    if (dims[0] == 0) {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims + 1, Typecode);
-    } else  {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(3, dims, Typecode);
-    }
+    int nd = dims[0] == 0 ? 2 : 3;
+    pyarr$argnum = create_array_with_owned_data(nd, &dims[3 - nd], Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-           PyArray_SIZE(pyarr$argnum) * sizeof(Type));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
 

@@ -128,12 +128,12 @@ class OutArg(Arg):
             self.name = f'int{my_id}'
             self.rank = 1
             self.dim_names = [f'{self.name}_dim1']
-            self.dim_values = ['0']
+            self.dim_values = ['maxdim']
         elif self.key == 'b':
             self.name = f'bool{my_id}'
             self.rank = 1
             self.dim_names = [f'{self.name}_dim1']
-            self.dim_values = ['0']
+            self.dim_values = ['maxdim']
         elif self.key[0] == 'd':
             self.name = f'out{len(self.key)}{counter[lookup_key]}'
             self.rank = len(self.key)
@@ -141,7 +141,7 @@ class OutArg(Arg):
             size_args = list(self.key[1:])
             if self.has_variable_multi_dimensions:
                 size_args = [ijkdict[letter] for letter in size_args]
-            self.dim_values = ['0', *size_args]
+            self.dim_values = ['maxdim', *size_args]
         else:
             raise ValueError('Unrecognized input arg in ' + fullname)
 
@@ -152,14 +152,12 @@ class OutArg(Arg):
         return ', '.join((main_declaration, *dims_declarations))
 
     def get_malloc(self):
-        buffer = f'{self.name}_buffer'
         if self.key == 'i':
-            return 'SpiceInt *{}', buffer, 'my_int_malloc(size, my_name)'
+            return 'SpiceInt', 'size'
         elif self.key == 'b':
-            return 'SpiceBoolean *{}', buffer, 'my_bool_malloc(size, my_name)'
+            return 'SpiceBoolean', 'size'
         else:
-            size_arg = ' * '.join(['size', *self.dim_values[1:]])
-            return 'SpiceDouble *{}', buffer, f'my_malloc({size_arg}, my_name)'
+            return 'SpiceDouble', ' * '.join(['size', *self.dim_values[1:]])
 
     def get_call(self, _sizer_count):
         multiplier = ' * '.join(['i', *self.dim_values[1:]])
@@ -250,7 +248,6 @@ class MacroGenerator:
     def write_body(self):
         out = self.out
 
-        out('char *my_name = "NAME" "_vector";\n')
         # Get maximum leading dimensions
         self.get_maxdim_and_size()
         # Set all ouput vars to the values they'll have if allocation fails.
@@ -280,33 +277,30 @@ class MacroGenerator:
 
     def generate_initialize_output_vars(self):
         for arg in self.outargs:
-            initialize_arg_name = f'*{arg.name} = NULL;'
             initialize_dimensions = [f'*{name} = {value};'
                                      for name, value in zip(arg.dim_names, arg.dim_values)]
-            self.out(' '.join((initialize_arg_name, *initialize_dimensions)))
+            self.out(' '.join(initialize_dimensions))
         self.out()
 
     def generate_output_buffer_allocation(self):
         out = self.out
-        seen_buffers = []
+        last_name = None
         for arg in self.outargs:
-            type_formatter, buffer, mallocer = arg.get_malloc()
-            if not seen_buffers:
-                out(f'{type_formatter.format(buffer)} = {mallocer};')
+            type, count = arg.get_malloc()
+            name = arg.name
+            if not last_name:
+                out(f'{type} *{name}_buffer = ({type} *)PyMem_Malloc({count} * sizeof({type}));')
             else:
-                out(f'{type_formatter.format(buffer)} = '
-                    f'{seen_buffers[-1]} ? {mallocer} : NULL;')
-            seen_buffers.append(buffer)
+                out(f'{type} *{name}_buffer = {last_name}_buffer ? ({type} *)PyMem_Malloc({count} * sizeof({type})) : NULL;')
+            last_name = name
+        for arg in self.outargs:
+            out(f'*{arg.name} = {arg.name}_buffer;')
         # Handle an error
-        if len(seen_buffers) == 1:
-            out(f'if (!{seen_buffers[-1]}) return;')
-        else:
-            out(f'if (!{seen_buffers[-1]}) {{')
-            with self.indent:
-                for seen_buffer in seen_buffers[:-1]:
-                    out(f'free({seen_buffer});')
-                out(f'return;')
-            out('}\n')
+        out(f'if (!{last_name}_buffer) {{')
+        with self.indent:
+            out('handle_malloc_failure("NAME" "_vector");')
+        out('}')
+        out()
 
     def generate_cspice_call(self):
         out = self.out
