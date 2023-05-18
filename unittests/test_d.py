@@ -595,23 +595,197 @@ def fail_dlaopn_dlabns_dlaens_daswbr():
     # now clean up
     cleanup_kernel(path)
     
+    
+def test_dazldr_drdazl():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(ExtraKernels.earthTopoTf)
+    cs.furnsh(ExtraKernels.earthStnSpk)
+    cs.furnsh(ExtraKernels.earthHighPerPck)
+    et = cs.str2et("2003 Oct 13 06:00:00 UTC")
+    state, lt = cs.spkezr("VENUS", et, "DSS-14_TOPO", "CN+S", "DSS-14")
+    r, az, el = cs.recazl(state[0:3], False, True)
+    jacobi = cs.dazldr(state[0], state[1], state[2], False, True)
+    azlvel = cs.mxv(jacobi, state[3:])
+    jacobi = cs.drdazl(r, az, el, False, True)
+    drectn = cs.mxv(jacobi, azlvel)
+    npt.assert_array_almost_equal(
+        drectn,
+        [
+            6166.04150307,
+            -13797.77164550,
+            -8704.32385654,
+        ],
+        decimal=3,
+    )
+    
+    
+def test_dcyldr():
+    output = cs.dcyldr(1.0, 0.0, 0.0)
+    expected = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    npt.assert_array_almost_equal(output, expected)
+    
+    
+def test_deltet():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    UTC_1997 = "Jan 1 1997"
+    UTC_2004 = "Jan 1 2004"
+    et_1997 = cs.str2et(UTC_1997)
+    et_2004 = cs.str2et(UTC_2004)
+    delt_1997 = cs.deltet(et_1997, "ET")
+    delt_2004 = cs.deltet(et_2004, "ET")
+    npt.assert_almost_equal(delt_1997, 62.1839353, decimal=6)
+    npt.assert_almost_equal(delt_2004, 64.1839116, decimal=6)
+    
+    
+def test_det():
+    m1 = np.array([[5.0, -2.0, 1.0], [0.0, 3.0, -1.0], [2.0, 0.0, 7.0]])
+    expected = 103
+    assert cs.det(m1) == expected
+
+
+def test_dgeodr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("EARTH", "RADII")
+    flat = (radii[0] - radii[2]) / radii[0]
+    lon = 118.0 * cs.rpd()
+    lat = 32.0 * cs.rpd()
+    alt = 0.0
+    rec = cs.latrec(lon, lat, alt)
+    output = cs.dgeodr(rec[0], rec[1], rec[2], radii[0], flat)
+    expected = [
+        [-0.25730624850202866, 0.41177607401581356, 0.0],
+        [-0.019818463887750683, -0.012383950685377182, 0.0011247386599188864],
+        [0.040768073853231314, 0.02547471988726025, 0.9988438330394612],
+    ]
+    npt.assert_array_almost_equal(output, expected)
+
+
+def test_diags2():
+    mat = [[1.0, 4.0], [4.0, -5.0]]
+    diag, rot = cs.diags2(mat)
+    expected_diag = [[3.0, 0.0], [0.0, -7.0]]
+    expected_rot = [[0.89442719, -0.44721360], [0.44721360, 0.89442719]]
+    npt.assert_array_almost_equal(diag, expected_diag)
+    npt.assert_array_almost_equal(rot, expected_rot)
+    
+
+# Test changed. cspyce currently defaults to dlabbs_error. Using cs.use_flags()
+# to use original version. Also, cspyce does not have SpiceyPy's .dsize
+# feature, so .dsize is replaced with indexes.
+def test_dlabbs():
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    cs.use_flags(cs.dlabbs)
+    current = cs.dlabbs(handle)
+    assert current is not None
+    assert current[0][5] == 1300
+    with pytest.raises(Exception):
+        prev = cs.dlafps(handle, current)
+    cs.dascls(handle)
+    
+
+# Test changed. cspyce does not have a spiceypy.dsize equivalent. Replaced
+# with indexing.
+def test_dlabfs_dlafns():
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    current = cs.dlabfs(handle)
+    assert current is not None
+    assert current[5] == 1300
+    with pytest.raises(Exception):
+        next = cs.dlafns(handle, current)
+    cs.dascls(handle)
+    
+
+# This is a unique test...not good.
+def test_dlafns():
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    cs.use_flags(cs.dlafns)
+    current = cs.dlabfs(handle)
+    output = cs.dlafns(handle, current)
+    assert output[1] is False
+    
+
+# Still developing this test.
 # =============================================================================
-# dazldr
-# dcyldr
-# deltet
-# det
-# dgeodr
-# diags2
-# dlabbs
-# dlabfs
-# dlafns
-# dlafps
-# dlaopn
-# dlatdr
-# dnearp
-# dp2hx
-# dpgrdr
+# def test_dlafps():
+#     cs.use_flags(cs.dlafps)
+#     result = cs.dlafps(1, )
+#     assert result == [0, 0, 1]
 # =============================================================================
+    
+
+# Test changed. No equivalent to spiceypy.isize
+def test_dlaopn_dlabns_dlaens_daswbr():
+    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
+    cleanup_kernel(path)
+    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
+    cs.dlabns(handle)  # start segm
+    datai = np.arange(100, dtype=int)
+    datad = np.arange(100.0, dtype=float)
+    cs.dasadi(handle, datai)
+    cs.dasadd(handle, datad)
+    cs.dlaens(handle)  # end the segment
+    cs.daswbr(handle)
+    cs.dasllc(handle)
+    # now read the file to check data
+    handle = cs.dasopr(path)
+    dladsc = cs.dlabfs(handle)
+    assert dladsc[3] == 100
+    cs.dascls(handle)
+    # now clean up
+    cleanup_kernel(path)
+    
+    
+def test_dlatdr():
+    output = cs.dlatdr(1.0, 0.0, 0.0)
+    expected = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    npt.assert_array_almost_equal(output, expected)
+    
+    
+def test_dnearp():
+    cs.furnsh(
+        [
+            CoreKernels.lsk,
+            CoreKernels.pck,
+            CoreKernels.spk,
+            ExtraKernels.mro2007sub,
+            ExtraKernels.marsSpk,
+            ExtraKernels.spk430sub,
+        ]
+    )
+    et = cs.str2et("2007 SEP 30 00:00:00 TDB")
+    _, radii = cs.bodvrd("MARS", "RADII", 3)
+    state, lt = cs.spkezr("MRO", et, "IAU_MARS", "NONE", "MARS")
+    dnear, dalt = cs.dnearp(state, radii[0], radii[1], radii[2])
+    shift = (dalt[1] / cs.clight()) * 20.0  # 20mhz
+    assert shift == pytest.approx(-0.0000005500991159)
+    assert cs.vnorm(dnear[3:]) == pytest.approx(3.214001, abs=1e-6)
+    
+    
+def test_dp2hx():
+    assert cs.dp2hx(2.0e-9) == "89705F4136B4A8^-7"
+    assert cs.dp2hx(1.0) == "1^1"
+    assert cs.dp2hx(-1.0) == "-1^1"
+    assert cs.dp2hx(1024.0) == "4^3"
+    assert cs.dp2hx(-1024.0) == "-4^3"
+    assert cs.dp2hx(521707.0) == "7F5EB^5"
+    assert cs.dp2hx(27.0) == "1B^2"
+    assert cs.dp2hx(0.0) == "0^0"
+    
+    
+def test_dpgrdr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    n, radii = cs.bodvrd("MARS", "RADII")
+    re = radii[0]
+    rp = radii[2]
+    f = (re - rp) / re
+    output = cs.dpgrdr("Mars", 90.0 * cs.rpd(), 45 * cs.rpd(), 300, re, f)
+    expected = [
+        [0.25464790894703276, -0.5092958178940655, -0.0],
+        [-0.002629849831988239, -0.0013149249159941194, 1.5182979166821334e-05],
+        [0.004618598844358383, 0.0023092994221791917, 0.9999866677515724],
+    ]
+    npt.assert_array_almost_equal(output, expected)
+
 
 
 
