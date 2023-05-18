@@ -682,7 +682,7 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
 // result must be a variable which will be Py_DECREF-ed if an error occurs
 %define CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer, rows, columns, result)
     result = PyList_New(rows);
-    TEST_MALLOC_FAILURE(list$argnum);
+    TEST_MALLOC_FAILURE(result);
 
     // Convert the results to Python strings and add them to the list
     for (int i = 0; i < rows; i++) {
