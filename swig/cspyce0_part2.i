@@ -3092,12 +3092,12 @@ VECTORIZE_dX_3d__dM_dN_b(dnearp, dnearp_c, 6, 2)
 
 %rename (dp2hx) my_dp2hx_c;
 %apply (void RETURN_VOID) {void my_dp2hx_c};
-%apply (SpiceChar OUT_STRING[ANY]) {SpiceChar hxstr[TIMELEN]};
+%apply (SpiceChar OUT_STRING[ANY]) {SpiceChar hxstr[256]};
 
 %inline %{
     void my_dp2hx_c(
         SpiceDouble number,
-        SpiceChar   hxstr[TIMELEN])
+        SpiceChar   hxstr[256])
     {
         SpiceInt hxssiz;
 
