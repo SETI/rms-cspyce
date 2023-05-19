@@ -3097,7 +3097,7 @@ VECTORIZE_dX_3d__dM_dN_b(dnearp, dnearp_c, 6, 2)
 %inline %{
     void my_dp2hx_c(
         SpiceDouble number,
-        SpiceChar   hxstr[256])
+        SpiceChar   hxstr[TIMELEN])
     {
         SpiceInt hxssiz;
 
