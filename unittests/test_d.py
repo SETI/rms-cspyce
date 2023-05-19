@@ -567,8 +567,13 @@ def fail_dasudi_dasrdi():
     assert rdata == pytest.approx(data)
     cs.dascls(handle)
     cleanup_kernel(daspath)
-    
-    
+
+def test_dp2hx():
+    assert cs.dp2hx(2.0e-9) == "89705F4136B4A8^-7"
+    assert cs.dp2hx(1.0) == "1^1"
+    assert cs.dp2hx(-1.0) == "-1^1"
+    assert cs.dp2hx(1024.0) == "4^3"
+
 # Fails due to bytearray reliance.
 def test_dasudc():
     pass
