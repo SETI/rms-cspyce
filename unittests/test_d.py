@@ -753,7 +753,7 @@ def test_dnearp():
         ]
     )
     et = cs.str2et("2007 SEP 30 00:00:00 TDB")
-    _, radii = cs.bodvrd("MARS", "RADII", 3)
+    radii = cs.bodvrd("MARS", "RADII")
     state, lt = cs.spkezr("MRO", et, "IAU_MARS", "NONE", "MARS")
     dnear, dalt = cs.dnearp(state, radii[0], radii[1], radii[2])
     shift = (dalt[1] / cs.clight()) * 20.0  # 20mhz
@@ -774,7 +774,7 @@ def test_dp2hx():
     
 def test_dpgrdr():
     cs.furnsh(CoreKernels.testMetaKernel)
-    n, radii = cs.bodvrd("MARS", "RADII")
+    radii = cs.bodvrd("MARS", "RADII")
     re = radii[0]
     rp = radii[2]
     f = (re - rp) / re
