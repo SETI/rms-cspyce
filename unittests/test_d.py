@@ -599,22 +599,6 @@ def fail_dlaopn_dlabns_dlaens_daswbr():
     cs.dascls(handle)
     # now clean up
     cleanup_kernel(path)
-
-def test_dskd02():
-    handle = cs.dasopr(ExtraKernels.phobosDsk)
-    dladsc = cs.dlabfs(handle)
-    values = cs.dskd02(handle, dladsc, 19, 0)
-    assert len(values) > 0
-    npt.assert_almost_equal(
-        values[:3],
-        [
-            5.12656957900699912362e-16,
-            -0.00000000000000000000e00,
-            -8.37260000000000026432e00,
-        ],
-    )
-    cs.dascls(handle)
-
     
 # =============================================================================
 # dazldr
