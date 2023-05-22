@@ -1,17 +1,18 @@
 # This workflow compiles CSPICE for many architectures and publishes a branch
-# to Test-PyPi or PyPi
+# to PyPi
 
 name: Publish to PyPI
 run-name: Publish to PyPI triggered by ${{ github.ref_type }} ${{ github.ref_name }}
 
 # Controls when the workflow will run - push of a "v*" tag
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
 
 jobs:
-  build_python3_wheels:
+  build_wheels:
     name: Build Python 3 wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -77,7 +78,7 @@ jobs:
 
 
   upload_pypi:
-    needs: [build_python3_wheels, build_sdist]
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
