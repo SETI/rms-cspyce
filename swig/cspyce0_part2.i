@@ -3273,7 +3273,7 @@ extern void dskcls_c(
 %rename (dskd02) dskd02_c;
 %apply (void RETURN_VOID) {void dskd02_c};
 %apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt OUT_ARRAY1[ANY])
+%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceDouble OUT_ARRAY1[ANY])
                     {(SpiceInt room, SpiceInt *n, SpiceDouble values[MAXVALS])};
 
 extern void dskd02_c(
