@@ -216,7 +216,7 @@ void out_array01_malloc(double start, int length, double **arrayP, int *size);
 
     int out_array2_4(int start, int length, int dim1, int *size1, double result[4][5]) {
         double *ptr = result;
-        for (int i = 0; i <= 20; i++) {
+        for (int i = 0; i < 20; i++) {
             ptr[i] = start + i;
         }
         *size1 = length;
@@ -295,7 +295,11 @@ void out_array23_1(int start, int length1, int length2, int length3, double **re
         return (int)value;
     }
 
-    void inout_string(int dim, char* result) {
+    void inout_string_10(int dim, char* result) {
+        sprintf(result, "%d", dim);
+    }
+
+    void inout_string_ptr(int dim, char* result) {
         sprintf(result, "%d", dim);
     }
 
@@ -311,7 +315,10 @@ int const_string_0(const char *string);
 int const_char_0(char value);
 
 %apply (int DIM1, char INOUT_STRING[ANY]) {(int dim, char result[10])};
-void inout_string(int dim, char result[10]);
+void inout_string_10(int dim, char result[10]);
+
+%apply (int DIM1, char *INOUT_STRING) {(int dim, char* result)};
+void inout_string_ptr(int dim, char *result);
 
 %apply (char OUT_STRING[ANY]) {(char result[10])};
 void out_string(int value, char result[10]);

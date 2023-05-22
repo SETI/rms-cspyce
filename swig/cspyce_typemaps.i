@@ -29,12 +29,6 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
-#if PY_VERSION_HEX >= 0x03000000
-#    define is_python_3xx 1
-#else
-#    define is_python_3xx 0
-#endif
-
 /*******************************************************************************
 *******************************************************************************/
 
@@ -543,7 +537,7 @@ void handle_malloc_failure(const char* symname) {
 
 %define TEST_IS_STRING(obj)
 {
-    if (is_python_3xx ? !PyUnicode_Check(obj) : !PyString_Check(obj)) {
+    if (!PyUnicode_Check(obj)) {
         handle_bad_string_error("$symname");
         SWIG_fail;
     }
@@ -688,7 +682,7 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
 // result must be a variable which will be Py_DECREF-ed if an error occurs
 %define CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer, rows, columns, result)
     result = PyList_New(rows);
-    TEST_MALLOC_FAILURE(list$argnum);
+    TEST_MALLOC_FAILURE(result);
 
     // Convert the results to Python strings and add them to the list
     for (int i = 0; i < rows; i++) {
@@ -762,11 +756,9 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
     for (int i = 0; i < count; i++) {
         PyObject *obj = PyList_GetItem(list, i);  // Note, we don't own this object
         TEST_IS_STRING(obj);
-        if (is_python_3xx) {
-            obj = PyUnicode_AsUTF8String(obj);   // We own this item
-            TEST_MALLOC_FAILURE(obj);
-            PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
-        }
+        obj = PyUnicode_AsUTF8String(obj);   // We own this item
+        TEST_MALLOC_FAILURE(obj);
+        PyList_SetItem(list, i, obj);        // And SetItem steals the ownership
         maxlen = max(maxlen, PyBytes_Size(obj));
     }
     // Allocate the buffer
@@ -796,6 +788,35 @@ void handle_bad_sequence_to_list(const char *symname) {
         USE_RUNTIME_ERRORS ? PyExc_RuntimeError : PyExc_TypeError,
         get_exception_message(symname));
     reset_c();
+}
+
+void capsule_cleanup(PyObject *capsule) {
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    PyMem_Free(memory);
+}
+
+// A wrapper around PyArray_SimpleNewFromData that gives the PyArray ownership
+// of the data. The buffer pointed to by *data will be freed when the array is freed.
+//
+// On success, this function returns the newly created array and set *data to NULL.
+// On failure, this function returns False, and *data is unchanged.
+//
+PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int typenum, void **data) {
+    PyArrayObject* array = PyArray_SimpleNewFromData(nd, dims, typenum, *data);
+    PyObject *capsule = array ? PyCapsule_New(*data, NULL, capsule_cleanup) : NULL;
+    // If this is successful, it steals ownership of capsule.
+    int result = capsule ? PyArray_SetBaseObject(array, capsule) : -1;
+    if (result == 0) {
+        // The array owns capsule, and capsule owns the data. The caller is no longer
+        // responsible for freeing data.
+        *data = NULL;
+        return array;
+    } else {
+        // Something went wrong.  Clear both of these.
+        Py_XDECREF(array);
+        Py_XDECREF(capsule);
+        return NULL;
+    }
 }
 %}
 
@@ -961,6 +982,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 {
 //      (Type *IN_ARRAY01, int DIM1)
 
+
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 0, 1, pyarr)
 
     $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
@@ -1018,11 +1040,7 @@ void handle_bad_sequence_to_list(const char *symname) {
 %enddef
 
 // Define concrete examples of the TYPEMAP_IN1 macros
-TYPEMAP_IN(char,             NPY_CHAR  )
-TYPEMAP_IN(SpiceChar,        NPY_CHAR  )
-TYPEMAP_IN(unsigned char,    NPY_UBYTE )
-TYPEMAP_IN(signed char,      NPY_SBYTE )
-TYPEMAP_IN(short,            NPY_SHORT )
+TYPEMAP_IN(ConstSpiceChar,   NPY_STRING )
 TYPEMAP_IN(int,              NPY_INT   )
 TYPEMAP_IN(SpiceInt,         NPY_INT   )
 TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
@@ -1033,7 +1051,6 @@ TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
 TYPEMAP_IN(SpiceDouble,      NPY_DOUBLE)
 TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
-TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 #undef TYPEMAP_IN
 
@@ -1370,12 +1387,6 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 %enddef
 
 // Define concrete examples of the TYPEMAP_IN1 macros
-TYPEMAP_IN(char,             NPY_CHAR  )
-TYPEMAP_IN(SpiceChar,        NPY_CHAR  )
-TYPEMAP_IN(ConstSpiceChar,   NPY_CHAR  )
-TYPEMAP_IN(unsigned char,    NPY_UBYTE )
-TYPEMAP_IN(signed char,      NPY_SBYTE )
-TYPEMAP_IN(short,            NPY_SHORT )
 TYPEMAP_IN(int,              NPY_INT   )
 TYPEMAP_IN(SpiceInt,         NPY_INT   )
 TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
@@ -1386,7 +1397,6 @@ TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
 TYPEMAP_IN(SpiceDouble,      NPY_DOUBLE)
 TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
-TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 #undef TYPEMAP_IN
 
@@ -1733,9 +1743,9 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[1] = {dimsize$argnum[0]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, dims, Typecode);
+    pyarr$argnum = create_array_with_owned_data(1, dims, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum, dims[0] * sizeof(Type));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -1757,11 +1767,6 @@ TYPEMAP_IN(PyObject,         NPY_OBJECT)
 
 %enddef
 
-TYPEMAP_ARGOUT(char,          NPY_CHAR  )
-TYPEMAP_ARGOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_ARGOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_ARGOUT(signed char,   NPY_SBYTE )
-TYPEMAP_ARGOUT(short,         NPY_SHORT )
 TYPEMAP_ARGOUT(int,           NPY_INT   )
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
@@ -1769,7 +1774,6 @@ TYPEMAP_ARGOUT(long,          NPY_LONG  )
 TYPEMAP_ARGOUT(float,         NPY_FLOAT )
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
 #undef TYPEMAP_ARGOUT
 
@@ -1811,9 +1815,9 @@ TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dim = max(dimsize$argnum[0], 1);
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, &dim, Typecode);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum, dim * sizeof(Type));
+
     if (dimsize$argnum[0] == 0) {
         PyObject* value = PyArray_GETITEM(pyarr$argnum, PyArray_DATA(pyarr$argnum));
         TEST_MALLOC_FAILURE(value);
@@ -1841,7 +1845,6 @@ TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 * Now define these typemaps for every numeric type
 *******************************************************/
 
-TYPEMAP_ARGOUT(short,         NPY_SHORT)
 TYPEMAP_ARGOUT(int,           NPY_INT)
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT)
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT)
@@ -2359,10 +2362,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(2, dims, Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-         PyArray_SIZE(pyarr$argnum) * sizeof(Type));
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
@@ -2377,14 +2378,10 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    if (dimsize$argnum[0] == 0) {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(1, dims + 1, Typecode);
-    } else {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
-    }
+    int nd = dims[0] == 0 ? 1 : 2;
+    pyarr$argnum = create_array_with_owned_data(nd, &dims[2 - nd], Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-        PyArray_SIZE(pyarr$argnum) * sizeof(Type));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2408,11 +2405,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %enddef
 
-TYPEMAP_ARGOUT(char,          NPY_CHAR  )
-TYPEMAP_ARGOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_ARGOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_ARGOUT(signed char,   NPY_SBYTE )
-TYPEMAP_ARGOUT(short,         NPY_SHORT )
 TYPEMAP_ARGOUT(int,           NPY_INT   )
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
@@ -2420,7 +2412,6 @@ TYPEMAP_ARGOUT(long,          NPY_LONG  )
 TYPEMAP_ARGOUT(float,         NPY_FLOAT )
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
 #undef TYPEMAP_ARGOUT
 
@@ -2463,15 +2454,12 @@ TYPEMAP_ARGOUT(PyObject,      NPY_OBJECT)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[3] = {dimsize$argnum[0], dimsize$argnum[1], dimsize$argnum[2]};
-    if (dims[0] == 0) {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(2, dims + 1, Typecode);
-    } else  {
-        pyarr$argnum = (PyArrayObject *) PyArray_SimpleNew(3, dims, Typecode);
-    }
+    int nd = dims[0] == 0 ? 2 : 3;
+    pyarr$argnum = create_array_with_owned_data(nd, &dims[3 - nd], Typecode, &buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
-    memcpy(PyArray_DATA(pyarr$argnum), buffer$argnum,
-           PyArray_SIZE(pyarr$argnum) * sizeof(Type));
+
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
 
@@ -2509,15 +2497,22 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 *******************************************************/
 
 %typemap(in)
+    (Type *INOUT_ARRAY1)
+        (PyArrayObject* pyarr=NULL)
+{
+//      (Type *INOUT_ARRAY1)
+    CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(in)
     (int DIM1, Type *INOUT_ARRAY1)
         (PyArrayObject* pyarr=NULL),
     (int DIM1, Type INOUT_ARRAY1[])
         (PyArrayObject* pyarr=NULL)
 {
-
-//      (int DIM1, Type INOUT_ARRAY1)
+//      (int DIM1, Type *INOUT_ARRAY1)
 //  NOT CURRENTLY USED BY CSPICE
-
 
     CONVERT_TO_CONTIGUOUS_ARRAY_WRITEABLE_COPY(Typecode, $input, 1, 1, pyarr)
     $2 = ($2_ltype) PyArray_DATA(pyarr);                        // ARRAY
@@ -2551,6 +2546,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 }
 
 %typemap(argout)
+    (Type *INOUT_ARRAY1),
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY]),
@@ -2561,11 +2557,11 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 }
 
 %typemap(freearg)
+    (Type *INOUT_ARRAY1),
     (int DIM1, Type *INOUT_ARRAY1),
     (int DIM1, Type INOUT_ARRAY1[]),
     (int DIM1, Type INOUT_ARRAY2[][ANY]),
     (int DIM2, Type *INOUT_ARRAY2)
-
 {
     Py_XDECREF(pyarr$argnum);
 }
@@ -2573,11 +2569,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
 %enddef
 
 // Define concrete examples of the TYPEMAP_INOUT macros
-TYPEMAP_INOUT(char,          NPY_CHAR  )
-TYPEMAP_INOUT(SpiceChar,     NPY_CHAR  )
-TYPEMAP_INOUT(unsigned char, NPY_UBYTE )
-TYPEMAP_INOUT(signed char,   NPY_SBYTE )
-TYPEMAP_INOUT(short,         NPY_SHORT )
+TYPEMAP_INOUT(char,          NPY_STRING)
 TYPEMAP_INOUT(int,           NPY_INT   )
 TYPEMAP_INOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_INOUT(SpiceBoolean,  NPY_INT   )
@@ -2585,10 +2577,9 @@ TYPEMAP_INOUT(long,          NPY_LONG  )
 TYPEMAP_INOUT(float,         NPY_FLOAT )
 TYPEMAP_INOUT(double,        NPY_DOUBLE)
 TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
-TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
-
 
 #undef TYPEMAP_INOUT
+
 
 /*******************************************************************************
 * Typemap for string input
@@ -2615,46 +2606,23 @@ TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
 %define TYPEMAP_IN(Type) // Use to fill in types below
 
 /***********************************************
-* (Type *IN_STRING)
-***********************************************/
-
-%typemap(in) (Type *IN_STRING) (int alloc = 0) {
-//      (Type *IN_STRING)
-//  NOT CURRENTLY USED BY CSPICE
-
-    TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&$1, NULL, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
-}
-
-%typemap(argout) (char *IN_STRING) {
-}
-
-%typemap(freearg) (char *IN_STRING)  {
-    if (SWIG_IsNewObj(alloc$argnum)) {
-        PyMem_Free((void *)$1);
-    }
-}
-
-/***********************************************
 * (char *CONST_STRING)
 ***********************************************/
 
-%typemap(in) (Type *CONST_STRING) (int alloc = 0) {
+%typemap(in) (Type *CONST_STRING) (PyObject* byte_string = NULL) {
 //      (Type *CONST_STRING)
 
     TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&$1, NULL, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
+    byte_string = PyUnicode_AsUTF8String($input);
+    TEST_MALLOC_FAILURE(byte_string);
+
+    $1 = PyBytes_AS_STRING(byte_string);
 }
 
-%typemap(argout) (char *CONST_STRING) {
-}
+%typemap(argout) (Type *CONST_STRING) ""
 
-%typemap(freearg) (char *CONST_STRING) {
-    if (SWIG_IsNewObj(alloc$argnum)) {
-        PyMem_Free((void *)$1);
-  }
+%typemap(freearg) (Type *CONST_STRING) {
+    Py_XDECREF(byte_string$argnum);
 }
 
 /***********************************************
@@ -2663,17 +2631,14 @@ TYPEMAP_INOUT(PyObject,      NPY_OBJECT)
 
 %typemap(in) (Type IN_STRING) {
 //      (Type IN_STRING)
-
     TEST_IS_STRING($input);
     int error  = SWIG_AsVal_char($input, &$1);
     RAISE_BAD_STRING_ON_ERROR(error);
  }
 
-%typemap(argout) (Type IN_STRING) {
-}
+%typemap(argout) (Type IN_STRING) ""
 
-%typemap(freearg) (Type IN_STRING) {
-}
+%typemap(freearg) (Type IN_STRING) ""
 
 /*******************************************************
 * Now apply to all data types
@@ -2769,25 +2734,18 @@ TYPEMAP_IN(ConstSpiceChar)
 *******************************************************************************/
 
 %{
-void resize_char_array_to_minimum_size(
-        char **buffer, size_t* size, size_t needed_size, int* alloc) {
-    if (needed_size <= 0) {
-        needed_size = 1;
-    }
-    if (*size >= needed_size) {
-        // do nothing
-    } else if (SWIG_IsNewObj(*alloc)) {
-        *buffer = PyMem_Realloc(*buffer, needed_size + 1);
-        *size = needed_size;
-    } else {
-        void *original = *buffer;
-        *buffer = PyMem_Malloc(needed_size + 1);
-        if (*buffer) {
-            strncpy(*buffer, original, *size + 1);
-            *size = needed_size;
-            *alloc = SWIG_NEWOBJ;
-        }
-    }
+
+char *byte_string_to_buffer_minimum_size(
+    PyObject* byte_string, size_t needed_size, size_t *out_size) {
+
+    size_t actual_size = PyBytes_GET_SIZE(byte_string);
+    needed_size = max(needed_size, actual_size + 1);
+
+    char *buffer = PyMem_Malloc(needed_size + 1);
+    memcpy(buffer, PyBytes_AS_STRING(byte_string), actual_size);
+    buffer[actual_size] = 0;
+    *out_size = needed_size;
+    return buffer;
 }
 
 %}
@@ -2801,20 +2759,19 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in)
     (Type INOUT_STRING[ANY])                                    // PATTERN
-    (char *buffer = NULL, size_t dim1 = 0, int alloc = 0)
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL)
 {
 //      (char INOUT_STRING[ANY])
 //  NOT CURRENTLY USED BY CSPICE
 
     TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, &buffer, &dim1, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
+    byte_string = PyUnicode_AsUTF8String($input);
+    TEST_MALLOC_FAILURE(byte_string);
 
-    resize_char_array_to_minimum_size(&buffer, &dim1, $1_dim0, &alloc);
+    buffer = byte_string_to_buffer_minimum_size(byte_string, $1_dim0, &dim1);
     TEST_MALLOC_FAILURE(buffer);
 
     $1 = ($1_ltype)buffer;                                      // STRING
-//  $2 = dim1; */                                               // DIM1
 }
 
 /***********************************************
@@ -2823,18 +2780,18 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in)
     (Type INOUT_STRING[ANY], int DIM1)                          // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0),
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL),
     (Type INOUT_STRING[ANY], SpiceInt DIM1)                     // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL)
 {
 //      (char INOUT_STRING[ANY], int DIM1)
 //  NOT CURRENTLY USED BY CSPICE
 
     TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
+    byte_string = PyUnicode_AsUTF8String($input);
+    TEST_MALLOC_FAILURE(byte_string);
 
-    resize_char_array_to_minimum_size(&buffer, &dim1, $1_dim0, &alloc);
+    buffer = byte_string_to_buffer_minimum_size(byte_string, $1_dim0, &dim1);
     TEST_MALLOC_FAILURE(buffer);
 
     $1 = buffer;                                                // STRING
@@ -2847,67 +2804,21 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in)
     (int DIM1, Type INOUT_STRING[ANY])                          // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0),
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL),
     (SpiceInt DIM1, Type INOUT_STRING[ANY])                     // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL)
 {
 //      (int DIM1, char INOUT_STRING[ANY])
 
     TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
+    byte_string = PyUnicode_AsUTF8String($input);
+    TEST_MALLOC_FAILURE(byte_string);
 
-    resize_char_array_to_minimum_size(&buffer, &dim1, $2_dim0, &alloc);
+    buffer = byte_string_to_buffer_minimum_size(byte_string, $2_dim0, &dim1);
     TEST_MALLOC_FAILURE(buffer);
 
-    $2 = buffer;                                                // STRING
     $1 = ($1_type)dim1;                                         // DIM1
-}
-
-/***********************************************
-* (char *INOUT_STRING)
-***********************************************/
-
-%typemap(in)
-    (Type *INOUT_STRING)                                        // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
-{
-//      (char *INOUT_STRING)
-//  NOT CURRENTLY USED BY CSPICE
-
-    TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
-
-    resize_char_array_to_minimum_size(&buffer, &dim1, 2, &alloc);
-    TEST_MALLOC_FAILURE(buffer);
-
-    $1 = buffer;                                                // STRING
-//  $2 = dim1;                                                  // DIM1
-}
-
-/***********************************************
-* (char *INOUT_STRING, int DIM1)
-***********************************************/
-
-%typemap(in)
-    (Type *INOUT_STRING, int DIM1)                              // PATTERN
-        (Type *buffer = NULL, size_t dim1= 0, int alloc = 0),
-    (Type *INOUT_STRING, SpiceInt DIM1)                         // PATTERN
-        (Type *buffer = NULL, size_t dim1= 0, int alloc = 0)
-{
-//      (char *INOUT_STRING, int DIM1)
-//  NOT CURRENTLY USED BY CSPICE
-
-    TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
-
-    // resize_char_array_to_minimum_size(&buffer, &dim1, $1_dim0, &alloc);
-    TEST_MALLOC_FAILURE(buffer);
-
-    $1 = buffer;                                                // STRING
-    $2 = ($2_type)dim1;                                         // DIM1
+    $2 = buffer;                                                // STRING
 }
 
 /***********************************************
@@ -2916,17 +2827,17 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in)
     (int DIM1, Type *INOUT_STRING)                              // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0),
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL),
     (SpiceInt DIM1, Type *INOUT_STRING)                         // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
+        (char *buffer = NULL, size_t dim1 = 0, PyObject *byte_string = NULL)
 {
 //      (int DIM1, char *INOUT_STRING)
-//  TODO(FY): Add test for me
-    TEST_IS_STRING($input);
-    int error = SWIG_AsCharPtrAndSize($input, (char **)&buffer, &dim1, &alloc);
-    RAISE_BAD_STRING_ON_ERROR(error);
 
-    // resize_char_array_to_minimum_size(&buffer, &dim1, $2_dim0, &alloc);
+    TEST_IS_STRING($input);
+    byte_string = PyUnicode_AsUTF8String($input);
+    TEST_MALLOC_FAILURE(byte_string);
+
+    buffer = byte_string_to_buffer_minimum_size(byte_string, 0, &dim1);
     TEST_MALLOC_FAILURE(buffer);
 
     $2 = buffer;                                                // STRING
@@ -2939,18 +2850,16 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in, numinputs=0)
     (Type OUT_STRING[ANY])                                      // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc = 0)
+        (Type *buffer = NULL, size_t dim1 = 0)
 {
 //      (char OUT_STRING[ANY])
 
     dim1 = max(1, $1_dim0);
-    buffer = (char *) PyMem_Malloc((dim1 + 1) * sizeof(char));
+    buffer = (char *) PyMem_Malloc((dim1 + 1) * sizeof(Type));
     TEST_MALLOC_FAILURE(buffer);
-    alloc = SWIG_NEWOBJ;
 
     buffer[0] = '\0';   // String begins empty
     $1 = buffer;                                                // STRING
-//  $2 = dim1;                                                  // DIM1
 }
 
 /***********************************************
@@ -2959,9 +2868,9 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in, numinputs=0)
     (Type OUT_STRING[ANY], int DIM1)                            // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc),
+        (Type *buffer = NULL, size_t dim1 = 0),
     (Type OUT_STRING[ANY], SpiceInt DIM1)                       // PATTERN
-        (Type *buffer = NULL, size_t dim1 = 0, int alloc)
+        (Type *buffer = NULL, size_t dim1 = 0)
 {
 //      (char OUT_STRING[ANY], int DIM1)
 //  NOT CURRENTLY USED BY CSPICE
@@ -2969,11 +2878,10 @@ void resize_char_array_to_minimum_size(
     dim1 = max(1, $2_dim0);
     buffer = ($1_ltype) PyMem_Malloc((dim1 + 1) * sizeof(Type));
     TEST_MALLOC_FAILURE(buffer);
-    alloc = SWIG_NEWOBJ;
 
     buffer[0] = '\0';   // String begins empty
     $1 = buffer;                                                // STRING
-    $2 = ($2_type)dim1;                                         // DIM1
+    $2 = ($2type)dim1;                                         // DIM1
 }
 
 /***********************************************
@@ -2982,16 +2890,15 @@ void resize_char_array_to_minimum_size(
 
 %typemap(in, numinputs=0)
     (int DIM1, Type OUT_STRING[ANY])                            // PATTERN
-        (Type *buffer = NULL, size_t dim1, int alloc = 0),
+        (Type *buffer = NULL, size_t dim1),
     (SpiceInt DIM1, Type OUT_STRING[ANY])                       // PATTERN
-        (Type *buffer = NULL, size_t dim1, int alloc = 0)
+        (Type *buffer = NULL, size_t dim1)
 {
 //      (int DIM1, char OUT_STRING[ANY])
 
     dim1 = max(1, $2_dim0);
     buffer = (Type *) PyMem_Malloc((dim1 + 1) * sizeof(Type));
     TEST_MALLOC_FAILURE(buffer);
-    alloc = SWIG_NEWOBJ;
 
     buffer[0] = '\0';   // String begins empty
     $2 = buffer;                                                // STRING
@@ -3026,7 +2933,7 @@ void resize_char_array_to_minimum_size(
 //      (... Type OUT_STRING[ANY] ...)
 
     buffer$argnum[dim1$argnum-1] = '\0';  // Make sure string is terminated
-    PyObject *obj = PyString_FromString((Type *) buffer$argnum);
+    PyObject *obj = PyUnicode_FromString((Type *) buffer$argnum);
     $result = SWIG_Python_AppendOutput($result, obj);
 }
 
@@ -3040,21 +2947,23 @@ void resize_char_array_to_minimum_size(
     (Type *INOUT_STRING, int DIM1),
     (Type *INOUT_STRING, SpiceInt DIM1),
     (int DIM1, Type *INOUT_STRING),
-    (SpiceInt DIM1, Type *INOUT_STRING),
+    (SpiceInt DIM1, Type *INOUT_STRING)
+{
+    PyMem_Free(buffer$argnum);
+    Py_XDECREF(byte_string$argnum);
+}
+
+%typemap(freearg)
     (Type OUT_STRING[ANY]),
     (Type OUT_STRING[ANY], int DIM1),
     (Type OUT_STRING[ANY], SpiceInt DIM1),
     (INT DIM1, Type OUT_STRING[ANY]),
     (SpiceInt DIM1, Type OUT_STRING[ANY])
 {
-//      (... Type INOUT_STRING[ANY] ...)
-//      (... Type *INOUT_STRING ...)
-//      (... Type OUT_STRING[ANY] ...)
-
-    if (SWIG_IsNewObj(alloc$argnum)) {
-        PyMem_Free((void *) buffer$argnum);
-    }
+    PyMem_Free(buffer$argnum);
 }
+
+
 
 /*******************************************************
 * Now apply to all data types
@@ -3295,14 +3204,13 @@ TYPEMAP_OUT(SpiceChar)
 * Python function. A zero value is False; anything else is True.
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type)
+%define TYPEMAP_ARGOUT(Type, converter)
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
         (Type value)
 {
 //      (Type *OUTPUT)
-
     $1 = &value;
 }
 
@@ -3311,14 +3219,15 @@ TYPEMAP_OUT(SpiceChar)
 {
 //      (Type *OUTPUT)
 
-    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong(value$argnum));
+    $result = SWIG_Python_AppendOutput($result, converter);
 }
 
 %typemap(freearg) (Type *OUTPUT) ""
 
 %enddef
 
-TYPEMAP_ARGOUT(SpiceBoolean)
+TYPEMAP_ARGOUT(SpiceBoolean, PyBool_FromLong(value$argnum))
+TYPEMAP_ARGOUT(PyObject*, (value$argnum))
 
 #undef TYPEMAP_ARGOUT
 
@@ -3377,13 +3286,11 @@ TYPEMAP_ARGOUT(SpiceBoolean)
     (SpiceChar *RETURN_STRING) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result,
-                                       PyString_FromString((char *) $1));
+    $result = SWIG_Python_AppendOutput($result, PyUnicode_FromString((char *) $1));
 }
 
 // Special handler just for direct calls to sigerr()
 %typemap(out) (void RETURN_VOID_SIGERR) {
-
     RAISE_SIGERR_EXCEPTION;
     Py_XDECREF($result);
     Py_INCREF(Py_None);
