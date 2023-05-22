@@ -216,7 +216,7 @@ void out_array01_malloc(double start, int length, double **arrayP, int *size);
 
     int out_array2_4(int start, int length, int dim1, int *size1, double result[4][5]) {
         double *ptr = result;
-        for (int i = 0; i <= 20; i++) {
+        for (int i = 0; i < 20; i++) {
             ptr[i] = start + i;
         }
         *size1 = length;
