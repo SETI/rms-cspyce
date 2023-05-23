@@ -57,14 +57,10 @@ def cleanup_file(path: str) -> None:
 class CassiniKernels(object):
     cassPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cpck05Mar2004.tpc"
     cassPck_md5 = "8c16afc3bd886326e852b54bd71cc751"
-# =============================================================================
-#     satSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130220AP_SE_13043_13073.bsp"
-#     satSpk_md5 = "056c65b8a8064f2958aa097db40160b2"
-# =============================================================================
-# =============================================================================
-#     cassTourSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130212AP_SK_13043_13058.bsp"
-#     cassTourSpk_md5 = "41210b787e06c1b8bce7ded3d0b930ab"
-# =============================================================================
+    satSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130220AP_SE_13043_13073.bsp"
+    satSpk_md5 = "056c65b8a8064f2958aa097db40160b2"
+    cassTourSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130212AP_SK_13043_13058.bsp"
+    cassTourSpk_md5 = "41210b787e06c1b8bce7ded3d0b930ab"
     cassFk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cas_v40.tf"
     cassFk_md5 = "99f1f5a1900afc536354306419dc119b"
     cassCk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/13056_13057ra.bc"
@@ -74,12 +70,8 @@ class CassiniKernels(object):
     cassIk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cas_iss_v10.ti"
     cassIk_md5 = "101419660e4fe5856d30eb624da61a3f"
     cassPck = get_path_from_url(cassPck_url)
-# =============================================================================
-#     satSpk = get_path_from_url(satSpk_url)
-# =============================================================================
-# =============================================================================
-#     cassTourSpk = get_path_from_url(cassTourSpk_url)
-# =============================================================================
+    satSpk = get_path_from_url(satSpk_url)
+    cassTourSpk = get_path_from_url(cassTourSpk_url)
     cassFk = get_path_from_url(cassFk_url)
     cassCk = get_path_from_url(cassCk_url)
     cassSclk = get_path_from_url(cassSclk_url)
@@ -88,12 +80,8 @@ class CassiniKernels(object):
 
 def cleanup_cassini_kernels() -> None:
     cleanup_file(CassiniKernels.cassPck)
-# =============================================================================
-#     cleanup_file(CassiniKernels.satSpk)
-# =============================================================================
-# =============================================================================
-#     cleanup_file(CassiniKernels.cassTourSpk)
-# =============================================================================
+    cleanup_file(CassiniKernels.satSpk)
+    cleanup_file(CassiniKernels.cassTourSpk)
     cleanup_file(CassiniKernels.cassFk)
     cleanup_file(CassiniKernels.cassCk)
     cleanup_file(CassiniKernels.cassSclk)
@@ -109,30 +97,18 @@ class ExtraKernels(object):
     earthStnSpk_md5 = "a37d8d5e3023f0df7ead0e6b40d6a5b6"
     earthHighPerPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/earth_031228_231229_predict.bpc"
     earthHighPerPck_md5 = "affa1da5adeee5ea4b0d7da54e4b69d7"
-# =============================================================================
-#     phobosDsk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/phobos_lores.bds"
-#     phobosDsk_md5 = "68261460433bfc67b9e57bb57f79c5c9"
-# =============================================================================
-# =============================================================================
-#     marsSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mar022-1.bsp"
-#     marsSpk_md5 = "d8d742db3f9502571fb5a5f8c55e8e62"
-# =============================================================================
-# =============================================================================
-#     mroFk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mro_v15.tf"
-#     mroFk_md5 = "a938c271be63e0e5aa2ec86db89af109"
-# =============================================================================
-# =============================================================================
-#     geophysical_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/geophysical.ker"
-#     geophysical_md5 = "9a565ded819a9f0c6423b46f04e000db"
-# =============================================================================
-# =============================================================================
-#     mro2007sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mro_psp4_ssd_mro95a_sub.bsp"
-#     mro2007sub_md5 = "8ed34eb77b21ac611f4680806677edfb"
-# =============================================================================
-# =============================================================================
-#     spk430sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/de430sub.bsp"
-#     spk430sub_md5 = "0b49545fa316f9053f5cfbcce155becc"
-# =============================================================================
+    phobosDsk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/phobos_lores.bds"
+    phobosDsk_md5 = "68261460433bfc67b9e57bb57f79c5c9"
+    marsSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mar022-1.bsp"
+    marsSpk_md5 = "d8d742db3f9502571fb5a5f8c55e8e62"
+    mroFk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mro_v15.tf"
+    mroFk_md5 = "a938c271be63e0e5aa2ec86db89af109"
+    geophysical_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/geophysical.ker"
+    geophysical_md5 = "9a565ded819a9f0c6423b46f04e000db"
+    mro2007sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mro_psp4_ssd_mro95a_sub.bsp"
+    mro2007sub_md5 = "8ed34eb77b21ac611f4680806677edfb"
+    spk430sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/de430sub.bsp"
+    spk430sub_md5 = "0b49545fa316f9053f5cfbcce155becc"
     vexboomck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/VEX_BOOM_V01.BC"
     vexboomck_md5 = "2f4dba65649246d72836fb3b53823c3d"
     v02swuck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/vo2_swu_ck2.bc"
@@ -141,24 +117,12 @@ class ExtraKernels(object):
     earthTopoTf = get_path_from_url(earthTopoTf_url)
     earthStnSpk = get_path_from_url(earthStnSpk_url)
     earthHighPerPck = get_path_from_url(earthHighPerPck_url)
-# =============================================================================
-#     phobosDsk = get_path_from_url(phobosDsk_url)
-# =============================================================================
-# =============================================================================
-#     marsSpk = get_path_from_url(marsSpk_url)
-# =============================================================================
-# =============================================================================
-#     mroFk = get_path_from_url(mroFk_url)
-# =============================================================================
-# =============================================================================
-#     geophKer = get_path_from_url(geophysical_url)
-# =============================================================================
-# =============================================================================
-#     mro2007sub = get_path_from_url(mro2007sub_url)
-# =============================================================================
-# =============================================================================
-#     spk430sub = get_path_from_url(spk430sub_url)
-# =============================================================================
+    phobosDsk = get_path_from_url(phobosDsk_url)
+    marsSpk = get_path_from_url(marsSpk_url)
+    mroFk = get_path_from_url(mroFk_url)
+    geophKer = get_path_from_url(geophysical_url)
+    mro2007sub = get_path_from_url(mro2007sub_url)
+    spk430sub = get_path_from_url(spk430sub_url)
     vexboomck = get_path_from_url(vexboomck_url)
     v02swuck = get_path_from_url(v02swuck_url)
 
@@ -168,24 +132,12 @@ def cleanup_extra_kernels() -> None:
     cleanup_file(ExtraKernels.earthTopoTf)
     cleanup_file(ExtraKernels.earthStnSpk)
     cleanup_file(ExtraKernels.earthHighPerPck)
-# =============================================================================
-#     cleanup_file(ExtraKernels.phobosDsk)
-# =============================================================================
-# =============================================================================
-#     cleanup_file(ExtraKernels.marsSpk)
-# =============================================================================
-# =============================================================================
-#     cleanup_file(ExtraKernels.mroFk)
-# =============================================================================
-# =============================================================================
-#     cleanup_file(ExtraKernels.geophKer)
-# =============================================================================
-# =============================================================================
-#     cleanup_file(ExtraKernels.mro2007sub)
-# =============================================================================
-# =============================================================================
-#     cleanup_file(ExtraKernels.spk430sub)
-# =============================================================================
+    cleanup_file(ExtraKernels.phobosDsk)
+    cleanup_file(ExtraKernels.marsSpk)
+    cleanup_file(ExtraKernels.mroFk)
+    cleanup_file(ExtraKernels.geophKer)
+    cleanup_file(ExtraKernels.mro2007sub)
+    cleanup_file(ExtraKernels.spk430sub)
     cleanup_file(ExtraKernels.vexboomck)
     cleanup_file(ExtraKernels.v02swuck)
 
@@ -314,36 +266,20 @@ def get_extra_test_kernels() -> None:
     get_kernel(ExtraKernels.earthTopoTf_url, ExtraKernels.earthTopoTf_md5)
     get_kernel(ExtraKernels.earthStnSpk_url, ExtraKernels.earthStnSpk_md5)
     get_kernel(ExtraKernels.earthHighPerPck_url, ExtraKernels.earthHighPerPck_md5)
-# =============================================================================
-#     get_kernel(ExtraKernels.phobosDsk_url, ExtraKernels.phobosDsk_md5)
-# =============================================================================
-# =============================================================================
-#     get_kernel(ExtraKernels.marsSpk_url, ExtraKernels.marsSpk_md5)
-# =============================================================================
-# =============================================================================
-#     get_kernel(ExtraKernels.mroFk_url, ExtraKernels.mroFk_md5)
-# =============================================================================
-# =============================================================================
-#     get_kernel(ExtraKernels.geophysical_url, ExtraKernels.geophysical_md5)
-# =============================================================================
-# =============================================================================
-#     get_kernel(ExtraKernels.mro2007sub_url, ExtraKernels.mro2007sub_md5)
-# =============================================================================
-# =============================================================================
-#     get_kernel(ExtraKernels.spk430sub_url, ExtraKernels.spk430sub_md5)
-# =============================================================================
+    get_kernel(ExtraKernels.phobosDsk_url, ExtraKernels.phobosDsk_md5)
+    get_kernel(ExtraKernels.marsSpk_url, ExtraKernels.marsSpk_md5)
+    get_kernel(ExtraKernels.mroFk_url, ExtraKernels.mroFk_md5)
+    get_kernel(ExtraKernels.geophysical_url, ExtraKernels.geophysical_md5)
+    get_kernel(ExtraKernels.mro2007sub_url, ExtraKernels.mro2007sub_md5)
+    get_kernel(ExtraKernels.spk430sub_url, ExtraKernels.spk430sub_md5)
     get_kernel(ExtraKernels.vexboomck_url, ExtraKernels.vexboomck_md5)
     get_kernel(ExtraKernels.v02swuck_url, ExtraKernels.v02swuck_md5)
 
 
 def get_cassini_test_kernels() -> None:
     get_kernel(CassiniKernels.cassPck_url, CassiniKernels.cassPck_md5)
-# =============================================================================
-#     get_kernel(CassiniKernels.satSpk_url, CassiniKernels.satSpk_md5)
-# =============================================================================
-# =============================================================================
-#     get_kernel(CassiniKernels.cassTourSpk_url, CassiniKernels.cassTourSpk_md5)
-# =============================================================================
+    get_kernel(CassiniKernels.satSpk_url, CassiniKernels.satSpk_md5)
+    get_kernel(CassiniKernels.cassTourSpk_url, CassiniKernels.cassTourSpk_md5)
     get_kernel(CassiniKernels.cassFk_url, CassiniKernels.cassFk_md5)
     get_kernel(CassiniKernels.cassCk_url, CassiniKernels.cassCk_md5)
     get_kernel(CassiniKernels.cassSclk_url, CassiniKernels.cassSclk_md5)

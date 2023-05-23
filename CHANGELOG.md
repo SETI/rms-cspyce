@@ -4,7 +4,7 @@ All notable changes to `cspyce` will be documented here
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project tries to adhere to [Semantic Versioning](http://semver.org/).
 
-## [2.1.1] - 2023-05-22
+## [2.1.1] - 2023-05-23
 Fix various memory corruption issues that caused crashing under MacOS.
 Fix implementation issues with `dafgda`, `dafus`, `dasrdc`, `dp2hx`,
 and `dskd02`.
