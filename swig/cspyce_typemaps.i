@@ -2232,7 +2232,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
-    (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY])
+    (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
+    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
+    (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY])
 {
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
@@ -2246,12 +2248,13 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
-    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (int *SIZE1, int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1),
     (int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
+    (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
+    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY])
 {
     npy_intp dims[2] = {outsize$argnum, dimsize$argnum[1]};
@@ -2284,21 +2287,18 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
-
     (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2, int *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2, SpiceInt *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1, int DIM1, int DIM2),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
-    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (int *SIZE1, int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1),
     (int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
-
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1, int *SIZE2),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1, SpiceInt *SIZE2),
     (int *SIZE1, int *SIZE2, Type OUT_ARRAY2[ANY][ANY]),

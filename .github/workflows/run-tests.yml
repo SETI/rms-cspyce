@@ -6,9 +6,7 @@ on:
   pull_request:
     branches: [ master ]
   push:
-    branches:
-      - 'main'
-      - 'fy-*'
+    branches: [ master ]
   schedule:
     - cron: "20 11 * * 0"
 
@@ -42,7 +40,8 @@ jobs:
           cache-name: cspice-source-code
         with:
           path: cspice
-          key: ${{ matrix.os }}-l${{ env.cache-name }}-${{ hashFiles('setup.py', 'pyproject.toml') }}
+          # If we up the Spice version, this is the best way to find out.
+          key: ${{ matrix.os }}-${{ runner.arch }}-${{ env.cache-name }}-${{ hashFiles('setup.py') }}
 
       - name: Generate cspyce
         run: |
@@ -54,10 +53,8 @@ jobs:
         env:
           cache-name: cspice-libraries
         with:
-          path: |
-            build/**/libcspice*.*
-            build/**/*.lib
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ env.cache-name }}-${{ hashFiles('cspice/**/*') }}
+          path: build/
+          key: ${{ matrix.os }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ env.cache-name }}-${{ hashFiles('setup.py', 'cspice/**/*') }}
 
       - name: Compile C libraries
         if: ${{ steps.cache-libraries.outputs.cache-hit != 'true' }}
