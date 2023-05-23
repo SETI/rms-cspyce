@@ -31,6 +31,7 @@ import urllib.error
 import urllib.request
 import sys
 import hashlib
+import requests
 
 try:
     cwd = os.environ['CSPYCE_TEST_KERNELS']
@@ -48,7 +49,7 @@ def get_path_from_url(url: str) -> str:
 
 def cleanup_file(path: str) -> None:
 # =============================================================================
-#     if os.path.exists(path):
+#     if os.    path.exists(path):
 #         os.remove(path)
 # =============================================================================
     pass
@@ -240,22 +241,23 @@ def attempt_download(
     while current_attempt < num_attempts:
         try:
             print("Attempting to Download kernel: {}".format(kernel_name), flush=True)
-            current_kernel = urllib.request.urlopen(url, timeout=10)
-            with open(target_file_name, "wb") as kernel:
-                kernel.write(current_kernel.read())
+            hasher = hashlib.md5()
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(target_file_name, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=16384):  # 2 ** 14
+                        f.write(chunk)
+                        hasher.update(chunk)
+                file_hash = hasher.hexdigest()
             print("Downloaded kernel: {}".format(kernel_name), flush=True)
             # check file hash if provided, assumes md5
             if provided_hash is not None:
-                with open(target_file_name, "rb") as kernel:
-                    file_contents = kernel.read()
-                    assert file_contents is not None
-                    file_hash = hashlib.md5(file_contents).hexdigest()
-                    if file_hash != provided_hash:
-                        raise AssertionError(
-                            "File {} appears corrupted. Expected md5: {} but got {} instead".format(
-                                kernel_name, provided_hash, file_hash
-                            )
+                if file_hash != provided_hash:
+                    raise AssertionError(
+                        "File {} appears corrupted. Expected md5: {} but got {} instead".format(
+                            kernel_name, provided_hash, file_hash
                         )
+                    )
             break
         # N.B. .HTTPError inherits from .URLError, so [except:....HTTPError]
         #      must be listed before [except:....URLError], otherwise the
