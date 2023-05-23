@@ -1048,7 +1048,6 @@ TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
 TYPEMAP_IN(SpiceBoolean,     NPY_INT   )
 TYPEMAP_IN(ConstSpiceBoolean,NPY_INT   )
 TYPEMAP_IN(long,             NPY_LONG  )
-TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
 TYPEMAP_IN(SpiceDouble,      NPY_DOUBLE)
 TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
@@ -1394,7 +1393,6 @@ TYPEMAP_IN(ConstSpiceInt,    NPY_INT   )
 TYPEMAP_IN(SpiceBoolean,     NPY_INT   )
 TYPEMAP_IN(ConstSpiceBoolean,NPY_INT   )
 TYPEMAP_IN(long,             NPY_LONG  )
-TYPEMAP_IN(float,            NPY_FLOAT )
 TYPEMAP_IN(double,           NPY_DOUBLE)
 TYPEMAP_IN(SpiceDouble,      NPY_DOUBLE)
 TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
@@ -1772,7 +1770,6 @@ TYPEMAP_ARGOUT(int,           NPY_INT   )
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
 TYPEMAP_ARGOUT(long,          NPY_LONG  )
-TYPEMAP_ARGOUT(float,         NPY_FLOAT )
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
@@ -1850,7 +1847,6 @@ TYPEMAP_ARGOUT(int,           NPY_INT)
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT)
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT)
 TYPEMAP_ARGOUT(long,          NPY_LONG)
-TYPEMAP_ARGOUT(float,         NPY_FLOAT)
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
@@ -2363,9 +2359,7 @@ TYPEMAP_SIZED_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
-    (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
-    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
-    (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY])
+    (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY])
 {
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
@@ -2379,13 +2373,12 @@ TYPEMAP_SIZED_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
+    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (int *SIZE1, int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1),
     (int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
-    (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
-    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY])
 {
     npy_intp dims[2] = {outsize$argnum, dimsize$argnum[1]};
@@ -2418,18 +2411,21 @@ TYPEMAP_SIZED_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
+
     (Type OUT_ARRAY2[ANY][ANY], int DIM1, int DIM2, int *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2, SpiceInt *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1, int DIM1, int DIM2),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2),
     (int DIM1, int DIM2, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
+    (int DIM1, int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (int *SIZE1, int DIM1, int DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY]),
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1),
     (int *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
     (SpiceInt *SIZE1, Type OUT_ARRAY2[ANY][ANY]),
+
     (Type OUT_ARRAY2[ANY][ANY], int *SIZE1, int *SIZE2),
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1, SpiceInt *SIZE2),
     (int *SIZE1, int *SIZE2, Type OUT_ARRAY2[ANY][ANY]),
@@ -2540,7 +2536,6 @@ TYPEMAP_ARGOUT(int,           NPY_INT   )
 TYPEMAP_ARGOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT   )
 TYPEMAP_ARGOUT(long,          NPY_LONG  )
-TYPEMAP_ARGOUT(float,         NPY_FLOAT )
 TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
@@ -2705,7 +2700,6 @@ TYPEMAP_INOUT(int,           NPY_INT   )
 TYPEMAP_INOUT(SpiceInt,      NPY_INT   )
 TYPEMAP_INOUT(SpiceBoolean,  NPY_INT   )
 TYPEMAP_INOUT(long,          NPY_LONG  )
-TYPEMAP_INOUT(float,         NPY_FLOAT )
 TYPEMAP_INOUT(double,        NPY_DOUBLE)
 TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
 
