@@ -18,32 +18,54 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [ '3.8', '3.9', '3.10', '3.11' ]
-        # os: [ubuntu-latest]
-        # python-version: [ '3.11' ]
       fail-fast: false
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           python -m pip install -r requirements.txt
-      - name: Build cspyce
+
+      - name: Generate cspyce
         run: |
           python setup.py generate
+
+      - name: Cache libraries
+        id: cache-libraries
+        uses: actions/cache@v3
+        env:
+          cache-name: cspice-libraries
+        with:
+          path: |
+            build/**/libcspice*.*
+            build/**/*.lib
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-${{ env.cache-name }}-${{ hashFiles('cspice/**/*') }}
+
+      - name: Compile C libraries
+        if: ${{ steps.cache-libraries.outputs.cache-hit != 'true' }}
+        run: |
           python setup.py build_clib
+
+      - name: Build extensions
+        run: |
           python setup.py build_ext --inplace
+
       - name: Install cspyce
         run: |
           python -m pip install .
+
       - name: Test with coverage
         run: |
           pytest -v -rA --cov=./ --cov-report=xml
+
       - name: Upload coverage report to codecov
         uses: codecov/codecov-action@v3
         with:
