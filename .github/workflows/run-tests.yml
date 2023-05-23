@@ -6,9 +6,7 @@ on:
   pull_request:
     branches: [ master ]
   push:
-    branches:
-      - 'main'
-      - 'fy-*'
+    branches: [ master ]
   schedule:
     - cron: "20 11 * * 0"
 
@@ -35,14 +33,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -r requirements.txt
-
-      - name: Cache CSPICE source code
-        uses: actions/cache@v3
-        env:
-          cache-name: cspice-source-code
-        with:
-          path: cspice
-          key: ${{ matrix.os }}-l${{ env.cache-name }}-${{ hashFiles('setup.py', 'pyproject.toml') }}
 
       - name: Generate cspyce
         run: |

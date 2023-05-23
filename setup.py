@@ -173,7 +173,7 @@ cspice_directory = GetCspice().download()
 
 def get_c_libraries():
     files = sorted(glob(os.path.join(cspice_directory, "src", "*.c")))
-    splits = 1 if IS_LINUX else 1 + (len(files) // 150)
+    splits = 1 if IS_LINUX else 1 + (len(files) // 250)
     compiler_flags = ["-DKR_headers", "-DMSDOS", "/nowarn"] if IS_WINDOWS else ["-w"]
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
