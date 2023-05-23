@@ -49,7 +49,7 @@ def get_path_from_url(url: str) -> str:
 
 def cleanup_file(path: str) -> None:
 # =============================================================================
-#     if os.    path.exists(path):
+#     if os.path.exists(path):
 #         os.remove(path)
 # =============================================================================
     pass
@@ -192,7 +192,7 @@ def attempt_download(
     current_attempt = 0
     while current_attempt < num_attempts:
         try:
-            print("Attempting to Download kernel: {}".format(kernel_name), flush=True)
+            print(f"Attempting to Download kernel: {kernel_name}", flush=True)
             hasher = hashlib.md5()
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -203,47 +203,32 @@ def attempt_download(
                 file_hash = hasher.hexdigest()
             print("Downloaded kernel: {}".format(kernel_name), flush=True)
             # check file hash if provided, assumes md5
-            if provided_hash is not None:
-                if file_hash != provided_hash:
-                    raise AssertionError(
-                        "File {} appears corrupted. Expected md5: {} but got {} instead".format(
-                            kernel_name, provided_hash, file_hash
-                        )
-                    )
+            if provided_hash is not None and file_hash != provided_hash:
+                raise AssertionError(
+                    f"File {kernel_name} appears corrupted. "
+                    f"Expected md5: {provided_hash} but got {file_hash} instead"
+                )
             break
         # N.B. .HTTPError inherits from .URLError, so [except:....HTTPError]
         #      must be listed before [except:....URLError], otherwise the
         #      .HTTPError exception cannot be caught
         except urllib.error.HTTPError as h:
-            print(
-                "Some http error when downloading kernel {}, error: ".format(
-                    kernel_name
-                ),
-                h,
-                ", trying again after a bit.",
-            )
+            print(f"Some http error when downloading kernel {kernel_name}, error: ",
+                  f"{h}, trying again after a bit.")
         except urllib.error.URLError:
-            print(
-                "Download of kernel: {} failed with URLError, trying again after a bit.".format(
-                    kernel_name
-                ),
-                flush=True,
-            )
+            print(f"Download of kernel: {kernel_name} failed with URLError, "
+                  f"trying again after a bit.",
+                  flush=True)
         except AssertionError as ae:
-            print(
-                "Download of kernel: {} failed with AssertionError, ({}), trying again after a bit.".format(
-                    str(ae), kernel_name
-                ),
-                flush=True,
-            )
+            print(f"Download of kernel: {kernel_name} failed with AssertionError, ({ae}), "
+                  f"trying again after a bit.",
+                  flush=True)
         current_attempt += 1
         print("\t Attempting to Download kernel again...", flush=True)
         time.sleep(2 + current_attempt)
     if current_attempt >= num_attempts:
-        raise BaseException(
-            "Error Downloading kernel: {}, check if kernel exists at url: {}".format(
-                kernel_name, url
-            )
+        raise Exception(f"Error Downloading kernel: {kernel_name}, "
+                        f"check if kernel exists at url: {url}"
         )
 
 
