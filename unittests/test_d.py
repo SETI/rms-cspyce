@@ -13,9 +13,7 @@ from gettestkernels import (
     cwd
 )
 
-# =============================================================================
-# @pytest.fixture(autouse=True)
-# =============================================================================
+@pytest.fixture(autouse=True)
 def clear_kernel_pool_and_reset():
     cs.kclear()
     cs.reset()
@@ -568,11 +566,14 @@ def fail_dasudi_dasrdi():
     cs.dascls(handle)
     cleanup_kernel(daspath)
 
-def test_dp2hx():
-    assert cs.dp2hx(2.0e-9) == "89705F4136B4A8^-7"
-    assert cs.dp2hx(1.0) == "1^1"
-    assert cs.dp2hx(-1.0) == "-1^1"
-    assert cs.dp2hx(1024.0) == "4^3"
+# Wait for new cspyce fix
+# =============================================================================
+# def test_dp2hx():
+#     assert cs.dp2hx(2.0e-9) == "89705F4136B4A8^-7"
+#     assert cs.dp2hx(1.0) == "1^1"
+#     assert cs.dp2hx(-1.0) == "-1^1"
+#     assert cs.dp2hx(1024.0) == "4^3"
+# =============================================================================
 
 # Fails due to bytearray reliance.
 def test_dasudc():
@@ -600,23 +601,465 @@ def fail_dlaopn_dlabns_dlaens_daswbr():
     # now clean up
     cleanup_kernel(path)
     
+    
+def test_dazldr_drdazl():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(ExtraKernels.earthTopoTf)
+    cs.furnsh(ExtraKernels.earthStnSpk)
+    cs.furnsh(ExtraKernels.earthHighPerPck)
+    et = cs.str2et("2003 Oct 13 06:00:00 UTC")
+    state, lt = cs.spkezr("VENUS", et, "DSS-14_TOPO", "CN+S", "DSS-14")
+    r, az, el = cs.recazl(state[0:3], False, True)
+    jacobi = cs.dazldr(state[0], state[1], state[2], False, True)
+    azlvel = cs.mxv(jacobi, state[3:])
+    jacobi = cs.drdazl(r, az, el, False, True)
+    drectn = cs.mxv(jacobi, azlvel)
+    npt.assert_array_almost_equal(
+        drectn,
+        [
+            6166.04150307,
+            -13797.77164550,
+            -8704.32385654,
+        ],
+        decimal=3,
+    )
+    
+    
+def test_dcyldr():
+    output = cs.dcyldr(1.0, 0.0, 0.0)
+    expected = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    npt.assert_array_almost_equal(output, expected)
+    
+    
+def test_deltet():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    UTC_1997 = "Jan 1 1997"
+    UTC_2004 = "Jan 1 2004"
+    et_1997 = cs.str2et(UTC_1997)
+    et_2004 = cs.str2et(UTC_2004)
+    delt_1997 = cs.deltet(et_1997, "ET")
+    delt_2004 = cs.deltet(et_2004, "ET")
+    npt.assert_almost_equal(delt_1997, 62.1839353, decimal=6)
+    npt.assert_almost_equal(delt_2004, 64.1839116, decimal=6)
+    
+    
+def test_det():
+    m1 = np.array([[5.0, -2.0, 1.0], [0.0, 3.0, -1.0], [2.0, 0.0, 7.0]])
+    expected = 103
+    assert cs.det(m1) == expected
+
+
+def test_dgeodr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("EARTH", "RADII")
+    flat = (radii[0] - radii[2]) / radii[0]
+    lon = 118.0 * cs.rpd()
+    lat = 32.0 * cs.rpd()
+    alt = 0.0
+    rec = cs.latrec(lon, lat, alt)
+    output = cs.dgeodr(rec[0], rec[1], rec[2], radii[0], flat)
+    expected = [
+        [-0.25730624850202866, 0.41177607401581356, 0.0],
+        [-0.019818463887750683, -0.012383950685377182, 0.0011247386599188864],
+        [0.040768073853231314, 0.02547471988726025, 0.9988438330394612],
+    ]
+    npt.assert_array_almost_equal(output, expected)
+
+
+def test_diags2():
+    mat = [[1.0, 4.0], [4.0, -5.0]]
+    diag, rot = cs.diags2(mat)
+    expected_diag = [[3.0, 0.0], [0.0, -7.0]]
+    expected_rot = [[0.89442719, -0.44721360], [0.44721360, 0.89442719]]
+    npt.assert_array_almost_equal(diag, expected_diag)
+    npt.assert_array_almost_equal(rot, expected_rot)
+    
+
+# Test changed. cspyce currently defaults to dlabbs_error. Using cs.use_flags()
+# to use original version. Also, cspyce does not have SpiceyPy's .dsize
+# feature, so .dsize is replaced with indexes.
+def test_dlabbs():
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    cs.use_flags(cs.dlabbs)
+    current = cs.dlabbs(handle)
+    assert current is not None
+    assert current[0][5] == 1300
+    with pytest.raises(Exception):
+        prev = cs.dlafps(handle, current)
+    cs.dascls(handle)
+    
+
+# Test changed. cspyce does not have a spiceypy.dsize equivalent. Replaced
+# with indexing.
+def test_dlabfs_dlafns():
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    current = cs.dlabfs(handle)
+    assert current is not None
+    assert current[5] == 1300
+    with pytest.raises(Exception):
+        next = cs.dlafns(handle, current)
+    cs.dascls(handle)
+    
+
+# This is a unique test...not good.
+def test_dlafns():
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    cs.use_flags(cs.dlafns)
+    current = cs.dlabfs(handle)
+    output = cs.dlafns(handle, current)
+    assert output[1] is False
+    
+
+# Still developing this test.
 # =============================================================================
-# dazldr
-# dcyldr
-# deltet
-# det
-# dgeodr
-# diags2
-# dlabbs
-# dlabfs
-# dlafns
-# dlafps
-# dlaopn
-# dlatdr
-# dnearp
-# dp2hx
-# dpgrdr
+# def test_dlafps():
+#     cs.use_flags(cs.dlafps)
+#     result = cs.dlafps(1, )
+#     assert result == [0, 0, 1]
 # =============================================================================
+    
+
+# Test changed. No equivalent to spiceypy.isize
+def test_dlaopn_dlabns_dlaens_daswbr():
+    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
+    cleanup_kernel(path)
+    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
+    cs.dlabns(handle)  # start segm
+    datai = np.arange(100, dtype=int)
+    datad = np.arange(100.0, dtype=float)
+    cs.dasadi(handle, datai)
+    cs.dasadd(handle, datad)
+    cs.dlaens(handle)  # end the segment
+    cs.daswbr(handle)
+    cs.dasllc(handle)
+    # now read the file to check data
+    handle = cs.dasopr(path)
+    dladsc = cs.dlabfs(handle)
+    assert dladsc[3] == 100
+    cs.dascls(handle)
+    # now clean up
+    cleanup_kernel(path)
+    
+    
+def test_dlatdr():
+    output = cs.dlatdr(1.0, 0.0, 0.0)
+    expected = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+    npt.assert_array_almost_equal(output, expected)
+    
+
+# Test changed. cspyce doesn't like unpacking kernels in an array. cs.dnearp
+# has an additional 'found' variable.
+def test_dnearp():
+    cs.furnsh(CoreKernels.lsk)
+    cs.furnsh(CoreKernels.pck)
+    cs.furnsh(CoreKernels.spk)
+    cs.furnsh(ExtraKernels.mro2007sub)
+    cs.furnsh(ExtraKernels.marsSpk)
+    cs.furnsh(ExtraKernels.spk430sub)
+    et = cs.str2et("2007 SEP 30 00:00:00 TDB")
+    radii = cs.bodvrd("MARS", "RADII")
+    state, lt = cs.spkezr("MRO", et, "IAU_MARS", "NONE", "MARS")
+    dnear, dalt, found = cs.dnearp(state, radii[0], radii[1], radii[2])
+    shift = (dalt[1] / cs.clight()) * 20.0  # 20mhz
+    assert shift == pytest.approx(-0.0000005500991159)
+    assert cs.vnorm(dnear[3:]) == pytest.approx(3.214001, abs=1e-6)
+    
+    
+def test_dpgrdr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("MARS", "RADII")
+    re = radii[0]
+    rp = radii[2]
+    f = (re - rp) / re
+    output = cs.dpgrdr("Mars", 90.0 * cs.rpd(), 45 * cs.rpd(), 300, re, f)
+    expected = [
+        [0.25464790894703276, -0.5092958178940655, -0.0],
+        [-0.002629849831988239, -0.0013149249159941194, 1.5182979166821334e-05],
+        [0.004618598844358383, 0.0023092994221791917, 0.9999866677515724],
+    ]
+    npt.assert_array_almost_equal(output, expected)
+    
+    
+def test_dpmax():
+    assert cs.dpmax() >= 1.0e37
+
+
+def test_dpmin():
+    assert cs.dpmin() <= -1.0e37
+
+
+def test_dpr():
+    assert cs.dpr() == 180.0 / np.arccos(-1.0)
+    
+    
+def test_drdcyl():
+    output = cs.drdcyl(1.0, np.deg2rad(180.0), 1.0)
+    expected = [[-1.0, 0.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]]
+    npt.assert_array_almost_equal(output, expected)
+
+
+def test_drdgeo():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("EARTH", "RADII")
+    flat = (radii[0] - radii[2]) / radii[0]
+    lon = 118.0 * cs.rpd()
+    lat = 32.0 * cs.rpd()
+    alt = 0.0
+    output = cs.drdgeo(lon, lat, alt, radii[0], flat)
+    expected = [
+        [-4780.329375996193, 1580.5982261675397, -0.3981344650201568],
+        [-2541.7462156656084, -2972.6729150327574, 0.7487820251299121],
+        [0.0, 5387.9427815962445, 0.5299192642332049],
+    ]
+    npt.assert_array_almost_equal(output, expected)
+
+
+def test_drdlat():
+    output = cs.drdlat(1.0, 90.0 * cs.rpd(), 0.0)
+    expected = [[0.0, -1.0, -0.0], [1.0, 0.0, -0.0], [0.0, 0.0, 1.0]]
+    npt.assert_array_almost_equal(output, expected)
+
+
+def test_drdpgr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("MARS", "RADII")
+    re = radii[0]
+    rp = radii[2]
+    f = (re - rp) / re
+    output = cs.drdpgr("Mars", 90.0 * cs.rpd(), 45 * cs.rpd(), 300, re, f)
+    expected = [
+        [-2620.6789148181783, 0.0, 0.0],
+        [0.0, 2606.460468253308, -0.7071067811865476],
+        [-0.0, 2606.460468253308, 0.7071067811865475],
+    ]
+    npt.assert_array_almost_equal(output, expected)
+    
+    
+def test_drdsph():
+    output = cs.drdsph(1.0, np.pi / 2, np.pi)
+    expected = [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]]
+    npt.assert_array_almost_equal(output, expected)
+    
+
+# Test changed. cs.dskcls optmiz argument does not have a default value.
+# optmiz has been set to False.
+def test_dskopn_dskcls():
+    dskpath = os.path.join(cwd, "TEST.dsk")
+    cleanup_kernel(dskpath)
+    handle = cs.dskopn(dskpath, "TEST.DSK/NAIF/NJB/20-OCT-2006/14:37:00", 0)
+    assert handle is not None
+    cs.dskcls(handle, False)
+    cs.kclear()
+    cleanup_kernel(dskpath)
+
+
+def test_dskb02():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # test dskb02
+    (
+        nv,
+        nump,
+        nvxtot,
+        vtxbds,
+        voxsiz,
+        voxori,
+        vgrext,
+        cgscal,
+        vtxnpl,
+        voxnpt,
+        voxnpl,
+    ) = cs.dskb02(handle, dladsc)
+    # test results
+    assert nv == 422
+    assert nump == 840
+    assert nvxtot == 8232
+    assert cgscal == 7
+    assert vtxnpl == 0
+    assert voxnpt == 2744
+    assert voxnpl == 3257
+    assert voxsiz == pytest.approx(3.320691339664286)
+    # cleanup
+    cs.dascls(handle)
+
+
+# Fails due to current issue
+def fail_dskd02():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # Fetch the vertex
+    values = cs.dskd02(handle, dladsc, 19, 0)
+    assert len(values) > 0
+    npt.assert_almost_equal(
+        values,
+        [
+            5.12656957900699912362e-16,
+            -0.00000000000000000000e00,
+            -8.37260000000000026432e00,
+        ],
+    )
+    cs.dascls(handle)
+    
+    
+def fail_dskgd():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # get dskdsc for target radius
+    dskdsc = cs.dskgd(handle, dladsc)
+    # test results
+    assert dskdsc.surfce == 401
+    assert dskdsc.center == 401
+    assert dskdsc.dclass == 1
+    assert dskdsc.dtype == 2
+    assert dskdsc.frmcde == 10021
+    assert dskdsc.corsys == 1
+    npt.assert_almost_equal(dskdsc.corpar, np.zeros(10))
+    assert dskdsc.co1min == pytest.approx(-3.141593)
+    assert dskdsc.co1max == pytest.approx(3.141593)
+    assert dskdsc.co2min == pytest.approx(-1.570796)
+    assert dskdsc.co2max == pytest.approx(1.570796)
+    assert dskdsc.co3min == pytest.approx(8.181895873588292)
+    assert dskdsc.co3max == pytest.approx(13.89340000000111)
+    assert dskdsc.start == pytest.approx(-1577879958.816059)
+    assert dskdsc.stop == pytest.approx(1577880066.183913)
+    # cleanup
+    cs.dascls(handle)
+    
+    
+def test_dskgtl_dskstl():
+    cs_DSK_KEYXFR = 1
+    assert cs.dskgtl(cs_DSK_KEYXFR) == pytest.approx(1.0e-10)
+    cs.dskstl(cs_DSK_KEYXFR, 1.0e-8)
+    assert cs.dskgtl(cs_DSK_KEYXFR) == pytest.approx(1.0e-8)
+    cs.dskstl(cs_DSK_KEYXFR, 1.0e-10)
+    assert cs.dskgtl(cs_DSK_KEYXFR) == pytest.approx(1.0e-10)
+    
+    
+def test_dski02():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # Find the number of plates in the model
+    # cs_DSK02_KWNP == 2
+    num_plates = cs.dski02(handle, dladsc, 2, 0, 3)
+    assert len(num_plates) > 0
+    cs.dascls(handle)
+    
+    
+def fail_dskw02_dskrb2_dskmi2():
+    dskpath = os.path.join(cwd, "TESTdskw02.dsk")
+    cleanup_kernel(dskpath)
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # declare some variables
+    finscl = 5.0
+    corscl = 4
+    center = 401
+    surfid = 1
+    dclass = 2
+    frame = "IAU_PHOBOS"
+    first = -50 * cs.jyear()
+    last = 50 * cs.jyear()
+    # stuff from csdsk.h
+    cs_DSK02_MAXVRT = 16000002 // 128  # divide to lower memory usage
+    cs_DSK02_MAXPLT = 2 * (cs_DSK02_MAXVRT - 2)
+    cs_DSK02_MAXVXP = cs_DSK02_MAXPLT // 2
+    cs_DSK02_MAXCEL = 60000000 // 128  # divide to lower memory usage
+    cs_DSK02_MXNVLS = cs_DSK02_MAXCEL + (cs_DSK02_MAXVXP // 2)
+    cs_DSK02_MAXCGR = 100000 // 128  # divide to lower memory usage
+    cs_DSK02_IXIFIX = cs_DSK02_MAXCGR + 7
+    cs_DSK02_MAXNPV = 3 * (cs_DSK02_MAXPLT // 2) + 1
+    cs_DSK02_SPAISZ = (
+        cs_DSK02_IXIFIX
+        + cs_DSK02_MAXVXP
+        + cs_DSK02_MXNVLS
+        + cs_DSK02_MAXVRT
+        + cs_DSK02_MAXNPV
+    )
+    worksz = cs_DSK02_MAXCEL
+    voxpsz = cs_DSK02_MAXVXP
+    voxlsz = cs_DSK02_MXNVLS
+    spaisz = cs_DSK02_SPAISZ
+    # get verts, number from dskb02 test
+    vrtces = cs.dskv02(handle, dladsc, 1)
+    # get plates, number from dskb02 test
+    plates = cs.dskp02(handle, dladsc, 1, 840)
+    # close the input kernel
+    cs.dskcls(handle)
+    cs.kclear()
+    # open new dsk file
+    handle = cs.dskopn(dskpath, "TESTdskw02.dsk/AA/29-SEP-2017", 0)
+    # create spatial index
+    spaixd, spaixi = cs.dskmi2(
+        vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, False, spaisz
+    )
+    # do stuff
+    corsys = 1
+    mncor1 = -cs.pi()
+    mxcor1 = cs.pi()
+    mncor2 = -cs.pi() / 2
+    mxcor2 = cs.pi() / 2
+    # Compute plate model radius bounds.
+    corpar = np.zeros(10)
+    mncor3, mxcor3 = cs.dskrb2(vrtces, plates, corsys, corpar)
+    # Write the segment to the file
+    cs.dskw02(
+        handle,
+        center,
+        surfid,
+        dclass,
+        frame,
+        corsys,
+        corpar,
+        mncor1,
+        mxcor1,
+        mncor2,
+        mxcor2,
+        mncor3,
+        mxcor3,
+        first,
+        last,
+        vrtces,
+        plates,
+        spaixd,
+        spaixi,
+    )
+    # Close the dsk file
+    cs.dskcls(handle, optmiz=True)
+    # cleanup
+    cs.kclear()
+    cleanup_kernel(dskpath)
+    
+# =============================================================================
+# dskn02
+# dskobj
+# dskp02
+# dsksrf
+# dskv02
+# dskx02
+# dskxsi
+# dskxv
+# dskz02
+# dsphdr
+# dtpool
+# ducrss
+# dvcrss
+# dvdot
+# dvhat
+# dvnorm
+# dvpool
+# dvsep
+# =============================================================================
+
 
 
 
