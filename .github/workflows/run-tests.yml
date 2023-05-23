@@ -40,7 +40,7 @@ jobs:
           cache-name: cspice-source-code
         with:
           path: cspice
-          # If we up the Spice version, this is the best way to find out.
+          # If we change the Spice version, it's setup.py that will be udpated.
           key: ${{ matrix.os }}-${{ runner.arch }}-${{ env.cache-name }}-${{ hashFiles('setup.py') }}
 
       - name: Generate cspyce
