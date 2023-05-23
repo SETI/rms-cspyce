@@ -40,7 +40,9 @@ jobs:
           cache-name: cspice-source-code
         with:
           path: cspice
-          # If we change the Spice version, it's setup.py that will be udpated.
+          # If setup.py is modified, we want to invalidate the cache. It means that there
+          # has been some change to the build process (a new Spice version??) and we want
+          # to make sure new sources are pulled.
           key: ${{ matrix.os }}-${{ runner.arch }}-${{ env.cache-name }}-${{ hashFiles('setup.py') }}
 
       - name: Generate cspyce
@@ -54,6 +56,8 @@ jobs:
           cache-name: cspice-libraries
         with:
           path: build/
+          # We need to rebuild the cspice library if the source files have changed,
+          # or if there is some change in the build process.
           key: ${{ matrix.os }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ env.cache-name }}-${{ hashFiles('setup.py', 'cspice/**/*') }}
 
       - name: Compile C libraries
