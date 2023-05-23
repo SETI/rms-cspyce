@@ -701,3 +701,16 @@ class TestReturnValueThroughOutvar:
         assert ts.outvar_set_from_var_bool(0) is False
         assert ts.outvar_set_from_var_bool(1) is True
         assert ts.outvar_set_from_var_bool(-100) is True
+
+class Test_SIZED_INOUTARRAY1:
+    def test_resizes_array_no_default(self):
+        assert len(ts.sized_array_no_default(10, 20)) == 10
+        assert len(ts.sized_array_no_default(30, 20)) == 20
+        assert ts.sized_array_no_default(30, 20)[0] == 30
+
+    def test_resizes_array_with_default(self):
+        assert len(ts.sized_array_with_default(10, None)) == 10
+
+
+
+
