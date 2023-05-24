@@ -1915,15 +1915,19 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1)
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
+
     HANDLE_THREE_ARG_SIZED_INOUT_ARRAY1(Typecode, $1, $2, $3)
 }
 
 %typemap(in)
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1, SpiceInt *SIZE1)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size),
     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1)
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
+
     HANDLE_THREE_ARG_SIZED_INOUT_ARRAY1(Typecode, $2, $1, $3)
 }
 
@@ -1933,6 +1937,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[])
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
     HANDLE_THREE_ARG_SIZED_INOUT_ARRAY1(Typecode, $3, $1, $2)
 }
 
@@ -1940,6 +1945,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type SIZED_INOUT_ARRAY1[ANY], SpiceInt DIM1, SpiceInt *SIZE1)
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//    (Type SIZED_INOUT_ARRAY1[ANY], SpiceInt DIM1, SpiceInt *SIZE1)
+
     HANDLE_THREE_ARG_SIZED_DEFAULT_INOUT_ARRAY1(Typecode, $1, $1_dim0, $2, $3)
 }
 
@@ -1947,6 +1954,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[ANY], SpiceInt *SIZE1)
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[ANY], SpiceInt *SIZE1)
     HANDLE_THREE_ARG_SIZED_DEFAULT_INOUT_ARRAY1(Typecode, $2, $2_dim0, $1, $3)
 }
 
@@ -1954,6 +1962,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[ANY])
         (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[ANY])
+
     HANDLE_THREE_ARG_SIZED_DEFAULT_INOUT_ARRAY1(Typecode, $3, $3_dim0, $1, $2)
 }
 
@@ -1963,6 +1973,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1)
             (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1)
+
     HANDLE_TWO_ARG_SIZED_INOUT_ARRAY1(Typecode, $1, $2)
 }
 
@@ -1972,6 +1984,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[])
             (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
 {
+//     (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
+
     HANDLE_TWO_ARG_SIZED_INOUT_ARRAY1(Typecode, $2, $1)
 }
 

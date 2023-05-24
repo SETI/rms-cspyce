@@ -710,6 +710,11 @@ class Test_SIZED_INOUTARRAY1:
 
     def test_resizes_array_with_default(self):
         assert len(ts.sized_array_with_default(10, None)) == 10
+        assert len(ts.sized_array_with_default(100, None)) == 10
+
+    def test_no_resizes_array(self):
+        assert len(ts.sized_array_no_resize(10)) == 10
+        assert len(ts.sized_array_no_resize(-1)) == 0
 
 
 
