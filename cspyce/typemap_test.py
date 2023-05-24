@@ -702,20 +702,21 @@ class TestReturnValueThroughOutvar:
         assert ts.outvar_set_from_var_bool(1) is True
         assert ts.outvar_set_from_var_bool(-100) is True
 
-class Test_SIZED_INOUTARRAY1:
-    def test_resizes_array_no_default(self):
-        assert len(ts.sized_array_no_default(10, 20)) == 10
-        assert len(ts.sized_array_no_default(30, 20)) == 20
-        assert ts.sized_array_no_default(30, 20)[0] == 30
+class Test_SIZED_INOUT_ARRAY1:
+    def test_basic_int_to_sized_array(self):
+        assert len(ts.sized_array_plain(10)) == 10
+        assert len(ts.sized_array_plain(-1)) == 0
 
-    def test_resizes_array_with_default(self):
-        assert len(ts.sized_array_with_default(10, None)) == 10
-        assert len(ts.sized_array_with_default(100, None)) == 10
+    def test_basic_int_to_sized_array_with_size(self):
+        length, array = ts.sized_array_no_resize(10)
+        assert length == 10
+        assert len(b) == array
 
-    def test_no_resizes_array(self):
-        assert len(ts.sized_array_no_resize(10)) == 10
-        assert len(ts.sized_array_no_resize(-1)) == 0
-
+    def test_resizing_int_to_sized_array(self):
+        # We allocate with size 20, and resize to 5
+        original_length, array = ts.sized_array_with_resize(20, 5)
+        assert original_length == 20
+        assert len(array) == 5
 
 
 

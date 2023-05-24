@@ -502,8 +502,15 @@ def handle_one_function(out, records):
 
     # CSPYCE_DEFAULTS
     if defaults:
-        defaults = [repr(defaults[name]).replace("'", '"') for name in argnames]
-        out.write(f'CSPYCE_DEFAULTS["{func}"] = [{", ".join(defaults)}]\n')
+        # get the index of the smallest argument that has a default set
+        min_index = min(index for index, argname in enumerate(argnames)
+                                if argname in defaults)
+        if len(defaults) != len(argnames) - min_index:
+            raise ValueError(f"All arguments after {argnames[min_index]} "
+                             f"must have an optional value")
+
+        defaults = [repr(defaults[name]) for name in argnames[min_index:]]
+        out.write(f'CSPYCE_DEFAULTS["{func}"] = ({", ".join(defaults)},)\n')
 
 
 # Replacements for other random SPICE types
