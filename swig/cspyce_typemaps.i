@@ -1938,9 +1938,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(in)
     (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
-            (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size),
+            (PyArrayObject* pyarr=NULL),
     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[])
-            (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1], int size)
+            (PyArrayObject* pyarr=NULL)
 {
     CREATE_SIZED_INOUT_ARRAY(Typecode)
 
@@ -1959,8 +1959,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     CREATE_SIZED_INOUT_ARRAY(Typecode)
     $1 = PyArray_DATA(pyarr);
 }
-
-
 
 %typemap(argout)
     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1),

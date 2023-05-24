@@ -2477,27 +2477,16 @@ extern void dasrdc_c(
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdd) my_dasrdd_c;
-%apply (void RETURN_VOID) {void my_dasrdd_c};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
+%rename (dasrdd) dasrdd_c;
+%apply (void RETURN_VOID) {void dasrdd_c};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble *data)};
 
-%inline %{
-extern void my_dasrdd_c (
+extern void dasrdd_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
-        SpiceDouble         **data,
-        int                 *size)
-    {
-        my_assert_ge(first, 1, "dasrdd", "first (#) must be at least 1");
-        my_assert_ge(last, first, "dasrdd", "last (#) must be as large as first (#)");
-        *size = last - first + 1;
-        *data = my_malloc(*size, "dasrdd");
-        if (data) {
-           dasrdd_c(handle, first, last,  *data);
-        }
-    }
-%}
+        SpiceDouble         *data
+);
 
 /***********************************************************************
 * -Procedure dasrdi_c ( DAS, read data, integer )
@@ -2522,27 +2511,16 @@ extern void my_dasrdd_c (
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdi) my_dasrdi_c;
-%apply (void RETURN_VOID) {void my_dasrdi_c};
-%apply (SpiceInt **OUT_ARRAY1, int *SIZE1){(SpiceInt **data, int *size)};
+%rename (dasrdi) dasrdi_c;
+%apply (void RETURN_VOID) {void dasrdi_c};
+%apply (SpiceInt *SIZED_INOUT_ARRAY1){(SpiceInt *data)};
 
-%inline %{
-extern void my_dasrdi_c (
+extern void dasrdi_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
-        SpiceInt            **data,
-        int                 *size)
-    {
-        my_assert_ge(first, 1, "dasrdi", "first (#) must be at least 1");
-        my_assert_ge(last, first, "dasrdi", "last (#) must be as large as first (#)");
-        *size = last - first + 1;
-        *data = my_int_malloc(*size, "dasrdi");
-        if (data) {
-           dasrdi_c(handle, first, last,  *data);
-        }
-    }
-%}
+        SpiceInt            *data
+);
 
 /***********************************************************************
 * -Procedure dasrfr_c ( DAS, read file record )
