@@ -31,7 +31,6 @@ import urllib.error
 import urllib.request
 import sys
 import hashlib
-import requests
 
 try:
     cwd = os.environ['CSPYCE_TEST_KERNELS']
@@ -192,18 +191,16 @@ def attempt_download(
     current_attempt = 0
     while current_attempt < num_attempts:
         try:
-            print(f"Attempting to Download kernel: {kernel_name}", flush=True)
-            hasher = hashlib.md5()
-            with requests.get(url, stream=True) as r:
-                r.raise_for_status()
-                with open(target_file_name, 'wb') as f:
-                    for chunk in r.iter_content(chunk_size=16384):  # 2 ** 14
-                        f.write(chunk)
-                        hasher.update(chunk)
-                file_hash = hasher.hexdigest()
+            print("Attempting to Download kernel: {}".format(kernel_name), flush=True)
+            current_kernel = urllib.request.urlopen(url, timeout=10)
+            with open(target_file_name, "wb") as kernel:
+                data = current_kernel.read()
+                kernel.write(data)
+                file_hash = (None if provided_hash is None
+                             else hashlib.md5(data).hexdigest())
             print("Downloaded kernel: {}".format(kernel_name), flush=True)
             # check file hash if provided, assumes md5
-            if provided_hash is not None and file_hash != provided_hash:
+            if provided_hash != file_hash:
                 raise AssertionError(
                     f"File {kernel_name} appears corrupted. "
                     f"Expected md5: {provided_hash} but got {file_hash} instead"
