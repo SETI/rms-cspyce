@@ -710,7 +710,7 @@ class Test_SIZED_INOUT_ARRAY1:
     def test_basic_int_to_sized_array_with_size(self):
         length, array = ts.sized_array_no_resize(10)
         assert length == 10
-        assert len(b) == array
+        assert len(array) == 10
 
     def test_resizing_int_to_sized_array(self):
         # We allocate with size 20, and resize to 5
