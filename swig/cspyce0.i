@@ -1373,29 +1373,16 @@ extern void dafcls_c(
 * data       O   Data contained between `begin' and `end'.
 ***********************************************************************/
 
-%rename (dafgda) my_dafgda_c;
-%apply (void RETURN_VOID) {void my_dafgda_c};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **data, int *size)};
+%rename (dafgda) dafgda_c;
+%apply (void RETURN_VOID) {void dafgda_c};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble **data)};
 
-%inline %{
-    void my_dafgda_c(
+extern void dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble **data,
-        int         *size)
-    {
-        my_assert_ge(begin, 1, "dafgda", "begin (#) must be at least 1");
-        my_assert_ge(end, begin, "dafgda", "end (#) must at least as large as begin (#)");
-        *size = end - begin + 1;
-        *data = my_malloc(*size, "dafgda");
-        if (*data) {
-            dafgda_c(handle, begin, end, *data);
-        }
-    }
-
-%}
-
+        SpiceDouble *data
+);
 
 /***********************************************************************
 * -Procedure dafgn_c ( DAF, get array name )
@@ -1531,28 +1518,20 @@ extern void dafopr_c(
 %rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
 %apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble sum[]};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1){(SpiceDouble **dc, int *dc_size)};
-%apply (SpiceInt **OUT_ARRAY1, int *SIZE1){(SpiceInt **ic, int *ic_size)};
+%apply (SpiceInt DIM1, SpiceDouble *SIZED_INOUT_ARRAY1) {(SpiceInt nd, SpiceDouble *dc)};
+%apply (SpiceInt DIM1, SpiceInt *SIZED_INOUT_ARRAY1) {(SpiceInt ni, SpiceInt *ic)};
 
 %inline %{
     void my_dafus_c(
         ConstSpiceDouble sum[],
         SpiceInt nd,
+        SpiceDouble *dc,
         SpiceInt ni,
-        SpiceDouble **dc,
-        int *dc_size,
-        SpiceInt **ic,
-        int *ic_size)
+        SpiceInt *ic)
     {
-        *dc = my_malloc(max(nd, 0), "dafus");
-        *ic = my_malloc(max(ni, 0), "dafus");
-        if (dc && ic) {
-            *dc_size = max(nd, 0);
-            *ic_size = max(ni, 0);
-            dafus_c(sum, nd, ni, *dc, *ic);
-        }
+        // Arguments are in the wrong order. We can't do the interweaving ourselves.
+        dafus_c(sum, nd, ni, dc, ic);
     }
-
 %}
 
 /***********************************************************************

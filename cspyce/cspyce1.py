@@ -849,6 +849,24 @@ def _create_das_char_array(data, epos):
     itemsize = max(epos + 1, max(len(x) for x in byte_data))
     return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
+def dasrdi(handle, first, last):
+    return cspyce0.dasrdi(handle, first, last, last - first + 1)
+
+del CSPYCE_SIGNATURES['dasrdi'][-1]
+del CSPYCE_ARGNAMES['dasrdi'][-1]
+
+def dasrdd(handle, first, last):
+    return cspyce0.dasrdd(handle, first, last, last - first + 1)
+
+del CSPYCE_SIGNATURES['dasrdd'][-1]
+del CSPYCE_ARGNAMES['dasrdd'][-1]
+
+def dafgda(handle, begin, end):
+    return cspcye0.dafgda(handle, begin, end, end - begin + 1)
+
+del CSPYCE_SIGNATURES['dafgda'][-1]
+del CSPYCE_ARGNAMES['dafgda'][-1]
+
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in
 # an additional layer [].

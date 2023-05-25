@@ -538,25 +538,26 @@ void handle_malloc_failure(const char* symname) {
 %define TEST_IS_STRING(obj)
 {
     if (!PyUnicode_Check(obj)) {
-        handle_bad_string_error("$symname");
+        handle_bad_type_error("$symname", "String");
         SWIG_fail;
     }
 }
 %enddef
 
-%define RAISE_BAD_STRING_ON_ERROR(error)
+%define RAISE_BAD_TYPE_ON_ERROR(error, typename)
 {
     if (!SWIG_IsOK(error)) {
-        handle_bad_string_error("$symname");
+        handle_bad_type_error("$symname", typename);
         SWIG_fail;
     }
 }
 %enddef
 
 %{
-void handle_bad_string_error(const char* symname) {
+void handle_bad_type_error(const char* symname, const char* typename) {
     chkin_c(symname);
-    setmsg_c("Expected String");
+    setmsg_c("Expected #");
+    errch_c( "#", typename);
     sigerr_c("SPICE(INVALIDARGUMENT)");
     chkout_c(symname);
     PyErr_SetString(
@@ -1663,7 +1664,8 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
     // Reshape to indicate the number of elements we actually created
     npy_intp dims[1] = {size$argnum[0]};
     PyArray_Dims shape = {dims, 1};
-    PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    PyObject* temp = PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    Py_XDECREF(temp);
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
@@ -1850,6 +1852,175 @@ TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 #undef TYPEMAP_ARGOUT
+
+
+
+/*******************************************************************************
+* 1-D numeric typemaps for output
+*
+* FY WRITE ME
+*******************************************************************************/
+
+%define CREATE_SIZED_INOUT_ARRAY(Typecode)
+    int size = 0;
+    int error = SWIG_AsVal_int($input, &size);
+    RAISE_BAD_TYPE_ON_ERROR(error, "Integer");
+
+    npy_intp dims = max(size, 0);                               // ARRAY
+    pyarr = (PyArrayObject *) PyArray_SimpleNew(1, &dims, Typecode);
+    TEST_MALLOC_FAILURE(pyarr);
+%enddef
+
+
+%define TYPEMAP_SIZED_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
+
+%typemap(in)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
+        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1]),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1)
+        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1])
+{
+//     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
+
+    CREATE_SIZED_INOUT_ARRAY(Typecode)
+
+    dimsize[0] = 0;
+    $1 = PyArray_DATA(pyarr);
+    $2 = PyArray_DIM(pyarr, 0);
+    $3 = dimsize;
+}
+
+%typemap(in)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
+        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1]),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1)
+        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1])
+{
+//    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
+
+    CREATE_SIZED_INOUT_ARRAY(Typecode)
+
+    dimsize[0] = 0;
+    $1 = PyArray_DIM(pyarr, 0);
+    $2 = PyArray_DATA(pyarr);
+    $3 = dimsize;
+}
+
+%typemap(in)
+    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
+        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1]),
+    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[])
+        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1])
+{
+//     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
+
+    CREATE_SIZED_INOUT_ARRAY(Typecode)
+
+    dimsize[0] = 0;
+    $1 = PyArray_DIM(pyarr, 0);
+    $2 = dimsize;
+    $3 = PyArray_DATA(pyarr);
+}
+
+%typemap(in)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1)
+            (PyArrayObject* pyarr=NULL),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1)
+            (PyArrayObject* pyarr=NULL)
+{
+//     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1)
+
+    CREATE_SIZED_INOUT_ARRAY(Typecode)
+
+    $1 = PyArray_DATA(pyarr);
+    $2 = PyArray_DIM(pyarr, 0);
+}
+
+%typemap(in)
+    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
+            (PyArrayObject* pyarr=NULL),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[])
+            (PyArrayObject* pyarr=NULL)
+{
+    CREATE_SIZED_INOUT_ARRAY(Typecode)
+
+    $1 = PyArray_DIM(pyarr, 0);
+    $2 = PyArray_DATA(pyarr);
+}
+
+%typemap(in)
+    (Type *SIZED_INOUT_ARRAY1)
+            (PyArrayObject* pyarr=NULL),
+    (Type SIZED_INOUT_ARRAY1[])
+            (PyArrayObject* pyarr=NULL)
+{
+//     (Type *SIZED_INOUT_ARRAY1)
+
+    CREATE_SIZED_INOUT_ARRAY(Typecode)
+    $1 = PyArray_DATA(pyarr);
+}
+
+%typemap(argout)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1),
+    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1, SpiceInt *SIZE1),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1),
+    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1),
+    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[]),
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1)
+{
+    npy_intp new_dim = dimsize$argnum[0];
+    PyArray_Dims shape = {&new_dim, 1};
+    PyObject *result = PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    Py_XDECREF(result);
+
+    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    pyarr$argnum = NULL;
+}
+
+%typemap(argout)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1),
+    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
+    (Type *SIZED_INOUT_ARRAY1),
+    (Type SIZED_INOUT_ARRAY1[])
+
+{
+    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    pyarr$argnum = NULL;
+}
+
+
+%typemap(free)
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1),
+    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1, SpiceInt *SIZE1),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1),
+    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1),
+    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[]),
+    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1),
+    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1),
+    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
+    (Type *SIZED_INOUT_ARRAY1)
+{
+    Py_XDECREF(pyarr$argnum);
+}
+
+
+
+
+%enddef
+
+TYPEMAP_SIZED_ARGOUT(int,           NPY_INT   )
+TYPEMAP_SIZED_ARGOUT(SpiceInt,      NPY_INT   )
+TYPEMAP_SIZED_ARGOUT(SpiceBoolean,  NPY_INT   )
+TYPEMAP_SIZED_ARGOUT(long,          NPY_LONG  )
+TYPEMAP_SIZED_ARGOUT(float,         NPY_FLOAT )
+TYPEMAP_SIZED_ARGOUT(double,        NPY_DOUBLE)
+TYPEMAP_SIZED_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 /*******************************************************************************
 * 2-D numeric typemaps for output
@@ -2253,7 +2424,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     npy_intp dims[2] = {outsize$argnum, dimsize$argnum[1]};
     PyArray_Dims shape = {dims, 2};
 
-    PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    PyObject* temp = PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    Py_XDECREF(temp);
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2268,7 +2440,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     npy_intp dims[2] = {outsize$argnum[0], outsize$argnum[1]};
     PyArray_Dims shape = {dims, 2};
 
-    PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    PyObject* temp = PyArray_Resize(pyarr$argnum, &shape, 0, NPY_CORDER);
+    Py_XDECREF(temp);
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
@@ -2627,7 +2800,7 @@ TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type IN_STRING)
     TEST_IS_STRING($input);
     int error  = SWIG_AsVal_char($input, &$1);
-    RAISE_BAD_STRING_ON_ERROR(error);
+    RAISE_BAD_TYPE_ON_ERROR(error, "String");
  }
 
 %typemap(argout) (Type IN_STRING) ""
