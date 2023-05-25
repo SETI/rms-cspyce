@@ -57,11 +57,12 @@ def get_path_from_url(url: str) -> str:
 
 
 def cleanup_file(_path: str) -> None:
-# =============================================================================
-#     if os.path.exists(path):
-#         os.remove(path)
-# =============================================================================
+    # =============================================================================
+    #     if os.path.exists(path):
+    #         os.remove(path)
+    # =============================================================================
     pass
+
 
 def delete_cache_directory():
     """
@@ -69,6 +70,7 @@ def delete_cache_directory():
     kernels have been corrupted.
     """
     shutil.rmtree(cwd)
+
 
 class CassiniKernels:
     cassPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cpck05Mar2004.tpc"
@@ -211,12 +213,12 @@ def attempt_download(
         hasher = None if provided_hash is None else hashlib.md5()
         temp_filename = target_file_name + ".download"
         try:
-            with (requests.get(url, timeout=10, stream=True) as request,
-                  open(temp_filename, "wb") as current_kernel):
-                for data in request.iter_content(chunk_size=(1 << 16)):
-                    current_kernel.write(data)
-                    if hasher:
-                        hasher.update(data)
+            with requests.get(url, timeout=10, stream=True) as request:
+                with open(temp_filename, "wb") as current_kernel:
+                    for data in request.iter_content(chunk_size=(1 << 16)):
+                        current_kernel.write(data)
+                        if hasher:
+                            hasher.update(data)
             print("Downloaded kernel: {}".format(kernel_name), flush=True)
             # check file hash if provided, assumes md5
             if hasher:
@@ -242,8 +244,7 @@ def attempt_download(
         time.sleep(2 + current_attempt)
     if current_attempt >= num_attempts:
         raise Exception(f"Error Downloading kernel: {kernel_name}, "
-                        f"check if kernel exists at url: {url}"
-        )
+                        f"check if kernel exists at url: {url}")
 
 
 def get_standard_kernels() -> None:
@@ -304,5 +305,4 @@ def download_kernels() -> None:
     get_cassini_test_kernels()  # Download Cassini kernels
     get_extra_test_kernels()  # Download any extra test kernels we need
     write_test_meta_kernel()  # Create the meta kernel file for tests
-
 
