@@ -22,20 +22,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import os
-import time
-import platform
-import tempfile
-import urllib
-import urllib.error
-import urllib.request
-import sys
 import hashlib
+import os
+import shutil
+import sys
+import tempfile
+import time
+from pathlib import Path
 
-try:
-    cwd = os.environ['CSPYCE_TEST_KERNELS']
-except KeyError:
-    cwd = "/tmp" if platform.system() == "Darwin" else tempfile.gettempdir()
+import requests
+from requests import RequestException
+
+
+def _get_kernel_directory():
+    try:
+        return os.environ['CSPYCE_TEST_KERNELS']
+    except KeyError:
+        pass
+
+    directory = Path(tempfile.gettempdir()) / "cspyce-test-kernels"
+    directory.mkdir(parents=True, exist_ok=True)
+    return str(directory)
+
+
+cwd = _get_kernel_directory()
 
 
 def get_kernel_name_from_url(url: str) -> str:
@@ -46,11 +56,27 @@ def get_path_from_url(url: str) -> str:
     return os.path.join(cwd, get_kernel_name_from_url(url))
 
 
+<<<<<<< HEAD
 def cleanup_file(path: str) -> None:
     if os.path.exists(path):
         os.remove(path)
+=======
+def cleanup_file(_path: str) -> None:
+# =============================================================================
+#     if os.path.exists(path):
+#         os.remove(path)
+# =============================================================================
+    pass
+>>>>>>> fy-faster-hash
 
-class CassiniKernels(object):
+def delete_cache_directory():
+    """
+    Delete all cached kernels.  Not currently needed, but useful in case you suspect the
+    kernels have been corrupted.
+    """
+    shutil.rmtree(cwd)
+
+class CassiniKernels:
     cassPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cpck05Mar2004.tpc"
     cassPck_md5 = "8c16afc3bd886326e852b54bd71cc751"
     satSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130220AP_SE_13043_13073.bsp"
@@ -84,7 +110,7 @@ def cleanup_cassini_kernels() -> None:
     cleanup_file(CassiniKernels.cassIk)
 
 
-class ExtraKernels(object):
+class ExtraKernels:
     voyagerSclk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/vg200022.tsc"
     voyagerSclk_md5 = "4bcaf22788efbd86707c4b3c4d63c0c3"
     earthTopoTf_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/earth_topo_050714.tf"
@@ -138,7 +164,7 @@ def cleanup_extra_kernels() -> None:
     cleanup_file(ExtraKernels.v02swuck)
 
 
-class CoreKernels(object):
+class CoreKernels:
     # note this gets updated
     currentLSK = "naif0012.tls"
     #
@@ -187,58 +213,42 @@ def attempt_download(
 ) -> None:
     current_attempt = 0
     while current_attempt < num_attempts:
+        print("Attempting to Download kernel: {}".format(kernel_name), flush=True)
+        hasher = None if provided_hash is None else hashlib.md5()
+        temp_filename = target_file_name + ".download"
         try:
-            print("Attempting to Download kernel: {}".format(kernel_name), flush=True)
-            current_kernel = urllib.request.urlopen(url, timeout=10)
-            with open(target_file_name, "wb") as kernel:
-                kernel.write(current_kernel.read())
+            with (requests.get(url, timeout=10, stream=True) as request,
+                  open(temp_filename, "wb") as current_kernel):
+                for data in request.iter_content(chunk_size=(1 << 16)):
+                    current_kernel.write(data)
+                    if hasher:
+                        hasher.update(data)
             print("Downloaded kernel: {}".format(kernel_name), flush=True)
             # check file hash if provided, assumes md5
-            if provided_hash is not None:
-                with open(target_file_name, "rb") as kernel:
-                    file_contents = kernel.read()
-                    assert file_contents is not None
-                    file_hash = hashlib.md5(file_contents).hexdigest()
-                    if file_hash != provided_hash:
-                        raise AssertionError(
-                            "File {} appears corrupted. Expected md5: {} but got {} instead".format(
-                                kernel_name, provided_hash, file_hash
-                            )
-                        )
+            if hasher:
+                file_hash = hasher.hexdigest()
+                if provided_hash != file_hash:
+                    raise AssertionError(
+                        f"File {kernel_name} appears corrupted. "
+                        f"Expected md5: {provided_hash} but got {file_hash} instead"
+                    )
+            os.rename(temp_filename, target_file_name)
             break
-        # N.B. .HTTPError inherits from .URLError, so [except:....HTTPError]
-        #      must be listed before [except:....URLError], otherwise the
-        #      .HTTPError exception cannot be caught
-        except urllib.error.HTTPError as h:
-            print(
-                "Some http error when downloading kernel {}, error: ".format(
-                    kernel_name
-                ),
-                h,
-                ", trying again after a bit.",
-            )
-        except urllib.error.URLError:
-            print(
-                "Download of kernel: {} failed with URLError, trying again after a bit.".format(
-                    kernel_name
-                ),
-                flush=True,
-            )
+        except RequestException as h:
+            print(f"Some http error when downloading kernel {kernel_name}, error: ",
+                  f"{h}, trying again after a bit.")
+        except TimeoutError:
+            print(f"Download of kernel: {kernel_name} timed out, "
+                  f"trying again after a bit.")
         except AssertionError as ae:
-            print(
-                "Download of kernel: {} failed with AssertionError, ({}), trying again after a bit.".format(
-                    str(ae), kernel_name
-                ),
-                flush=True,
-            )
+            print(f"Download of kernel: {kernel_name} failed with AssertionError, ({ae}), "
+                  f"trying again after a bit.")
         current_attempt += 1
         print("\t Attempting to Download kernel again...", flush=True)
         time.sleep(2 + current_attempt)
     if current_attempt >= num_attempts:
-        raise BaseException(
-            "Error Downloading kernel: {}, check if kernel exists at url: {}".format(
-                kernel_name, url
-            )
+        raise Exception(f"Error Downloading kernel: {kernel_name}, "
+                        f"check if kernel exists at url: {url}"
         )
 
 
@@ -300,3 +310,5 @@ def download_kernels() -> None:
     get_cassini_test_kernels()  # Download Cassini kernels
     get_extra_test_kernels()  # Download any extra test kernels we need
     write_test_meta_kernel()  # Create the meta kernel file for tests
+
+
