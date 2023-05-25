@@ -56,18 +56,20 @@ def get_path_from_url(url: str) -> str:
     return os.path.join(cwd, get_kernel_name_from_url(url))
 
 
-<<<<<<< HEAD
+# <<<<<<< HEAD
 def cleanup_file(path: str) -> None:
     if os.path.exists(path):
         os.remove(path)
-=======
-def cleanup_file(_path: str) -> None:
+# =======
 # =============================================================================
-#     if os.path.exists(path):
-#         os.remove(path)
+# def cleanup_file(_path: str) -> None:
+# # =============================================================================
+# #     if os.path.exists(path):
+# #         os.remove(path)
+# # =============================================================================
+#     pass
 # =============================================================================
-    pass
->>>>>>> fy-faster-hash
+# >>>>>>> fy-faster-hash
 
 def delete_cache_directory():
     """
@@ -217,8 +219,8 @@ def attempt_download(
         hasher = None if provided_hash is None else hashlib.md5()
         temp_filename = target_file_name + ".download"
         try:
-            with (requests.get(url, timeout=10, stream=True) as request,
-                  open(temp_filename, "wb") as current_kernel):
+            with requests.get(url, timeout=10, stream=True) as request, \
+                  open(temp_filename, "wb") as current_kernel:
                 for data in request.iter_content(chunk_size=(1 << 16)):
                     current_kernel.write(data)
                     if hasher:
