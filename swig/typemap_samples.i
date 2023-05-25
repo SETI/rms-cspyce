@@ -408,3 +408,23 @@ void outvar_set_from_var_double(double INPUT, SpiceDouble* OUTPUT);
 void outvar_set_from_var_char(char INPUT, SpiceChar *OUTPUT);
 void outvar_set_from_var_bool(int INPUT, SpiceBoolean *OUTPUT);
 
+%{
+    void sized_array_plain(SpiceInt *array) {}
+
+    int sized_array_no_resize(SpiceDouble *array, SpiceInt in_size) { return in_size; }
+
+    int sized_array_with_resize(SpiceInt *array, SpiceInt in_size, SpiceInt *out_size, SpiceInt new_size) {
+        *out_size = new_size > in_size ? in_size : new_size;
+        return in_size;
+    }
+
+%}
+%apply (SpiceInt SIZED_INOUT_ARRAY1[]) {(SpiceInt *array)};
+void sized_array_plain(SpiceInt SIZED_INOUT_ARRAY1[]);
+
+%apply (SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1) {(SpiceInt *array, SpiceInt in_size)};
+int sized_array_no_resize(SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1);
+
+%apply (SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1) {(SpiceInt *array, SpiceInt in_size, SpiceInt *out_size)};
+int sized_array_with_resize(SpiceInt *array, SpiceInt in_size, SpiceInt *out_size, SpiceInt new_size);
+
