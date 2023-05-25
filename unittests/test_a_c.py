@@ -9,10 +9,19 @@ from gettestkernels import (
     CassiniKernels,
     ExtraKernels,
     download_kernels,
-    cwd
-)
+    cleanup_core_kernels,
+    TEST_FILE_DIR
+    )
 
-download_kernels()
+@pytest.fixture(autouse=True)
+def clear_kernel_pool_and_reset():
+    cs.kclear()
+    cs.reset()
+    # yield for test
+    yield
+    # clear kernel pool again
+    cs.kclear()
+    cs.reset()
 
 
 def cleanup_kernel(path):
@@ -21,6 +30,10 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
+
+
+def setup_module(module):
+    download_kernels()
 
 
 def test_axisar():
@@ -347,7 +360,7 @@ def test_cidfrm():
 # Test is currently commented out due to issue with cspyce.ckw01
 def fail_ckcls():
     # Spice crashes if ckcls detects nothing written to ck1
-    ck1 = os.path.join(cwd, "ckopenkernel.bc")
+    ck1 = os.path.join(TEST_FILE_DIR, "ckopenkernel.bc")
     cleanup_kernel(ck1)
     ifname = "Test CK type 1 segment created by cspice_ckw01"
     handle = cs.ckopn(ck1, ifname, 10)
@@ -528,7 +541,7 @@ def test_ckgr03_cknr03():
 # Test fails due to cs.ckw01
 def fail_cklpf():
     cs.reset()
-    cklpf = os.path.join(cwd, "cklpfkernel.bc")
+    cklpf = os.path.join(TEST_FILE_DIR, "cklpfkernel.bc")
     cleanup_kernel(cklpf)
     ifname = "Test CK type 1 segment created by ccs_cklpf"
     handle = cs.ckopn(cklpf, ifname, 10)
@@ -574,7 +587,7 @@ def test_ckobj():
 # Fails due to cs.ckw01
 def fail_ckopn():
     # cs crashes if ckcls detects nothing written to ck1
-    ck1 = os.path.join(cwd, "ckopenkernel.bc")
+    ck1 = os.path.join(TEST_FILE_DIR, "ckopenkernel.bc")
     cleanup_kernel(ck1)
     ifname = "Test CK type 1 segment created by ccs_ckw01"
     handle = cs.ckopn(ck1, ifname, 10)
@@ -609,7 +622,7 @@ def test_ckupf():
 
 # Test current fails.
 def fail_ckw01():
-    ck1 = os.path.join(cwd, "type1.bc")
+    ck1 = os.path.join(TEST_FILE_DIR, "type1.bc")
     cleanup_kernel(ck1)
     INST = -77701
     MAXREC = 201
@@ -661,7 +674,7 @@ def fail_ckw01():
 
 # Test fails.
 def fail_ckw02():
-    ck2 = os.path.join(cwd, "type2.bc")
+    ck2 = os.path.join(TEST_FILE_DIR, "type2.bc")
     cleanup_kernel(ck2)
     INST = -77702
     MAXREC = 201
@@ -716,7 +729,7 @@ def fail_ckw02():
 
 # Test fails.
 def fail_ckw03():
-    ck3 = os.path.join(cwd, "type3.bc")
+    ck3 = os.path.join(TEST_FILE_DIR, "type3.bc")
     cleanup_kernel(ck3)
     MAXREC = 201
     SECPERTICK = 0.001
@@ -769,7 +782,7 @@ def fail_ckw03():
 # Test fails.
 def fail_ckw05():
     cs.kclear()
-    ck5 = os.path.join(cwd, "type5.bc")
+    ck5 = os.path.join(TEST_FILE_DIR, "type5.bc")
     cleanup_kernel(ck5)
     # constants
     avflag = True

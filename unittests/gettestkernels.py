@@ -45,15 +45,21 @@ def _get_kernel_directory():
     return str(directory)
 
 
-cwd = _get_kernel_directory()
+def _get_test_output_directory():
+    directory = Path(tempfile.gettempdir()) / "test_file_output"
+    directory.mkdir(parents=True, exist_ok=True)
+    return str(directory)
 
+
+KERNEL_DIR = _get_kernel_directory()
+TEST_FILE_DIR = _get_test_output_directory()
 
 def get_kernel_name_from_url(url: str) -> str:
     return url.split("/")[-1]
 
 
 def get_path_from_url(url: str) -> str:
-    return os.path.join(cwd, get_kernel_name_from_url(url))
+    return os.path.join(KERNEL_DIR, get_kernel_name_from_url(url))
 
 
 def cleanup_file(_path: str) -> None:
@@ -69,7 +75,7 @@ def delete_cache_directory():
     Delete all cached kernels.  Not currently needed, but useful in case you suspect the
     kernels have been corrupted.
     """
-    shutil.rmtree(cwd)
+    shutil.rmtree(KERNEL_DIR)
 
 class CassiniKernels:
     cassPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cpck05Mar2004.tpc"
@@ -181,7 +187,7 @@ class CoreKernels:
     gm_pck = get_path_from_url(gm_pck_url)
     lsk = get_path_from_url(lsk_url)
     standardKernelList = [pck, spk, gm_pck, lsk]
-    testMetaKernel = os.path.join(cwd, "exampleKernels.txt")
+    testMetaKernel = os.path.join(TEST_FILE_DIR, "exampleKernels.txt")
 
 
 def cleanup_core_kernels() -> None:
@@ -193,7 +199,7 @@ def cleanup_core_kernels() -> None:
 
 def get_kernel(url: str, provided_hash: str = None):
     kernel_name = get_kernel_name_from_url(url)
-    kernel_file = os.path.join(cwd, kernel_name)
+    kernel_file = os.path.join(KERNEL_DIR, kernel_name)
     # does not download if files are present, which allows us to potentially cache kernels
     if not os.path.isfile(kernel_file):
         attempt_download(url, kernel_name, kernel_file, 5, provided_hash=provided_hash)
@@ -288,11 +294,11 @@ def get_cassini_test_kernels() -> None:
 
 def write_test_meta_kernel() -> None:
     # Update the paths!
-    with open(os.path.join(cwd, "exampleKernels.txt"), "w") as kernelFile:
+    with open(os.path.join(TEST_FILE_DIR, "exampleKernels.txt"), "w") as kernelFile:
         kernelFile.write("\\begindata\n")
         kernelFile.write("KERNELS_TO_LOAD = (\n")
         for kernel in CoreKernels.standardKernelList:
-            filename = os.path.join(cwd, kernel)
+            filename = os.path.join(KERNEL_DIR, kernel)
             lines = ["'"+filename[i:i+75] for i in range(0, len(filename), 75)]
             kernelFile.write("+'\n".join(lines) + "'\n")
         kernelFile.write(")\n")

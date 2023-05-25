@@ -10,7 +10,7 @@ from gettestkernels import (
     ExtraKernels,
     download_kernels,
     cleanup_core_kernels,
-    cwd
+    TEST_FILE_DIR
     )
 
 @pytest.fixture(autouse=True)
@@ -38,7 +38,7 @@ def setup_module(module):
 
 def test_dafac():
     # Create new DAF using CKOPN
-    dafpath = os.path.join(cwd, "ex_dafac.bc")
+    dafpath = os.path.join(TEST_FILE_DIR, "ex_dafac.bc")
     cleanup_kernel(dafpath)
     # Open CK to get new DAF because DAFONW (Create DAF) is not available to CSPICE/spiceypy
     handle = cs.ckopn(dafpath, "TEST_ex_dafac", 140)
@@ -108,7 +108,7 @@ def test_dafcs():
 
 
 def test_dafdc():
-    dafpath = os.path.join(cwd, "ex_dafdc.bc")
+    dafpath = os.path.join(TEST_FILE_DIR, "ex_dafdc.bc")
     cleanup_kernel(dafpath)
     # Open CK to get new DAF because DAFONW (Create DAF) is not available to CSPICE/spiceypy
     handle = cs.ckopn(dafpath, "TEST_ex_dafdc", 140)
@@ -324,7 +324,7 @@ def test_dafrfr():
 
 
 def test_dafps_dafrs():
-    dafpath = os.path.join(cwd, "ckopenkernel_dafps.bc")
+    dafpath = os.path.join(TEST_FILE_DIR, "ckopenkernel_dafps.bc")
     cleanup_kernel(dafpath)
     ifname = "Test CK type 1 segment created by ccs_ckw01"
     handle = cs.ckopn(dafpath, ifname, 10)
@@ -394,7 +394,7 @@ def test_dafus():
     
 # Test changed. cs.dasec() outputs one value, not three. 
 def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc():
-    daspath = os.path.join(cwd, "ex_dasac.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasac.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasac", 140)
     assert handle is not None
@@ -489,7 +489,7 @@ def test_dasadi():
 
 # Test changed. cs.dasopr does not exist. 
 def test_dasopw_dascls_dasopr():
-    daspath = os.path.join(cwd, "ex_das.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_das.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", daspath, 0)
     assert handle is not None
@@ -514,7 +514,7 @@ def test_daslla():
     
     
 def test_dasonw():
-    daspath = os.path.join(cwd, "ex_dasac.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasac.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasac", 140)
     assert handle is not None
@@ -533,7 +533,7 @@ def test_dasrdc():
 
 
 def test_dasudd_dasrdd():
-    daspath = os.path.join(cwd, "ex_dasudd.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasudd.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasudd", 140)
     cs.dasadd(handle, np.zeros(200, dtype=float))
@@ -550,7 +550,7 @@ def test_dasudd_dasrdd():
 
 # Fails due to unknown reason
 def test_dasudi_dasrdi():
-    daspath = os.path.join(cwd, "ex_dasudi.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasudi.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasudi", 140)
     cs.dasadi(handle, np.zeros(200, dtype=int))
@@ -574,28 +574,6 @@ def test_dp2hx():
 # Fails due to bytearray reliance.
 def test_dasudc():
     pass
-    
-
-def test_dlaopn_dlabns_dlaens_daswbr():
-    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
-    cleanup_kernel(path)
-    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
-    cs.dlabns(handle)  # start segm
-    datai = np.arange(100, dtype=int)
-    datad = np.arange(100.0, dtype=float)
-    cs.dasadi(handle, datai)
-    cs.dasadd(handle, datad)
-    cs.dlaens(handle)  # end the segment
-    cs.daswbr(handle)
-    cs.dasllc(handle)
-    # now read the file to check data
-    handle = cs.dasopr(path)
-    dladsc = cs.dlabfs(handle)
-    assert dladsc.isize == 100
-    assert dladsc.dsize == 100
-    cs.dascls(handle)
-    # now clean up
-    cleanup_kernel(path)
     
     
 def test_dazldr_drdazl():
@@ -717,7 +695,7 @@ def test_dlafns():
 
 # Test changed. No equivalent to spiceypy.isize
 def test_dlaopn_dlabns_dlaens_daswbr():
-    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
+    path = os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla")
     cleanup_kernel(path)
     handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
     cs.dlabns(handle)  # start segm
@@ -840,7 +818,7 @@ def test_drdsph():
 # Test changed. cs.dskcls optmiz argument does not have a default value.
 # optmiz has been set to False.
 def test_dskopn_dskcls():
-    dskpath = os.path.join(cwd, "TEST.dsk")
+    dskpath = os.path.join(TEST_FILE_DIR, "TEST.dsk")
     cleanup_kernel(dskpath)
     handle = cs.dskopn(dskpath, "TEST.DSK/NAIF/NJB/20-OCT-2006/14:37:00", 0)
     assert handle is not None
@@ -950,7 +928,7 @@ def test_dski02():
     
     
 def test_dskw02_dskrb2_dskmi2():
-    dskpath = os.path.join(cwd, "TESTdskw02.dsk")
+    dskpath = os.path.join(TEST_FILE_DIR, "TESTdskw02.dsk")
     cleanup_kernel(dskpath)
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
