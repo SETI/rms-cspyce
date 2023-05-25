@@ -56,20 +56,13 @@ def get_path_from_url(url: str) -> str:
     return os.path.join(cwd, get_kernel_name_from_url(url))
 
 
-# <<<<<<< HEAD
-def cleanup_file(path: str) -> None:
-    if os.path.exists(path):
-        os.remove(path)
-# =======
+def cleanup_file(_path: str) -> None:
 # =============================================================================
-# def cleanup_file(_path: str) -> None:
-# # =============================================================================
-# #     if os.path.exists(path):
-# #         os.remove(path)
-# # =============================================================================
-#     pass
+#     if os.path.exists(path):
+#         os.remove(path)
 # =============================================================================
-# >>>>>>> fy-faster-hash
+    pass
+
 
 def delete_cache_directory():
     """
@@ -312,5 +305,3 @@ def download_kernels() -> None:
     get_cassini_test_kernels()  # Download Cassini kernels
     get_extra_test_kernels()  # Download any extra test kernels we need
     write_test_meta_kernel()  # Create the meta kernel file for tests
-
-

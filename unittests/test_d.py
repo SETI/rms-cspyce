@@ -13,9 +13,7 @@ from gettestkernels import (
     cwd
     )
 
-# =============================================================================
-# @pytest.fixture(autouse=True)
-# =============================================================================
+@pytest.fixture(autouse=True)
 def clear_kernel_pool_and_reset():
     cs.kclear()
     cs.reset()
