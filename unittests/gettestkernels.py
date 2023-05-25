@@ -47,11 +47,8 @@ def get_path_from_url(url: str) -> str:
 
 
 def cleanup_file(path: str) -> None:
-# =============================================================================
-#     if os.path.exists(path):
-#         os.remove(path)
-# =============================================================================
-    pass
+    if os.path.exists(path):
+        os.remove(path)
 
 class CassiniKernels(object):
     cassPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cpck05Mar2004.tpc"
