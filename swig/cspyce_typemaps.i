@@ -1918,8 +1918,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     dimsize[0] = 0;
     $1 = PyArray_DIM(pyarr, 0);
-    $3 = dimsize;
-    $2 = PyArray_DATA(pyarr);
+    $2 = dimsize;
+    $3 = PyArray_DATA(pyarr);
 }
 
 %typemap(in)
