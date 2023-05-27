@@ -33,6 +33,7 @@
 #define MESSAGELEN 1024 // max length of an error message including null
 #define NAMELEN 65      // table names can be 64 plus one null
 #define NPLATES 10000   // max number of DSK plates or vertices
+#define SIDLEN 41       // maximum length of segment id, from spkpvn_c.c
 #define TIMELEN 60      // max length of a time string including null
 #define WINDOWS 120000  // max time windows returned
 
@@ -1375,7 +1376,7 @@ extern void dafcls_c(
 
 %rename (dafgda) dafgda_c;
 %apply (void RETURN_VOID) {void dafgda_c};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble **data)};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble *data)};
 
 extern void dafgda_c(
         SpiceInt    handle,
@@ -3156,6 +3157,7 @@ extern SpiceBoolean failed_c(void);
 %apply (ConstSpiceChar    *CONST_STRING) {ConstSpiceChar *rframe};
 %apply (ConstSpiceChar    *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar    *CONST_STRING) {ConstSpiceChar *obsrvr};
+%apply (SpiceBoolean      *OUTPUT)       {SpiceBoolean *visibl};
 
 %inline %{
     void my_fovray_c(

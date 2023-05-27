@@ -510,11 +510,11 @@ def dafgsr_error(handle, recno, begin, end):
 
     return data
 
-def dlabbs_error(handle, recno, begin, end):
-    (dladsc, found) = cspyce0.dafgsr(handle, recno, begin, end)
+def dlabbs_error(handle):
+    (dladsc, found) = cspyce0.dafgsr(handle)
     if not found:
         chkin('dlabbs_error')
-        setmsg('DLA segment not found for handle {}'.format(handle))
+        setmsg(f'DLA segment not found for handle {handle}')
         sigerr('SPICE(DASFILEREADFAILED)')
         chkout('dlabbs_error')
 
@@ -560,8 +560,8 @@ def dskx02_error(handle, dladsc, vertex, raydir):
 
     return [plid, xpt]
 
-def dskxsi_error(pri, target, nsurf, srflst, et, fixref, vertex, raydir):
-    (xpt, handle, dladsc, dskdsc, dc, ic, found) = cspyce0.dskxsi(pri, target, nsurf,
+def dskxsi_error(pri, target, srflst, et, fixref, vertex, raydir):
+    (xpt, handle, dladsc, dskdsc, dc, ic, found) = cspyce0.dskxsi(pri, target,
                                                                   srflst, et, fixref,
                                                                   vertex, raydir)
     if not found:
@@ -615,10 +615,8 @@ def ekgi_error(selidx, row, elment):
 
     return [idata, null]
 
-def ekpsel_error(query, tabs, n4, cols, n5):
-    (xbegs, xends, xtypes, xclass, tabs, cols, error, errmsg) = cspyce0.ekpsel(query,
-                                                                               tabs, n4,
-                                                                               cols, n5)
+def ekpsel_error(query):
+    (xbegs, xends, xtypes, xclass, tabs, cols, error, errmsg) = cspyce0.ekpsel(query)
     if error:
         chkin('ekpsel_error')
         setmsg(errmsg)
@@ -663,7 +661,7 @@ def kinfo_error(file):
     return [filtyp, srcfil, handle]
 
 def spksfs_error(body, et, idlen, ident):
-    (handle, descr, ident, found) = cspyce0.spksfs(body, et, idlen, ident)
+    (handle, descr, ident, found) = cspyce0.spksfs(body, et)
     if not found:
         chkin('spksfs_error')
         setmsg('SPK segment not found for body "{}", time {}'.format(body, et))
@@ -1247,6 +1245,7 @@ for name in CSPYCE_BASENAMES:
 # Set defaults at initialization
 ################################################################################
 
+del func, efunc, vfunc, vefunc
 erract('SET', 'EXCEPTION')
 
 ################################################################################

@@ -17,65 +17,50 @@ import keyword
 # location in the global dictionary and every function's internal link point to
 # a new function of the same name.
 
-CSPYCE_FUNCTION_LOOKUP = {}
-
 
 def relink_all(new_dict, old_dict):
 
-    # Assign a new function to the dictionary at the same location as every
-    # cspyce function found in the old dictionary
-
-    dict_names = {}     # maps each function name to its dictionary locations
-    old_funcs = {}      # maps each function name to its old function
-    for (dict_name, old_func) in old_dict.items():
-        if not callable(old_func):
-            continue
-        if 'SIGNATURE' not in old_func.__dict__:
-            continue
-
-        func_name = old_func.__name__
-        old_funcs[func_name] = old_func
-
-        if func_name not in dict_names:
-            dict_names[func_name] = []
-
-        dict_names[func_name].append(dict_name)
-
-    for (name, keys) in dict_names.items():
-        func = new_dict[name]
-        for key in keys:
-            new_dict[key] = func
-            CSPYCE_FUNCTION_LOOKUP[func.__name__] = func
-
-    # Make sure each cspyce function has the same properties and attributes as
-    # the one in the old dictionary
+    old_funcs = {name: defn for name, defn in old_dict.items()
+                 if callable(defn) and hasattr(defn, 'SIGNATURE') }
+    for name, defn in old_funcs.items():
+        assert defn.__name__ == name
 
     for (name, old_func) in old_funcs.items():
-        func = new_dict[name]
+        new_func = new_dict[name]
 
         # Copy function properties
-        func.__doc__ = old_func.__doc__
-
-        func.__defaults__ = old_func.__defaults__
+        new_func.__doc__ = old_func.__doc__
+        new_func.__defaults__ = old_func.__defaults__
 
         # Copy attributes
-        for (key, value) in old_func.__dict__.items():
+        old_vars, new_vars = vars(old_func), vars(new_func)
+        for (key, value) in old_vars.items():
+            assert old_func.__dict__ is vars(old_func)
             if not callable(value):
-                func.__dict__[key] = value
+                new_vars[key] = value
             else:
                 # If it's a function, locate a new one with the same name
-                func.__dict__[key] = new_dict[value.__name__]
-
+                new_vars[key] = new_dict[value.__name__]
 
 def populate_cspyce2():
+    import inspect
     snippets = []
-    for name, func in cspyce1.__dict__.items():
+    for name, func in sorted(cspyce1.__dict__.items()):
         if callable(func) and hasattr(func, 'ARGNAMES'):
+
+            signature = list(inspect.signature(func).parameters.keys())
+            if len(signature) != len(func.ARGNAMES):
+                print(func.__name__, func.ARGNAMES, signature)
+
             argnames = [(x + "_" if keyword.iskeyword(x) else x) for x in func.ARGNAMES]
-            code = "def {name}({arglist}): return cspyce1.{name}({arglist})".format(
-                       name=name, arglist=", ".join(argnames))
+            arglist = ", ".join(argnames)
+            code = f"def {name}({arglist}):\n    return cspyce1.{name}({arglist})\n\n"
             snippets.append(code)
-    code = "\n\n".join(snippets)
+    code = "".join(snippets)
+
+    with open("code.txt", "w") as f:
+        f.write(code)
+
     exec(code, globals(), globals())
 
 
