@@ -63,7 +63,6 @@ def populate_cspyce2():
 
     exec(code, globals(), globals())
 
-
 populate_cspyce2()
 relink_all(globals(), cspyce1.__dict__)
 

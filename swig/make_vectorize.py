@@ -91,7 +91,7 @@ class InArg(Arg):
         else:
             my_type = "ConstSpiceDouble *" if self.key[0] == 'd' else "SpiceDouble *"
             main_declaration = f'{my_type}{self.name}'
-            dim_declarations = [f'int {dim}' for dim in self.dim_names]
+            dim_declarations = [f'SpiceInt {dim}' for dim in self.dim_names]
             return ', '.join((main_declaration, *dim_declarations))
 
     def get_call(self, sizer_count):
@@ -148,7 +148,7 @@ class OutArg(Arg):
     def get_declaration(self):
         my_type = dict(i='SpiceInt', b='SpiceBoolean').get(self.key, 'SpiceDouble')
         main_declaration = f'{my_type} **{self.name}'
-        dims_declarations = [f'int *{name}' for name in self.dim_names]
+        dims_declarations = [f'SpiceInt *{name}' for name in self.dim_names]
         return ', '.join((main_declaration, *dims_declarations))
 
     def get_malloc(self):
@@ -341,18 +341,18 @@ HEADER = """
 
 
 APPLY_TEMPLATE_LINES = [
-    "%apply (ConstSpiceDouble *IN_ARRAY01, int DIM1) {(ConstSpiceDouble *in1@, int in1@_dim1)};",
-    "%apply (ConstSpiceDouble *IN_ARRAY12, int DIM1, int DIM2) {(ConstSpiceDouble *in2@, int in2@_dim1, int in2@_dim2)};",
-    "%apply (ConstSpiceDouble *IN_ARRAY23, int DIM1, int DIM2, int DIM3) {(ConstSpiceDouble *in3@, int in3@_dim1, int in3@_dim2, int in3@_dim3)};",
-    "%apply (SpiceDouble *IN_ARRAY01, int DIM1) {(SpiceDouble *in1@, int in1@_dim1)};",
-    "%apply (SpiceDouble *IN_ARRAY12, int DIM1, int DIM2) {(SpiceDouble *in2@, int in2@_dim1, int in2@_dim2)};",
-    "%apply (SpiceDouble *IN_ARRAY23, int DIM1, int DIM2, int DIM3) {(SpiceDouble *in3@, int in3@_dim1, int in3@_dim2, int in3@_dim3)};",
+    "%apply (ConstSpiceDouble *IN_ARRAY01, SpiceInt DIM1) {(ConstSpiceDouble *in1@, SpiceInt in1@_dim1)};",
+    "%apply (ConstSpiceDouble *IN_ARRAY12, SpiceInt DIM1, SpiceInt DIM2) {(ConstSpiceDouble *in2@, SpiceInt in2@_dim1, SpiceInt in2@_dim2)};",
+    "%apply (ConstSpiceDouble *IN_ARRAY23, SpiceInt DIM1, SpiceInt DIM2, SpiceInt DIM3) {(ConstSpiceDouble *in3@, SpiceInt in3@_dim1, SpiceInt in3@_dim2, SpiceInt in3@_dim3)};",
+    "%apply (SpiceDouble *IN_ARRAY01, SpiceInt DIM1) {(SpiceDouble *in1@, SpiceInt in1@_dim1)};",
+    "%apply (SpiceDouble *IN_ARRAY12, SpiceInt DIM1, SpiceInt DIM2) {(SpiceDouble *in2@, SpiceInt in2@_dim1, SpiceInt in2@_dim2)};",
+    "%apply (SpiceDouble *IN_ARRAY23, SpiceInt DIM1, SpiceInt DIM2, SpiceInt DIM3) {(SpiceDouble *in3@, SpiceInt in3@_dim1, SpiceInt in3@_dim2, SpiceInt in3@_dim3)};",
     "%apply (ConstSpiceChar *CONST_STRING) {(ConstSpiceChar *str@)};",
-    "%apply (SpiceDouble **OUT_ARRAY01, int *SIZE1) {(SpiceDouble **out1@, int *out1@_dim1)};",
-    "%apply (SpiceDouble **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(SpiceDouble **out2@, int *out2@_dim1, int *out2@_dim2)};",
-    "%apply (SpiceDouble **OUT_ARRAY23, int *SIZE1, int *SIZE2, int *SIZE3) {(SpiceDouble **out3@, int *out3@_dim1, int *out3@_dim2, int *out3@_dim3)};",
-    "%apply (SpiceInt **OUT_ARRAY01, int *SIZE1) {(SpiceInt **int@, int *int@_dim1)};",
-    "%apply (SpiceBoolean **OUT_ARRAY01, int *SIZE1) {(SpiceBoolean **bool@, int *bool@_dim1)};",
+    "%apply (SpiceDouble **OUT_ARRAY01, SpiceInt *SIZE1) {(SpiceDouble **out1@, SpiceInt *out1@_dim1)};",
+    "%apply (SpiceDouble **OUT_ARRAY12, SpiceInt *SIZE1, SpiceInt *SIZE2) {(SpiceDouble **out2@, SpiceInt *out2@_dim1, SpiceInt *out2@_dim2)};",
+    "%apply (SpiceDouble **OUT_ARRAY23, SpiceInt *SIZE1, SpiceInt *SIZE2, SpiceInt *SIZE3) {(SpiceDouble **out3@, SpiceInt *out3@_dim1, SpiceInt *out3@_dim2, SpiceInt *out3@_dim3)};",
+    "%apply (SpiceInt **OUT_ARRAY01, SpiceInt *SIZE1) {(SpiceInt **int@, SpiceInt *int@_dim1)};",
+    "%apply (SpiceBoolean **OUT_ARRAY01, SpiceInt *SIZE1) {(SpiceBoolean **bool@, SpiceInt *bool@_dim1)};",
 ]
 
 

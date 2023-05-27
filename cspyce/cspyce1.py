@@ -511,14 +511,14 @@ def dafgsr_error(handle, recno, begin, end):
     return data
 
 def dlabbs_error(handle):
-    (dladsc, found) = cspyce0.dafgsr(handle)
+    (dlabbs, found) = cspyce0.dlabbs(handle)
     if not found:
         chkin('dlabbs_error')
         setmsg(f'DLA segment not found for handle {handle}')
         sigerr('SPICE(DASFILEREADFAILED)')
         chkout('dlabbs_error')
 
-    return dladsc
+    return dlabbs
 
 def dlabfs_error(handle):
     (dladsc, found) = cspyce0.dlabfs(handle)
@@ -660,7 +660,7 @@ def kinfo_error(file):
 
     return [filtyp, srcfil, handle]
 
-def spksfs_error(body, et, idlen, ident):
+def spksfs_error(body, et,):
     (handle, descr, ident, found) = cspyce0.spksfs(body, et)
     if not found:
         chkin('spksfs_error')
@@ -860,7 +860,7 @@ del CSPYCE_SIGNATURES['dasrdd'][-1]
 del CSPYCE_ARGNAMES['dasrdd'][-1]
 
 def dafgda(handle, begin, end):
-    return cspcye0.dafgda(handle, begin, end, end - begin + 1)
+    return cspyce0.dafgda(handle, begin, end, end - begin + 1)
 
 del CSPYCE_SIGNATURES['dafgda'][-1]
 del CSPYCE_ARGNAMES['dafgda'][-1]
@@ -1241,11 +1241,32 @@ for name in CSPYCE_BASENAMES:
 #     globals()[sename] = efunc
 #     globals()[vfname] = vfunc
 
+
+def check_for_length_mismatch(dictionary):
+    """
+    This check will find template problems.  A messed up template will often cause the
+    cspyce0 argument list to be a different length than the computed ARGNAMES.
+    """
+    for name, func in dictionary.items():
+        error = False
+        if callable(func) and hasattr(func, 'ARGNAMES'):
+            signature_length = len(func.ARGNAMES)
+            actual_length = func.__code__.co_argcount
+            if signature_length != actual_length:
+                print(f"{name} has a signature length of {signature_length} "
+                      f"but actually takes {actual_length} arguments")
+                error = True
+        if error:
+            raise(ValueError("function signatures do not match up"))
+
+check_for_length_mismatch(globals())
+
+del func, efunc, vfunc, vefunc
+
 ################################################################################
 # Set defaults at initialization
 ################################################################################
 
-del func, efunc, vfunc, vefunc
 erract('SET', 'EXCEPTION')
 
 ################################################################################
