@@ -1242,24 +1242,6 @@ for name in CSPYCE_BASENAMES:
 #     globals()[vfname] = vfunc
 
 
-def check_for_length_mismatch(dictionary):
-    """
-    This check will find template problems.  A messed up template will often cause the
-    cspyce0 argument list to be a different length than the computed ARGNAMES.
-    """
-    for name, func in dictionary.items():
-        error = False
-        if callable(func) and hasattr(func, 'ARGNAMES'):
-            signature_length = len(func.ARGNAMES)
-            actual_length = func.__code__.co_argcount
-            if signature_length != actual_length:
-                print(f"{name} has a signature length of {signature_length} "
-                      f"but actually takes {actual_length} arguments")
-                error = True
-        if error:
-            raise(ValueError("function signatures do not match up"))
-
-check_for_length_mismatch(globals())
 
 del func, efunc, vfunc, vefunc
 

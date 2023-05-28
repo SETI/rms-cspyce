@@ -9,17 +9,27 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
-import sys
 import cspyce.cspyce1 as cspyce1
 import keyword
+
+def populate_cspyce2():
+    snippets = []
+    for name, func in sorted(cspyce1.__dict__.items()):
+        if callable(func) and hasattr(func, 'ARGNAMES'):
+            argnames = [(x + "_" if keyword.iskeyword(x) else x) for x in func.ARGNAMES]
+            arglist = ", ".join(argnames)
+            code = f"def {name}({arglist}):\n    return cspyce1.{name}({arglist})\n\n"
+            snippets.append(code)
+    code = "".join(snippets)
+
+    exec(code, globals(), globals())
+
 
 # This function makes cspyce2 look the same as cspyce1. It ensures that every
 # location in the global dictionary and every function's internal link point to
 # a new function of the same name.
 
-
 def relink_all(new_dict, old_dict):
-
     old_funcs = {name: defn for name, defn in old_dict.items()
                  if callable(defn) and hasattr(defn, 'SIGNATURE') }
     for name, defn in old_funcs.items():
@@ -42,26 +52,6 @@ def relink_all(new_dict, old_dict):
                 # If it's a function, locate a new one with the same name
                 new_vars[key] = new_dict[value.__name__]
 
-def populate_cspyce2():
-    import inspect
-    snippets = []
-    for name, func in sorted(cspyce1.__dict__.items()):
-        if callable(func) and hasattr(func, 'ARGNAMES'):
-
-            signature = list(inspect.signature(func).parameters.keys())
-            if len(signature) != len(func.ARGNAMES):
-                print(func.__name__, func.ARGNAMES, signature)
-
-            argnames = [(x + "_" if keyword.iskeyword(x) else x) for x in func.ARGNAMES]
-            arglist = ", ".join(argnames)
-            code = f"def {name}({arglist}):\n    return cspyce1.{name}({arglist})\n\n"
-            snippets.append(code)
-    code = "".join(snippets)
-
-    with open("code.txt", "w") as f:
-        f.write(code)
-
-    exec(code, globals(), globals())
 
 populate_cspyce2()
 relink_all(globals(), cspyce1.__dict__)
