@@ -1243,6 +1243,8 @@ for name in CSPYCE_BASENAMES:
 #     globals()[sename] = efunc
 #     globals()[vfname] = vfunc
 
+del func, vfunc, efunc, vefunc
+
 ################################################################################
 # Set defaults at initialization
 ################################################################################
