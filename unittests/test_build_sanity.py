@@ -45,6 +45,6 @@ def test_sane_argnames_and_signatures():
                               f'cs1.{name}.SIGNATURE has length {len(signature)}.')
 
     if errors:
-        error_message = "These functions may bad Typemaps:\n" + "\n".join(errors)
+        error_message = "These functions may have bad Typemaps:\n" + "\n".join(errors)
         pytest.fail(error_message)
 
