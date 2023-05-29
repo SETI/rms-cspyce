@@ -154,18 +154,23 @@ class GenerateCommand(Command):
         pass
 
     def run(self):
+        # Create vectorize.i and cspyce0_info.py from existing swig .i files
         from swig.make_vectorize import create_vectorize_header_file
         from swig.make_cspyce0_info import make_cspice0_info
-        from swig.make_cspyce2 import make_cspyce2
         create_vectorize_header_file("swig/vectorize.i")
         make_cspice0_info("cspyce/cspyce0_info.py")
+
+        # Run swig to generate cspyce0.i and cspyce0.py
+        command = "swig -python -outdir cspyce/. " \
+                  "-o swig/cspyce0_wrap.c swig/cspyce0.i".split(" ")
+        subprocess.check_call(command)
+        command = "swig -python -outdir cspyce/. " \
+                  "-o swig/typemap_samples_wrap.c swig/typemap_samples.i".split(" ")
+        subprocess.check_call(command)
+
+        # We cannot run this import until *after* we've created cspyce0.py
+        from swig.make_cspyce2 import make_cspyce2
         make_cspyce2("cspyce/cspyce2.py")
-        command = "swig -python -outdir cspyce/. " \
-                    "-o swig/cspyce0_wrap.c swig/cspyce0.i".split(" ")
-        subprocess.check_call(command)
-        command = "swig -python -outdir cspyce/. " \
-                    "-o swig/typemap_samples_wrap.c swig/typemap_samples.i".split(" ")
-        subprocess.check_call(command)
 
 
 # Some linkers seem to have trouble with 2400 files, so we break it up into
