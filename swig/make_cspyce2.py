@@ -14,18 +14,30 @@ from operator import itemgetter
 import sys
 from types import ModuleType
 
+#####################
+##  When this file is run, the packages _cspyce0.py and cspyce2.py don't yet exist.
+##  Yet, the simple fact of loading cspyce.cspyce1, which we need, will cause them to
+##  be loaded.  So we lie to Python and tell it that we've already loaded those two
+##  modules, and it doesn't need to look for them.
+##
+##  Likewise, cspyce1 may may calls to cspyce0, which is just a Python veneer over
+##  _cspyce0.  So although we load cspyce0, we overwrite all of its methods to be noops.
+##
+##  This is ugly, but it works.
+######################
 
+# Creates a fake module.  Python won't reload a module if it already thinks it's loaded.
 def new_module(name, doc=None):
     m = ModuleType(name, doc)
     m.__file__ = name + '.py'
     sys.modules[name] = m
     return m
 
-# Create empty versions of these two modules.  They don't exist yet.
+# Create empty versions of these two modules.
 new_module("cspyce.cspyce2")
 new_module("cspyce._cspyce0")
 
-# We need to call functions in cspyce0, but we need to make them not actually do anything
+# cspyce1 may call functions in cspyce0, but we need to make them not actually do anything
 import cspyce.cspyce0 as cspyce0
 for name, value in vars(cspyce0).items():
     if callable(value):
@@ -52,7 +64,7 @@ HEADER = """
 
 import cspyce.cspyce1 as cs1
 
-def _copy_attributes_from(function, old_function):
+def __copy_attributes_from(function, old_function):
     function.__doc__ = old_function.__doc__
     if old_function.__defaults__:
         assert function.__defaults__ == old_function.__defaults__
@@ -94,10 +106,6 @@ def populate_cspyce2(file):
             file.write(f"    return cs1.{name}({call_list})\n\n")
 
         for _root, name, func in group:
-            file.write(f'_copy_attributes_from({name}, cs1.{name})\n')
+            file.write(f'__copy_attributes_from({name}, cs1.{name})\n')
 
         file.write("\n")
-
-
-if __name__ == '__main__':
-    make_cspyce2('cspyce2.py')
