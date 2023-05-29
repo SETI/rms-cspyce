@@ -4602,7 +4602,7 @@ extern void my_ekbseg_c(
         SpiceInt       ignore, SpiceInt  declen,  ConstSpiceChar *decls,
         SpiceInt       *segno)
     {
-        ekgseg_c(handle, tabnam, ncols, cnamln, cnames, declen, decls, segno);
+        ekbseg_c(handle, tabnam, ncols, cnamln, cnames, declen, decls, segno);
     }
 %}
 
