@@ -9,48 +9,74 @@
 # Used internally by cspyce; not intended for direct import.
 ################################################################################
 
+import sys
 import cspyce.cspyce1 as cspyce1
 import keyword
-
-def populate_cspyce2():
-    snippets = []
-    for name, func in sorted(cspyce1.__dict__.items()):
-        if callable(func) and hasattr(func, 'ARGNAMES'):
-            argnames = [(x + "_" if keyword.iskeyword(x) else x) for x in func.ARGNAMES]
-            arglist = ", ".join(argnames)
-            code = f"def {name}({arglist}):\n    return cspyce1.{name}({arglist})\n\n"
-            snippets.append(code)
-    code = "".join(snippets)
-
-    exec(code, globals(), globals())
-
 
 # This function makes cspyce2 look the same as cspyce1. It ensures that every
 # location in the global dictionary and every function's internal link point to
 # a new function of the same name.
 
+CSPYCE_FUNCTION_LOOKUP = {}
+
+
 def relink_all(new_dict, old_dict):
-    old_funcs = {name: defn for name, defn in old_dict.items()
-                 if callable(defn) and hasattr(defn, 'SIGNATURE') }
-    for name, defn in old_funcs.items():
-        assert defn.__name__ == name
+
+    # Assign a new function to the dictionary at the same location as every
+    # cspyce function found in the old dictionary
+
+    dict_names = {}     # maps each function name to its dictionary locations
+    old_funcs = {}      # maps each function name to its old function
+    for (dict_name, old_func) in old_dict.items():
+        if not callable(old_func):
+            continue
+        if 'SIGNATURE' not in old_func.__dict__:
+            continue
+
+        func_name = old_func.__name__
+        old_funcs[func_name] = old_func
+
+        if func_name not in dict_names:
+            dict_names[func_name] = []
+
+        dict_names[func_name].append(dict_name)
+
+    for (name, keys) in dict_names.items():
+        func = new_dict[name]
+        for key in keys:
+            new_dict[key] = func
+            CSPYCE_FUNCTION_LOOKUP[func.__name__] = func
+
+    # Make sure each cspyce function has the same properties and attributes as
+    # the one in the old dictionary
 
     for (name, old_func) in old_funcs.items():
-        new_func = new_dict[name]
+        func = new_dict[name]
 
         # Copy function properties
-        new_func.__doc__ = old_func.__doc__
-        new_func.__defaults__ = old_func.__defaults__
+        func.__doc__ = old_func.__doc__
+
+        func.__defaults__ = old_func.__defaults__
 
         # Copy attributes
-        old_vars, new_vars = vars(old_func), vars(new_func)
-        for (key, value) in old_vars.items():
-            assert old_func.__dict__ is vars(old_func)
+        for (key, value) in old_func.__dict__.items():
             if not callable(value):
-                new_vars[key] = value
+                func.__dict__[key] = value
             else:
                 # If it's a function, locate a new one with the same name
-                new_vars[key] = new_dict[value.__name__]
+                func.__dict__[key] = new_dict[value.__name__]
+
+
+def populate_cspyce2():
+    snippets = []
+    for name, func in cspyce1.__dict__.items():
+        if callable(func) and hasattr(func, 'ARGNAMES'):
+            argnames = [(x + "_" if keyword.iskeyword(x) else x) for x in func.ARGNAMES]
+            code = "def {name}({arglist}): return cspyce1.{name}({arglist})".format(
+                       name=name, arglist=", ".join(argnames))
+            snippets.append(code)
+    code = "\n\n".join(snippets)
+    exec(code, globals(), globals())
 
 
 populate_cspyce2()
