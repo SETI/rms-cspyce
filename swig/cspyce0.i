@@ -1375,7 +1375,7 @@ extern void dafcls_c(
 
 %rename (dafgda) dafgda_c;
 %apply (void RETURN_VOID) {void dafgda_c};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble **data)};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble *data)};
 
 extern void dafgda_c(
         SpiceInt    handle,
