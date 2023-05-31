@@ -15,16 +15,17 @@ import sys
 from types import ModuleType
 
 #####################
-##  When this file is run, the packages _cspyce0.py and cspyce2.py don't yet exist.
-##  Yet, the simple fact of loading cspyce.cspyce1, which we need, will cause them to
-##  be loaded.  So we lie to Python and tell it that we've already loaded those two
-##  modules, and it doesn't need to look for them.
-##
-##  Likewise, cspyce1 may may calls to cspyce0, which is just a Python veneer over
-##  _cspyce0.  So although we load cspyce0, we overwrite all of its methods to be noops.
-##
-##  This is ugly, but it works.
+#  When this file is run, the packages _cspyce0.py and cspyce2.py don't yet exist.
+#  Yet, the simple fact of loading cspyce.cspyce1, which we need, will cause them to
+#  be loaded.  So we lie to Python and tell it that we've already loaded those two
+#  modules, and it doesn't need to look for them.
+#
+#  Likewise, cspyce1 may make calls to cspyce0, which is just a Python veneer over
+#  _cspyce0.  So although we load cspyce0, we overwrite all of its methods to be noops.
+#
+#  This is ugly, but it works.
 ######################
+
 
 # Creates a fake module.  Python won't reload a module if it already thinks it's loaded.
 def new_module(name, doc=None):
@@ -32,6 +33,7 @@ def new_module(name, doc=None):
     m.__file__ = name + '.py'
     sys.modules[name] = m
     return m
+
 
 # Create empty versions of these two modules.
 new_module("cspyce.cspyce2")
@@ -65,7 +67,6 @@ HEADER = """
 import cspyce.cspyce1 as cs1
 
 def __copy_attributes_from(function, old_function):
-    function.__doc__ = old_function.__doc__
     if old_function.__defaults__:
         assert function.__defaults__ == old_function.__defaults__
     for key, value in vars(old_function).items():
@@ -103,6 +104,11 @@ def populate_cspyce2(file):
                 parameters[~index] += " = " + repr(func.__defaults__[~index])
             parameter_list = ', '.join(parameters)
             file.write(f"def {name}({parameter_list}):\n")
+            if func.__doc__:
+                file.write('    """\n')
+                for line in func.__doc__.strip().splitlines():
+                    file.write("    " + line + "\n");
+                file.write('    """\n')
             file.write(f"    return cs1.{name}({call_list})\n\n")
 
         for _root, name, func in group:
