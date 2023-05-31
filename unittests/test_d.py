@@ -10,8 +10,8 @@ from gettestkernels import (
     ExtraKernels,
     download_kernels,
     cleanup_core_kernels,
-    cwd
-)
+    TEST_FILE_DIR
+    )
 
 @pytest.fixture(autouse=True)
 def clear_kernel_pool_and_reset():
@@ -38,7 +38,7 @@ def setup_module(module):
 
 def test_dafac():
     # Create new DAF using CKOPN
-    dafpath = os.path.join(cwd, "ex_dafac.bc")
+    dafpath = os.path.join(TEST_FILE_DIR, "ex_dafac.bc")
     cleanup_kernel(dafpath)
     # Open CK to get new DAF because DAFONW (Create DAF) is not available to CSPICE/spiceypy
     handle = cs.ckopn(dafpath, "TEST_ex_dafac", 140)
@@ -108,7 +108,7 @@ def test_dafcs():
 
 
 def test_dafdc():
-    dafpath = os.path.join(cwd, "ex_dafdc.bc")
+    dafpath = os.path.join(TEST_FILE_DIR, "ex_dafdc.bc")
     cleanup_kernel(dafpath)
     # Open CK to get new DAF because DAFONW (Create DAF) is not available to CSPICE/spiceypy
     handle = cs.ckopn(dafpath, "TEST_ex_dafdc", 140)
@@ -150,8 +150,6 @@ def test_dafdc():
     cleanup_kernel(dafpath)
     
 
-# Test changed. cs.dafec() only takes one input, while spiceypy.dafec() takes
-# three. Fails due to lack of maximum size parameter.
 def test_dafec():
     handle = cs.dafopr(CoreKernels.spk)
     buffer = cs.dafec(handle)
@@ -189,12 +187,11 @@ def test_daffpa():
     cs.dafcls(handle)
 
 
-# Fails due to dafgda()
-def fail_dafgda():
+def test_dafgda():
     # not a very good test...
     handle = cs.dafopr(CoreKernels.spk)
     elements = cs.dafgda(handle, 20, 20)
-    assert elements == [0.0]
+    npt.assert_array_almost_equal(elements, [0.0])
     cs.dafcls(handle)
     
     
@@ -205,17 +202,16 @@ def test_dafgh():
     searchHandle = cs.dafgh()
     assert searchHandle == handle
     cs.dafcls(handle)
-    
-    
-# Fails due to dafgs()
-def fail_dafgn():
+
+
+def test_dafgn():
     handle = cs.dafopr(CoreKernels.spk)
     cs.dafbfs(handle)
     found = cs.daffna()
     assert found
     out = cs.dafgs()
     npt.assert_array_almost_equal(
-        out, [-9.46511378160646408796e07, 3.15662463183953464031e08]
+        out[:2], [-9.46511378160646408796e07, 3.15662463183953464031e08]
     )
     outname = cs.dafgn()
     assert outname == "DE-405"
@@ -223,20 +219,20 @@ def fail_dafgn():
     
 
 # Fails
-def fail_dafgs():
+def test_dafgs():
     handle = cs.dafopr(CoreKernels.spk)
     cs.dafbfs(handle)
     found = cs.daffna()
     assert found
     out = cs.dafgs()
     npt.assert_array_almost_equal(
-        out, [-9.46511378160646408796e07, 3.15662463183953464031e08]
+        out[:2], [-9.46511378160646408796e07, 3.15662463183953464031e08]
     )
     cs.dafcls(handle)
     
 
 # Fails due to dafgsr()
-def fail_dafgsr():
+def test_dafgsr():
     cs.reset()
     # Open DAF
     # N.B. The SPK used must use the LTL-IEEE double byte-ordering and format
@@ -324,8 +320,8 @@ def test_dafrfr():
     assert bward == 7
 
 
-def fail_dafps_dafrs():
-    dafpath = os.path.join(cwd, "ckopenkernel_dafps.bc")
+def _dafps_dafrs():
+    dafpath = os.path.join(TEST_FILE_DIR, "ckopenkernel_dafps.bc")
     cleanup_kernel(dafpath)
     ifname = "Test CK type 1 segment created by ccs_ckw01"
     handle = cs.ckopn(dafpath, ifname, 10)
@@ -337,7 +333,6 @@ def fail_dafps_dafrs():
         "J2000",
         True,
         "Test type 1 CK segment",
-        2 - 1,
         [1.1, 4.1],
         [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0]],
         [[0.0, 0.0, 1.0], [0.0, 0.0, 2.0]],
@@ -352,12 +347,12 @@ def fail_dafps_dafrs():
     cs.dafbfs(handle)
     found = cs.daffna()
     assert found
-    out = cs.dafgs(n=124)
+    out = cs.dafgs()
     dc, ic = cs.dafus(out, 2, 6)
     # change the id code and repack
     ic[0] = -1999
     ic[1] = -2999
-    summ = cs.dafps(2, 6, dc, ic)
+    summ = cs.dafps(dc, ic)
     cs.dafrs(summ)
     # finished.
     cs.dafcls(handle)
@@ -379,8 +374,7 @@ def fail_dafps_dafrs():
     cleanup_kernel(dafpath)
     
 
-# Test changed. cspyce.dafgs needs fixing.
-def fail_dafus():
+def test_dafus():
     handle = cs.dafopr(CoreKernels.spk)
     cs.dafbfs(handle)
     found = cs.daffna()
@@ -393,10 +387,9 @@ def fail_dafus():
     )
     npt.assert_array_almost_equal(ic, [1, 0, 1, 2, 1025, 27164])
     
-    
-# Test changed. cs.dasec() outputs one value, not three. 
+
 def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc():
-    daspath = os.path.join(cwd, "ex_dasac.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasac.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasac", 140)
     assert handle is not None
@@ -457,10 +450,8 @@ def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc():
     cs.kclear()
     cleanup_kernel(daspath)
     
-    
-# Test changed. cs.dasdadc takes five arguments, not six (does not use datlen: 
-# Common length of the character arrays in data.)
-def fail_dasadc():
+
+def test_dasadc():
     h = cs.dasops()
     cs.dasadc(h, 4, 0, 4, ["SPUD"])
     nc, _, _ = cs.daslla(h)
@@ -468,8 +459,6 @@ def fail_dasadc():
     cs.dascls(h)
 
 
-# Test changed. cs.dasadd takes two inputs, not three (does not use n: Number 
-# of d p numbers to add to DAS file.)
 def test_dasadd():
     h = cs.dasops()
     data = np.linspace(0.0, 1.0, num=10)
@@ -479,8 +468,6 @@ def test_dasadd():
     cs.dascls(h)
 
 
-# Test changed. cs.dasadi takes two inputs, not three ( n: Number of d p 
-# numbers to add to DAS file.)
 def test_dasadi():
     h = cs.dasops()
     data = np.arange(0, 10, dtype=int)
@@ -489,9 +476,9 @@ def test_dasadi():
     assert ni == 10
     cs.dascls(h)
 
-# Test changed. cs.dasopr does not exist. 
+
 def test_dasopw_dascls_dasopr():
-    daspath = os.path.join(cwd, "ex_das.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_das.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", daspath, 0)
     assert handle is not None
@@ -516,7 +503,7 @@ def test_daslla():
     
     
 def test_dasonw():
-    daspath = os.path.join(cwd, "ex_dasac.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasac.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasac", 140)
     assert handle is not None
@@ -530,12 +517,12 @@ def test_dasops():
     
 
 # Unit test cannot be written without dasadc()
-def fail_dasrdc():
+def test_dasrdc():
     pass
 
 
 def test_dasudd_dasrdd():
-    daspath = os.path.join(cwd, "ex_dasudd.das")
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasudd.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasudd", 140)
     cs.dasadd(handle, np.zeros(200, dtype=float))
@@ -551,8 +538,8 @@ def test_dasudd_dasrdd():
         
 
 # Fails due to unknown reason
-def fail_dasudi_dasrdi():
-    daspath = os.path.join(cwd, "ex_dasudi.das")
+def test_dasudi_dasrdi():
+    daspath = os.path.join(TEST_FILE_DIR, "ex_dasudi.das")
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasudi", 140)
     cs.dasadi(handle, np.zeros(200, dtype=int))
@@ -567,39 +554,15 @@ def fail_dasudi_dasrdi():
     cleanup_kernel(daspath)
 
 # Wait for new cspyce fix
-# =============================================================================
-# def test_dp2hx():
-#     assert cs.dp2hx(2.0e-9) == "89705F4136B4A8^-7"
-#     assert cs.dp2hx(1.0) == "1^1"
-#     assert cs.dp2hx(-1.0) == "-1^1"
-#     assert cs.dp2hx(1024.0) == "4^3"
-# =============================================================================
+def test_dp2hx():
+    assert cs.dp2hx(2.0e-9) == "89705F4136B4A8^-7"
+    assert cs.dp2hx(1.0) == "1^1"
+    assert cs.dp2hx(-1.0) == "-1^1"
+    assert cs.dp2hx(1024.0) == "4^3"
 
 # Fails due to bytearray reliance.
 def test_dasudc():
     pass
-    
-
-def fail_dlaopn_dlabns_dlaens_daswbr():
-    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
-    cleanup_kernel(path)
-    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
-    cs.dlabns(handle)  # start segm
-    datai = np.arange(100, dtype=int)
-    datad = np.arange(100.0, dtype=float)
-    cs.dasadi(handle, datai)
-    cs.dasadd(handle, datad)
-    cs.dlaens(handle)  # end the segment
-    cs.daswbr(handle)
-    cs.dasllc(handle)
-    # now read the file to check data
-    handle = cs.dasopr(path)
-    dladsc = cs.dlabfs(handle)
-    assert dladsc.isize == 100
-    assert dladsc.dsize == 100
-    cs.dascls(handle)
-    # now clean up
-    cleanup_kernel(path)
     
     
 def test_dazldr_drdazl():
@@ -675,9 +638,6 @@ def test_diags2():
     npt.assert_array_almost_equal(rot, expected_rot)
     
 
-# Test changed. cspyce currently defaults to dlabbs_error. Using cs.use_flags()
-# to use original version. Also, cspyce does not have SpiceyPy's .dsize
-# feature, so .dsize is replaced with indexes.
 def test_dlabbs():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     cs.use_flags(cs.dlabbs)
@@ -689,8 +649,6 @@ def test_dlabbs():
     cs.dascls(handle)
     
 
-# Test changed. cspyce does not have a spiceypy.dsize equivalent. Replaced
-# with indexing.
 def test_dlabfs_dlafns():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     current = cs.dlabfs(handle)
@@ -701,7 +659,6 @@ def test_dlabfs_dlafns():
     cs.dascls(handle)
     
 
-# This is a unique test...not good.
 def test_dlafns():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     cs.use_flags(cs.dlafns)
@@ -710,7 +667,7 @@ def test_dlafns():
     assert output[1] is False
     
 
-# Still developing this test.
+# 
 # =============================================================================
 # def test_dlafps():
 #     cs.use_flags(cs.dlafps)
@@ -719,9 +676,8 @@ def test_dlafns():
 # =============================================================================
     
 
-# Test changed. No equivalent to spiceypy.isize
 def test_dlaopn_dlabns_dlaens_daswbr():
-    path = os.path.join(cwd, "dlaopn_dlabns_dlaens_daswbr.dla")
+    path = os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla")
     cleanup_kernel(path)
     handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
     cs.dlabns(handle)  # start segm
@@ -747,8 +703,6 @@ def test_dlatdr():
     npt.assert_array_almost_equal(output, expected)
     
 
-# Test changed. cspyce doesn't like unpacking kernels in an array. cs.dnearp
-# has an additional 'found' variable.
 def test_dnearp():
     cs.furnsh(CoreKernels.lsk)
     cs.furnsh(CoreKernels.pck)
@@ -840,11 +794,9 @@ def test_drdsph():
     expected = [[-1.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, -1.0, 0.0]]
     npt.assert_array_almost_equal(output, expected)
     
-
-# Test changed. cs.dskcls optmiz argument does not have a default value.
-# optmiz has been set to False.
+ 
 def test_dskopn_dskcls():
-    dskpath = os.path.join(cwd, "TEST.dsk")
+    dskpath = os.path.join(TEST_FILE_DIR, "TEST.dsk")
     cleanup_kernel(dskpath)
     handle = cs.dskopn(dskpath, "TEST.DSK/NAIF/NJB/20-OCT-2006/14:37:00", 0)
     assert handle is not None
@@ -885,8 +837,7 @@ def test_dskb02():
     cs.dascls(handle)
 
 
-# Fails due to current issue
-def fail_dskd02():
+def test_dskd02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
@@ -895,7 +846,7 @@ def fail_dskd02():
     values = cs.dskd02(handle, dladsc, 19, 0)
     assert len(values) > 0
     npt.assert_almost_equal(
-        values,
+        values[:3],
         [
             5.12656957900699912362e-16,
             -0.00000000000000000000e00,
@@ -954,7 +905,7 @@ def test_dski02():
     
     
 def fail_dskw02_dskrb2_dskmi2():
-    dskpath = os.path.join(cwd, "TESTdskw02.dsk")
+    dskpath = os.path.join(TEST_FILE_DIR, "TESTdskw02.dsk")
     cleanup_kernel(dskpath)
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
@@ -1039,11 +990,60 @@ def fail_dskw02_dskrb2_dskmi2():
     cs.kclear()
     cleanup_kernel(dskpath)
     
+    
+def test_dskn02():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # get the normal vector for first plate
+    normal = cs.dskn02(handle, dladsc, 1)
+    npt.assert_almost_equal(
+        normal,
+        [0.20813166897151150203, 0.07187012861854354118, -0.97545676120650637309],
+    )
+    cs.dascls(handle)
+    
+    
+def test_dskobj_dsksrf():
+    cs.reset()
+    bodyids = cs.dskobj(ExtraKernels.phobosDsk)
+    assert 401 in bodyids
+    srfids = cs.dsksrf(ExtraKernels.phobosDsk, 401)
+    assert 401 in srfids
+    cs.reset()
+    
+    
+def fail_dskp02():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # get the first plate
+    plates = cs.dskp02(handle, dladsc, 1, 2)
+    npt.assert_almost_equal(plates[0], [1, 9, 2])
+    npt.assert_almost_equal(plates[1], [1, 2, 3])
+    cs.dascls(handle)
+    
+
+def fail_dskv02():
+    # open the dsk file
+    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    # get the dladsc from the file
+    dladsc = cs.dlabfs(handle)
+    # read the vertices
+    vrtces = cs.dskv02(handle, dladsc, 1, 1)
+    npt.assert_almost_equal(
+        vrtces[0],
+        [
+            5.12656957900699912362e-16,
+            -0.00000000000000000000e00,
+            -8.37260000000000026432e00,
+        ],
+    )
+    cs.dascls(handle)
+
 # =============================================================================
-# dskn02
-# dskobj
-# dskp02
-# dsksrf
 # dskv02
 # dskx02
 # dskxsi

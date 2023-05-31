@@ -862,7 +862,7 @@ del CSPYCE_SIGNATURES['dasrdd'][-1]
 del CSPYCE_ARGNAMES['dasrdd'][-1]
 
 def dafgda(handle, begin, end):
-    return cspcye0.dafgda(handle, begin, end, end - begin + 1)
+    return cspyce0.dafgda(handle, begin, end, end - begin + 1)
 
 del CSPYCE_SIGNATURES['dafgda'][-1]
 del CSPYCE_ARGNAMES['dafgda'][-1]
