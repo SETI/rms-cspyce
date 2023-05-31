@@ -448,12 +448,12 @@ extern SpiceInt bsrchi_c(
 %apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1) {(SpiceDouble **dpdxs, SpiceInt *n)};
 
 // Copied from vectorize.i
-%apply (ConstSpiceDouble *IN_ARRAY12, int DIM1, int DIM2)
-                    {(ConstSpiceDouble *in21, int in21_dim1, int in21_dim2)};
-%apply (ConstSpiceDouble *IN_ARRAY01, int DIM1)
-                    {(ConstSpiceDouble *in12, int in12_dim1)};
-%apply (SpiceDouble **OUT_ARRAY12, int *SIZE1, int *SIZE2)
-                    {(SpiceDouble **out21, int *out21_dim1, int *out21_dim2)};
+%apply (ConstSpiceDouble *IN_ARRAY12, SpiceInt DIM1, SpiceInt DIM2)
+                    {(ConstSpiceDouble *in21, SpiceInt in21_dim1, SpiceInt in21_dim2)};
+%apply (ConstSpiceDouble *IN_ARRAY01, SpiceInt DIM1)
+                    {(ConstSpiceDouble *in12, SpiceInt in12_dim1)};
+%apply (SpiceDouble **OUT_ARRAY12, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                    {(SpiceDouble **out21, SpiceInt *out21_dim1, SpiceInt *out21_dim2)};
 
 %inline %{
     void my_chbder_c(
@@ -492,11 +492,11 @@ extern SpiceInt bsrchi_c(
     // the rightmost dimension of the returned axis is variable.
 
     void chbder_vector(
-        ConstSpiceDouble *in21, int in21_dim1, int in21_dim2,
+        ConstSpiceDouble *in21, SpiceInt in21_dim1, SpiceInt in21_dim2,
         SpiceDouble x2s[2],
-        ConstSpiceDouble *in12, int in12_dim1,
+        ConstSpiceDouble *in12, SpiceInt in12_dim1,
         SpiceInt nderiv,
-        SpiceDouble **out21, int *out21_dim1, int *out21_dim2)
+        SpiceDouble **out21, SpiceInt *out21_dim1, SpiceInt *out21_dim2)
     {
         char *my_name = "chbder_vector";
 
@@ -765,7 +765,7 @@ extern void ckfrot_c(
 );
 
 //Vector version
-VECTORIZE_i_d_dXY__i_b(ckfrot, ckfrot_c)
+VECTORIZE_i_d__dMN_i_b(ckfrot, ckfrot_c, 3, 3)
 
 /***********************************************************************
 * -Procedure ckfxfm_c ( CK frame, find state transformation )
@@ -808,7 +808,7 @@ extern void ckfxfm_c(
 );
 
 //Vector version
-VECTORIZE_i_d_dXY__i_b(ckfxfm, ckfxfm_c)
+VECTORIZE_i_d__dMN_i_b(ckfxfm, ckfxfm_c, 6, 6)
 
 /***********************************************************************
 * -Procedure ckgr02_c ( C-kernel, get record, type 02 )
@@ -875,14 +875,14 @@ extern void ckgr02_c(
 %rename (ckgr03) my_ckgr03_c;
 %apply (void RETURN_VOID) {void my_ckgr03_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble descr[5]};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1) {(SpiceDouble **record, int *size)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1) {(SpiceDouble **record, SpiceInt *size)};
 
 %inline %{
     void my_ckgr03_c(
         SpiceInt         handle,
         ConstSpiceDouble descr[5],
         SpiceInt         recno,
-        SpiceDouble      **record, int *size)
+        SpiceDouble      **record, SpiceInt *size)
     {
         SpiceDouble dcd[2];
         SpiceInt    icd[6];
@@ -1530,7 +1530,7 @@ extern void cvpool_c(
 
 %rename (dafac) dafac_c;
 %apply (void RETURN_VOID) {void dafac_c};
-%apply (int DIM1, int DIM2, ConstSpiceChar *IN_STRINGS)
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                     {(SpiceInt n, SpiceInt buflen, ConstSpiceChar *buffer)};
 
 extern void dafac_c(
@@ -1640,12 +1640,12 @@ extern void dafdc_c(
 
 %rename (dafec) dafec_c;
 %apply (void RETURN_VOID) {void dafec_c};
-%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, char OUT_STRINGS[ANY][ANY])
-        {(SpiceInt bufsiz, SpiceInt buffln, SpiceInt *n, char buffer[COMMENTS][COMMENTLEN])};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
+        {(SpiceInt bufsiz, SpiceInt buffln, SpiceInt *n, SpiceChar buffer[COMMENTS][COMMENTLEN])};
 
 extern void dafec_c(
         SpiceInt     handle,
-        SpiceInt     bufsiz, SpiceInt buffln, SpiceInt *n, char buffer[COMMENTS][COMMENTLEN],
+        SpiceInt     bufsiz, SpiceInt buffln, SpiceInt *n, SpiceChar buffer[COMMENTS][COMMENTLEN],
         SpiceBoolean *OUTPUT
 );
 
@@ -1726,8 +1726,8 @@ extern void dafgh_c(
 
 %rename (dafgsr) my_dafgsr_c;
 %apply (void RETURN_VOID) {void my_dafgsr_c};
-%apply (SpiceDouble OUT_ARRAY1[ANY], int *SIZE1)
-                    {(SpiceDouble data[DAFSIZE], int *size)};
+%apply (SpiceDouble OUT_ARRAY1[ANY], SpiceInt *SIZE1)
+                    {(SpiceDouble data[DAFSIZE], SpiceInt *size)};
 
 %inline %{
     void my_dafgsr_c(
@@ -1735,7 +1735,7 @@ extern void dafgh_c(
         SpiceInt     recno,
         SpiceInt     begin,
         SpiceInt     end,
-        SpiceDouble  data[DAFSIZE], int *size,
+        SpiceDouble  data[DAFSIZE], SpiceInt *size,
         SpiceBoolean *found)
     {
         dafgsr_c(handle, recno, begin, end, data, found);
@@ -1834,13 +1834,13 @@ extern void dafopw_c(
 %apply (void RETURN_VOID) {void my_dafps_c};
 %apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1) {(SpiceInt nd, ConstSpiceDouble *dc)};
 %apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1) {(SpiceInt ni, ConstSpiceInt *ic)};
-%apply (SpiceDouble OUT_ARRAY[ANY], int *SIZE1) {(SpiceDouble sum[DAFSIZE], int *nsum)};
+%apply (SpiceDouble OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceDouble sum[DAFSIZE], SpiceInt *nsum)};
 
 %inline %{
     void my_dafps_c(
         SpiceInt nd, ConstSpiceDouble *dc,
         SpiceInt ni, ConstSpiceInt *ic,
-        SpiceDouble sum[DAFSIZE], int *nsum)
+        SpiceDouble sum[DAFSIZE], SpiceInt *nsum)
     {
         dafps_c(nd, ni, dc, ic, sum);
         *nsum = nd + (ni + 1)/2 + 1;
@@ -1954,7 +1954,7 @@ extern void dafrs_c(
 
 %rename (dasac) dasac_c;
 %apply (void RETURN_VOID) {void dasac_c};
-%apply (int DIM1, int DIM2, ConstSpiceChar *IN_STRINGS)
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                     {(SpiceInt n, SpiceInt buflen, ConstSpiceChar *buffer)};
 
 extern void dasac_c(
@@ -2144,12 +2144,12 @@ extern void dasdc_c(
 
 %rename (dasec) dasec_c;
 %apply (void RETURN_VOID) {void dasec_c};
-%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, char OUT_STRINGS[ANY][ANY])
-            {(SpiceInt bufsiz, SpiceInt buffln, SpiceInt *n, char buffer[COMMENTS][COMMENTLEN])};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
+            {(SpiceInt bufsiz, SpiceInt buffln, SpiceInt *n, SpiceChar buffer[COMMENTS][COMMENTLEN])};
 
 extern void dasec_c(
         SpiceInt     handle,
-        SpiceInt     bufsiz, SpiceInt buffln, SpiceInt *n, char buffer[COMMENTS][COMMENTLEN],
+        SpiceInt     bufsiz, SpiceInt buffln, SpiceInt *n, SpiceChar buffer[COMMENTS][COMMENTLEN],
         SpiceBoolean *OUTPUT
 );
 
@@ -2440,7 +2440,7 @@ extern void dasopw_c(
 
 %rename (dasrdc) dasrdc_c;
 %apply (void RETURN_VOID) {void dasrdc_c};
-%apply (char *INOUT_ARRAY1) {char *data};
+%apply (SpiceChar *INOUT_ARRAY1) {SpiceChar *data};
 
 extern void dasrdc_c(
         SpiceInt handle,
@@ -2449,7 +2449,7 @@ extern void dasrdc_c(
         SpiceInt bpos,
         SpiceInt epos,
         SpiceInt datlen,
-        char *data
+        SpiceChar *data
 );
 
 //CSPYCE_TYPE:data:byte_array[][]
@@ -3501,12 +3501,12 @@ extern void dskn02_c(
 %rename (dskobj) my_dskobj_c;
 %apply (void RETURN_VOID) {void my_dskobj_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *dskfnm};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt bodids[MAXIDS], int *count)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt bodids[MAXIDS], SpiceInt *count)};
 
 %inline %{
     void my_dskobj_c(
         ConstSpiceChar *dskfnm,
-        SpiceInt bodids[MAXIDS], int *count)
+        SpiceInt bodids[MAXIDS], SpiceInt *count)
     {
         int j;
         SPICEINT_CELL(ids, MAXIDS);
@@ -3665,13 +3665,13 @@ extern void dskrb2_c(
 %rename (dsksrf) my_dsksrf_c;
 %apply (void RETURN_VOID) {void my_dsksrf_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *dskfnm};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt srfids[MAXIDS], int *count)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt srfids[MAXIDS], SpiceInt *count)};
 
 %inline %{
     void my_dsksrf_c(
         ConstSpiceChar *dskfnm,
         SpiceInt bodyid,
-        SpiceInt srfids[MAXIDS], int *count)
+        SpiceInt srfids[MAXIDS], SpiceInt *count)
     {
         int j;
         SPICEINT_CELL(ids, MAXIDS);
@@ -4047,9 +4047,9 @@ extern void dskx02_c(
                             {(SpiceInt nrays, ConstSpiceDouble vtxarr[][3])};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                             {(SpiceInt n2, ConstSpiceDouble dirarr[][3])};
-%apply (SpiceInt *DIM1, SpiceInt *DIM2, SpiceDouble **OUT_ARRAY2)
+%apply (SpiceInt *SIZE1, SpiceInt *SIZE2, SpiceDouble **OUT_ARRAY2)
                             {(SpiceInt *n3, SpiceInt *nv, SpiceDouble **xptarr)};
-%apply (SpiceInt *DIM1, SpiceBoolean **OUT_ARRAY1)
+%apply (SpiceInt *SIZE1, SpiceBoolean **OUT_ARRAY1)
                             {(SpiceInt *n4, SpiceBoolean **fndarr)};
 
 %inline %{
@@ -4384,11 +4384,12 @@ extern void ekacei_c(
 * wkindx    I-O  Work space for column index.
 ***********************************************************************/
 
+// TODO(FY): Create the right typemap for cvals, or use an existing one and throw away unused value?
 %rename (ekaclc) my_ekaclc_c;
 %apply (void RETURN_VOID) {void my_ekaclc_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *column};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
-                    {(SpiceInt vallen, ConstSpiceChar *cvals)};
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
+                    {(SpiceInt ignore, SpiceInt vallen, ConstSpiceChar *cvals)};
 %apply (ConstSpiceInt     IN_ARRAY1[]) {ConstSpiceInt     entszs[]};
 %apply (ConstSpiceBoolean IN_ARRAY1[]) {ConstSpiceBoolean nlflgs[]};
 %apply (ConstSpiceInt     IN_ARRAY1[]) {ConstSpiceInt     rcptrs[]};
@@ -4398,7 +4399,7 @@ extern void ekacei_c(
         SpiceInt          handle,
         SpiceInt          segno,
         ConstSpiceChar    *column,
-        SpiceInt          vallen, ConstSpiceChar *cvals,
+        SpiceInt          ignore, SpiceInt vallen, ConstSpiceChar *cvals,
         ConstSpiceInt     entszs[],
         ConstSpiceBoolean nlflgs[],
         ConstSpiceInt     rcptrs[])
@@ -4584,21 +4585,26 @@ extern void ekappr_c(
 * segno      O   Segment number.
 ***********************************************************************/
 
-%rename (ekbseg) ekbseg_c;
+%rename (ekbseg) my_ekbseg_c;
 %apply (void RETURN_VOID) {void ekbseg_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *tabnam};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
             {(SpiceInt ncols, SpiceInt cnamln, ConstSpiceChar *cnames)};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
-                {(SpiceInt declen, ConstSpiceChar *decls)};
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
+                {(SpiceInt ignore, SpiceInt declen, ConstSpiceChar *decls)};
+%apply (SpiceInt *OUTPUT) {SpiceInt *segno};
 
-extern void ekbseg_c(
+%inline %{
+extern void my_ekbseg_c(
         SpiceInt       handle,
-        ConstSpiceChar *CONST_STRING,
-        SpiceInt       ncols,   SpiceInt cnamln, ConstSpiceChar *cnames,
-        SpiceInt       declen,  ConstSpiceChar *decls,
-        SpiceInt       *OUTPUT
-);
+        ConstSpiceChar *tabnam,
+        SpiceInt       ncols,  SpiceInt cnamln, ConstSpiceChar *cnames,
+        SpiceInt       ignore, SpiceInt  declen,  ConstSpiceChar *decls,
+        SpiceInt       *segno)
+    {
+        ekbseg_c(handle, tabnam, ncols, cnamln, cnames, declen, decls, segno);
+    }
+%}
 
 /***********************************************************************
 * -Procedure ekccnt_c ( EK, column count )
@@ -4990,8 +4996,8 @@ extern void ekgi_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *tabnam};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                     {(SpiceInt ncols, SpiceInt cnamln, ConstSpiceChar *cnames)};
-%apply (SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
-                    {(SpiceInt declen, ConstSpiceChar *decls)};
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
+                    {(SpiceInt ignore, SpiceInt declen, ConstSpiceChar *decls)};
 %apply (SpiceInt *OUTPUT) {SpiceInt *segno};
 %apply (SpiceInt *SIZE1, SpiceInt OUT_ARRAY1[ANY])
                     {(SpiceInt *nrows1, SpiceInt rcptrs[MAXROWS])};
@@ -5002,7 +5008,7 @@ extern void ekgi_c(
         ConstSpiceChar *tabnam,
         SpiceInt       nrows,
         SpiceInt       ncols, SpiceInt cnamln, ConstSpiceChar *cnames,
-        SpiceInt       declen, ConstSpiceChar *decls,
+        SpiceInt       ignore, SpiceInt declen, ConstSpiceChar *decls,
         SpiceInt       *segno,
         SpiceInt       *nrows1, SpiceInt rcptrs[MAXROWS])
     {
@@ -5172,14 +5178,12 @@ extern void ekntab_c(
 
 %rename (ekopn) ekopn_c;
 %apply (void RETURN_VOID) {void ekopn_c};
-%apply (SpiceInt DIM1, SpiceInt OUT_ARRAY1[ANY])
-                    {(SpiceInt ncomch, SpiceInt handle[1024])};
 
 extern void ekopn_c(
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
-        SpiceInt       *OUTPUT
+        SpiceInt       *handle
 );
 
 /***********************************************************************
@@ -5308,11 +5312,11 @@ extern void ekopw_c(
 %apply (void RETURN_VOID) {void my_ekpsel_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *query};
 %apply (SpiceInt *SIZE1, SpiceInt OUT_ARRAY1[ANY]) {(SpiceInt *n,  SpiceInt xbegs[CLAUSES])};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt xends[CLAUSES],  int *n1)};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt xtypes[CLAUSES], int *n2)};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt xclass[CLAUSES], int *n3)};
-%apply (char OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(char tabs[CLAUSES][NAMELEN], int *n4)};
-%apply (char OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(char cols[CLAUSES][NAMELEN], int *n5)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt xends[CLAUSES],  SpiceInt *n1)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt xtypes[CLAUSES], SpiceInt *n2)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt xclass[CLAUSES], SpiceInt *n3)};
+%apply (SpiceChar OUT_STRINGS[ANY][ANY], SpiceInt *NSTRINGS) {(SpiceChar tabs[CLAUSES][NAMELEN], SpiceInt *n4)};
+%apply (SpiceChar OUT_STRINGS[ANY][ANY], SpiceInt *NSTRINGS) {(SpiceChar cols[CLAUSES][NAMELEN], SpiceInt *n5)};
 %apply (SpiceBoolean *OUTPUT) {SpiceBoolean *error};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar errmsg[MESSAGELEN]};
 
@@ -5321,11 +5325,11 @@ extern void ekopw_c(
         ConstSpiceChar *query,
         SpiceInt       *n,
         SpiceInt       xbegs[CLAUSES],
-        SpiceInt       xends[CLAUSES],  int *n1,
-        SpiceInt       xtypes[CLAUSES], int *n2,
-        SpiceInt       xclass[CLAUSES], int *n3,
-        char           tabs[CLAUSES][NAMELEN], int *n4,
-        char           cols[CLAUSES][NAMELEN], int *n5,
+        SpiceInt       xends[CLAUSES],  SpiceInt *n1,
+        SpiceInt       xtypes[CLAUSES], SpiceInt *n2,
+        SpiceInt       xclass[CLAUSES], SpiceInt *n3,
+        SpiceChar      tabs[CLAUSES][NAMELEN], SpiceInt *n4,
+        SpiceChar      cols[CLAUSES][NAMELEN], SpiceInt *n5,
         SpiceBoolean   *error,
         SpiceChar      errmsg[MESSAGELEN])
     {
@@ -5391,15 +5395,16 @@ extern void ekopw_c(
 %rename (ekrcec) ekrcec_c;
 %apply (void RETURN_VOID) {void ekrcec_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *column};
-%apply (SpiceInt DIM2, SpiceInt *SIZE1, char OUT_STRINGS[ANY][ANY])
-            {(SpiceInt cvalen, SpiceInt *nvals, char cvals[MAXVALS][COLLEN])};
+%apply (SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
+            {(SpiceInt cvalen, SpiceInt *nvals, SpiceChar cvals[MAXVALS][COLLEN])};
+
 
 extern void ekrcec_c(
         SpiceInt       handle,
         SpiceInt       segno,
         SpiceInt       recno,
         ConstSpiceChar *CONST_STRING,
-        SpiceInt       cvalen, SpiceInt *nvals, char cvals[MAXVALS][COLLEN],
+        SpiceInt       cvalen, SpiceInt *nvals, SpiceChar cvals[MAXVALS][COLLEN],
         SpiceBoolean   *OUTPUT
 );
 
@@ -5523,29 +5528,29 @@ extern void ekrcei_c(
 
 %rename (ekssum) my_ekssum_c;
 %apply (void RETURN_VOID) {void my_ekssum_c};
-%apply (SpiceChar    OUT_STRING[ANY], int *SIZE1) {(SpiceChar tabnam[NAMELEN], int *nrows)};
+%apply (SpiceChar    OUT_STRING[ANY], SpiceInt *SIZE1) {(SpiceChar tabnam[NAMELEN], SpiceInt *nrows)};
 %apply (SpiceInt     *OUTPUT)                     {(SpiceInt  *ncols)};
-%apply (SpiceChar    OUT_STRINGS[ANY][ANY], int *NSTRINGS) {(SpiceChar cnames[SPICE_EK_MXCLSG][NAMELEN], int *n1)};
-%apply (SpiceInt     OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt     cclass[SPICE_EK_MXCLSG], int *n2)};
-%apply (SpiceInt     OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt      dtype[SPICE_EK_MXCLSG], int *n3)};
-%apply (SpiceInt     OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt      strln[SPICE_EK_MXCLSG], int *n4)};
-%apply (SpiceInt     OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt       size[SPICE_EK_MXCLSG], int *n5)};
-%apply (SpiceBoolean OUT_ARRAY1[ANY], int *SIZE1) {(SpiceBoolean indexd[SPICE_EK_MXCLSG], int *n6)};
-%apply (SpiceBoolean OUT_ARRAY1[ANY], int *SIZE1) {(SpiceBoolean nullok[SPICE_EK_MXCLSG], int *n7)};
+%apply (SpiceChar    OUT_STRINGS[ANY][ANY], SpiceInt *NSTRINGS) {(SpiceChar cnames[SPICE_EK_MXCLSG][NAMELEN], SpiceInt *n1)};
+%apply (SpiceInt     OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt     cclass[SPICE_EK_MXCLSG], SpiceInt *n2)};
+%apply (SpiceInt     OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt      dtype[SPICE_EK_MXCLSG], SpiceInt *n3)};
+%apply (SpiceInt     OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt      strln[SPICE_EK_MXCLSG], SpiceInt *n4)};
+%apply (SpiceInt     OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt       size[SPICE_EK_MXCLSG], SpiceInt *n5)};
+%apply (SpiceBoolean OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceBoolean indexd[SPICE_EK_MXCLSG], SpiceInt *n6)};
+%apply (SpiceBoolean OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceBoolean nullok[SPICE_EK_MXCLSG], SpiceInt *n7)};
 
 %inline %{
     void my_ekssum_c(
         SpiceInt     handle,
         SpiceInt     segno,
-        SpiceChar    tabnam[NAMELEN], int *nrows,
+        SpiceChar    tabnam[NAMELEN], SpiceInt *nrows,
         SpiceInt     *ncols,
-        SpiceChar    cnames[SPICE_EK_MXCLSG][NAMELEN], int *n1,
-        SpiceInt     cclass[SPICE_EK_MXCLSG], int *n2,
-        SpiceInt      dtype[SPICE_EK_MXCLSG], int *n3,
-        SpiceInt      strln[SPICE_EK_MXCLSG], int *n4,
-        SpiceInt       size[SPICE_EK_MXCLSG], int *n5,
-        SpiceBoolean indexd[SPICE_EK_MXCLSG], int *n6,
-        SpiceBoolean nullok[SPICE_EK_MXCLSG], int *n7)
+        SpiceChar    cnames[SPICE_EK_MXCLSG][NAMELEN], SpiceInt *n1,
+        SpiceInt     cclass[SPICE_EK_MXCLSG], SpiceInt *n2,
+        SpiceInt      dtype[SPICE_EK_MXCLSG], SpiceInt *n3,
+        SpiceInt      strln[SPICE_EK_MXCLSG], SpiceInt *n4,
+        SpiceInt       size[SPICE_EK_MXCLSG], SpiceInt *n5,
+        SpiceBoolean indexd[SPICE_EK_MXCLSG], SpiceInt *n6,
+        SpiceBoolean nullok[SPICE_EK_MXCLSG], SpiceInt *n7)
     {
         SpiceEKSegSum segsum;
 
@@ -6036,8 +6041,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfdist_c(
@@ -6050,7 +6055,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6150,20 +6155,20 @@ extern SpiceInt esrchc_c(
 %rename (gfevnt) my_gfevnt_c;
 %apply (void RETURN_VOID) {void my_gfevnt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *gquant};
-%apply (SpiceInt DIM1, ConstSpiceChar *IN_STRINGS)
-                {(SpiceInt qnpars, ConstSpiceChar *qpnams)};
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
+                {(SpiceInt qnpars, SpiceInt ignore, ConstSpiceChar *qpnams)};
 %apply (ConstSpiceChar *IN_STRINGS) {ConstSpiceChar *qcpars};
 %apply (ConstSpiceDouble  *IN_ARRAY1) {ConstSpiceDouble  *qdpars};
 %apply (ConstSpiceInt     *IN_ARRAY1) {ConstSpiceInt     *qipars};
 %apply (ConstSpiceBoolean *IN_ARRAY1) {ConstSpiceBoolean *qlpars};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfevnt_c(
         SpiceDouble  step,
         ConstSpiceChar    *gquant,
-        SpiceInt          qnpars, ConstSpiceChar *qpnams,
+        SpiceInt          qnpars, SpiceInt ignore, ConstSpiceChar *qpnams,
         ConstSpiceChar    *qcpars,
         ConstSpiceDouble  *qdpars,
         ConstSpiceInt     *qipars,
@@ -6175,7 +6180,7 @@ extern SpiceInt esrchc_c(
         SpiceBoolean      rpt,
         SpiceDouble       et0,
         SpiceDouble       et1,
-        SpiceDouble       windows[WINDOWS][2], int *intervals)
+        SpiceDouble       windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6268,8 +6273,8 @@ extern SpiceInt esrchc_c(
 %rename (gffove) my_gffove_c;
 %apply (void RETURN_VOID) {void my_gffove_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gffove_c(
@@ -6285,7 +6290,7 @@ extern SpiceInt esrchc_c(
         SpiceBoolean     rpt,
         SpiceDouble      et0,
         SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], int *intervals)
+        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6374,8 +6379,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble spoint[3]};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfilum_c(
@@ -6393,7 +6398,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble      step,
         SpiceDouble      et0,
         SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], int *intervals)
+        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6487,8 +6492,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bshape};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfocce_c(
@@ -6506,7 +6511,7 @@ extern SpiceInt esrchc_c(
         SpiceBoolean   rpt,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6589,8 +6594,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfoclt_c(
@@ -6606,7 +6611,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6678,8 +6683,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfpa_c(
@@ -6693,7 +6698,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6773,8 +6778,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfposc_c(
@@ -6790,7 +6795,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6862,8 +6867,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *rframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfrfov_c(
@@ -6875,7 +6880,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble      step,
         SpiceDouble      et0,
         SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], int *intervals)
+        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -6943,8 +6948,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfrr_c(
@@ -6957,7 +6962,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -7046,8 +7051,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfsep_c(
@@ -7065,7 +7070,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -7155,8 +7160,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfsntc_c(
@@ -7175,7 +7180,7 @@ extern SpiceInt esrchc_c(
         SpiceDouble      step,
         SpiceDouble      et0,
         SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], int *intervals)
+        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -7283,8 +7288,8 @@ extern void gfstol_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfsubc_c(
@@ -7301,7 +7306,7 @@ extern void gfstol_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -7377,8 +7382,8 @@ extern void gfstol_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *tframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gftfov_c(
@@ -7391,7 +7396,7 @@ extern void gfstol_c(
         SpiceDouble    step,
         SpiceDouble    et0,
         SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], int *intervals)
+        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
     {
         SPICEDOUBLE_CELL(cnfine, 2);
         wnvald_c(2, 0, &cnfine);
@@ -8228,13 +8233,13 @@ VECTORIZE_di_di_d__RETURN_d(lgrint, my_lgrint_c)
 %apply (void RETURN_VOID) {void lparse_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *list};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *delim};
-%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, char OUT_STRINGS[ANY][ANY])
-        {(SpiceInt nmax, SpiceInt itemln, SpiceInt *n, char items[MAXVALS][NAMELEN])};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
+        {(SpiceInt nmax, SpiceInt itemln, SpiceInt *n, SpiceChar items[MAXVALS][NAMELEN])};
 
 extern void lparse_c(
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
-        SpiceInt       nmax, SpiceInt itemln, SpiceInt *n, char items[MAXVALS][NAMELEN]
+        SpiceInt       nmax, SpiceInt itemln, SpiceInt *n, SpiceChar items[MAXVALS][NAMELEN]
 );
 
 /***********************************************************************
@@ -8269,12 +8274,12 @@ extern void lparse_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *list};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *delims};
 %apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
-        {(SpiceInt nmax, SpiceInt itemln, SpiceInt *n, char items[MAXVALS][COLLEN])};
+        {(SpiceInt nmax, SpiceInt itemln, SpiceInt *n, SpiceChar items[MAXVALS][COLLEN])};
 
 extern void lparsm_c(
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
-        SpiceInt       nmax, SpiceInt itemln, SpiceInt *n, char items[MAXVALS][COLLEN]
+        SpiceInt       nmax, SpiceInt itemln, SpiceInt *n, SpiceChar items[MAXVALS][COLLEN]
 );
 
 /***********************************************************************
@@ -8895,7 +8900,7 @@ extern void nthwd_c(
 %apply (void RETURN_VOID) {void my_orderc_c};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                 {(SpiceInt ndim, SpiceInt arrlen, ConstSpiceChar *array)};
-%apply (int *DIM1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
+%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
 
 %inline %{
     void my_orderc_c(
@@ -8937,7 +8942,7 @@ extern void nthwd_c(
 %apply (void RETURN_VOID) {void my_orderd_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                 {(ConstSpiceDouble *array, SpiceInt ndim)};
-%apply (int *DIM1, SpiceInt **OUT_ARRAY1)
+%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1)
                 {(SpiceInt *n, SpiceInt **iorder)};
 
 %inline %{
@@ -8981,7 +8986,7 @@ extern void nthwd_c(
 %apply (void RETURN_VOID) {void my_orderi_c};
 %apply (ConstSpiceInt *IN_ARRAY1, SpiceInt DIM1)
                 {(ConstSpiceInt *array, SpiceInt ndim)};
-%apply (int *DIM1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
+%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
 
 %inline %{
     void my_orderi_c(
@@ -9240,12 +9245,12 @@ VECTORIZE_dX_dX_dX__dN(pltnrm, pltnrm_c, 3)
                 {(SpiceInt *nderiv_plus_1, SpiceDouble p[10])};
 
 // Copied from vectorize.i
-%apply (ConstSpiceDouble *IN_ARRAY12, int DIM1, int DIM2)
-                {(ConstSpiceDouble *in21, int in21_dim1, int in21_dim2)};
-%apply (ConstSpiceDouble *IN_ARRAY01, int DIM1)
-                {(ConstSpiceDouble *in12, int in12_dim1)};
-%apply (SpiceDouble **OUT_ARRAY12, int *SIZE1, int *SIZE2)
-                {(SpiceDouble **out21, int *out21_dim1, int *out21_dim2)};
+%apply (ConstSpiceDouble *IN_ARRAY12, SpiceInt DIM1, SpiceInt DIM2)
+                {(ConstSpiceDouble *in21, SpiceInt in21_dim1, SpiceInt in21_dim2)};
+%apply (ConstSpiceDouble *IN_ARRAY01, SpiceInt DIM1)
+                {(ConstSpiceDouble *in12, SpiceInt in12_dim1)};
+%apply (SpiceDouble **OUT_ARRAY12, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                {(SpiceDouble **out21, SpiceInt *out21_dim1, SpiceInt *out21_dim2)};
 
 %inline %{
     void my_polyds_c(
@@ -9262,10 +9267,10 @@ VECTORIZE_dX_dX_dX__dN(pltnrm, pltnrm_c, 3)
     // the rightmost dimension of the returned axis is variable.
 
     void polyds_vector(
-        ConstSpiceDouble *in21, int in21_dim1, int in21_dim2,
+        ConstSpiceDouble *in21, SpiceInt in21_dim1, SpiceInt in21_dim2,
         SpiceInt nderiv,
-        ConstSpiceDouble *in12, int in12_dim1,
-        SpiceDouble **out21, int *out21_dim1, int *out21_dim2)
+        ConstSpiceDouble *in12, SpiceInt in12_dim1,
+        SpiceDouble **out21, SpiceInt *out21_dim1, SpiceInt *out21_dim2)
     {
         char *my_name = "polyds_vector";
 
@@ -9492,9 +9497,12 @@ extern void prsint_c(
 
 %rename (qderiv) my_qderiv_c;
 %apply (void RETURN_VOID) {void my_qderiv_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1) {(SpiceInt ndim, ConstSpiceDouble *f0)};
-%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1) {(SpiceInt ndim1, ConstSpiceDouble *f2)};
-%apply (SpiceInt *DIM1, SpiceDouble **OUT_ARRAY1) {(SpiceInt *ndim2, SpiceDouble **dfdt)};
+%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1)
+            {(SpiceInt ndim, ConstSpiceDouble *f0)};
+%apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1)
+            {(SpiceInt ndim1, ConstSpiceDouble *f2)};
+%apply (SpiceInt *SIZE1, SpiceDouble **OUT_ARRAY1)
+            {(SpiceInt *ndim2, SpiceDouble **dfdt)};
 
 %inline %{
     void my_qderiv_c(
@@ -9598,12 +9606,12 @@ VECTORIZE_dX_2d__3d(recazl, recazl_c)
 %rename (reordc) reordc_c;
 %apply (void RETURN_VOID) {void reordc_c};
 %apply (ConstSpiceInt *IN_ARRAY1) {ConstSpiceInt *iorder};
-%apply (SpiceInt DIM1, SpiceInt DIM2, char *INOUT_STRINGS)
-                {(SpiceInt ndim, SpiceInt arrlen, char *array)};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceChar *INOUT_STRINGS)
+                {(SpiceInt ndim, SpiceInt arrlen, SpiceChar *array)};
 
 extern void reordc_c(
         ConstSpiceInt *iorder,
-        SpiceInt      ndim, SpiceInt arrlen, char *array
+        SpiceInt      ndim, SpiceInt arrlen, SpiceChar *array
 );
 
 /***********************************************************************
@@ -9792,11 +9800,11 @@ extern SpiceBoolean return_c(void);
 
 %rename (shellc) shellc_c;
 %apply (void RETURN_VOID) {void shellc_c};
-%apply (SpiceInt DIM1, SpiceInt DIM2, char *INOUT_STRINGS)
-                {(SpiceInt ndim, SpiceInt arrlen, char *array)};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceChar *INOUT_STRINGS)
+                {(SpiceInt ndim, SpiceInt arrlen, SpiceChar *array)};
 
 extern void shellc_c(
-        SpiceInt ndim, SpiceInt arrlen, char *array
+        SpiceInt ndim, SpiceInt arrlen, SpiceChar *array
 );
 
 /***********************************************************************
@@ -10441,7 +10449,8 @@ extern void spkpvn_c(
 %apply (void RETURN_VOID) {void my_spksfs_c};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble descr[5]};
-%apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt idlen, SpiceChar ident[SIDLEN])};
+%apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
+      {(SpiceInt idlen, SpiceChar ident[SIDLEN])};
 %apply (SpiceInt *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
@@ -10450,7 +10459,7 @@ extern void spkpvn_c(
         SpiceDouble  et,
         SpiceInt     *handle,
         SpiceDouble  descr[5],
-        SpiceInt     idlen, SpiceChar *ident,
+        SpiceInt     idlen, SpiceChar ident[SIDLEN],
         SpiceBoolean *found)
     {
         spksfs_c(body, et, idlen, handle, descr, ident, found);
@@ -11397,7 +11406,7 @@ extern SpiceInt sumai_c(
 
 %rename (swpool) swpool_c;
 %apply (void RETURN_VOID) {void swpool_c};
-%apply (int DIM1, int DIM2, ConstSpiceChar *IN_STRINGS)
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                 {(SpiceInt nnames, SpiceInt namlen, ConstSpiceChar *names)};
 
 extern void swpool_c(
@@ -11781,17 +11790,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wncomd) my_wncomd_c;
 %apply (void RETURN_VOID) {void my_wncomd_c};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, SpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *n1, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, SpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wncomd_c(
         SpiceDouble left,
         SpiceDouble right,
-        int         n,   SpiceDouble window[][2],
-        int         *n1, SpiceDouble result[WINDOWS][2])
+        SpiceInt    n,   SpiceDouble window[][2],
+        SpiceInt    *n1, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells1, 2 * WINDOWS);
@@ -11834,17 +11843,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wncond) my_wncond_c;
 %apply (void RETURN_VOID) {void my_wncond_c};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, SpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *size, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, SpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *size, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wncond_c(
         SpiceDouble left,
         SpiceDouble right,
-        int n, SpiceDouble window[][2],
-        int *size, SpiceDouble result[WINDOWS][2])
+        SpiceInt n, SpiceDouble window[][2],
+        SpiceInt *size, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -11883,15 +11892,15 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wndifd) my_wndifd_c;
 %apply (void RETURN_VOID) {void my_wndifd_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int na, ConstSpiceDouble a[][2])};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int nb, ConstSpiceDouble b[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(int *nc, SpiceDouble c[WINDOWS][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(SpiceInt *nc, SpiceDouble c[WINDOWS][2])};
 
 %inline %{
     void my_wndifd_c(
-        int na,  ConstSpiceDouble a[][2],
-        int nb,  ConstSpiceDouble b[][2],
-        int *nc, SpiceDouble c[WINDOWS][2])
+        SpiceInt na,  ConstSpiceDouble a[][2],
+        SpiceInt nb,  ConstSpiceDouble b[][2],
+        SpiceInt *nc, SpiceDouble c[WINDOWS][2])
     {
         int nx2 = 2 * na;
         SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
@@ -11938,13 +11947,13 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnelmd) my_wnelmd_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean my_wnelmd_c};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, SpiceDouble window[][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, SpiceDouble window[][2])};
 
 %inline %{
     SpiceBoolean my_wnelmd_c(
         SpiceDouble point,
-        int n, SpiceDouble window[][2])
+        SpiceInt n, SpiceDouble window[][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -11980,17 +11989,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnexpd) my_wnexpd_c;
 %apply (void RETURN_VOID) {void my_wnexpd_c};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, SpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *size, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, SpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *size, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wnexpd_c(
         SpiceDouble left,
         SpiceDouble right,
-        int n, SpiceDouble window[][2],
-        int *size, SpiceDouble result[WINDOWS][2])
+        SpiceInt n, SpiceDouble window[][2],
+        SpiceInt *size, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -12030,16 +12039,16 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 %rename (wnextd) my_wnextd_c;
 %apply (void RETURN_VOID) {void my_wnextd_c};
 %apply (SpiceChar IN_STRING) {SpiceChar side};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, SpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *size, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, SpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *size, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wnextd_c(
         SpiceChar side,
-        int n, SpiceDouble window[][2],
-        int *size, SpiceDouble result[WINDOWS][2])
+        SpiceInt n, SpiceDouble window[][2],
+        SpiceInt *size, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -12076,16 +12085,16 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnfild) my_wnfild_c;
 %apply (void RETURN_VOID) {void my_wnfild_c};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, SpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *n1, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, SpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wnfild_c(
         SpiceDouble smlgap,
-        int n, SpiceDouble window[][2],
-        int *n1, SpiceDouble result[WINDOWS][2])
+        SpiceInt n, SpiceDouble window[][2],
+        SpiceInt *n1, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -12122,16 +12131,16 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnfltd) my_wnfltd_c;
 %apply (void RETURN_VOID) {void my_wnfltd_c};
-%apply (int DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(int n, ConstSpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *n1, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, ConstSpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wnfltd_c(
         SpiceDouble smlint,
-        int n,   ConstSpiceDouble window[][2],
-        int *n1, SpiceDouble result[WINDOWS][2])
+        SpiceInt n,   ConstSpiceDouble window[][2],
+        SpiceInt *n1, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -12171,14 +12180,14 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnincd) my_wnincd_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean my_wnincd_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
-                {(int n, ConstSpiceDouble window[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, ConstSpiceDouble window[][2])};
 
 %inline %{
     SpiceBoolean my_wnincd_c(
         SpiceDouble left,
         SpiceDouble right,
-        int n, ConstSpiceDouble window[][2])
+        SpiceInt n, ConstSpiceDouble window[][2])
     {
         int nx2 = 2 * n;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -12213,17 +12222,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wninsd) my_wninsd_c;
 %apply (void RETURN_VOID) {void my_wninsd_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
-                {(int n, ConstSpiceDouble window[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(int *n1, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+                {(SpiceInt n, ConstSpiceDouble window[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
+                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
 
 %inline %{
     void my_wninsd_c(
         SpiceDouble left,
         SpiceDouble right,
-        int n, ConstSpiceDouble window[][2],
-        int *n1, SpiceDouble result[WINDOWS][2])
+        SpiceInt n, ConstSpiceDouble window[][2],
+        SpiceInt *n1, SpiceDouble result[WINDOWS][2])
     {
         int nx2 = n * 2;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -12262,15 +12271,15 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnintd) my_wnintd_c;
 %apply (void RETURN_VOID) {void my_wnintd_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int na, ConstSpiceDouble a[][2])};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int nb, ConstSpiceDouble b[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(int *nc, SpiceDouble c[WINDOWS][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(SpiceInt *nc, SpiceDouble c[WINDOWS][2])};
 
 %inline %{
     void my_wnintd_c(
-        int na,  ConstSpiceDouble a[][2],
-        int nb,  ConstSpiceDouble b[][2],
-        int *nc, SpiceDouble c[WINDOWS][2])
+        SpiceInt na,  ConstSpiceDouble a[][2],
+        SpiceInt nb,  ConstSpiceDouble b[][2],
+        SpiceInt *nc, SpiceDouble c[WINDOWS][2])
     {
         int nx2 = 2 * na;
         SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
@@ -12323,15 +12332,15 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnreld) my_wnreld_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean my_wnreld_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int na, ConstSpiceDouble a[][2])};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int nb, ConstSpiceDouble b[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *op};
 
 %inline %{
     SpiceBoolean my_wnreld_c(
-        int na, ConstSpiceDouble a[][2],
+        SpiceInt na, ConstSpiceDouble a[][2],
         ConstSpiceChar *op,
-        int nb, ConstSpiceDouble b[][2])
+        SpiceInt nb, ConstSpiceDouble b[][2])
     {
         int nx2 = 2 * na;
         SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
@@ -12376,7 +12385,7 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnsumd) my_wnsumd_c;
 %apply (void RETURN_VOID) {void my_wnsumd_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int n, ConstSpiceDouble window[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt n, ConstSpiceDouble window[][2])};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *meas};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *avg};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *stddev};
@@ -12385,7 +12394,7 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %inline %{
     void my_wnsumd_c(
-        int n, ConstSpiceDouble window[][2],
+        SpiceInt n, ConstSpiceDouble window[][2],
         SpiceDouble *meas,
         SpiceDouble *avg,
         SpiceDouble *stddev,
@@ -12425,15 +12434,15 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wnunid) my_wnunid_c;
 %apply (void RETURN_VOID) {void my_wnunid_c};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int na, ConstSpiceDouble a[][2])};
-%apply (int DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(int nb, ConstSpiceDouble b[][2])};
-%apply (int *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(int *nc, SpiceDouble c[WINDOWS][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
+%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(SpiceInt *nc, SpiceDouble c[WINDOWS][2])};
 
 %inline %{
     void my_wnunid_c(
-        int na,  ConstSpiceDouble a[][2],
-        int nb,  ConstSpiceDouble b[][2],
-        int *nc, SpiceDouble c[WINDOWS][2])
+        SpiceInt na,  ConstSpiceDouble a[][2],
+        SpiceInt nb,  ConstSpiceDouble b[][2],
+        SpiceInt *nc, SpiceDouble c[WINDOWS][2])
     {
         int nx2 = 2 * na;
         SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);

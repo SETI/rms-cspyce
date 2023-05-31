@@ -11,6 +11,7 @@ wheelhouse/
 .DS_Store
 cspyce/cspyce0.py
 cspyce/cspyce0_info.py
+cspyce/cspyce2.py
 cspyce/typemap_samples.py
 cspyce/_version.py
 swig/vectorize.i
