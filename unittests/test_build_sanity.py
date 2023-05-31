@@ -11,7 +11,7 @@ def test_sane_argnames_and_signatures():
     """
     For every function in cspyce1, it has the ARGNAMES attribute iff it has the SIGNATURE
     attribute.  The ARGNAMES attribute, the SIGNATURE attribute, and the actual length
-    of the function's paramters must be identical.
+    of the function's parameters must be identical.
     """
 
     # This function finds as many errors as it can, rather than reporting them one by one.
