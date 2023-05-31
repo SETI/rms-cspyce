@@ -33,6 +33,7 @@
 #define MESSAGELEN 1024 // max length of an error message including null
 #define NAMELEN 65      // table names can be 64 plus one null
 #define NPLATES 10000   // max number of DSK plates or vertices
+#define SIDLEN 41       // maximum length of segment id, from spkpvn_c.c
 #define TIMELEN 60      // max length of a time string including null
 #define WINDOWS 120000  // max time windows returned
 
@@ -132,15 +133,15 @@ void refchg_(SpiceInt    *frame1,
              SpiceDouble *et,
              SpiceDouble *rotate);
 
-int stcf01_(ConstSpiceChar *catnam,
+SpiceInt stcf01_(ConstSpiceChar *catnam,
             SpiceDouble    *westra,
             SpiceDouble    *eastra,
             SpiceDouble    *sthdec,
             SpiceDouble    *nthdec,
             SpiceInt       *nstars,
-            int            catnam_len);
+            SpiceInt       catnam_len);
 
-int stcg01_(SpiceInt    *index,
+SpiceInt stcg01_(SpiceInt    *index,
             SpiceDouble *ra,
             SpiceDouble *dec,
             SpiceDouble *rasig,
@@ -148,22 +149,22 @@ int stcg01_(SpiceInt    *index,
             SpiceInt    *catnum,
             SpiceChar   *sptype,
             SpiceDouble *vmag,
-            int         sptype_len);
+            SpiceInt    sptype_len);
 
-int stcl01_(ConstSpiceChar *catfnm,
+SpiceInt stcl01_(ConstSpiceChar *catfnm,
             SpiceChar      *tabnam,
             SpiceInt       *handle,
-            int            catfnm_len,
-            int            tabnam_len);
+            SpiceInt       catfnm_len,
+            SpiceInt       tabnam_len);
 
 void stlabx_(ConstSpiceDouble pobj[3],
              ConstSpiceDouble vobs[3],
              SpiceDouble      corpos[3]);
 
 // From cspyce_typemaps.i
-void set_python_exception_flag(int flag);
-int get_python_exception_flag(void);
-char *get_message_after_reset(int option);
+void set_python_exception_flag(SpiceInt flag);
+SpiceInt get_python_exception_flag(void);
+char *get_message_after_reset(SpiceInt option);
 void reset_messages(void);
 
 %}
@@ -1001,12 +1002,12 @@ VECTORIZE_i_2d_s__dLM_dN_d_b(ckgpav, ckgpav_c, 3, 3, 3)
 %rename (ckobj) my_ckobj_c;
 %apply (void RETURN_VOID) {void my_ckobj_c};
 %apply (ConstSpiceChar *CONST_STRING)    {ConstSpiceChar *ck};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt bodids[MAXIDS], int *bodies)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt bodids[MAXIDS], SpiceInt *bodies)};
 
 %inline %{
     void my_ckobj_c(
         ConstSpiceChar *ck,
-        SpiceInt bodids[MAXIDS], int *bodies)
+        SpiceInt bodids[MAXIDS], SpiceInt *bodies)
     {
         int j;
         SPICEINT_CELL(ids, MAXIDS);
@@ -2462,8 +2463,8 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceDouble *OUTPUT)          {SpiceDouble *trgepc};
 %apply (SpiceDouble OUT_ARRAY1[ANY])  {SpiceDouble obspos[3]};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                                {(SpiceDouble **trmpts, int *dim1, int *dim2)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                                {(SpiceDouble **trmpts, SpiceInt *dim1, SpiceInt *dim2)};
 
 %inline %{
     void my_edterm_c(
@@ -2477,7 +2478,7 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
         SpiceInt       npts,
         SpiceDouble    *trgepc,
         SpiceDouble    obspos[3],
-        SpiceDouble    **trmpts, int *dim1, int *dim2)
+        SpiceDouble    **trmpts, SpiceInt *dim1, SpiceInt *dim2)
     {
         *trmpts = NULL;
         *dim1 = 0;
@@ -3156,6 +3157,7 @@ extern SpiceBoolean failed_c(void);
 %apply (ConstSpiceChar    *CONST_STRING) {ConstSpiceChar *rframe};
 %apply (ConstSpiceChar    *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar    *CONST_STRING) {ConstSpiceChar *obsrvr};
+%apply (SpiceBoolean      *OUTPUT)       {SpiceBoolean *visibl};
 
 %inline %{
     void my_fovray_c(
@@ -3459,13 +3461,13 @@ extern void furnsh_c(
 
 %rename (gcpool) gcpool_c;
 %apply (void RETURN_VOID) {void gcpool_c};
-%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, char OUT_STRINGS[ANY][ANY])
-        {(SpiceInt room, SpiceInt lenout, SpiceInt *n, char cvals[KERVALS][KERVALLEN])};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
+        {(SpiceInt room, SpiceInt lenout, SpiceInt *n, SpiceChar cvals[KERVALS][KERVALLEN])};
 
 extern void gcpool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       start,
-        SpiceInt room, SpiceInt lenout, SpiceInt *n, char cvals[KERVALS][KERVALLEN],
+        SpiceInt room, SpiceInt lenout, SpiceInt *n, SpiceChar cvals[KERVALS][KERVALLEN],
         SpiceBoolean   *OUTPUT
 );
 
@@ -3598,7 +3600,7 @@ VECTORIZE_5d__dN(georec, georec_c, 3)
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                         {(SpiceInt framelen, SpiceChar frame[NAMELEN])};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble bsight[3]};
-%apply (int *SIZE1, int *SIZE2, SpiceDouble OUT_ARRAY2[ANY][ANY])
+%apply (SpiceInt *SIZE1, SpiceInt *SIZE2, SpiceDouble OUT_ARRAY2[ANY][ANY])
                         {(SpiceInt *size1, SpiceInt *size2, SpiceDouble bounds[FOVSHAPE][3])};
 
 %inline %{
@@ -3742,13 +3744,13 @@ extern void gipool_c(
 
 %rename (gnpool) gnpool_c;
 %apply (void RETURN_VOID) {void gnpool_c};
-%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, char OUT_STRINGS[ANY][ANY])
-        {(SpiceInt room, SpiceInt lenout, SpiceInt *n, char kvars[KERVALS][NAMELEN])};
+%apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY])
+        {(SpiceInt room, SpiceInt lenout, SpiceInt *n, SpiceChar kvars[KERVALS][NAMELEN])};
 
 extern void gnpool_c(
         ConstSpiceChar *CONST_STRING,
         SpiceInt       start,
-        SpiceInt room, SpiceInt lenout, SpiceInt *n, char kvars[KERVALS][NAMELEN],
+        SpiceInt room, SpiceInt lenout, SpiceInt *n, SpiceChar kvars[KERVALS][NAMELEN],
         SpiceBoolean   *OUTPUT
 );
 
@@ -4627,8 +4629,8 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (ConstSpiceDouble IN_ARRAY2[][ANY], SpiceInt DIM1)
                             {(ConstSpiceDouble lonlat[][2], SpiceInt npts)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                            {(SpiceDouble **srfpts, int *sdim1, int *sdim2)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                            {(SpiceDouble **srfpts, SpiceInt *sdim1, SpiceInt *sdim2)};
 
 %inline %{
     void my_latsrf_c(
@@ -4637,7 +4639,7 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
         SpiceDouble      et,
         ConstSpiceChar   *fixref,
         ConstSpiceDouble lonlat[][2], SpiceInt npts,
-        SpiceDouble      **srfpts, int *sdim1, int *sdim2)
+        SpiceDouble      **srfpts, SpiceInt *sdim1, SpiceInt *sdim2)
     {
         *srfpts = NULL;
         *sdim1 = 0;
@@ -4790,12 +4792,12 @@ extern void ldpool_c(
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble refvec[3]};
 %apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1)
                                {(SpiceInt **npts, SpiceInt *ndim1)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                               {(SpiceDouble **points, int *pdim1, int *pdim2)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                               {(SpiceDouble **epochs, int *edim1)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                               {(SpiceDouble **tangts, int *tdim1, int *tdim2)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                               {(SpiceDouble **epochs, SpiceInt *edim1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **tangts, SpiceInt *tdim1, SpiceInt *tdim2)};
 
 %inline %{
     void my_limbpt_c(
@@ -4814,9 +4816,9 @@ extern void ldpool_c(
         SpiceInt         maxn,
         SpiceInt         **npts,
         SpiceInt         *ndim1,
-        SpiceDouble **points, int *pdim1, int *pdim2,
-        SpiceDouble **epochs, int *edim1,
-        SpiceDouble **tangts, int *tdim1, int *tdim2)
+        SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2,
+        SpiceDouble **epochs, SpiceInt *edim1,
+        SpiceDouble **tangts, SpiceInt *tdim1, SpiceInt *tdim2)
     {
         *npts = NULL;
         *ndim1 = 0;
@@ -5093,13 +5095,13 @@ VECTORIZE_dXY__dMN(mequ, mequ_c, 3, 3)
 %apply (void RETURN_VOID) {void my_mequg_c};
 %apply (SpiceDouble *IN_ARRAY2, SpiceInt  DIM1, SpiceInt DIM2)
                           {(SpiceDouble *m1, SpiceInt nr, SpiceInt nc)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                          {(SpiceDouble **matrix, int *nr_out, int *nc_out)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                          {(SpiceDouble **matrix, SpiceInt *nr_out, SpiceInt *nc_out)};
 
 %inline %{
     void my_mequg_c(
         SpiceDouble *m1,    SpiceInt nr, SpiceInt nc,
-        SpiceDouble **matrix, int *nr_out, int *nc_out)
+        SpiceDouble **matrix, SpiceInt *nr_out, SpiceInt *nc_out)
     {
         *matrix = NULL;
         *nr_out = 0;
@@ -5122,7 +5124,7 @@ VECTORIZE_dXY__dMN(mequ, mequ_c, 3, 3)
 
     void my_mequg_nomalloc(
         ConstSpiceDouble *m1, SpiceInt nr, SpiceInt nc,
-        SpiceDouble  *matrix, int *nr_out, int *nc_out)
+        SpiceDouble  *matrix, SpiceInt *nr_out, SpiceInt *nc_out)
     {
         mequg_c(m1, nr, nc, matrix);
         *nr_out = nr;
@@ -5355,7 +5357,7 @@ VECTORIZE_dXY_dX__dN(mtxv, mtxv_c, 3)
     void my_mtxvg_nomalloc(
         ConstSpiceDouble *m1, SpiceInt nr1, SpiceInt nc1,
         ConstSpiceDouble *v2, SpiceInt nr2,
-        SpiceDouble      *v3, int      *nr3)
+        SpiceDouble      *v3, SpiceInt *nr3)
     {
         if (!my_assert_eq(nr1, nr2, "mtxvg",
             "Array dimension mismatch in mtxvg: "
@@ -5558,14 +5560,14 @@ VECTORIZE_dXY_dXY__dMN(mxmt, mxmt_c, 3, 3)
                         {(SpiceDouble *m1, SpiceInt nr1, SpiceInt nc1)};
 %apply (SpiceDouble *IN_ARRAY2, SpiceInt  DIM1, SpiceInt  DIM2)
                         {(SpiceDouble *m2, SpiceInt nr2, SpiceInt nc2)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                        {(SpiceDouble **m3, int *nr3, int *nc3)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                        {(SpiceDouble **m3, SpiceInt *nr3, SpiceInt *nc3)};
 
 %inline %{
     void my_mxmtg_c(
         SpiceDouble  *m1, SpiceInt nr1, SpiceInt nc1,
         SpiceDouble  *m2, SpiceInt nr2, SpiceInt nc2,
-        SpiceDouble **m3, int     *nr3, int     *nc3)
+        SpiceDouble **m3, SpiceInt *nr3, SpiceInt *nc3)
     {
         *m3 = NULL;
         *nr3 = 0;
@@ -5593,7 +5595,7 @@ VECTORIZE_dXY_dXY__dMN(mxmt, mxmt_c, 3, 3)
     void my_mxmtg_nomalloc(
         SpiceDouble *m1, SpiceInt nr1, SpiceInt nc1,
         SpiceDouble *m2, SpiceInt nr2, SpiceInt nc2,
-        SpiceDouble *m3, int     *nr3, int     *nc3)
+        SpiceDouble *m3, SpiceInt *nr3, SpiceInt *nc3)
     {
         if (!my_assert_eq(nc1, nc2, "mxmtg",
             "Array dimension mismatch in mxmtg: "
@@ -5675,14 +5677,14 @@ VECTORIZE_dXY_dX__dN(mxv, mxv_c, 3)
                           {(SpiceDouble *m1, SpiceInt nr1, SpiceInt nc1)};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(SpiceDouble *v2, SpiceInt nr2)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v3, int *nr3)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v3, SpiceInt *nr3)};
 
 %inline %{
     void my_mxvg_c(
         SpiceDouble  *m1, SpiceInt nr1, SpiceInt nc1,
         SpiceDouble  *v2, SpiceInt nr2,
-        SpiceDouble **v3, int      *nr3)
+        SpiceDouble **v3, SpiceInt *nr3)
     {
         *v3 = NULL;
         *nr3 = 0;
@@ -5708,7 +5710,7 @@ VECTORIZE_dXY_dX__dN(mxv, mxv_c, 3)
     void my_mxvg_nomalloc(
         SpiceDouble *m1, SpiceInt nr1, SpiceInt nc1,
         SpiceDouble *v2, SpiceInt nr2,
-        SpiceDouble *v3, int     *nr3)
+        SpiceDouble *v3, SpiceInt *nr3)
     {
         if (!my_assert_eq(nc1, nr2, "mxvg",
             "Array dimension mismatch in mxvg: "
@@ -6166,14 +6168,14 @@ VECTORIZE_dX_2d__dN(oscltx, oscltx_c, SPICE_OSCLTX_NELTS)
 %apply (void RETURN_VOID) {void my_pckcov_c};
 %apply (ConstSpiceChar *CONST_STRING)
                           {ConstSpiceChar *pck};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                          {(SpiceDouble cover[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                          {(SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_pckcov_c(
         ConstSpiceChar *pck,
         SpiceInt idcode,
-        SpiceDouble cover[WINDOWS][2], int *intervals)
+        SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)
     {
         int j;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -8816,14 +8818,14 @@ VECTORIZE_i_d_2s_dX_dX__dN_d_d(spkaps, spkaps_c, 6)
 %rename (spkcov) my_spkcov_c;
 %apply (void RETURN_VOID) {void my_spkcov_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], int *SIZE1)
-                        {(SpiceDouble cover[WINDOWS][2], int *intervals)};
+%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
+                        {(SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_spkcov_c(
         ConstSpiceChar *spk,
         SpiceInt       idcode,
-        SpiceDouble    cover[WINDOWS][2], int *intervals)
+        SpiceDouble    cover[WINDOWS][2], SpiceInt *intervals)
     {
         int j;
         SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
@@ -9146,12 +9148,12 @@ VECTORIZE_i_d_2s_dX__dN_d_d(spkltc, spkltc_c, 6)
 %rename (spkobj) my_spkobj_c;
 %apply (void RETURN_VOID) {void my_spkobj_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
-%apply (SpiceInt OUT_ARRAY1[ANY], int *SIZE1) {(SpiceInt ids[MAXIDS], int *bodies)};
+%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt ids[MAXIDS], SpiceInt *bodies)};
 
 %inline %{
     void my_spkobj_c(
         ConstSpiceChar *spk,
-        SpiceInt ids[MAXIDS], int *bodies)
+        SpiceInt ids[MAXIDS], SpiceInt *bodies)
     {
         int j;
         SPICEINT_CELL(cells, MAXIDS);
@@ -9382,8 +9384,8 @@ extern void srfcss_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                           {(SpiceInt npts, ConstSpiceDouble srfpts[][3])};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                          {(SpiceDouble **normls, int *dim1, int *dim2)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                          {(SpiceDouble **normls, SpiceInt *dim1, SpiceInt *dim2)};
 
 %inline %{
     void my_srfnrm_c(
@@ -9392,7 +9394,7 @@ extern void srfcss_c(
         SpiceDouble    et,
         ConstSpiceChar *fixref,
         SpiceInt npts, ConstSpiceDouble srfpts[][3],
-        SpiceDouble **normls, int *dim1, int *dim2)
+        SpiceDouble **normls, SpiceInt *dim1, SpiceInt *dim2)
     {
         *normls = NULL;
         *dim1 = 0;
@@ -10401,12 +10403,12 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble refvec[3]};
 %apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1)
                                {(SpiceInt **npts, SpiceInt *ndim1)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                               {(SpiceDouble **points, int *pdim1, int *pdim2)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                               {(SpiceDouble **epochs, int *edim1)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                               {(SpiceDouble **trmvcs, int *tdim1, int *tdim2)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                               {(SpiceDouble **epochs, SpiceInt *edim1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **trmvcs, SpiceInt *tdim1, SpiceInt *tdim2)};
 
 
 %inline %{
@@ -10426,9 +10428,9 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
         SpiceDouble      soltol,
         SpiceInt         maxn,
         SpiceInt    **npts,   SpiceInt *ndim1,
-        SpiceDouble **points, int      *pdim1, int *pdim2,
-        SpiceDouble **epochs, int      *edim1,
-        SpiceDouble **trmvcs, int      *tdim1, int *tdim2)
+        SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2,
+        SpiceDouble **epochs, SpiceInt *edim1,
+        SpiceDouble **trmvcs, SpiceInt *tdim1, SpiceInt *tdim2)
     {
         *npts = NULL;
         *ndim1 = 0;
@@ -11144,14 +11146,14 @@ VECTORIZE_dX__dN_d(unorm, unorm_c, 3)
 %apply (void RETURN_VOID) {void my_unormg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                              {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                             {(SpiceDouble **vector, int *nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                             {(SpiceDouble **vector, SpiceInt *nd2)};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *vmag};
 
 %inline %{
     void my_unormg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble **vector, int      *nd2,
+        SpiceDouble **vector, SpiceInt *nd2,
         SpiceDouble    *vmag)
     {
         *vector = NULL;
@@ -11172,7 +11174,7 @@ VECTORIZE_dX__dN_d(unorm, unorm_c, 3)
     }
 
     void my_unormg_nomalloc(ConstSpiceDouble *v1, SpiceInt ndim,
-                            SpiceDouble  *vector, int      *nd2,
+                            SpiceDouble  *vector, SpiceInt *nd2,
                             SpiceDouble    *vmag)
     {
         unormg_c(v1, ndim, vector, vmag);
@@ -11274,16 +11276,16 @@ VECTORIZE_dX_dX__dN(vadd, vadd_c, 3)
 %apply (void RETURN_VOID) {void my_vaddg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (ConstSpiceDouble *IN_ARRAY1, int DIM1)
-                          {(ConstSpiceDouble *v2, int nd2)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v3, int *nd3)};
+%apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                          {(ConstSpiceDouble *v2, SpiceInt nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v3, SpiceInt *nd3)};
 
 %inline %{
     void my_vaddg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int      nd2,
-        SpiceDouble     **v3, int     *nd3)
+        ConstSpiceDouble *v2, SpiceInt nd2,
+        SpiceDouble     **v3, SpiceInt *nd3)
     {
         SpiceDouble *result = NULL;
 
@@ -11309,8 +11311,8 @@ VECTORIZE_dX_dX__dN(vadd, vadd_c, 3)
     }
 
     void my_vaddg_nomalloc(ConstSpiceDouble *v1, SpiceInt ndim,
-                    ConstSpiceDouble *v2, int      nd2,
-                    SpiceDouble      *v3, int     *nd3)
+                    ConstSpiceDouble *v2, SpiceInt nd2,
+                    SpiceDouble      *v3, SpiceInt *nd3)
     {
         if (!my_assert_eq(ndim, nd2, "vaddg",
             "Vector dimension mismatch in vaddg: "
@@ -11419,13 +11421,13 @@ VECTORIZE_dX_dX__RETURN_d(vdist, vdist_c)
 %apply (SpiceDouble RETURN_DOUBLE) {SpiceDouble my_vdistg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                                 {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (ConstSpiceDouble *IN_ARRAY1, int DIM1)
-                                {(ConstSpiceDouble *v2, int nd2)};
+%apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                                {(ConstSpiceDouble *v2, SpiceInt nd2)};
 
 %inline %{
     SpiceDouble my_vdistg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int nd2)
+        ConstSpiceDouble *v2, SpiceInt nd2)
     {
         if (!my_assert_eq(ndim, nd2, "vdistg",
             "Vector dimension mismatch in vdistg: "
@@ -11498,13 +11500,13 @@ VECTORIZE_dX_dX__RETURN_d(vdot, vdot_c)
 %apply (SpiceDouble RETURN_DOUBLE) {SpiceDouble my_vdotg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                                    {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (ConstSpiceDouble *IN_ARRAY1, int DIM1)
-                                   {(ConstSpiceDouble *v2, int nd2)};
+%apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                                   {(ConstSpiceDouble *v2, SpiceInt nd2)};
 
 %inline %{
     SpiceDouble my_vdotg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int nd2)
+        ConstSpiceDouble *v2, SpiceInt nd2)
     {
         if (!my_assert_eq(ndim, nd2, "vdotg",
             "Vector dimension mismatch in vdotg: "
@@ -11576,13 +11578,13 @@ VECTORIZE_dX__dN(vequ, vequ_c, 3)
 %apply (void RETURN_VOID) {void my_vequg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v2, int *nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v2, SpiceInt *nd2)};
 
 %inline %{
     void my_vequg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble     **v2, int      *nd2)
+        SpiceDouble     **v2, SpiceInt *nd2)
     {
         *v2 = NULL;
         *nd2 = 0;
@@ -11603,7 +11605,7 @@ VECTORIZE_dX__dN(vequ, vequ_c, 3)
 
     void my_vequg_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble      *v2, int      *nd2)
+        SpiceDouble      *v2, SpiceInt *nd2)
     {
         vequg_c(v1, ndim, v2);
         *nd2 = ndim;
@@ -11672,13 +11674,13 @@ VECTORIZE_dX__dN(vhat, vhat_c, 3)
 %apply (void RETURN_VOID) {void my_vhatg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble  *v1, SpiceInt ndim)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v2, int *nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v2, SpiceInt *nd2)};
 
 %inline %{
     void my_vhatg_c(
         ConstSpiceDouble  *v1, SpiceInt ndim,
-        SpiceDouble      **v2, int      *nd2)
+        SpiceDouble      **v2, SpiceInt *nd2)
     {
         *v2 = NULL;
         *nd2 = 0;
@@ -11699,7 +11701,7 @@ VECTORIZE_dX__dN(vhat, vhat_c, 3)
 
     void my_vhatg_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble      *v2, int      *nd2)
+        SpiceDouble      *v2, SpiceInt *nd2)
     {
         vhatg_c(v1, ndim, v2);
         *nd2 = ndim;
@@ -11834,18 +11836,18 @@ VECTORIZE_d_dX_d_dX__dN(vlcom, vlcom_c, 3)
 %apply (void RETURN_VOID) {void my_vlcomg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble  *v1, SpiceInt n)};
-%apply (ConstSpiceDouble *IN_ARRAY1, int DIM1)
-                          {(ConstSpiceDouble  *v2, int    nd2)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v3, int *nd3)};
+%apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                          {(ConstSpiceDouble  *v2, SpiceInt    nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v3, SpiceInt *nd3)};
 
 %inline %{
     void my_vlcomg_c(
         SpiceDouble       a,
         ConstSpiceDouble *v1, SpiceInt n,
         SpiceDouble       b,
-        ConstSpiceDouble *v2, int nd2,
-        SpiceDouble     **v3, int *nd3)
+        ConstSpiceDouble *v2, SpiceInt nd2,
+        SpiceDouble     **v3, SpiceInt *nd3)
     {
         *v3 = NULL;
         *nd3 = 0;
@@ -11872,8 +11874,8 @@ VECTORIZE_d_dX_d_dX__dN(vlcom, vlcom_c, 3)
         SpiceDouble       a,
         ConstSpiceDouble *v1, SpiceInt  n,
         SpiceDouble       b,
-        ConstSpiceDouble *v2, int nd2,
-        SpiceDouble      *v3, int *nd3)
+        ConstSpiceDouble *v2, SpiceInt nd2,
+        SpiceDouble      *v3, SpiceInt *nd3)
     {
         if (!my_assert_eq(n, nd2, "vlcomg",
             "Vector dimension mismatch in vlcomg: "
@@ -11912,13 +11914,13 @@ VECTORIZE_d_di_d_di__di(vlcomg, my_vlcomg_nomalloc)
 %apply (void RETURN_VOID) {void my_vminug_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble  *v1,  SpiceInt ndim)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v2, int *nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v2, SpiceInt *nd2)};
 
 %inline %{
     void my_vminug_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble     **v2, int      *nd2)
+        SpiceDouble     **v2, SpiceInt *nd2)
     {
         *v2 = NULL;
         *nd2 = 0;
@@ -11939,7 +11941,7 @@ VECTORIZE_d_di_d_di__di(vlcomg, my_vlcomg_nomalloc)
 
     void my_vminug_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble      *v2, int      *nd2)
+        SpiceDouble      *v2, SpiceInt *nd2)
     {
         vminug_c(v1, ndim, v2);
         *nd2 = ndim;
@@ -12294,13 +12296,13 @@ VECTORIZE_dX_dX__RETURN_d(vrel, vrel_c)
 %apply (SpiceDouble RETURN_DOUBLE) {void my_vrelg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (ConstSpiceDouble *IN_ARRAY1, int DIM1)
-                          {(ConstSpiceDouble *v2, int nd2)};
+%apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                          {(ConstSpiceDouble *v2, SpiceInt nd2)};
 
 %inline %{
     SpiceDouble my_vrelg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int nd2)
+        ConstSpiceDouble *v2, SpiceInt nd2)
     {
         if (!my_assert_eq(ndim, nd2, "vrelg",
             "Vector dimension mismatch in vrelg: "
@@ -12416,14 +12418,14 @@ VECTORIZE_d_dX__dN(vscl, vscl_c, 3)
 %apply (void RETURN_VOID) {void my_vsclg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble  *v1, SpiceInt ndim)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v2, int *nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v2, SpiceInt *nd2)};
 
 %inline %{
     void my_vsclg_c(
         SpiceDouble      s,
         ConstSpiceDouble *v1, SpiceInt  ndim,
-        SpiceDouble     **v2, int *nd2)
+        SpiceDouble     **v2, SpiceInt *nd2)
     {
         *v2 = NULL;
         *nd2 = 0;
@@ -12445,7 +12447,7 @@ VECTORIZE_d_dX__dN(vscl, vscl_c, 3)
     void my_vsclg_nomalloc(
         SpiceDouble s,
         ConstSpiceDouble   *v1, SpiceInt  ndim,
-        SpiceDouble        *v2, int       *nd2)
+        SpiceDouble        *v2, SpiceInt  *nd2)
     {
         vsclg_c(s, v1, ndim, v2);
         *nd2 = ndim;
@@ -12518,13 +12520,13 @@ VECTORIZE_dX_dX__RETURN_d(vsep, vsep_c)
 %apply (SpiceDouble RETURN_DOUBLE) {SpiceDouble my_vsepg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                                    {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (ConstSpiceDouble *IN_ARRAY1, int  DIM1)
-                                   {(ConstSpiceDouble *v2, int nd2)};
+%apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt  DIM1)
+                                   {(ConstSpiceDouble *v2, SpiceInt nd2)};
 
 %inline %{
     SpiceDouble my_vsepg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int nd2)
+        ConstSpiceDouble *v2, SpiceInt nd2)
     {
         if (!my_assert_eq(ndim, nd2, "vsepg",
             "Vector dimension mismatch in vsepg: "
@@ -12601,16 +12603,16 @@ VECTORIZE_dX_dX__dN(vsub, vsub_c, 3)
 %apply (void RETURN_VOID) {void my_vsubg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                           {(ConstSpiceDouble  *v1, SpiceInt ndim)};
-%apply (ConstSpiceDouble   *IN_ARRAY1, int DIM1)
-                          {(ConstSpiceDouble  *v2, int nd2)};
-%apply (SpiceDouble **OUT_ARRAY1, int *SIZE1)
-                          {(SpiceDouble **v3, int *nd3)};
+%apply (ConstSpiceDouble   *IN_ARRAY1, SpiceInt DIM1)
+                          {(ConstSpiceDouble  *v2, SpiceInt nd2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                          {(SpiceDouble **v3, SpiceInt *nd3)};
 
 %inline %{
     void my_vsubg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int      nd2,
-        SpiceDouble     **v3, int     *nd3)
+        ConstSpiceDouble *v2, SpiceInt nd2,
+        SpiceDouble     **v3, SpiceInt *nd3)
     {
         *v3 = NULL;
         *nd3 = 0;
@@ -12635,8 +12637,8 @@ VECTORIZE_dX_dX__dN(vsub, vsub_c, 3)
 
     void my_vsubg_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        ConstSpiceDouble *v2, int      nd2,
-        SpiceDouble      *v3, int     *nd3)
+        ConstSpiceDouble *v2, SpiceInt nd2,
+        SpiceDouble      *v3, SpiceInt *nd3)
     {
         if (!my_assert_eq(ndim, nd2, "vsubg",
             "Vector dimension mismatch in vsubg: "
@@ -12717,18 +12719,18 @@ VECTORIZE_dX_dXY_dX__RETURN_d(vtmv, vtmv_c)
 
 %rename (vtmvg) my_vtmvg_c;
 %apply (SpiceDouble RETURN_DOUBLE) {SpiceDouble my_vtmvg_c};
-%apply (SpiceDouble *IN_ARRAY1, int DIM1)
-                    {(SpiceDouble *v1, int nrow1)};
-%apply (SpiceDouble *IN_ARRAY1, int DIM1)
-                    {(SpiceDouble *v2, int ncol2)};
+%apply (SpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                    {(SpiceDouble *v1, SpiceInt nrow1)};
+%apply (SpiceDouble *IN_ARRAY1, SpiceInt DIM1)
+                    {(SpiceDouble *v2, SpiceInt ncol2)};
 %apply (SpiceDouble *IN_ARRAY2, SpiceInt DIM1, SpiceInt DIM2)
                     {(SpiceDouble *matrix, SpiceInt nrow, SpiceInt ncol)};
 
 %inline %{
     SpiceDouble my_vtmvg_c(
-        SpiceDouble *v1, int nrow1,
+        SpiceDouble *v1, SpiceInt nrow1,
         SpiceDouble *matrix, SpiceInt nrow, SpiceInt ncol,
-        SpiceDouble *v2, int ncol2)
+        SpiceDouble *v2, SpiceInt ncol2)
     {
         if (!my_assert_eq(nrow1, nrow, "vtmvg",
             "Array dimension mismatch in vtmvg: "
@@ -13065,13 +13067,13 @@ VECTORIZE_dXY__dMN(xpose, xpose_c, 3, 3)
 %apply (void RETURN_VOID) {void my_xposeg_c};
 %apply (ConstSpiceDouble *IN_ARRAY2, SpiceInt DIM1, SpiceInt DIM2)
                 {(ConstSpiceDouble *matrix, SpiceInt nrow, SpiceInt ncol)};
-%apply (SpiceDouble **OUT_ARRAY2, int *SIZE1, int *SIZE2)
-                {(SpiceDouble **xposem, int *nrow1,  int *nc1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                {(SpiceDouble **xposem, SpiceInt *nrow1,  SpiceInt *nc1)};
 
 %inline %{
     void my_xposeg_c(
-        ConstSpiceDouble *matrix, SpiceInt nrow, SpiceInt  ncol,
-        SpiceDouble     **xposem, int    *nrow1,     int *nc1)
+        ConstSpiceDouble *matrix, SpiceInt nrow,   SpiceInt  ncol,
+        SpiceDouble     **xposem, SpiceInt *nrow1, SpiceInt *nc1)
     {
         *xposem = NULL;
         *nrow1 = 0;
@@ -13094,7 +13096,7 @@ VECTORIZE_dXY__dMN(xpose, xpose_c, 3, 3)
 
     void my_xposeg_nomalloc(
         ConstSpiceDouble *matrix, SpiceInt nrow, SpiceInt  ncol,
-        SpiceDouble      *xposem, int    *nrow1,     int *nc1)
+        SpiceDouble      *xposem, SpiceInt *nrow1, SpiceInt *nc1)
     {
         xposeg_c(matrix, nrow, ncol, xposem);
         *nrow1 = ncol;

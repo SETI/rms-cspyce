@@ -356,7 +356,8 @@ def handle_one_function(out, records):
                                                 # declaration
                         assert inouts[name] == inout
                         if argtype2:
-                            assert types[name] == argtype2
+                            if types[name] != argtype2:
+                                raise ValueError(f"In {func}, expected {argtype2} but got {types[name]}")
                     else:
                         if name in types:
                             validate_type_change(argtype, types[name],
