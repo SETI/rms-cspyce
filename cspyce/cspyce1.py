@@ -1241,13 +1241,12 @@ for name in CSPYCE_BASENAMES:
 #     globals()[sename] = efunc
 #     globals()[vfname] = vfunc
 
-
 # These are temporary variables used by cspyce1.py whose values happen to be
 # functions with an ARGNAMES property.  We don't want cspyce2.py to think that
-# these are actual functions it needs to know about.  So e remove them from the
+# these are actual functions it needs to know about.  So we remove them from the
 # namespace.
-
 del func, efunc, vfunc, vefunc
+
 
 ################################################################################
 # Set defaults at initialization
