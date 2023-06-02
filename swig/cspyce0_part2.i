@@ -3411,36 +3411,32 @@ extern void dski02_c(
 * spaixi     O   Integer component of spatial index.
 ***********************************************************************/
 
-%rename (dskmi2) my_dskmi2_c;
-%apply (void RETURN_VOID) {void my_dskmi2_c};
+%rename (dskmi2) dskmi2_c;
+%apply (void RETURN_VOID) {void dskmi2_c};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                     {(SpiceInt nv, ConstSpiceDouble vrtces[][3])};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                     {(SpiceInt np, ConstSpiceInt plates[][3])};
-%apply (SpiceDouble OUT_ARRAY1[ANY])
-                    {SpiceDouble spaixd[SPICE_DSK02_SPADSZ]};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt spaixi[SPICE_DSK02_SPAISZ]};
+%apply (SpiceInt SIZED_INOUT_ARRAY2[][ANY]) {SpiceInt work[][2]};
+%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble spaixd[SPICE_DSK02_SPADSZ]};
+%apply (SpiceInt SIZED_INOUT_ARRAY1[]) {SpiceInt spaixi[]};
 
-%inline %{
-    void my_dskmi2_c(
-        SpiceInt         nv, ConstSpiceDouble vrtces[][3],
-        SpiceInt         np, ConstSpiceInt    plates[][3],
-        SpiceDouble      finscl,
-        SpiceInt         corscl,
-        SpiceBoolean     makvtl,
-        SpiceDouble      spaixd[SPICE_DSK02_SPADSZ],
-        SpiceInt         spaixi[SPICE_DSK02_SPAISZ])
-    {
-        SpiceInt voxpsz = SPICE_DSK02_MAXVXP;
-        SpiceInt voxlsz = SPICE_DSK02_MXNVLS;
-        SpiceInt worksz = SPICE_DSK02_MAXCEL;
-        SpiceInt spxisz = SPICE_DSK02_SPAISZ;
-        SpiceInt work[SPICE_DSK02_MAXCEL][2];
-
-        dskmi2_c(nv, vrtces, np, plates, finscl, corscl, worksz, voxpsz, voxlsz,
-                 makvtl, spxisz, work, spaixd, spaixi);
-    }
-%}
+extern void dskmi2_c (
+        SpiceInt            nv,
+        ConstSpiceDouble    vrtces[][3],
+        SpiceInt            np,
+        ConstSpiceInt       plates[][3],
+        SpiceDouble         finscl,
+        SpiceInt            corscl,
+        SpiceInt            worksz,
+        SpiceInt            voxpsz,
+        SpiceInt            voxlsz,
+        SpiceBoolean        makvtl,
+        SpiceInt            spxisz,
+        SpiceInt            work[][2],
+        SpiceDouble         spaixd[SPICE_DSK02_SPADSZ],
+        SpiceInt            spaixi[]
+);
 
 /***********************************************************************
 * -Procedure dskn02_c ( DSK, type 2, compute normal vector for plate )
@@ -3584,15 +3580,17 @@ extern void dskopn_c(
 %rename (dskp02) dskp02_c;
 %apply (void RETURN_VOID) {void dskp02_c};
 %apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt room, SpiceInt *n, SpiceInt plates[NPLATES][3])};
+%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt SIZED_INOUT_ARRAY2[][ANY])
+                    {(SpiceInt room, SpiceInt *n, SpiceInt plates[][3])};
 
 extern void dskp02_c(
         SpiceInt      handle,
         ConstSpiceInt dladsc[DLASIZE],
         SpiceInt      start,
-        SpiceInt      room, SpiceInt *n, SpiceInt plates[NPLATES][3]
+        SpiceInt      room, SpiceInt *n, SpiceInt plates[][3]
 );
+
+//CSPYCE_DEFAULT:plates:100
 
 /***********************************************************************
 * -Procedure dskrb2_c ( DSK, determine range bounds for plate set )
@@ -3743,15 +3741,17 @@ extern void dskstl_c(
 %rename (dskv02) dskv02_c;
 %apply (void RETURN_VOID) {void dskv02_c};
 %apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt OUT_ARRAY2[ANY][ANY])
-                    {(SpiceInt room, SpiceInt *n, SpiceDouble vrtces[NPLATES][3])};
+%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceDouble SIZED_INOUT_ARRAY2[][ANY])
+                    {(SpiceInt room, SpiceInt *n, SpiceDouble vrtces[][3])};
 
 extern void dskv02_c(
         SpiceInt      handle,
         ConstSpiceInt dladsc[DLASIZE],
         SpiceInt      start,
-        SpiceInt      room, SpiceInt *n, SpiceDouble vrtces[NPLATES][3]
+        SpiceInt      room, SpiceInt *n, SpiceDouble vrtces[][3]
 );
+
+//CSPYCE_DEFAULT:vrtces:100
 
 /***********************************************************************
 * -Procedure dskw02_c ( DSK, write type 2 segment )

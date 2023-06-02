@@ -67,8 +67,6 @@ HEADER = """
 import cspyce.cspyce1 as cs1
 
 def __copy_attributes_from(function, old_function):
-    if old_function.__defaults__:
-        assert function.__defaults__ == old_function.__defaults__
     for key, value in vars(old_function).items():
         if callable(value):
             value = globals()[value.__name__]

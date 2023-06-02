@@ -25,6 +25,29 @@ INTERACTIVE = not hasattr(__main__, '__file__')
 # GET/SET handling
 ################################################################################
 
+## Helpers
+
+def __delete_final_return_values(func, count=1):
+    name = func.__name__
+    return_names = CSPYCE_RETNAMES[name][-count:]
+    del CSPYCE_RETURNS[name][-count:]
+    del CSPYCE_RETNAMES[name][-count:]
+    for return_name in return_names:
+        del CSPYCE_DEFINITIONS[name][return_name]
+
+def __delete_final_arguments(func, count=1):
+    name = func.__name__
+    del CSPYCE_SIGNATURES[name][-count:]
+    del CSPYCE_ARGNAMES[name][-count:]
+    defaults = CSPYCE_DEFAULTS.get(name)
+    if defaults:
+        if len(defaults) <= count:
+            del CSPYCE_DEFAULTS[name]
+        else:
+            print(f"Changing defaults of {func}")
+            CSPYCE_DEFAULTS[name] = CSPYCE_DEFAULTS[name][:count]
+
+
 def erract(op='', action=''):
     """Allow special argument handling:
         erract()            -> erract('GET', '')
@@ -790,9 +813,7 @@ def dafec(handle):
             return records
 
 # Update the call signature for help
-del CSPYCE_RETURNS['dafec'][1]
-del CSPYCE_RETNAMES['dafec'][1]
-del CSPYCE_DEFINITIONS['dafec']['done']
+__delete_final_return_values(dafec)
 
 def dasec(handle):
     records = []
@@ -803,9 +824,7 @@ def dasec(handle):
             return records
 
 # Update the call signature for help
-del CSPYCE_RETURNS['dasec'][1]
-del CSPYCE_RETNAMES['dasec'][1]
-del CSPYCE_DEFINITIONS['dasec']['done']
+__delete_final_return_values(dasec)
 
 ################################################################################
 # These functions need to be passed a fixed-size array that's based on the value of
@@ -839,8 +858,7 @@ def dasrdc(handle, first, last, bpos, epos, data=None):
     result = cspyce0.dasrdc(handle, first, last, bpos, epos, array.itemsize, array)
     return [item.decode() for item in result]
 
-del CSPYCE_SIGNATURES['dasrdc'][5]
-del CSPYCE_ARGNAMES['dasrdc'][5]
+__delete_final_arguments(dasrdc)
 
 def _create_das_char_array(data, epos):
     byte_data = [string.encode('utf-8') for string in data]
@@ -850,20 +868,23 @@ def _create_das_char_array(data, epos):
 def dasrdi(handle, first, last):
     return cspyce0.dasrdi(handle, first, last, last - first + 1)
 
-del CSPYCE_SIGNATURES['dasrdi'][-1]
-del CSPYCE_ARGNAMES['dasrdi'][-1]
+__delete_final_arguments(dasrdi)
 
 def dasrdd(handle, first, last):
     return cspyce0.dasrdd(handle, first, last, last - first + 1)
 
-del CSPYCE_SIGNATURES['dasrdd'][-1]
-del CSPYCE_ARGNAMES['dasrdd'][-1]
+__delete_final_arguments(dasrdd)
 
 def dafgda(handle, begin, end):
     return cspyce0.dafgda(handle, begin, end, end - begin + 1)
 
-del CSPYCE_SIGNATURES['dafgda'][-1]
-del CSPYCE_ARGNAMES['dafgda'][-1]
+__delete_final_arguments(dafgda)
+
+def dskmi2(vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, makvtl, spxisz):
+    return cspyce0.dskmi2(vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, makvtl, spxisz,
+                          worksz, spxisz)
+
+__delete_final_arguments(dskmi2, count=2)
 
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in
