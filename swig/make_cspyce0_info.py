@@ -397,7 +397,7 @@ def handle_one_function(out, records):
                     raise ValueError('Invalid comment: ' + key + ':' + record)
 
     except IndexError:
-        raise ValueError("Queue seems to have ended early!")
+        raise ValueError(f"Queue seems to have ended early for function {func}!")
 
     # Preserve the return name, if any
     if return_name and return_name not in python_args:
