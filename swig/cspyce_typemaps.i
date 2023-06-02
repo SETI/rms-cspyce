@@ -827,6 +827,34 @@ PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int ty
         return NULL;
     }
 }
+
+#if 0
+// The are useful functions for when we need to try and debug the generated code.
+// Leaving them out of the build, but they can be added whenever necessary.
+void debug_show_array(const char* name, PyArrayObject *array, FILE* file) {
+     int typenum = PyArray_TYPE(array);
+     int dimensions = PyArray_NDIM(array);
+     npy_intp* shape = PyArray_SHAPE(array);
+     void* data = PyArray_DATA(array);
+     char *typename = typenum == NPY_INT ? "int" : typenum == NPY_DOUBLE ? "double" : "??";
+
+     fprintf(file, "%6s: array=%p data=%p %s", name, array, data, typename);
+     if (dimensions == 0) {
+         fprintf(file, "[()]\n");
+     } else {
+         for (int i = 0; i < dimensions; ++i) {
+             fprintf(file, "%s%ld", (i == 0 ? "[" : ", "), shape[i]);
+         }
+         fprintf(file, "]\n");
+     }
+}
+
+void debug_print_object(PyObject *object, FILE* file) {
+    PyObject_Print(object, file, 0);
+    fprintf(file, "\n");
+
+}
+#endif
 %}
 
 // Copy standard typemaps for Spice types

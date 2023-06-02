@@ -115,7 +115,3 @@ def test_dskv02():
         ],
     )
     cs.dascls(handle)
-
-if __name__ == '__main__':
-    # test_dskw02_dskrb2_dskmi2()
-    test_dskv02()

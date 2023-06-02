@@ -3418,10 +3418,9 @@ extern void dski02_c(
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                     {(SpiceInt np, ConstSpiceInt plates[][3])};
 %apply (SpiceInt SIZED_INOUT_ARRAY2[][ANY]) {SpiceInt work[][2]};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble spaixd[SPICE_DSK02_SPAISZ]};
+%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble spaixd[SPICE_DSK02_SPADSZ]};
 %apply (SpiceInt SIZED_INOUT_ARRAY1[]) {SpiceInt spaixi[]};
 
-// SPAISZ or SPADSZ ?? No idea.
 extern void dskmi2_c (
         SpiceInt            nv,
         ConstSpiceDouble    vrtces[][3],

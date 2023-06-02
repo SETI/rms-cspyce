@@ -2,6 +2,7 @@ import pytest
 import inspect
 
 import cspyce.cspyce1 as cspyce1
+import cspyce.cspyce2 as cspyce2
 
 """
 This file contains tests of the build process
@@ -47,4 +48,15 @@ def test_sane_argnames_and_signatures():
     if errors:
         error_message = "These functions may have bad Typemaps:\n" + "\n".join(errors)
         pytest.fail(error_message)
+
+
+def test_cspyce2_default_arguments():
+    # Test that every function in cspyce2 has a corresponding function in cspyce1, and
+    # that the default arguments match.
+    for name, func in vars(cspyce2).items():
+        if callable(func) and hasattr(func, 'ARGNAMES'):
+            old_func = vars(cspyce1).get(name)
+            assert old_func is not None, f"{name} not defined in cspyce1"
+            assert func.__defaults__ == old_func.__defaults__, f"{name} has unexpected defaults"
+
 
