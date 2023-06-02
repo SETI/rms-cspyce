@@ -867,7 +867,7 @@ def test_dskd02():
     cs.dascls(handle)
 
 
-def fail_dskgd():
+def test_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
