@@ -53,6 +53,7 @@ def _get_test_output_directory():
 KERNEL_DIR = _get_kernel_directory()
 TEST_FILE_DIR = _get_test_output_directory()
 
+
 def get_kernel_name_from_url(url: str) -> str:
     return url.split("/")[-1]
 
@@ -62,10 +63,10 @@ def get_path_from_url(url: str) -> str:
 
 
 def cleanup_file(path: str) -> None:
-# =============================================================================
-#     if os.path.exists(path):
-#         os.remove(path)
-# =============================================================================
+    # =============================================================================
+    #     if os.path.exists(path):
+    #         os.remove(path)
+    # =============================================================================
     pass
 
 
@@ -107,7 +108,7 @@ class ExtraKernels:
     voyagerSclk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/vg200022.tsc"
     voyagerSclk_md5 = "4bcaf22788efbd86707c4b3c4d63c0c3"
     earthTopoTf_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/earth_topo_050714.tf"
-    earthTopoTf_md5 = "fbde06c5abc5da969db984bb4ce5e6e0"
+    earthTopoTf_md5 = "0c152e057d753a4c550d31699662be4b"
     earthStnSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/earthstns_itrf93_050714.bsp"
     earthStnSpk_md5 = "a37d8d5e3023f0df7ead0e6b40d6a5b6"
     earthHighPerPck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/earth_031228_231229_predict.bpc"
@@ -119,7 +120,7 @@ class ExtraKernels:
     mroFk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mro_v15.tf"
     mroFk_md5 = "a938c271be63e0e5aa2ec86db89af109"
     geophysical_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/geophysical.ker"
-    geophysical_md5 = "9a565ded819a9f0c6423b46f04e000db"
+    geophysical_md5 = "caff390a00897d09a1f9cdeae0028e3d"
     mro2007sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/mro_psp4_ssd_mro95a_sub.bsp"
     mro2007sub_md5 = "8ed34eb77b21ac611f4680806677edfb"
     spk430sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/de430sub.bsp"
@@ -194,7 +195,8 @@ def get_kernel(url: str, provided_hash: str = None):
     kernel_file = os.path.join(KERNEL_DIR, kernel_name)
     # does not download if files are present, which allows us to potentially cache kernels
     if not os.path.isfile(kernel_file):
-        attempt_download(url, kernel_name, kernel_file, 5, provided_hash=provided_hash)
+        attempt_download(url, kernel_name, kernel_file,
+                         5, provided_hash=provided_hash)
 
 
 def attempt_download(
@@ -211,7 +213,7 @@ def attempt_download(
         temp_filename = target_file_name + ".download"
         try:
             with requests.get(url, timeout=10, stream=True) as request, \
-                  open(temp_filename, "wb") as current_kernel:
+                    open(temp_filename, "wb") as current_kernel:
                 for data in request.iter_content(chunk_size=(1 << 16)):
                     current_kernel.write(data)
                     if hasher:
@@ -242,7 +244,7 @@ def attempt_download(
     if current_attempt >= num_attempts:
         raise Exception(f"Error Downloading kernel: {kernel_name}, "
                         f"check if kernel exists at url: {url}"
-        )
+                        )
 
 
 def get_standard_kernels() -> None:
@@ -263,7 +265,8 @@ def get_extra_test_kernels() -> None:
     get_kernel(ExtraKernels.voyagerSclk_url, ExtraKernels.voyagerSclk_md5)
     get_kernel(ExtraKernels.earthTopoTf_url, ExtraKernels.earthTopoTf_md5)
     get_kernel(ExtraKernels.earthStnSpk_url, ExtraKernels.earthStnSpk_md5)
-    get_kernel(ExtraKernels.earthHighPerPck_url, ExtraKernels.earthHighPerPck_md5)
+    get_kernel(ExtraKernels.earthHighPerPck_url,
+               ExtraKernels.earthHighPerPck_md5)
     get_kernel(ExtraKernels.phobosDsk_url, ExtraKernels.phobosDsk_md5)
     get_kernel(ExtraKernels.marsSpk_url, ExtraKernels.marsSpk_md5)
     get_kernel(ExtraKernels.mroFk_url, ExtraKernels.mroFk_md5)
