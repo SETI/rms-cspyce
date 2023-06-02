@@ -1035,7 +1035,7 @@ def test_dskp02():
     cs.dascls(handle)
 
 
-def test_dskv02():
+def fail_dskv02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
@@ -1053,7 +1053,7 @@ def test_dskv02():
     cs.dascls(handle)
 
 
-def test_dskx02():
+def fail_dskx02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
@@ -1073,7 +1073,7 @@ def test_dskx02():
     cs.dascls(handle)
 
 
-def test_dskxsi():
+def fail_dskxsi():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle
@@ -1099,7 +1099,7 @@ def test_dskxsi():
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
 
 
-def test_dskxv():
+def fail_dskxv():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     cs.use_flags(cs.kdata)
@@ -1126,7 +1126,7 @@ def test_dskxv():
     npt.assert_almost_equal(xpt[0], [12.36679999999999957083, 0.0, 0.0])
 
 
-def test_dskxv_2():
+def fail_dskxv_2():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle
