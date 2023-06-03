@@ -680,11 +680,6 @@ class TestReturnValueThroughOutvar:
         assert type(temp) == int
         assert temp == 5
 
-    def test_outvar_float(self):
-        result = ts.outvar_set_from_var_float(10)
-        assert type(result) is float
-        assert result == 10
-
     def test_outvar_double(self):
         result = ts.outvar_set_from_var_double(10)
         assert type(result) is float

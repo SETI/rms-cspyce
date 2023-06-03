@@ -863,11 +863,6 @@ void debug_print_object(PyObject *object, FILE* file) {
 %apply double {SpiceDouble, ConstSpiceDouble};
 %apply float {SpiceFloat, ConstSpiceFloat};
 
-%apply int *OUTPUT {SpiceInt *OUTPUT};
-%apply char *OUTPUT {SpiceChar *OUTPUT}
-%apply double *OUTPUT {SpiceDouble *OUTPUT};
-%apply float *OUTPUT {SpiceFloat *OUTPUT};
-
 /*******************************************************************************
 * 1-D numeric typemaps for input
 *
@@ -1962,15 +1957,23 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(in)
     (Type *SIZED_INOUT_ARRAY2[ANY])
-            (PyArrayObject* pyarr=NULL),
+            (PyArrayObject* pyarr=NULL)
+{
+//      $1_type $1_name
+//      (Type *SIZED_INOUT_ARRAY2[ANY])
+
+    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim0)
+    $1 = PyArray_DATA(pyarr);
+}
+
+%typemap(in)
     (Type SIZED_INOUT_ARRAY2[][ANY])
             (PyArrayObject* pyarr=NULL)
 {
 //      $1_type $1_name
-//     (Type *SIZED_INOUT_ARRAY2[ANY]), (Type SIZED_INOUT_ARRAY2[][ANY])
-//
+//      (Type SIZED_INOUT_ARRAY2[][ANY])
 
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim0 $1_dim1)
+    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim1)
     $1 = PyArray_DATA(pyarr);
 }
 
@@ -1982,6 +1985,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 {
 //      $1_type $1_name, $2_type $2_name, $3_type $3_name
 //     (Type *SIZED_INOUT_ARRAY2[ANY])
+
     dimsize[0] = 0;
     dimsize[1] = $3_dim1;
     CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim0$3_dim1)
@@ -2695,7 +2699,7 @@ TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
 *       (SpiceChar *CONST_STRING): The string is taken as input. It is not copied so
 *               one must ensure that it does not get changed by the C function.
 *
-*       (SpiceChar IN_STRING): If the C function accepts a single SpiceCharacter, not a
+*       (SpiceChar IN_STRING): If the C function accepts a single SpiceChar, not a
 *               pointer to a string, any you wish to provide the Python input
 *               as a string.
 *******************************************************************************/
@@ -2802,7 +2806,7 @@ TYPEMAP_IN(ConstSpiceChar)
 *               length is passed to the function.
 *
 *       ((SpiceChar OUT_STRING[ANY], SpiceInt DIM1): two arguments to the C function are
-*               consumed; the dimensioned length of the the SpiceCharacter string
+*               consumed; the dimensioned length of the the SpiceChar string
 *               (which is one greater than the maximum allowed string length)
 *               is passed as the next argument after the SpiceChar* pointer.
 *
@@ -3220,7 +3224,6 @@ TYPEMAP_IN(ConstSpiceChar)
 //      (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $4_dim0, $4_dim1)
-    // foobar1
     $4 = buffer;                                                // ARRAY
     $1 = dimsize[0];                                            // DIM1
     $2 = dimsize[1];                                            // DIM2
@@ -3235,7 +3238,6 @@ TYPEMAP_IN(ConstSpiceChar)
 //      (SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $3_dim0, $3_dim1)
-
     $3 = buffer;                                                // ARRAY
     $1 = dimsize[1];                                            // DIM2
     $2 = &nstrings;                                             // NSTRINGS
@@ -3248,7 +3250,7 @@ TYPEMAP_IN(ConstSpiceChar)
 {
     CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer$argnum, nstrings$argnum, dimsize$argnum[1], list$argnum)
     $result = SWIG_Python_AppendOutput($result, list$argnum);
-    list$argnum = NULL; // foobar2
+    list$argnum = NULL;
 }
 
 %typemap(freearg)
@@ -3257,7 +3259,7 @@ TYPEMAP_IN(ConstSpiceChar)
     (SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 {
     PyMem_Free((void *) buffer$argnum);
-    Py_XDECREF(list$argnum); // foobar3
+    Py_XDECREF(list$argnum);
 }
 
 /*******************************************************
@@ -3285,7 +3287,7 @@ TYPEMAP_OUT(SpiceChar)
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
-        (Type value)
+        (Type value = 0)
 {
 //      $1_type $1_name
 //      (Type *OUTPUT)
@@ -3306,7 +3308,15 @@ TYPEMAP_OUT(SpiceChar)
 %enddef
 
 TYPEMAP_ARGOUT(SpiceBoolean, PyBool_FromLong(value$argnum))
-TYPEMAP_ARGOUT(PyObject*, (value$argnum))
+TYPEMAP_ARGOUT(SpiceInt,     PyInt_FromLong(value$argnum))
+TYPEMAP_ARGOUT(SpiceDouble,  PyFloat_FromDouble(value$argnum))
+TYPEMAP_ARGOUT(SpiceChar,    PyUnicode_FromStringAndSize(&value$argnum, 1))
+TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
+
+%typemap(freearg) (PyObject *OUTPUT)
+%{
+    Py_INCREF(value$argnum);
+%}
 
 #undef TYPEMAP_ARGOUT
 

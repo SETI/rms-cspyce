@@ -365,7 +365,7 @@ extern SpiceInt bsrchd_c(
         SpiceInt    ndim, ConstSpiceDouble *array
 );
 
-%inline %{
+%{
     SpiceInt my_bsrchd_vector(
         SpiceDouble value,
         ConstSpiceDouble *array, SpiceInt ndim)
@@ -1323,6 +1323,7 @@ extern void ckw03_c(
 
 %rename (ckw05) my_ckw05_c;
 %apply (void RETURN_VOID) {void my_ckw05_c};
+%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *subtyp};
 %apply (SpiceInt DIM1, ConstSpiceDouble *IN_ARRAY1)
                                      {(SpiceInt n, ConstSpiceDouble *sclkdp)};
 %apply (ConstSpiceDouble *IN_ARRAY2) {ConstSpiceDouble *packts};
@@ -1405,7 +1406,7 @@ extern void ckw03_c(
 extern void cmprss_c(
         SpiceChar      delim,
         SpiceInt       n,
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *input,
         SpiceInt       outlen, SpiceChar output[LONGMSGLEN]
 );
 
@@ -3829,8 +3830,11 @@ extern void dskv02_c(
 
 %rename (dskw02) dskw02_c;
 %apply (void RETURN_VOID) {void dskw02_c};
+%apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble corpar[]};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nv, ConstSpiceDouble vrtces[][3])};
 %apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY2[][ANY]) {(SpiceInt np, ConstSpiceInt plates[][3])};
+%apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble spaixd[]};
+%apply (ConstSpiceInt IN_ARRAY1[]) {ConstSpiceInt spaixi[]};
 
 extern void dskw02_c(
         SpiceInt         handle,
@@ -6157,19 +6161,21 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *gquant};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                 {(SpiceInt qnpars, SpiceInt ignore, ConstSpiceChar *qpnams)};
-%apply (ConstSpiceChar *IN_STRINGS) {ConstSpiceChar *qcpars};
+%apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
+                {(SpiceInt ignore2, SpiceInt ignore3, ConstSpiceChar *qcpars)};
 %apply (ConstSpiceDouble  *IN_ARRAY1) {ConstSpiceDouble  *qdpars};
 %apply (ConstSpiceInt     *IN_ARRAY1) {ConstSpiceInt     *qipars};
 %apply (ConstSpiceBoolean *IN_ARRAY1) {ConstSpiceBoolean *qlpars};
+%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar    *op};
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
                 {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 
 %inline %{
     void my_gfevnt_c(
-        SpiceDouble  step,
+        SpiceDouble       step,
         ConstSpiceChar    *gquant,
         SpiceInt          qnpars, SpiceInt ignore, ConstSpiceChar *qpnams,
-        ConstSpiceChar    *qcpars,
+        SpiceInt          ignore2, SpiceInt ignore3, ConstSpiceChar *qcpars,
         ConstSpiceDouble  *qdpars,
         ConstSpiceInt     *qipars,
         ConstSpiceBoolean *qlpars,
@@ -6490,6 +6496,7 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *back};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bshape};
+%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
@@ -8900,20 +8907,14 @@ extern void nthwd_c(
 %apply (void RETURN_VOID) {void my_orderc_c};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                 {(SpiceInt ndim, SpiceInt arrlen, ConstSpiceChar *array)};
-%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
+%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *iorder};
 
 %inline %{
     void my_orderc_c(
         SpiceInt ndim, SpiceInt arrlen, ConstSpiceChar *array,
-        SpiceInt *n,   SpiceInt **iorder)
+        SpiceInt *iorder)
     {
-        SpiceInt *iorder1 = my_int_malloc(ndim, "orderc");
-        if (!iorder1) return;
-
-        orderc_c(arrlen, array, ndim, iorder1);
-
-        *n = ndim;
-        *iorder = iorder1;
+        orderc_c(arrlen, array, ndim, iorder);
     }
 %}
 
@@ -8938,28 +8939,17 @@ extern void nthwd_c(
 * iorder     O   Order vector for array.
 ***********************************************************************/
 
-%rename (orderd) my_orderd_c;
-%apply (void RETURN_VOID) {void my_orderd_c};
+%rename (orderd) orderd_c;
+%apply (void RETURN_VOID) {void orderd_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                 {(ConstSpiceDouble *array, SpiceInt ndim)};
-%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1)
-                {(SpiceInt *n, SpiceInt **iorder)};
+%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *iorder};
 
-%inline %{
-    void my_orderd_c(
+extern void orderd_c(
         ConstSpiceDouble *array,
         SpiceInt         ndim,
-        SpiceInt         *n, SpiceInt **iorder)
-    {
-        SpiceInt *iorder1 = my_int_malloc(ndim, "orderd");
-        if (!iorder1) return;
-
-        orderd_c(array, ndim, iorder1);
-
-        *n = ndim;
-        *iorder = iorder1;
-    }
-%}
+        SpiceInt         *iorder
+);
 
 /***********************************************************************
 * -Procedure orderi_c ( Order of an integer array )
@@ -8982,26 +8972,16 @@ extern void nthwd_c(
 * iorder     O    Order vector for array.
 ***********************************************************************/
 
-%rename (orderi) my_orderi_c;
-%apply (void RETURN_VOID) {void my_orderi_c};
+%rename (orderi) orderi_c;
+%apply (void RETURN_VOID) {void orderi_c};
 %apply (ConstSpiceInt *IN_ARRAY1, SpiceInt DIM1)
                 {(ConstSpiceInt *array, SpiceInt ndim)};
-%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
+%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *iorder};
 
-%inline %{
-    void my_orderi_c(
+extern void orderi_c(
         ConstSpiceInt *array, SpiceInt ndim,
-        SpiceInt      *n,     SpiceInt **iorder)
-    {
-        SpiceInt *iorder1 = my_int_malloc(ndim, "orderi");
-        if (!iorder1) return;
-
-        orderi_c(array, ndim, iorder1);
-
-        *n = ndim;
-        *iorder = iorder1;
-    }
-%}
+        SpiceInt      *iorder
+);
 
 /***********************************************************************
 * -Procedure pckcls_c ( PCK, close file )
@@ -9746,8 +9726,8 @@ extern void reordl_c(
                 {(SpiceInt outlen, SpiceChar out[MESSAGELEN])};
 
 extern void repml_c(
-        ConstSpiceDouble *CONST_STRING,
-        ConstSpiceDouble *CONST_STRING,
+        ConstSpiceChar   *CONST_STRING,
+        ConstSpiceChar   *CONST_STRING,
         SpiceBoolean     value,
         SpiceChar        IN_STRING,
         SpiceInt         outlen, SpiceChar out[MESSAGELEN]
@@ -11746,7 +11726,9 @@ VECTORIZE_dX_i_dX_i__dMN(twovxf, twovxf_c, 6, 6)
         *p = result;
         *ndim2 = ndim;
     }
+%}
 
+%{
     void my_vprojg_nomalloc(
         ConstSpiceDouble *a, SpiceInt ndim,
         ConstSpiceDouble *b, SpiceInt ndim1, 

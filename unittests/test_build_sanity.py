@@ -1,3 +1,6 @@
+import re
+from pathlib import Path
+
 import pytest
 import inspect
 
@@ -58,5 +61,33 @@ def test_cspyce2_default_arguments():
             old_func = vars(cspyce1).get(name)
             assert old_func is not None, f"{name} not defined in cspyce1"
             assert func.__defaults__ == old_func.__defaults__, f"{name} has unexpected defaults"
+
+
+@pytest.mark.parametrize("filename", ["cspyce0_wrap.c", "typemap_samples_wrap.c"])
+def test_no_SWIG_ConvertPtr(filename):
+    # At this point, we have successfully removed all occurrences of
+    #      res<digits> = SWIG_ConvertPtr(......)
+    # from the generated swig code. This code is generally caused either because
+    # swig is generating "wrap" code for a function that it shouldn't be, or because
+    # there is a problem with a function's template. We should take a look if this
+    # ever reappears..
+    swig_file_path = Path("swig") / filename
+    if not swig_file_path.exists():
+        swig_file_path = Path("../swig") / filename
+    if not swig_file_path.exists():
+        return
+
+    bad_lines = []
+    regexp = re.compile(r"\s+res\d+ = SWIG_ConvertPtr\(")
+    with open(swig_file_path, "r") as file:
+        for lineno, line in enumerate(file, start=1):
+            if regexp.search(line):
+                bad_lines.append(lineno)
+    if bad_lines:
+        lines = ", ".join(map(str, bad_lines))
+        message = f"Probably a bad template. Call to SWIG_ConvertPtr found on " \
+                  f"line{'s' if len(lines) > 1 else ''} {lines} of {filename}."
+        pytest.fail(message)
+
 
 

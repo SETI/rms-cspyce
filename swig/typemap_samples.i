@@ -396,14 +396,12 @@ void return_sigerr(void);
 
 %{
     void outvar_set_from_var_int(SpiceInt in, SpiceInt* out) { *out = in; }
-    void outvar_set_from_var_float(float in, SpiceFloat* out) { *out = in; }
     void outvar_set_from_var_double(SpiceDouble in, SpiceDouble* out) { *out = in; }
     void outvar_set_from_var_char(SpiceChar in, SpiceChar *out) { *out = in; }
     void outvar_set_from_var_bool(SpiceInt in, SpiceBoolean *out) { *out = in; }
 %}
 
 void outvar_set_from_var_int(SpiceInt INPUT, SpiceInt* OUTPUT);
-void outvar_set_from_var_float(float INPUT, SpiceFloat* OUTPUT);
 void outvar_set_from_var_double(SpiceDouble INPUT, SpiceDouble* OUTPUT);
 void outvar_set_from_var_char(SpiceChar INPUT, SpiceChar *OUTPUT);
 void outvar_set_from_var_bool(SpiceInt INPUT, SpiceBoolean *OUTPUT);
