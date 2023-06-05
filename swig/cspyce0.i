@@ -14,7 +14,7 @@
 #define DAFSIZE 125     // size of DAF summary
 #define DASSIZE 256     // DAS size
 #define DLASIZE 8
-#define DSKSIZE 42
+#define DSKSIZE 21      // size in "doubles".  It's 6 integers then 18 doubles
 
 #define CLAUSES 100     // max number of expressions in a SELECT clause
 #define COLLEN 100      // max length of string columns or parsed items
