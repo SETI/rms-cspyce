@@ -713,5 +713,8 @@ class Test_SIZED_INOUT_ARRAY1:
         assert original_length == 20
         assert len(array) == 5
 
+    def test_double_array(self):
+        array = ts.sized_array_2d((11, 12))
+        assert array.shape == (11, 12)
 
 

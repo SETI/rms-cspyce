@@ -409,20 +409,24 @@ void outvar_set_from_var_bool(SpiceInt INPUT, SpiceBoolean *OUTPUT);
 %{
     void sized_array_plain(SpiceInt *array) {}
 
-    SpiceInt sized_array_no_resize(SpiceDouble *array, SpiceInt in_size) { return in_size; }
+    SpiceInt sized_array_no_resize(SpiceInt in_size, SpiceDouble *array) { return in_size; }
 
-    SpiceInt sized_array_with_resize(SpiceInt *array, SpiceInt in_size, SpiceInt *out_size, SpiceInt new_size) {
+    SpiceInt sized_array_with_resize(SpiceInt in_size, SpiceInt *out_size, SpiceInt *array, SpiceInt new_size) {
         *out_size = new_size > in_size ? in_size : new_size;
         return in_size;
     }
 
+    void sized_array_2d(SpiceInt *array) { }
 %}
 %apply (SpiceInt SIZED_INOUT_ARRAY1[]) {(SpiceInt *array)};
 void sized_array_plain(SpiceInt SIZED_INOUT_ARRAY1[]);
 
-%apply (SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1) {(SpiceInt *array, SpiceInt in_size)};
-SpiceInt sized_array_no_resize(SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1);
+%apply (SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1) {(SpiceInt in_size, SpiceInt *array)};
+SpiceInt sized_array_no_resize(SpiceInt DIM1, SpiceInt SIZED_INOUT_ARRAY1[]);
 
-%apply (SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1) {(SpiceInt *array, SpiceInt in_size, SpiceInt *out_size)};
-SpiceInt sized_array_with_resize(SpiceInt *array, SpiceInt in_size, SpiceInt *out_size, SpiceInt new_size);
+%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt SIZED_INOUT_ARRAY2[][ANY])
+        {(SpiceInt in_size, SpiceInt* out_size, SpiceInt array[][3])};
+SpiceInt sized_array_with_resize(SpiceInt in_size, SpiceInt *out_size, SpiceInt array[][3], SpiceInt new_size);
 
+%apply (SpiceInt SIZED_INOUT_ARRAY2[][]) {SpiceInt *array};
+void sized_array_2d(SpiceInt *array);
