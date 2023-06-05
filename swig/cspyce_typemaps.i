@@ -1978,14 +1978,11 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 }
 
 %typemap(in)
-     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY2[ANY])
-             (PyArrayObject* pyarr=NULL, SpiceInt dimsize[2]),
      (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
              (PyArrayObject* pyarr=NULL, SpiceInt dimsize[2])
 {
 //      $1_type $1_name, $2_type $2_name, $3_type $3_name
 //     (Type *SIZED_INOUT_ARRAY2[ANY])
-
     dimsize[0] = 0;
     dimsize[1] = $3_dim1;
     CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim0$3_dim1)
@@ -2014,8 +2011,8 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 // These are the typemaps that resize the output of a 2-dimensional array
 %typemap(argout)
-     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY2[ANY]),
      (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
+
 {
     npy_intp new_dim[2] = { dimsize$argnum[0], dimsize$argnum[1]};
     HANDLE_RESIZE(pyarr$argnum, new_dim)
@@ -2038,7 +2035,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr$argnum = NULL;
 }
 
-%typemap(free)
+%typemap(freearg)
     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1),
     (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1),
     (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1, SpiceInt *SIZE1),
@@ -2054,11 +2051,10 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY2[][ANY]),
     (Type *SIZED_INOUT_ARRAY2[ANY]),
     (Type SIZED_INOUT_ARRAY2[][ANY]),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY2[ANY]),
     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
-{
+%{
     Py_XDECREF(pyarr$argnum);
-}
+%}
 
 %enddef
 
