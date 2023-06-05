@@ -1985,7 +1985,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //     (Type *SIZED_INOUT_ARRAY2[ANY])
     dimsize[0] = 0;
     dimsize[1] = $3_dim1;
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim0$3_dim1)
+    CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim1)
     $1 = PyArray_DIM(pyarr, 0);
     $2 = &dimsize[0];
     $3 = PyArray_DATA(pyarr);
