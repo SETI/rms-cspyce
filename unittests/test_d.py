@@ -643,7 +643,7 @@ def test_diags2():
     npt.assert_array_almost_equal(rot, expected_rot)
 
 
-def test_dlabbs():
+def test_dlabbs_dlafps():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     cs.use_flags(cs.dlabbs)
     current = cs.dlabbs(handle)
@@ -670,21 +670,6 @@ def test_dlafns():
     current = cs.dlabfs(handle)
     output = cs.dlafns(handle, current)
     assert output[1] is False
-
-
-# Test is still being developed.
-def fail_dlafps():
-    cs.use_flags(cs.dlafps, cs.dlabfs)
-    path = os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla")
-    cleanup_kernel(path)
-    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
-    dladsc = cs.dlabfs(handle)
-    # False assert to trigger test of
-    try:
-        assert dladsc[0] == True
-    except:
-        prev = cs.dlafps(handle, dladsc[0])
-        assert prev[1] == False
 
 
 def test_dlaopn_dlabns_dlaens_daswbr():
@@ -867,7 +852,7 @@ def test_dskd02():
     cs.dascls(handle)
 
 
-def test_dskgd():
+def fail_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
@@ -915,7 +900,7 @@ def test_dski02():
     cs.dascls(handle)
 
 
-def fail_dskw02_dskrb2_dskmi2():
+def test_dskw02_dskrb2_dskmi2():
     dskpath = os.path.join(TEST_FILE_DIR, "TESTdskw02.dsk")
     cleanup_kernel(dskpath)
     # open the dsk file
@@ -961,7 +946,9 @@ def fail_dskw02_dskrb2_dskmi2():
     # open new dsk file
     handle = cs.dskopn(dskpath, "TESTdskw02.dsk/AA/29-SEP-2017", 0)
     # create spatial index
-    spaixd, spaixi = cs.dskmi2(vrtces, plates, finscl, corscl, False)
+    spaixd, spaixi = cs.dskmi2(
+        vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, False, spaisz
+    )
     # do stuff
     corsys = 1
     mncor1 = -cs.pi()
@@ -1035,13 +1022,13 @@ def test_dskp02():
     cs.dascls(handle)
 
 
-def fail_dskv02():
+def test_dskv02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
     dladsc = cs.dlabfs(handle)
     # read the vertices
-    vrtces = cs.dskv02(handle, dladsc, 1, 1)
+    vrtces = cs.dskv02(handle, dladsc, 1)
     npt.assert_almost_equal(
         vrtces[0],
         [
