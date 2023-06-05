@@ -863,11 +863,6 @@ void debug_print_object(PyObject *object, FILE* file) {
 %apply double {SpiceDouble, ConstSpiceDouble};
 %apply float {SpiceFloat, ConstSpiceFloat};
 
-%apply int *OUTPUT {SpiceInt *OUTPUT};
-%apply char *OUTPUT {SpiceChar *OUTPUT}
-%apply double *OUTPUT {SpiceDouble *OUTPUT};
-%apply float *OUTPUT {SpiceFloat *OUTPUT};
-
 /*******************************************************************************
 * 1-D numeric typemaps for input
 *
@@ -1838,91 +1833,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 %define TYPEMAP_SIZED_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
 
 /*******************************************************
-*  (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
-*  (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1)
-*******************************************************/
-
-%typemap(in)
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
-        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1]),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1)
-        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1])
-{
-//      $1_type $1_name, $2_type $2_name, $3_type $3_name
-//     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
-
-    CREATE_SIZED_INOUT_ARRAY1(Typecode)
-
-    dimsize[0] = 0;
-    $1 = PyArray_DATA(pyarr);
-    $2 = PyArray_DIM(pyarr, 0);
-    $3 = dimsize;
-}
-
-/*******************************************************
-* (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
-* (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1)
-*******************************************************/
-
-%typemap(in)
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
-        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1]),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1)
-        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1])
-{
-//      $1_type $1_name, $2_type $2_name, $3_type $3_name
-//    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1)
-
-    CREATE_SIZED_INOUT_ARRAY1(Typecode)
-
-    dimsize[0] = 0;
-    $1 = PyArray_DIM(pyarr, 0);
-    $2 = PyArray_DATA(pyarr);
-    $3 = dimsize;
-}
-
-/*******************************************************
- *  (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
- *  (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
-*******************************************************/
-
-%typemap(in)
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
-        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1]),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[])
-        (PyArrayObject* pyarr=NULL, SpiceInt dimsize[1])
-{
-//      $1_type $1_name, $2_type $2_name, $3_type $3_name
-//     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1)
-
-    CREATE_SIZED_INOUT_ARRAY1(Typecode)
-
-    dimsize[0] = 0;
-    $1 = PyArray_DIM(pyarr, 0);
-    $2 = dimsize;
-    $3 = PyArray_DATA(pyarr);
-}
-/*******************************************************
- *  (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1)
- *  (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1)
-*******************************************************/
-
-%typemap(in)
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1)
-            (PyArrayObject* pyarr=NULL),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1)
-            (PyArrayObject* pyarr=NULL)
-{
-//      $1_type $1_name, $2_type $2_name, $3_type $3_name
-//     (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1)
-
-    CREATE_SIZED_INOUT_ARRAY1(Typecode)
-
-    $1 = PyArray_DATA(pyarr);
-    $2 = PyArray_DIM(pyarr, 0);
-}
-
-/*******************************************************
  *  (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
  *  (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[])
 *******************************************************/
@@ -1935,7 +1845,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 {
 //      $1_type $1_name, $2_type $2_name
 //     (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
-
     CREATE_SIZED_INOUT_ARRAY1(Typecode)
 
     $1 = PyArray_DIM(pyarr, 0);
@@ -1955,28 +1864,48 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 {
 //      $1_type $1_name
 //     (Type *SIZED_INOUT_ARRAY1)
-
     CREATE_SIZED_INOUT_ARRAY1(Typecode)
     $1 = PyArray_DATA(pyarr);
 }
 
 %typemap(in)
     (Type *SIZED_INOUT_ARRAY2[ANY])
-            (PyArrayObject* pyarr=NULL),
-    (Type SIZED_INOUT_ARRAY2[][ANY])
             (PyArrayObject* pyarr=NULL)
 {
 //      $1_type $1_name
-//     (Type *SIZED_INOUT_ARRAY2[ANY]), (Type SIZED_INOUT_ARRAY2[][ANY])
-//
-
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim0 $1_dim1)
+//      (Type *SIZED_INOUT_ARRAY2[ANY])
+    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim0)
     $1 = PyArray_DATA(pyarr);
 }
 
 %typemap(in)
-     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY2[ANY])
-             (PyArrayObject* pyarr=NULL, SpiceInt dimsize[2]),
+    (Type SIZED_INOUT_ARRAY2[][ANY])
+            (PyArrayObject* pyarr=NULL)
+{
+//      $1_type $1_name
+//      (Type SIZED_INOUT_ARRAY2[][ANY])
+    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim1)
+    $1 = PyArray_DATA(pyarr);
+}
+
+%typemap(in)
+    (Type SIZED_INOUT_ARRAY2[][])
+            (PyArrayObject* pyarr=NULL)
+{
+//      $1_type $1_name
+//      (Type SIZED_INOUT_ARRAY2[][ANY])
+    int size1 = 0, size2 = 0;
+    int ok = PyArg_ParseTuple($input, "ii", &size1, &size2);
+    if (!ok) {
+        handle_bad_type_error("$symname", "tuple of integers");
+        SWIG_fail;
+    }
+    npy_intp dims[] = {max(size1, 0), max(size2, 0)};                      // ARRAY
+    pyarr = (PyArrayObject *) PyArray_SimpleNew(2, &dims, Typecode);
+    TEST_MALLOC_FAILURE(pyarr);
+}
+
+%typemap(in)
      (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
              (PyArrayObject* pyarr=NULL, SpiceInt dimsize[2])
 {
@@ -1984,33 +1913,28 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //     (Type *SIZED_INOUT_ARRAY2[ANY])
     dimsize[0] = 0;
     dimsize[1] = $3_dim1;
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim0$3_dim1)
+    CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim1)
     $1 = PyArray_DIM(pyarr, 0);
     $2 = &dimsize[0];
     $3 = PyArray_DATA(pyarr);
 }
 
-
-// These are the typemaps that resize the output of a 1-dimensional array
+// These are the typemaps that don't resize the output.
 %typemap(argout)
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1),
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1, SpiceInt *SIZE1),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1)
+    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
+    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
+    (Type *SIZED_INOUT_ARRAY1),
+    (Type SIZED_INOUT_ARRAY1[]),
+    (Type *SIZED_INOUT_ARRAY2[ANY]),
+    (Type SIZED_INOUT_ARRAY2[][ANY]),
+    (Type SIZED_INOUT_ARRAY2[][])
 {
-    npy_intp new_dim[1] = { dimsize$argnum[0] };
-    HANDLE_RESIZE(pyarr$argnum, new_dim)
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
     pyarr$argnum = NULL;
 }
 
 // These are the typemaps that resize the output of a 2-dimensional array
 %typemap(argout)
-     (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY2[ANY]),
      (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
 {
     npy_intp new_dim[2] = { dimsize$argnum[0], dimsize$argnum[1]};
@@ -2019,42 +1943,18 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr$argnum = NULL;
 }
 
-// These are the typemaps that don't resize the output.
-%typemap(argout)
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1),
+%typemap(freearg)
     (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
     (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
     (Type *SIZED_INOUT_ARRAY1),
     (Type SIZED_INOUT_ARRAY1[]),
     (Type *SIZED_INOUT_ARRAY2[ANY]),
-    (Type SIZED_INOUT_ARRAY2[][ANY])
-{
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
-    pyarr$argnum = NULL;
-}
-
-%typemap(free)
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1, SpiceInt *SIZE1),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1, SpiceInt *SIZE1),
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1, SpiceInt *SIZE1),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[], SpiceInt *SIZE1),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY1),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY1, SpiceInt DIM1),
-    (Type SIZED_INOUT_ARRAY1[], SpiceInt DIM1),
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY1),
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY2[ANY]),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY2[][ANY]),
-    (Type *SIZED_INOUT_ARRAY2[ANY]),
     (Type SIZED_INOUT_ARRAY2[][ANY]),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type *SIZED_INOUT_ARRAY2[ANY]),
+    (Type SIZED_INOUT_ARRAY2[][]),
     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
-{
+%{
     Py_XDECREF(pyarr$argnum);
-}
+%}
 
 %enddef
 
@@ -2695,7 +2595,7 @@ TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
 *       (SpiceChar *CONST_STRING): The string is taken as input. It is not copied so
 *               one must ensure that it does not get changed by the C function.
 *
-*       (SpiceChar IN_STRING): If the C function accepts a single SpiceCharacter, not a
+*       (SpiceChar IN_STRING): If the C function accepts a single SpiceChar, not a
 *               pointer to a string, any you wish to provide the Python input
 *               as a string.
 *******************************************************************************/
@@ -2802,7 +2702,7 @@ TYPEMAP_IN(ConstSpiceChar)
 *               length is passed to the function.
 *
 *       ((SpiceChar OUT_STRING[ANY], SpiceInt DIM1): two arguments to the C function are
-*               consumed; the dimensioned length of the the SpiceCharacter string
+*               consumed; the dimensioned length of the the SpiceChar string
 *               (which is one greater than the maximum allowed string length)
 *               is passed as the next argument after the SpiceChar* pointer.
 *
@@ -3220,7 +3120,6 @@ TYPEMAP_IN(ConstSpiceChar)
 //      (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $4_dim0, $4_dim1)
-    // foobar1
     $4 = buffer;                                                // ARRAY
     $1 = dimsize[0];                                            // DIM1
     $2 = dimsize[1];                                            // DIM2
@@ -3235,7 +3134,6 @@ TYPEMAP_IN(ConstSpiceChar)
 //      (SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $3_dim0, $3_dim1)
-
     $3 = buffer;                                                // ARRAY
     $1 = dimsize[1];                                            // DIM2
     $2 = &nstrings;                                             // NSTRINGS
@@ -3248,7 +3146,7 @@ TYPEMAP_IN(ConstSpiceChar)
 {
     CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer$argnum, nstrings$argnum, dimsize$argnum[1], list$argnum)
     $result = SWIG_Python_AppendOutput($result, list$argnum);
-    list$argnum = NULL; // foobar2
+    list$argnum = NULL;
 }
 
 %typemap(freearg)
@@ -3257,7 +3155,7 @@ TYPEMAP_IN(ConstSpiceChar)
     (SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 {
     PyMem_Free((void *) buffer$argnum);
-    Py_XDECREF(list$argnum); // foobar3
+    Py_XDECREF(list$argnum);
 }
 
 /*******************************************************
@@ -3285,7 +3183,7 @@ TYPEMAP_OUT(SpiceChar)
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
-        (Type value)
+        (Type value = 0)
 {
 //      $1_type $1_name
 //      (Type *OUTPUT)
@@ -3306,7 +3204,15 @@ TYPEMAP_OUT(SpiceChar)
 %enddef
 
 TYPEMAP_ARGOUT(SpiceBoolean, PyBool_FromLong(value$argnum))
-TYPEMAP_ARGOUT(PyObject*, (value$argnum))
+TYPEMAP_ARGOUT(SpiceInt,     PyInt_FromLong(value$argnum))
+TYPEMAP_ARGOUT(SpiceDouble,  PyFloat_FromDouble(value$argnum))
+TYPEMAP_ARGOUT(SpiceChar,    PyUnicode_FromStringAndSize(&value$argnum, 1))
+TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
+
+%typemap(freearg) (PyObject *OUTPUT)
+%{
+    Py_INCREF(value$argnum);
+%}
 
 #undef TYPEMAP_ARGOUT
 
