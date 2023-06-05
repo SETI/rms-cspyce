@@ -1,3 +1,4 @@
+import os
 import re
 from pathlib import Path
 
@@ -70,10 +71,9 @@ def test_no_SWIG_ConvertPtr(filename):
     # from the generated swig code. This code is generally caused either because
     # swig is generating "wrap" code for a function that it shouldn't be, or because
     # there is a problem with a function's template. We should take a look if this
-    # ever reappears..
-    swig_file_path = Path("swig") / filename
-    if not swig_file_path.exists():
-        swig_file_path = Path("../swig") / filename
+    # ever reappears.
+    root_dir = Path(os.path.realpath(__file__)).parent.parent
+    swig_file_path = root_dir / "swig" / filename
     if not swig_file_path.exists():
         return
 
