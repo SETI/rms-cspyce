@@ -39,12 +39,6 @@ def new_module(name, doc=None):
 new_module("cspyce.cspyce2")
 new_module("cspyce._cspyce0")
 
-# cspyce1 may call functions in cspyce0, but we need to make them not actually do anything
-import cspyce.cspyce0 as cspyce0
-for name, value in vars(cspyce0).items():
-    if callable(value):
-        vars(cspyce0)[name] = lambda *args: None
-
 import cspyce.cspyce1 as cspyce1
 import keyword
 
@@ -72,6 +66,11 @@ def __copy_attributes_from(function, old_function):
             value = globals()[value.__name__]
         setattr(function, key, value)
 
+"""
+
+
+TRAILER = """
+erract('SET', 'EXCEPTION')
 """
 
 
@@ -113,3 +112,5 @@ def populate_cspyce2(file):
             file.write(f'__copy_attributes_from({name}, cs1.{name})\n')
 
         file.write("\n")
+
+    file.write(TRAILER.lstrip())

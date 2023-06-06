@@ -14,7 +14,7 @@
 #define DAFSIZE 125     // size of DAF summary
 #define DASSIZE 256     // DAS size
 #define DLASIZE 8
-#define DSKSIZE 42
+#define DSKSIZE 21      // size in "doubles".  It's 6 integers then 18 doubles
 
 #define CLAUSES 100     // max number of expressions in a SELECT clause
 #define COLLEN 100      // max length of string columns or parsed items
@@ -32,7 +32,6 @@
 #define MAXFOV 100      // max number of vertices in a FOV
 #define MESSAGELEN 1024 // max length of an error message including null
 #define NAMELEN 65      // table names can be 64 plus one null
-#define NPLATES 10000   // max number of DSK plates or vertices
 #define SIDLEN 41       // maximum length of segment id, from spkpvn_c.c
 #define TIMELEN 60      // max length of a time string including null
 #define WINDOWS 120000  // max time windows returned
@@ -56,45 +55,8 @@ SpiceDouble *my_malloc(int count, const char *fname) {
     return result;
 }
 
-SpiceInt *my_int_malloc(int count, const char *fname) {
-    SpiceInt *result = (SpiceInt *) PyMem_Malloc(count * sizeof(SpiceInt));
-    if (!result) {
-        chkin_c(fname);
-        setmsg_c("Failed to allocate memory");
-        sigerr_c("SPICE(MALLOCFAILURE)");
-        chkout_c(fname);
-    }
-
-    return result;
-}
-
-SpiceInt *my_bool_malloc(int count, const char *fname) {
-    SpiceInt *result = (SpiceInt *) PyMem_Malloc(count * sizeof(SpiceBoolean));
-    if (!result) {
-        chkin_c(fname);
-        setmsg_c("Failed to allocate memory");
-        sigerr_c("SPICE(MALLOCFAILURE)");
-        chkout_c(fname);
-    }
-
-    return result;
-}
-
-SpiceChar *my_char_malloc(int count, const char *fname) {
-    SpiceChar *result = (SpiceChar *) PyMem_Malloc(count * sizeof(SpiceChar));
-    if (!result) {
-        chkin_c(fname);
-        setmsg_c("Failed to allocate memory");
-        sigerr_c("SPICE(MALLOCFAILURE)");
-        chkout_c(fname);
-    }
-
-    return result;
-}
-
 /* Internal routine to compare integers for equality */
 int my_assert_eq(int a, int b, const char *fname, const char *message) {
-
     if (a != b) {
         chkin_c(fname);
         setmsg_c(message);
@@ -109,7 +71,6 @@ int my_assert_eq(int a, int b, const char *fname, const char *message) {
 
 /* Internal routine to compare integers for "greater than or equal to" */
 int my_assert_ge(int a, int b, const char *fname, const char *message) {
-
     if (a < b) {
         chkin_c(fname);
         setmsg_c(message);
@@ -123,6 +84,7 @@ int my_assert_ge(int a, int b, const char *fname, const char *message) {
 }
 
 // Prototypes
+
 void frmchg_(SpiceInt    *frame1,
              SpiceInt    *frame2,
              SpiceDouble *et,
@@ -2453,8 +2415,8 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
 *    trmpts     O   Array of terminator points.
 ***********************************************************************/
 
-%rename (edterm) my_edterm_c;
-%apply (void RETURN_VOID) {void my_edterm_c};
+%rename (edterm) edterm_c;
+%apply (void RETURN_VOID) {void edterm_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *trmtyp};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *source};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -2463,11 +2425,9 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceDouble *OUTPUT)          {SpiceDouble *trgepc};
 %apply (SpiceDouble OUT_ARRAY1[ANY])  {SpiceDouble obspos[3]};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                                {(SpiceDouble **trmpts, SpiceInt *dim1, SpiceInt *dim2)};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *trmpts[3]};
 
-%inline %{
-    void my_edterm_c(
+extern void edterm_c(
         ConstSpiceChar *trmtyp,
         ConstSpiceChar *source,
         ConstSpiceChar *target,
@@ -2478,28 +2438,8 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
         SpiceInt       npts,
         SpiceDouble    *trgepc,
         SpiceDouble    obspos[3],
-        SpiceDouble    **trmpts, SpiceInt *dim1, SpiceInt *dim2)
-    {
-        *trmpts = NULL;
-        *dim1 = 0;
-        *dim2 = 3;
-
-        SpiceDouble *result = my_malloc(npts * 3, "edterm");
-        if (!result) return;
-
-        edterm_c(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts,
-                 trgepc, obspos, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *trmpts = result;
-        *dim1 = npts;
-        *dim2 = 3;
-    }
-%}
+        SpiceDouble    *trmpts[3]
+);
 
 /***********************************************************************
 * -Procedure el2cgv_c ( Ellipse to center and generating vectors )
@@ -3360,12 +3300,14 @@ extern void frinfo_c(
     }
 %}
 
+%{
 extern void frmchg_(
     SpiceInt    *frame1,
     SpiceInt    *frame2,
     SpiceDouble *et,
     SpiceDouble *xform
 );
+%}
 
 //Vector version
 VECTORIZE_2i_d__dMN(frmchg, my_frmchg, 6, 6)
@@ -4622,44 +4564,23 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
 *    srfpts     O   Array of surface points.
 ***********************************************************************/
 
-%rename (latsrf) my_latsrf_c;
-%apply (void RETURN_VOID) {void my_latsrf_c};
+%rename (latsrf) latsrf_c;
+%apply (void RETURN_VOID) {void latsrf_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
-%apply (ConstSpiceDouble IN_ARRAY2[][ANY], SpiceInt DIM1)
-                            {(ConstSpiceDouble lonlat[][2], SpiceInt npts)};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                            {(SpiceDouble **srfpts, SpiceInt *sdim1, SpiceInt *sdim2)};
+%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+                            {(SpiceInt npts, ConstSpiceDouble lonlat[][2])};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *srfpts[3]};
 
-%inline %{
-    void my_latsrf_c(
+extern void latsrf_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *target,
         SpiceDouble      et,
         ConstSpiceChar   *fixref,
-        ConstSpiceDouble lonlat[][2], SpiceInt npts,
-        SpiceDouble      **srfpts, SpiceInt *sdim1, SpiceInt *sdim2)
-    {
-        *srfpts = NULL;
-        *sdim1 = 0;
-        *sdim2 = 3;
-
-        SpiceDouble *srfpts1 = my_malloc(npts * 3, "latsrf");
-        if (!srfpts1) return;
-
-        latsrf_c(method, target, et, fixref, npts, lonlat, srfpts1);
-
-        if (failed_c()) {
-            PyMem_Free(srfpts1);
-            return;
-        }
-
-        *srfpts = srfpts1;
-        *sdim1 = npts;
-        *sdim2 = 3;
-    }
-%}
+        SpiceInt         npts, ConstSpiceDouble lonlat[][2],
+        SpiceDouble      *srfpts[3]
+);
 
 /***********************************************************************
 * -Procedure latsph_c ( Latitudinal to spherical coordinates )
@@ -4781,7 +4702,7 @@ extern void ldpool_c(
 *    tangts     O   Tangent vectors emanating from the observer.
 ***********************************************************************/
 
-%rename (limbpt) my_limbpt_c;
+%rename (limbpt) limbpt_c;
 %apply (void RETURN_VOID) {void my_limbpt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -4790,17 +4711,12 @@ extern void ldpool_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *corloc};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble refvec[3]};
-%apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1)
-                               {(SpiceInt **npts, SpiceInt *ndim1)};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                               {(SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2)};
-%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
-                               {(SpiceDouble **epochs, SpiceInt *edim1)};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                               {(SpiceDouble **tangts, SpiceInt *tdim1, SpiceInt *tdim2)};
+%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *npts};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *points[3]};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1) {SpiceDouble *epochs};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *tangts[3]};
 
-%inline %{
-    void my_limbpt_c(
+extern void limbpt_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *target,
         SpiceDouble      et,
@@ -4814,66 +4730,11 @@ extern void ldpool_c(
         SpiceDouble      schstp,
         SpiceDouble      soltol,
         SpiceInt         maxn,
-        SpiceInt         **npts,
-        SpiceInt         *ndim1,
-        SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2,
-        SpiceDouble **epochs, SpiceInt *edim1,
-        SpiceDouble **tangts, SpiceInt *tdim1, SpiceInt *tdim2)
-    {
-        *npts = NULL;
-        *ndim1 = 0;
-
-        *points = NULL;
-        *pdim1 = 0;
-        *pdim2 = 3;
-
-        *epochs = NULL;
-        *edim1 = 0;
-
-        *tangts = NULL;
-        *tdim1 = 0;
-        *tdim2 = 3;
-
-        SpiceInt    *npts1 = my_int_malloc(maxn,   "limbpt");
-        SpiceDouble *points1 = my_malloc(maxn * 3, "limbpt");
-        SpiceDouble *epochs1 = my_malloc(maxn,     "limbpt");
-        SpiceDouble *tangts1 = my_malloc(maxn * 3, "limbpt");
-
-        if (!tangts1) {
-            PyMem_Free(npts1);
-            PyMem_Free(points1);
-            PyMem_Free(epochs1);
-            PyMem_Free(tangts1);
-            return;
-        }
-
-        limbpt_c(method, target, et, fixref, abcorr, corloc, obsrvr, refvec,
-                 rolstp, ncuts, schstp, soltol, maxn,
-                 npts1, points1, epochs1, tangts1);
-
-        if (failed_c()) {
-            PyMem_Free(npts1);
-            PyMem_Free(points1);
-            PyMem_Free(epochs1);
-            PyMem_Free(tangts1);
-            return;
-        }
-
-        *npts = npts1;
-        *ndim1 = maxn;
-
-        *points = points1;
-        *pdim1 = maxn;
-        *pdim2 = 3;
-
-        *epochs = epochs1;
-        *edim1 = maxn;
-
-        *tangts = tangts1;
-        *tdim1 = maxn;
-        *tdim2 = 3;
-    }
-%}
+        SpiceInt         *npts,
+        SpiceDouble      *points[3],
+        SpiceDouble      *epochs,
+        SpiceDouble      *tangts[3]
+);
 
 /***********************************************************************
 * -Procedure lspcn_c  ( Longitude of the sun, planetocentric )
@@ -5121,7 +4982,9 @@ VECTORIZE_dXY__dMN(mequ, mequ_c, 3, 3)
         *nr_out = nr;
         *nc_out = nc;
     }
+%}
 
+%{
     void my_mequg_nomalloc(
         ConstSpiceDouble *m1, SpiceInt nr, SpiceInt nc,
         SpiceDouble  *matrix, SpiceInt *nr_out, SpiceInt *nc_out)
@@ -5237,7 +5100,9 @@ VECTORIZE_dXY_dXY__dMN(mtxm, mtxm_c, 3, 3)
         *nr3 = nc1;
         *nc3 = nc2;
     }
+%}
 
+%{
     void my_mtxmg_nomalloc(
         SpiceDouble *m1, SpiceInt  nr1, SpiceInt  nc1,
         SpiceDouble *m2, SpiceInt  nr2, SpiceInt  nc2,
@@ -5353,7 +5218,9 @@ VECTORIZE_dXY_dX__dN(mtxv, mtxv_c, 3)
         *v3 = result;
         *nr3 = nc1;
     }
+%}
 
+%{
     void my_mtxvg_nomalloc(
         ConstSpiceDouble *m1, SpiceInt nr1, SpiceInt nc1,
         ConstSpiceDouble *v2, SpiceInt nr2,
@@ -5471,7 +5338,8 @@ VECTORIZE_dXY_dXY__dMN(mxm, mxm_c, 3, 3)
         *nr3 = nr1;
         *nc3 = nc2;
     }
-
+%}
+%{
     void my_mxmg_nomalloc(
         SpiceDouble *m1, SpiceInt  nr1, SpiceInt  nc1,
         SpiceDouble *m2, SpiceInt  nr2, SpiceInt  nc2,
@@ -5591,7 +5459,9 @@ VECTORIZE_dXY_dXY__dMN(mxmt, mxmt_c, 3, 3)
         *nr3 = nr1;
         *nc3 = nr2;
     }
+%}
 
+%{
     void my_mxmtg_nomalloc(
         SpiceDouble *m1, SpiceInt nr1, SpiceInt nc1,
         SpiceDouble *m2, SpiceInt nr2, SpiceInt nc2,
@@ -5706,7 +5576,9 @@ VECTORIZE_dXY_dX__dN(mxv, mxv_c, 3)
         *v3 = result;
         *nr3 = nr1;
     }
+%}
 
+%{
     void my_mxvg_nomalloc(
         SpiceDouble *m1, SpiceInt nr1, SpiceInt nc1,
         SpiceDouble *v2, SpiceInt nr2,
@@ -7449,12 +7321,14 @@ VECTORIZE_dX__3d(recsph, recsph_c)
     }
 %}
 
+%{
 extern void refchg_(
     SpiceInt    *frame1,
     SpiceInt    *frame2,
     SpiceDouble *et,
     SpiceDouble *rotate
 );
+%}
 
 // Vector version
 VECTORIZE_2i_d__dMN(refchg, my_refchg, 3, 3)
@@ -9377,44 +9251,24 @@ extern void srfcss_c(
 *               P   Default point-surface membership margin.
 ***********************************************************************/
 
-%rename (srfnrm) my_srfnrm_c;
-%apply (void RETURN_VOID) {void my_srfnrm_c};
+%rename (srfnrm) srfnrm_c;
+%apply (void RETURN_VOID) {void srfnrm_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                           {(SpiceInt npts, ConstSpiceDouble srfpts[][3])};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                          {(SpiceDouble **normls, SpiceInt *dim1, SpiceInt *dim2)};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *normls[3]};
 
-%inline %{
-    void my_srfnrm_c(
+extern void srfnrm_c(
         ConstSpiceChar *method,
         ConstSpiceChar *target,
         SpiceDouble    et,
         ConstSpiceChar *fixref,
         SpiceInt npts, ConstSpiceDouble srfpts[][3],
-        SpiceDouble **normls, SpiceInt *dim1, SpiceInt *dim2)
-    {
-        *normls = NULL;
-        *dim1 = 0;
-        *dim2 = 3;
+        SpiceDouble    *normls[3]
+);
 
-        SpiceDouble *result = my_malloc(npts * 3, "srfnrm");
-        if (!result) return;
-
-        srfnrm_c(method, target, et, fixref, npts, srfpts, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *normls = result;
-        *dim1 = npts;
-        *dim2 = 3;
-    }
-%}
 
 /***********************************************************************
 * -Procedure srfrec_c ( Surface to rectangular coordinates )
@@ -9747,6 +9601,7 @@ VECTORIZE_2s_d_3s_dX__dM_2d_dN_b(srfxpt, srfxpt_c, 3, 3)
 
 %rename (stcl01) my_stcl01;
 %apply (void RETURN_VOID) {void my_stcl01};
+%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *catfnm};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar tabnam[NAMELEN]};
 %apply (SpiceInt *OUTPUT)          {SpiceInt *handle};
 
@@ -10391,8 +10246,8 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
 *    trmvcs     O   Terminator vectors emanating from the observer.
 ***********************************************************************/
 
-%rename (termpt) my_termpt_c;
-%apply (void RETURN_VOID) {void my_termpt_c};
+%rename (termpt) termpt_c;
+%apply (void RETURN_VOID) {void termpt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *ilusrc};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -10401,18 +10256,13 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *corloc};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble refvec[3]};
-%apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1)
-                               {(SpiceInt **npts, SpiceInt *ndim1)};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                               {(SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2)};
-%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
-                               {(SpiceDouble **epochs, SpiceInt *edim1)};
-%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
-                               {(SpiceDouble **trmvcs, SpiceInt *tdim1, SpiceInt *tdim2)};
+%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *npts};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *points[3]};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1) {SpiceDouble *epochs};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *trmvcs[3]};
 
 
-%inline %{
-    void my_termpt_c(
+extern void termpt_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *ilusrc,
         ConstSpiceChar   *target,
@@ -10427,65 +10277,11 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
         SpiceDouble      schstp,
         SpiceDouble      soltol,
         SpiceInt         maxn,
-        SpiceInt    **npts,   SpiceInt *ndim1,
-        SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2,
-        SpiceDouble **epochs, SpiceInt *edim1,
-        SpiceDouble **trmvcs, SpiceInt *tdim1, SpiceInt *tdim2)
-    {
-        *npts = NULL;
-        *ndim1 = 0;
-
-        *points = NULL;
-        *pdim1 = 0;
-        *pdim2 = 3;
-
-        *epochs = NULL;
-        *edim1 = 0;
-
-        *trmvcs = NULL;
-        *tdim1 = 0;
-        *tdim2 = 3;
-
-        SpiceInt    *npts1 = my_int_malloc(maxn,   "termpt");
-        SpiceDouble *points1 = my_malloc(maxn * 3, "termpt");
-        SpiceDouble *epochs1 = my_malloc(maxn,     "termpt");
-        SpiceDouble *trmvcs1 = my_malloc(maxn * 3, "termpt");
-
-        if (!trmvcs1) {
-            PyMem_Free(npts1);
-            PyMem_Free(points1);
-            PyMem_Free(epochs1);
-            PyMem_Free(trmvcs1);
-            return;
-        }
-
-        termpt_c(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr,
-                 refvec, rolstp, ncuts, schstp, soltol, maxn,
-                 npts1, points1, epochs1, trmvcs1);
-
-        if (failed_c()) {
-            PyMem_Free(npts1);
-            PyMem_Free(points1);
-            PyMem_Free(epochs1);
-            PyMem_Free(trmvcs1);
-            return;
-        }
-
-        *npts = npts1;
-        *ndim1 = maxn;
-
-        *points = points1;
-        *pdim1 = maxn;
-        *pdim2 = 3;
-
-        *epochs = epochs1;
-        *edim1 = maxn;
-
-        *trmvcs = trmvcs1;
-        *tdim1 = maxn;
-        *tdim2 = 3;
-    }
-%}
+        SpiceInt         *npts,
+        SpiceDouble      *points[3],
+        SpiceDouble      *epochs,
+        SpiceDouble      *trmvcs[3]
+);
 
 /***********************************************************************
 * -Procedure timdef_c ( Time Software Defaults )
@@ -11142,37 +10938,21 @@ VECTORIZE_dX__dN_d(unorm, unorm_c, 3)
 * vmag      O     Magnitude of v1, that is, |v1|.
 ***********************************************************************/
 
-%rename (unormg) my_unormg_c;
-%apply (void RETURN_VOID) {void my_unormg_c};
+%rename (unormg) unormg_c;
+%apply (void RETURN_VOID) {void unormg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                              {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
-                             {(SpiceDouble **vector, SpiceInt *nd2)};
+%apply (SpiceDouble *SIZED_INOUT_ARRAY1) {SpiceDouble *vector};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *vmag};
 
-%inline %{
-    void my_unormg_c(
+extern void unormg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble **vector, SpiceInt *nd2,
-        SpiceDouble    *vmag)
-    {
-        *vector = NULL;
-        *nd2 = 0;
+        SpiceDouble      *vector,
+        SpiceDouble      *vmag
+);
 
-        SpiceDouble *result = my_malloc(ndim, "unormg");
-        if (!result) return;
 
-        unormg_c(v1, ndim, result, vmag);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *vector = result;
-        *nd2 = ndim;
-    }
-
+%{
     void my_unormg_nomalloc(ConstSpiceDouble *v1, SpiceInt ndim,
                             SpiceDouble  *vector, SpiceInt *nd2,
                             SpiceDouble    *vmag)
@@ -11309,7 +11089,9 @@ VECTORIZE_dX_dX__dN(vadd, vadd_c, 3)
         *v3 = result;
         *nd3 = ndim;
     }
+%}
 
+%{
     void my_vaddg_nomalloc(ConstSpiceDouble *v1, SpiceInt ndim,
                     ConstSpiceDouble *v2, SpiceInt nd2,
                     SpiceDouble      *v3, SpiceInt *nd3)
@@ -11602,7 +11384,9 @@ VECTORIZE_dX__dN(vequ, vequ_c, 3)
         *v2 = result;
         *nd2 = ndim;
     }
+%}
 
+%{
     void my_vequg_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
         SpiceDouble      *v2, SpiceInt *nd2)
@@ -11698,7 +11482,9 @@ VECTORIZE_dX__dN(vhat, vhat_c, 3)
         *v2 = result;
         *nd2 = ndim;
     }
+%}
 
+%{
     void my_vhatg_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
         SpiceDouble      *v2, SpiceInt *nd2)
@@ -11869,7 +11655,9 @@ VECTORIZE_d_dX_d_dX__dN(vlcom, vlcom_c, 3)
         *v3 = result;
         *nd3 = n;
     }
+%}
 
+%{
     void my_vlcomg_nomalloc(
         SpiceDouble       a,
         ConstSpiceDouble *v1, SpiceInt  n,
@@ -11938,7 +11726,9 @@ VECTORIZE_d_di_d_di__di(vlcomg, my_vlcomg_nomalloc)
         *v2 = result;
         *nd2 = ndim;
     }
+%}
 
+%{
     void my_vminug_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
         SpiceDouble      *v2, SpiceInt *nd2)
@@ -12443,7 +12233,9 @@ VECTORIZE_d_dX__dN(vscl, vscl_c, 3)
         *v2 = result;
         *nd2 = ndim;
     }
+%}
 
+%{
     void my_vsclg_nomalloc(
         SpiceDouble s,
         ConstSpiceDouble   *v1, SpiceInt  ndim,
@@ -12634,7 +12426,9 @@ VECTORIZE_dX_dX__dN(vsub, vsub_c, 3)
         *v3 = result;
         *nd3 = ndim;
     }
+%}
 
+%{
     void my_vsubg_nomalloc(
         ConstSpiceDouble *v1, SpiceInt ndim,
         ConstSpiceDouble *v2, SpiceInt nd2,
@@ -13093,7 +12887,9 @@ VECTORIZE_dXY__dMN(xpose, xpose_c, 3, 3)
         *nrow1 = ncol;
         *nc1 = nrow;
     }
+%}
 
+%{
     void my_xposeg_nomalloc(
         ConstSpiceDouble *matrix, SpiceInt nrow, SpiceInt  ncol,
         SpiceDouble      *xposem, SpiceInt *nrow1, SpiceInt *nc1)

@@ -27,26 +27,29 @@ INTERACTIVE = not hasattr(__main__, '__file__')
 
 ## Helpers
 
-def __delete_final_return_values(func, count=1):
-    name = func.__name__
-    return_names = CSPYCE_RETNAMES[name][-count:]
-    del CSPYCE_RETURNS[name][-count:]
-    del CSPYCE_RETNAMES[name][-count:]
+def _deleting_final_return_value(function):
+    name = function.__name__
+    return_names = CSPYCE_RETNAMES[name][-1:]
+    del CSPYCE_RETURNS[name][-1:]
+    del CSPYCE_RETNAMES[name][-1:]
     for return_name in return_names:
         del CSPYCE_DEFINITIONS[name][return_name]
+    return function
 
-def __delete_final_arguments(func, count=1):
-    name = func.__name__
-    del CSPYCE_SIGNATURES[name][-count:]
-    del CSPYCE_ARGNAMES[name][-count:]
-    defaults = CSPYCE_DEFAULTS.get(name)
-    if defaults:
-        if len(defaults) <= count:
-            del CSPYCE_DEFAULTS[name]
-        else:
-            print(f"Changing defaults of {func}")
-            CSPYCE_DEFAULTS[name] = CSPYCE_DEFAULTS[name][:count]
-
+def _removing_final_arguments(function):
+    name = function.__name__
+    old_function = vars(cspyce0)[name]
+    count = old_function.__code__.co_argcount - function.__code__.co_argcount
+    if count > 0:
+        del CSPYCE_SIGNATURES[name][-count:]
+        del CSPYCE_ARGNAMES[name][-count:]
+        defaults = CSPYCE_DEFAULTS.get(name)
+        if defaults:
+            if len(defaults) <= count:
+                del CSPYCE_DEFAULTS[name]
+            else:
+                CSPYCE_DEFAULTS[name] = CSPYCE_DEFAULTS[name][:count]
+    return function
 
 def erract(op='', action=''):
     """Allow special argument handling:
@@ -804,6 +807,7 @@ def pcpool(name, cvals):
 # comment field is read. They eliminate the "done" return value.
 ################################################################################
 
+@_deleting_final_return_value
 def dafec(handle):
     records = []
     while True:
@@ -812,9 +816,7 @@ def dafec(handle):
         if done:
             return records
 
-# Update the call signature for help
-__delete_final_return_values(dafec)
-
+@_deleting_final_return_value
 def dasec(handle):
     records = []
     while True:
@@ -822,9 +824,6 @@ def dasec(handle):
         records += buffer
         if done:
             return records
-
-# Update the call signature for help
-__delete_final_return_values(dasec)
 
 ################################################################################
 # These functions need to be passed a fixed-size array that's based on the value of
@@ -858,33 +857,77 @@ def dasrdc(handle, first, last, bpos, epos, data=None):
     result = cspyce0.dasrdc(handle, first, last, bpos, epos, array.itemsize, array)
     return [item.decode() for item in result]
 
-__delete_final_arguments(dasrdc)
+del CSPYCE_SIGNATURES['dasrdc'][5]
+del CSPYCE_ARGNAMES['dasrdc'][5]
 
 def _create_das_char_array(data, epos):
     byte_data = [string.encode('utf-8') for string in data]
     itemsize = max(epos + 1, max(len(x) for x in byte_data))
     return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
+@_removing_final_arguments
 def dasrdi(handle, first, last):
     return cspyce0.dasrdi(handle, first, last, last - first + 1)
 
-__delete_final_arguments(dasrdi)
-
+@_removing_final_arguments
 def dasrdd(handle, first, last):
     return cspyce0.dasrdd(handle, first, last, last - first + 1)
 
-__delete_final_arguments(dasrdd)
-
+@_removing_final_arguments
 def dafgda(handle, begin, end):
     return cspyce0.dafgda(handle, begin, end, end - begin + 1)
 
-__delete_final_arguments(dafgda)
-
+@_removing_final_arguments
 def dskmi2(vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, makvtl, spxisz):
     return cspyce0.dskmi2(vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, makvtl, spxisz,
                           worksz, spxisz)
 
-__delete_final_arguments(dskmi2, count=2)
+@_removing_final_arguments
+def edterm(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts):
+    return cspyce0.edterm(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts, npts)
+
+@_removing_final_arguments
+def latsrf(method, target, et, fixref, lonlat):
+    lonlat = np.asarray(lonlat)
+    return cspyce0.latsrf(method, target, et, fixref, lonlat, len(lonlat))
+
+@_removing_final_arguments
+def limbpt(method, target, et, fixref, abcorr, corloc, obsrvr, refvec, rolstp, nctus, schstp, soltol, maxn):
+    return cspyce0.limbpt(method, target, et, fixref, abcorr, corloc, obsrvr,
+                          refvec, rolstp, nctus, schstp, soltol, maxn,
+                          # additional arguments are the sizes of the output arrays.
+                          maxn, maxn, maxn, maxn)
+
+@_removing_final_arguments
+def orderc(array):
+    array = np.asarray(array)
+    return cspyce0.orderc(array, len(array))
+
+@_removing_final_arguments
+def orderd(array):
+    array = np.asarray(array)
+    return cspyce0.orderd(array, len(array))
+
+@_removing_final_arguments
+def orderi(array):
+    array = np.asarray(array)
+    return cspyce0.orderi(array, len(array))
+
+@_removing_final_arguments
+def srfnrm(method, target, et, fixref, srfpts):
+    srfpts = np.asarray(srfpts)
+    return cspyce0.srfnrm(method, target, et, fixref, srfpts, len(srfpts))
+
+@_removing_final_arguments
+def termpt(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr, refvec, rolstp, ncuts, schstp, soltol, maxn):
+    return cspyce0.termpt(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr, refvec, rolstp, ncuts, schstp, soltol, maxn,
+                          # additional arguments oare the sizes of the output arrays
+                          maxn, maxn, maxn, maxn)
+
+@_removing_final_arguments
+def unormg(v1):
+    v1 = np.asarray(v1, dtype=np.double)
+    return cspyce0.unormg(v1, len(v1))
 
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in
@@ -1268,11 +1311,3 @@ for name in CSPYCE_BASENAMES:
 # namespace.
 del func, efunc, vfunc, vefunc
 
-
-################################################################################
-# Set defaults at initialization
-################################################################################
-
-erract('SET', 'EXCEPTION')
-
-################################################################################
