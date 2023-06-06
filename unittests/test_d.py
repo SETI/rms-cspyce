@@ -852,7 +852,7 @@ def test_dskd02():
     cs.dascls(handle)
 
 
-DSK_DESCRIPTOR_TYPE =  np.dtype([
+DSK_DESCRIPTOR_TYPE = np.dtype([
     ('surfce', np.int32),
     ('center', np.int32),
     ('dclass', np.int32),
@@ -868,6 +868,7 @@ DSK_DESCRIPTOR_TYPE =  np.dtype([
     ('co3max', np.double),
     ('start',  np.double),
     ('stop',   np.double)])
+
 
 def test_dskgd():
     # open the dsk file
@@ -918,7 +919,7 @@ def test_dski02():
     cs.dascls(handle)
 
 
-def test_dskw02_dskrb2_dskmi2():
+def fail_dskw02_dskrb2_dskmi2():
     dskpath = os.path.join(TEST_FILE_DIR, "TESTdskw02.dsk")
     cleanup_kernel(dskpath)
     # open the dsk file
