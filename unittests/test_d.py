@@ -1,5 +1,3 @@
-import struct
-
 import cspyce as cs
 import numpy as np
 import numpy.testing as npt
@@ -869,6 +867,23 @@ def test_dskd02():
     cs.dascls(handle)
 
 
+DSK_DESCRIPTOR_TYPE =  np.dtype([
+    ('surfce', np.int32),
+    ('center', np.int32),
+    ('dclass', np.int32),
+    ('dtype_', np.int32),  # had to rename from dtype, which is taken.
+    ('frmcde', np.int32),
+    ('corsys', np.int32),
+    ('corpar', np.double, 10),
+    ('co1min', np.double),
+    ('co1max', np.double),
+    ('co2min', np.double),
+    ('co2max', np.double),
+    ('co3min', np.double),
+    ('co3max', np.double),
+    ('start',  np.double),
+    ('stop',   np.double)])
+
 def test_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
@@ -876,38 +891,23 @@ def test_dskgd():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    # This is the layout of SpiceDSKDscr
-    dtype = np.dtype([('surfce', np.int32),
-                      ('center', np.int32),
-                      ('dclass', np.int32),
-                      ('dtype',  np.int32),
-                      ('frmcde', np.int32),
-                      ('corsys', np.int32),
-                      ('corpar', np.double, 10),
-                      ('co1min', np.double),
-                      ('co1max', np.double),
-                      ('co2min', np.double),
-                      ('co2max', np.double),
-                      ('co3min', np.double),
-                      ('co3max', np.double),
-                      ('start',  np.double),
-                      ('stop',   np.double)])
-    dskdsc = dskdsc.view(dtype)[0]
-    assert dskdsc['surfce'] == 401
-    assert dskdsc['center'] == 401
-    assert dskdsc['dclass'] == 1
-    assert dskdsc['dtype'] == 2
-    assert dskdsc['frmcde'] == 10021
-    assert dskdsc['corsys'] == 1
-    npt.assert_almost_equal(dskdsc['corpar'], np.zeros(10))
-    assert dskdsc['co1min'] == pytest.approx(-3.141593)
-    assert dskdsc['co1max'] == pytest.approx(3.141593)
-    assert dskdsc['co2min'] == pytest.approx(-1.570796)
-    assert dskdsc['co2max'] == pytest.approx(1.570796)
-    assert dskdsc['co3min'] == pytest.approx(8.181895873588292)
-    assert dskdsc['co3max'] == pytest.approx(13.89340000000111)
-    assert dskdsc['start'] == pytest.approx(-1577879958.816059)
-    assert dskdsc['stop'] == pytest.approx(1577880066.183913)
+    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
+
+    assert dskdsc.surfce == 401
+    assert dskdsc.center == 401
+    assert dskdsc.dclass == 1
+    assert dskdsc.dtype_ == 2
+    assert dskdsc.frmcde == 10021
+    assert dskdsc.corsys == 1
+    npt.assert_almost_equal(dskdsc.corpar, np.zeros(10))
+    assert dskdsc.co1min == pytest.approx(-3.141593)
+    assert dskdsc.co1max == pytest.approx(3.141593)
+    assert dskdsc.co2min == pytest.approx(-1.570796)
+    assert dskdsc.co2max == pytest.approx(1.570796)
+    assert dskdsc.co3min == pytest.approx(8.181895873588292)
+    assert dskdsc.co3max == pytest.approx(13.89340000000111)
+    assert dskdsc.start == pytest.approx(-1577879958.816059)
+    assert dskdsc.stop == pytest.approx(1577880066.183913)
     # cleanup
     cs.dascls(handle)
 
