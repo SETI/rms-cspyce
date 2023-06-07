@@ -469,17 +469,11 @@ void initialize_typemap_globals(void) {
     errcode_to_PyErrorType[ValueError] = PyExc_ValueError;
 }
 
-PyObject* GET_NEW_RECORD = NULL;
-PyObject* IS_RECORD = NULL;
 PyObject* RECORD_SWIG_SUPPORT = NULL;
 
-void initialize_numpy_descriptors(void) {
+void initialize_swig_callback(void) {
     PyObject *record_support = PyImport_ImportModule("cspyce.record_support");
-    GET_NEW_RECORD = PyObject_GetAttrString(record_support, "get_new_record");
-    IS_RECORD = PyObject_GetAttrString(record_support, "verify_record");
     RECORD_SWIG_SUPPORT = PyObject_GetAttrString(record_support, "_SwigSupport");
-    PyObject_Print(RECORD_SWIG_SUPPORT, stderr, 0);
-    fprintf(stderr, "\n");
     Py_XDECREF(record_support);
 }
 %}
@@ -3183,12 +3177,18 @@ TYPEMAP_OUT(SpiceChar)
 
 #undef TYPEMAP_OUT
 
-/******************************
- *
- *
- *
- *
- */
+/*******************************************************************************
+* Typemaps for records.
+*
+* These typemaps are for data-structures in which the user wants to see a a record
+* with named fields.  The only forms that exist are:
+*
+*     (ConstType *INPUT)
+*     (Type *INPUT)      // Not currently used, but just in case
+*     (Type *OUTPUT)
+*
+* Any type used here must have a descriptor added in record_support.py
+*******************************************************************************/
 
 %define TYPEMAP_RECORDS(ConstType, Type)
 
@@ -3200,13 +3200,13 @@ TYPEMAP_OUT(SpiceChar)
 {
 //      $1_type $1_name
 //      $1_type *INPUT
-    base_array = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "verify_record", "sO", "Type", $input);
-    if (base_array && base_array != Py_None) {
-        $1 = PyArray_DATA(base_array);
-    } else {
-        handle_bad_type_error("$symname", "Type" " record");
+    record = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "as_record", "sO", "Type", $input);
+    if (!record || record == Py_None) {
+        handle_bad_type_error("$symname", "Type");
         SWIG_fail;
     }
+    base_array = PyObject_GetAttrString(record, "base");
+    $1 = PyArray_DATA(base_array);
 }
 
 %typemap(in, numinputs=0)
@@ -3215,7 +3215,7 @@ TYPEMAP_OUT(SpiceChar)
 {
 //      $1_type $1_name
 //      Type *OUTPUT
-    record = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "get_new_record", "s", "Type");
+    record = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "create_record", "s", "Type");
     TEST_MALLOC_FAILURE(record);
     base_array = PyObject_GetAttrString(record, "base");
     $1 = PyArray_DATA(base_array);
@@ -3240,19 +3240,25 @@ TYPEMAP_OUT(SpiceChar)
 
 %enddef
 
+// If you add a new type here, then also add it to record_support.py
 TYPEMAP_RECORDS(ConstSpiceDLADescr, SpiceDLADescr)
 TYPEMAP_RECORDS(ConstSpiceDSKDescr, SpiceDSKDescr)
 
 #undef TYPEMAP_RECORDS
 
 
-
 /******************************
- *
- *
- *
- *
- */
+* Typemaps for records that we prefer to implement as Numpy arrays.
+*
+* These typemaps are for data-structures in which the interface with the user is just
+* a plane numpy array.  However we can do better typechecking in the .i files by using
+* the actual type name.
+*
+*     (ConstType *INPUT)
+*     (Type *INPUT)      // Not currently used, but just in case
+*     (Type *OUTPUT)
+*
+*/
 
 %define TYPEMAP_RECORDS_ALIAS(ConstType, Type, Typecode, size)
 

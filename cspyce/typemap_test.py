@@ -738,7 +738,7 @@ class Test_C_STRUCTURES:
 
     # A SpiceDLADescr is a python record
     def test_dla_in(self):
-        temp = record_support.get_new_record('SpiceDLADescr')
+        temp = record_support.create_record('SpiceDLADescr')
         temp.isize, temp.csize, temp.dsize = 1, 20, 400
         assert ts.DLADescr_in(temp) == 421  # It adds those three fields.  Just because
 

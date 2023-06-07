@@ -30,7 +30,9 @@ DESCRIPTORS = {
         ('stop',   np.double)])
 }
 
-def get_new_record(name:str):
+
+def create_record(name):
+    """ Creates a new empty record whose descriptor has the indicated name. """
     descriptor = DESCRIPTORS.get(name)
     if not descriptor:
         return None
@@ -38,38 +40,42 @@ def get_new_record(name:str):
     return array[0]
 
 
-def verify_record(name, record):
+def as_record(name, record):
+    """
+    Attempts to convert the record into a record whose descriptor has the indicated name.
+
+    If the record argument is okay, then it is returned unchanged.  Otherwise we use
+    np.rec.array to try and convert it.
+    """
     descriptor = DESCRIPTORS.get(name)
-    if descriptor is not None and isinstance(record, np.record) and record.dtype == descriptor:
-        return record.base
+    if (descriptor is not None and isinstance(record, np.record)
+            and record.dtype == descriptor):
+        return record
     try:
         record = np.rec.array(record, descriptor, 1)
-        return record.base
+        return record
     except ValueError:
         pass
+    # Add more attempts to convert it into a record here.
     return None
 
 ##########################
 #
 # It is simpler to callback from C to Python if everything is grouped as methods in a
-# single class.
+# single class.  Methods can be called by giving the method name as a C string.
 #
 ##########################
 
+
 class _SwigSupport:
     @staticmethod
-    def get_new_record(name: str, _size=0):
-        return get_new_record(name)
+    def create_record(name: str, _size=0):
+        return create_record(name)
 
     @staticmethod
-    def verify_record(name: str, record):
-        return verify_record(name, record)
+    def as_record(name: str, record):
+        return as_record(name, record)
 
     @staticmethod
     def debug(*args):
         print(args)
-
-
-
-
-

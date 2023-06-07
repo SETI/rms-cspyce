@@ -20,7 +20,7 @@
     erract_c("SET", 256, "RETURN");
     errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
     initialize_typemap_globals();
-    initialize_numpy_descriptors();
+    initialize_swig_callback();
 %}
 
 %typemap(in, numinputs=0)
