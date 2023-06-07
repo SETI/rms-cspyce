@@ -468,6 +468,20 @@ void initialize_typemap_globals(void) {
     errcode_to_PyErrorType[RuntimeError] = PyExc_RuntimeError;
     errcode_to_PyErrorType[ValueError] = PyExc_ValueError;
 }
+
+PyObject* GET_NEW_RECORD = NULL;
+PyObject* IS_RECORD = NULL;
+PyObject* RECORD_SWIG_SUPPORT = NULL;
+
+void initialize_numpy_descriptors(void) {
+    PyObject *record_support = PyImport_ImportModule("cspyce.record_support");
+    GET_NEW_RECORD = PyObject_GetAttrString(record_support, "get_new_record");
+    IS_RECORD = PyObject_GetAttrString(record_support, "verify_record");
+    RECORD_SWIG_SUPPORT = PyObject_GetAttrString(record_support, "_SwigSupport");
+    PyObject_Print(RECORD_SWIG_SUPPORT, stderr, 0);
+    fprintf(stderr, "\n");
+    Py_XDECREF(record_support);
+}
 %}
 
 %define TEST_FOR_EXCEPTION
@@ -3168,6 +3182,131 @@ TYPEMAP_IN(ConstSpiceChar)
 TYPEMAP_OUT(SpiceChar)
 
 #undef TYPEMAP_OUT
+
+/******************************
+ *
+ *
+ *
+ *
+ */
+
+%define TYPEMAP_RECORDS(ConstType, Type)
+
+%typemap(in)
+    (ConstType *INPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL),
+    (Type *INPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL)
+{
+//      $1_type $1_name
+//      $1_type *INPUT
+    base_array = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "verify_record", "sO", "Type", $input);
+    if (base_array && base_array != Py_None) {
+        $1 = PyArray_DATA(base_array);
+    } else {
+        handle_bad_type_error("$symname", "Type" " record");
+        SWIG_fail;
+    }
+}
+
+%typemap(in, numinputs=0)
+    (Type *OUTPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL)
+{
+//      $1_type $1_name
+//      Type *OUTPUT
+    record = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "get_new_record", "s", "Type");
+    TEST_MALLOC_FAILURE(record);
+    base_array = PyObject_GetAttrString(record, "base");
+    $1 = PyArray_DATA(base_array);
+}
+
+%typemap(argout)
+    (Type *OUTPUT)
+%{
+    $result = SWIG_Python_AppendOutput($result, record$argnum);
+    record$argnum = NULL;
+%}
+
+%typemap(freearg)
+    (ConstType *INPUT),
+    (Type *INPUT),
+    (Type *OUTPUT)
+%{
+    Py_XDECREF(record$argnum);
+    Py_XDECREF(base_array$argnum);
+%}
+
+
+%enddef
+
+TYPEMAP_RECORDS(ConstSpiceDLADescr, SpiceDLADescr)
+TYPEMAP_RECORDS(ConstSpiceDSKDescr, SpiceDSKDescr)
+
+#undef TYPEMAP_RECORDS
+
+
+
+/******************************
+ *
+ *
+ *
+ *
+ */
+
+%define TYPEMAP_RECORDS_ALIAS(ConstType, Type, Typecode, size)
+
+%typemap(in)
+    (ConstType *INPUT)
+        (PyArrayObject *pyarr=NULL),
+    (Type *INPUT)
+        (PyArrayObject *pyarr=NULL)
+{
+//      $1_type $1_name
+//      $1_type *INPUT
+
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
+    TEST_INVALID_ARRAY_SHAPE_1D(pyarr, size);
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(in, numinputs=0)
+    (Type *OUTPUT)                                              // PATTERN
+        (PyArrayObject *pyarr = NULL)
+{
+//      $1_type $1_name
+//      Type *OUTPUT
+
+    npy_intp dims = size;                                       // DIMENSIONS
+    pyarr = (PyArrayObject *) PyArray_SimpleNew(1, &dims, Typecode);
+    TEST_MALLOC_FAILURE(pyarr);
+
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(argout)
+    (Type *OUTPUT)
+%{
+    $result = SWIG_Python_AppendOutput($result, pyarr$argnum);
+    pyarr$argnum = NULL;
+%}
+
+%typemap(freearg)
+   (ConstType *INPUT),
+   (Type *INPUT),
+   (Type *OUTPUT)
+%{
+    Py_XDECREF(pyarr$argnum);
+%}
+
+%enddef
+
+TYPEMAP_RECORDS_ALIAS(ConstSpiceEllipse, SpiceEllipse, NPY_DOUBLE, 9)
+TYPEMAP_RECORDS_ALIAS(ConstSpicePlane, SpicePlane, NPY_DOUBLE, 4)
+
+#undef TYPEMAP_RECORDS_ALIAS
+
+
 
 /*******************************************************************************
 * Typemap for boolean output

@@ -20,6 +20,7 @@
     erract_c("SET", 256, "RETURN");
     errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
     initialize_typemap_globals();
+    initialize_numpy_descriptors();
 %}
 
 %typemap(in, numinputs=0)
@@ -430,3 +431,37 @@ SpiceInt sized_array_with_resize(SpiceInt in_size, SpiceInt *out_size, SpiceInt 
 
 %apply (SpiceInt SIZED_INOUT_ARRAY2[][]) {SpiceInt *array};
 void sized_array_2d(SpiceInt *array);
+
+//SpiceDLADescr
+%{
+    int DLADescr_in(ConstSpiceDLADescr *arg) {
+        return arg->isize + arg->dsize + arg->csize;
+    }
+
+    void DLADescr_out(SpiceDLADescr *arg) {
+        arg->isize = 1;
+    }
+
+    int ellipse_in(ConstSpiceEllipse *arg) {
+        return arg->center[0];
+    }
+
+    void ellipse_out(SpiceEllipse *arg) {
+        arg->center[0] = 1;
+    }
+
+%}
+
+%apply (ConstSpiceDLADescr* INPUT) {ConstSpiceDLADescr *arg};
+int DLADescr_in(ConstSpiceDLADescr *arg);
+
+%apply (SpiceDLADescr* OUTPUT) {SpiceDLADescr *arg};
+void DLADescr_out(SpiceDLADescr *arg);
+
+%apply (ConstSpiceEllipse* INPUT) {ConstSpiceEllipse *arg};
+int ellipse_in(ConstSpiceEllipse *arg);
+
+%apply (SpiceEllipse* OUTPUT) {SpiceEllipse *arg};
+void ellipse_out(SpiceEllipse *arg);
+
+

@@ -13,8 +13,6 @@
 #define NELLIPSE 9
 #define DAFSIZE 125     // size of DAF summary
 #define DASSIZE 256     // DAS size
-#define DLASIZE 8
-#define DSKSIZE 21      // size in "doubles".  It's 6 integers then 18 doubles
 
 #define CLAUSES 100     // max number of expressions in a SELECT clause
 #define COLLEN 100      // max length of string columns or parsed items
@@ -143,6 +141,7 @@ void reset_messages(void);
         erract_c("SET", 256, "RETURN");
         errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
         initialize_typemap_globals();
+        initialize_numpy_descriptors();
 %}
 
 %feature("autodoc", "1");
@@ -675,13 +674,13 @@ extern void bodvrd_c(
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble center[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vec1[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vec2[3]};
-%apply (SpiceDouble OUT_ARRAY1[ANY])     {SpiceDouble ellipse[NELLIPSE]};
+%apply (SpiceEllipse *OUTPUT)              {SpiceEllipse *ellipse};
 
 extern void cgv2el_c(
         ConstSpiceDouble center[3],
         ConstSpiceDouble vec1[3],
         ConstSpiceDouble vec2[3],
-        SpiceDouble      ellipse[NELLIPSE]
+        SpiceEllipse *ellipse
 );
 
 // Vector version
@@ -2363,14 +2362,14 @@ VECTORIZE_dX_dX__RETURN_d(dvsep, dvsep_c)
 %rename (edlimb) edlimb_c;
 %apply (void RETURN_VOID) {void edlimb_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble viewpt[3]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble    limb[NELLIPSE]};
+%apply (SpiceEllipse *OUTPUT)            {SpiceEllipse    *limb};
 
 extern void edlimb_c(
         SpiceDouble      a,
         SpiceDouble      b,
         SpiceDouble      c,
         ConstSpiceDouble viewpt[3],
-        SpiceDouble      limb[NELLIPSE]
+        SpiceEllipse     *limb
 );
 
 //Vector version
@@ -2468,13 +2467,13 @@ extern void edterm_c(
 
 %rename (el2cgv) el2cgv_c;
 %apply (void RETURN_VOID) {void el2cgv_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble ellipse[NELLIPSE]};
+%apply (ConstSpiceEllipse *INPUT)         {ConstSpiceEllipse *ellipse};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble center[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble smajor[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble sminor[3]};
 
 extern void el2cgv_c(
-        ConstSpiceDouble ellipse[NELLIPSE],
+        ConstSpiceEllipse *ellipse,
         SpiceDouble      center[3],
         SpiceDouble      smajor[3],
         SpiceDouble      sminor[3]
@@ -4045,15 +4044,15 @@ VECTORIZE_2s_d_3s_dX__d_dN_3d(ilumin, ilumin_c, 3)
 
 %rename (inedpl) inedpl_c;
 %apply (void RETURN_VOID) {void inedpl_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble ellipse[NELLIPSE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
+%apply (SpiceEllipse *OUTPUT)   {SpiceEllipse *ellipse};
 
 extern void inedpl_c(
         SpiceDouble      a,
         SpiceDouble      b,
         SpiceDouble      c,
-        ConstSpiceDouble plane[NPLANE],
-        SpiceDouble      ellipse[NELLIPSE],
+        ConstSpicePlane *plane,
+        SpiceEllipse *ellipse,
         SpiceBoolean     *OUTPUT
 );
 
@@ -4087,14 +4086,14 @@ VECTORIZE_3d_dX__dN_b(inedpl, inedpl_c, NELLIPSE)
 
 %rename (inelpl) inelpl_c;
 %apply (void RETURN_VOID) {void inelpl_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble ellips[NELLIPSE]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
+%apply (ConstSpiceEllipse *INPUT) {ConstSpiceEllipse *ellips};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble xpt1[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble xpt2[3]};
 
 extern void inelpl_c(
-        ConstSpiceDouble ellips[NELLIPSE],
-        ConstSpiceDouble plane[NPLANE],
+        ConstSpiceEllipse *ellips,
+        ConstSpicePlane  *plane,
         SpiceInt         *OUTPUT,
         SpiceDouble      xpt1[3],
         SpiceDouble      xpt2[3]
@@ -4132,13 +4131,13 @@ VECTORIZE_dX_dX__i_dM_dN(inelpl, inelpl_c, 3, 3)
 %apply (void RETURN_VOID) {void inrypl_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vertex[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble dir[3]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble xpt[3]};
 
 extern void inrypl_c(
         ConstSpiceDouble vertex[3],
         ConstSpiceDouble dir[3],
-        ConstSpiceDouble plane[NPLANE],
+        ConstSpicePlane *plane,
         SpiceInt         *OUTPUT,
         SpiceDouble      xpt[3]
 );
@@ -5746,12 +5745,12 @@ VECTORIZE_3d_dX_dX__dN_d(npedln, npedln_c, 3)
 %rename (npelpt) npelpt_c;
 %apply (void RETURN_VOID) {void npelpt_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble point[3]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble ellips[NELLIPSE]};
+%apply (ConstSpiceEllipse *INPUT)        {ConstSpiceEllipse *ellips};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      pnear[3]};
 
 extern void npelpt_c(
         ConstSpiceDouble point[3],
-        ConstSpiceDouble ellips[NELLIPSE],
+        ConstSpiceEllipse *ellips,
         SpiceDouble      pnear[3],
         SpiceDouble      *OUTPUT
 );
@@ -5827,15 +5826,15 @@ VECTORIZE_dX_dX_dX__dN_d(nplnpt, nplnpt_c, 3)
 %rename (nvc2pl) nvc2pl_c;
 %apply (void RETURN_VOID) {void nvc2pl_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble normal[3]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      plane[NPLANE]};
+%apply (SpicePlane       *OUTPUT) {SpicePlane      *plane};
 
 extern void nvc2pl_c(
         ConstSpiceDouble normal[3],
         SpiceDouble      constant,
-        SpiceDouble      plane[NPLANE]
+        SpicePlane       *plane
 );
 
-//Vector version
+//Vector version.  FY LOOK AT ME
 VECTORIZE_dX_d__dN(nvc2pl, nvc2pl_c, NPLANE)
 
 /***********************************************************************
@@ -5863,15 +5862,15 @@ VECTORIZE_dX_d__dN(nvc2pl, nvc2pl_c, NPLANE)
 %apply (void RETURN_VOID) {void nvp2pl_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble normal[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble point[3]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      plane[NPLANE]};
+%apply (SpicePlane       *OUTPUT)        {SpicePlane      *plane};
 
 extern void nvp2pl_c(
         ConstSpiceDouble normal[3],
         ConstSpiceDouble point[3],
-        SpiceDouble      plane[NPLANE]
+        SpicePlane       *plane
 );
 
-//Vector version
+//Vector version  FY LOOK AT ME
 VECTORIZE_dX_dX__dN(nvp2pl, nvp2pl_c, NPLANE)
 
 /***********************************************************************
@@ -6340,14 +6339,14 @@ extern void pipool_c(
 
 %rename (pjelpl) pjelpl_c;
 %apply (void RETURN_VOID) {void pjelpl_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble  elin[NELLIPSE]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      elout[NELLIPSE]};
+%apply (ConstSpiceEllipse *INPUT) {ConstSpiceEllipse *elin};
+%apply (ConstSpicePlane   *INPUT) {ConstSpicePlane *plane};
+%apply (SpiceEllipse      *OUTPUT) {SpiceEllipse *elout};
 
 extern void pjelpl_c(
-        ConstSpiceDouble  elin[NELLIPSE],
-        ConstSpiceDouble plane[NPLANE],
-        SpiceDouble      elout[NELLIPSE]
+        ConstSpiceEllipse *elin,
+        ConstSpicePlane   *plane,
+        SpiceEllipse      *elout
 );
 
 //Vector version
@@ -6535,11 +6534,11 @@ extern SpiceDouble pltvol_c(
 
 %rename (pl2nvc) pl2nvc_c;
 %apply (void RETURN_VOID) {void pl2nvc_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      normal[3]};
 
 extern void pl2nvc_c(
-        ConstSpiceDouble plane[NPLANE],
+        ConstSpicePlane *plane,
         SpiceDouble      normal[3],
         SpiceDouble      *OUTPUT
 );
@@ -6571,12 +6570,12 @@ VECTORIZE_dX__dN_d(pl2nvc, pl2nvc_c, 3)
 
 %rename (pl2nvp) pl2nvp_c;
 %apply (void RETURN_VOID) {void pl2nvp_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      normal[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble       point[3]};
 
 extern void pl2nvp_c(
-        ConstSpiceDouble plane[NPLANE],
+        ConstSpicePlane *plane,
         SpiceDouble      normal[3],
         SpiceDouble       point[3]
 );
@@ -6610,13 +6609,13 @@ VECTORIZE_dX__dM_dN(pl2nvp, pl2nvp_c, 3, 3)
 
 %rename (pl2psv) pl2psv_c;
 %apply (void RETURN_VOID) {void pl2psv_c};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      point[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      span1[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      span2[3]};
 
 extern void pl2psv_c(
-        ConstSpiceDouble plane[NPLANE],
+        ConstSpicePlane *plane,
         SpiceDouble      point[3],
         SpiceDouble      span1[3],
         SpiceDouble      span2[3]
@@ -6693,16 +6692,16 @@ VECTORIZE_d_dX_d__dN(prop2b, prop2b_c, 6)
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble point[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble span1[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble span2[3]};
-%apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      plane[NPLANE]};
+%apply (SpicePlane       *OUTPUT)        {SpicePlane       *plane};
 
 extern void psv2pl_c(
         ConstSpiceDouble point[3],
         ConstSpiceDouble span1[3],
         ConstSpiceDouble span2[3],
-        SpiceDouble      plane[NPLANE]
+        SpicePlane       *plane
 );
 
-//Vector version
+//Vector version FY LOOK AT ME
 VECTORIZE_dX_dX_dX__dN(psv2pl, psv2pl_c, NPLANE)
 
 /***********************************************************************
@@ -11933,12 +11932,12 @@ VECTORIZE_dX_dX__dN(vperp, vperp_c, 3)
 %rename (vprjp) vprjp_c;
 %apply (void RETURN_VOID) {void vprjp_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble v1[3]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble plane[NPLANE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      v2[3]};
 
 extern void vprjp_c(
         ConstSpiceDouble v1[3],
-        ConstSpiceDouble plane[NPLANE],
+        ConstSpicePlane *plane,
         SpiceDouble      v2[3]
 );
 
@@ -11974,14 +11973,14 @@ VECTORIZE_dX_dX__dN(vprjp, vprjp_c, 3)
 %rename (vprjpi) vprjpi_c;
 %apply (void RETURN_VOID) {void vprjpi_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble v1[3]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble projpl[NPLANE]};
-%apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble invpl[NPLANE]};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *projpl};
+%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *invpl};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble      v2[3]};
 
 extern void vprjpi_c(
         ConstSpiceDouble v1[3],
-        ConstSpiceDouble projpl[NPLANE],
-        ConstSpiceDouble invpl[NPLANE],
+        ConstSpicePlane  *projpl,
+        ConstSpicePlane  *invpl,
         SpiceDouble      v2[3],
         SpiceBoolean     *OUTPUT
 );

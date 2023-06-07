@@ -2,6 +2,8 @@ import pytest
 
 import numpy as np
 import cspyce.typemap_samples as ts
+import cspyce.record_support as record_support
+import numpy.testing as npt
 
 
 def flatten(array):
@@ -716,5 +718,44 @@ class Test_SIZED_INOUT_ARRAY1:
     def test_double_array(self):
         array = ts.sized_array_2d((11, 12))
         assert array.shape == (11, 12)
+
+class Test_C_STRUCTURES:
+    # An ellipse is just a vector of 9 floats
+    def test_ellipse_in(self):
+        ellipse = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = ts.ellipse_in(ellipse)  # returns arg->center[0]
+        assert result == 1
+
+    def test_ellipse_out(self):
+        ellipse = ts.ellipse_out()
+        # Sets arg->center[0] to 1
+        assert ellipse[0] == 1
+        assert len(ellipse) == 9
+
+    def test_ellipse_requires_exactly_nine(self):
+        with pytest.raises(ValueError):
+            ts.ellipse_in([1.0] * 10)
+
+    # A SpiceDLADescr is a python record
+    def test_dla_in(self):
+        temp = record_support.get_new_record('SpiceDLADescr')
+        temp.isize, temp.csize, temp.dsize = 1, 20, 400
+        assert ts.DLADescr_in(temp) == 421  # It adds those three fields.  Just because
+
+    # We can pass an array of 8 integers when it expects a SpiceDLADescr
+    def test_dla_in_with_array(self):
+        temp = np.arange(1, 9, dtype=np.int32)
+        assert ts.DLADescr_in(temp) == 4 + 6 + 8
+
+    def test_dla_in_with_wrong_sized_array(self):
+        with pytest.raises(ValueError):
+            temp = np.arange(1, 10, dtype=np.int32)
+            ts.DLADescr_in(temp)
+
+    def test_dla_out(self):
+        descriptor = ts.DLADescr_out()
+        assert descriptor is not None
+        assert descriptor.isize == 1  # set by method
+
 
 

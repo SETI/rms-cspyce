@@ -2802,11 +2802,11 @@ VECTORIZE_3d_2b__dMN(dazldr, dazldr_c, 3, 3)
 
 %rename (dlabbs) dlabbs_c;
 %apply (void RETURN_VOID) {void dlabbs_c};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt dladsc[DLASIZE]};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *dladsc};
 
 extern void dlabbs_c(
         SpiceInt      handle,
-        SpiceInt      dladsc[DLASIZE],
+        SpiceDLADescr *dladsc,
         SpiceBoolean  *OUTPUT
 );
 
@@ -2833,11 +2833,11 @@ extern void dlabbs_c(
 
 %rename (dlabfs) dlabfs_c;
 %apply (void RETURN_VOID) {void dlabfs_c};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt dladsc[DLASIZE]};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *dladsc};
 
 extern void dlabfs_c(
         SpiceInt      handle,
-        SpiceInt      dladsc[DLASIZE],
+        SpiceDLADescr *dladsc,
         SpiceBoolean  *OUTPUT
 );
 
@@ -2914,14 +2914,14 @@ extern void dlaens_c(
 
 %rename (dlafns) dlafns_c;
 %apply (void RETURN_VOID) {void dlafns_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt nxtdsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDLADescr *OUTPUT)     {SpiceDLADescr *nxtdsc};
 
 extern void dlafns_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
-        SpiceInt      nxtdsc[DLASIZE],
-        SpiceBoolean  *OUTPUT
+        ConstSpiceDLADescr *dladsc,
+        SpiceDLADescr      *nxtdsc,
+        SpiceBoolean       *OUTPUT
 );
 
 /***********************************************************************
@@ -2949,14 +2949,14 @@ extern void dlafns_c(
 
 %rename (dlafps) dlafps_c;
 %apply (void RETURN_VOID) {void dlafps_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt prvdsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *prvdsc};
 
 extern void dlafps_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
-        SpiceInt      prvdsc[DLASIZE],
-        SpiceBoolean  *OUTPUT
+        ConstSpiceDLADescr *dladsc,
+        SpiceDLADescr      *prvdsc,
+        SpiceBoolean       *OUTPUT
 );
 
 /***********************************************************************
@@ -3172,14 +3172,14 @@ VECTORIZE_3d_2b__dMN(drdazl, drdazl_c, 3, 3)
 
 %rename (dskb02) dskb02_c;
 %apply (void RETURN_VOID) {void dskb02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY]) {SpiceDouble vtxbds[3][2]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble voxori[3]};
 %apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt vgrext[3]};
 
 extern void dskb02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      *OUTPUT,
         SpiceInt      *OUTPUT,
         SpiceInt      *OUTPUT,
@@ -3251,13 +3251,13 @@ extern void dskcls_c(
 
 %rename (dskd02) dskd02_c;
 %apply (void RETURN_VOID) {void dskd02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceDouble OUT_ARRAY1[ANY])
                     {(SpiceInt room, SpiceInt *n, SpiceDouble values[MAXVALS])};
 
 extern void dskd02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      item,
         SpiceInt      start,
         SpiceInt      room, SpiceInt *n, SpiceDouble values[MAXVALS]
@@ -3287,13 +3287,13 @@ extern void dskd02_c(
 
 %rename (dskgd) dskgd_c;
 %apply (void RETURN_VOID) {void dskgd_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dskdsc[DSKSIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDSKDescr *OUTPUT) {SpiceDSKDescr *dskdsc};
 
 extern void dskgd_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
-        SpiceDouble   dskdsc[DSKSIZE]
+        ConstSpiceDLADescr *dladsc,
+        SpiceDSKDescr *dskdsc
 );
 
 /***********************************************************************
@@ -3354,11 +3354,11 @@ extern void dskgtl_c(
 
 %rename (dski02) dski02_c;
 %apply (void RETURN_VOID) {void dski02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 
 extern void dski02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      item,
         SpiceInt      start,
         SpiceInt      room,
@@ -3465,12 +3465,12 @@ extern void dskmi2_c (
 
 %rename (dskn02) dskn02_c;
 %apply (void RETURN_VOID) {void dskn02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble normal[3]};
 
 extern void dskn02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      plid,
         SpiceDouble   normal[3]
 );
@@ -3580,13 +3580,13 @@ extern void dskopn_c(
 
 %rename (dskp02) dskp02_c;
 %apply (void RETURN_VOID) {void dskp02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt SIZED_INOUT_ARRAY2[][ANY])
                     {(SpiceInt room, SpiceInt *n, SpiceInt plates[][3])};
 
 extern void dskp02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      start,
         SpiceInt      room, SpiceInt *n, SpiceInt plates[][3]
 );
@@ -3741,13 +3741,13 @@ extern void dskstl_c(
 
 %rename (dskv02) dskv02_c;
 %apply (void RETURN_VOID) {void dskv02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceDouble SIZED_INOUT_ARRAY2[][ANY])
                     {(SpiceInt room, SpiceInt *n, SpiceDouble vrtces[][3])};
 
 extern void dskv02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      start,
         SpiceInt      room, SpiceInt *n, SpiceDouble vrtces[][3]
 );
@@ -3891,14 +3891,14 @@ extern void dskw02_c(
 
 %rename (dskx02) dskx02_c;
 %apply (void RETURN_VOID) {void dskx02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vertex[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble xpt[3]};
 
 extern void dskx02_c(
         SpiceInt         handle,
-        ConstSpiceInt    dladsc[DLASIZE],
+        ConstSpiceDLADescr    *dladsc,
         ConstSpiceDouble vertex[3],
         ConstSpiceDouble raydir[3],
         SpiceInt         *OUTPUT,
@@ -3972,8 +3972,8 @@ extern void dskx02_c(
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble xpt[3]};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt dladsc[DLASIZE]};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dskdsc[DSKSIZE]};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *dladsc};
+%apply (SpiceDSKDescr *OUTPUT) {SpiceDSKDescr *dskdsc};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dc[SPICE_DSKXSI_DCSIZE]};
 %apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt ic[SPICE_DSKXSI_ICSIZE]};
 %apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
@@ -3989,8 +3989,8 @@ extern void dskx02_c(
         ConstSpiceDouble raydir[3],
         SpiceDouble      xpt[3],
         SpiceInt         *handle,
-        SpiceInt         dladsc[DLASIZE],
-        SpiceDouble      dskdsc[DSKSIZE],
+        SpiceDLADescr    *dladsc,
+        SpiceDSKDescr    *dskdsc,
         SpiceDouble      dc[SPICE_DSKXSI_DCSIZE],
         SpiceInt         ic[SPICE_DSKXSI_ICSIZE],
         SpiceBoolean     *found)
@@ -4129,11 +4129,11 @@ extern void dskx02_c(
 
 %rename (dskz02) dskz02_c;
 %apply (void RETURN_VOID) {void dskz02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 
 extern void dskz02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      *OUTPUT,
         SpiceInt      *OUTPUT
 );
