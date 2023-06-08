@@ -674,7 +674,7 @@ extern void bodvrd_c(
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble center[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vec1[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vec2[3]};
-%apply (SpiceEllipse *OUTPUT)              {SpiceEllipse *ellipse};
+%apply (SpiceEllipse *OUTPUT)            {SpiceEllipse *ellipse};
 
 extern void cgv2el_c(
         ConstSpiceDouble center[3],
@@ -2467,7 +2467,7 @@ extern void edterm_c(
 
 %rename (el2cgv) el2cgv_c;
 %apply (void RETURN_VOID) {void el2cgv_c};
-%apply (ConstSpiceEllipse *INPUT)         {ConstSpiceEllipse *ellipse};
+%apply (ConstSpiceEllipse *INPUT)        {ConstSpiceEllipse *ellipse};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble center[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble smajor[3]};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble sminor[3]};
@@ -4051,8 +4051,8 @@ extern void inedpl_c(
         SpiceDouble      a,
         SpiceDouble      b,
         SpiceDouble      c,
-        ConstSpicePlane *plane,
-        SpiceEllipse *ellipse,
+        ConstSpicePlane  *plane,
+        SpiceEllipse     *ellipse,
         SpiceBoolean     *OUTPUT
 );
 
@@ -4131,7 +4131,7 @@ VECTORIZE_dX_dX__i_dM_dN(inelpl, inelpl_c, 3, 3)
 %apply (void RETURN_VOID) {void inrypl_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vertex[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble dir[3]};
-%apply (ConstSpicePlane *INPUT) {ConstSpicePlane *plane};
+%apply (ConstSpicePlane *INPUT)          {ConstSpicePlane *plane};
 %apply (SpiceDouble     OUT_ARRAY1[ANY]) {SpiceDouble xpt[3]};
 
 extern void inrypl_c(
@@ -5834,7 +5834,7 @@ extern void nvc2pl_c(
         SpicePlane       *plane
 );
 
-//Vector version.  FY LOOK AT ME
+//Vector version.
 VECTORIZE_dX_d__dN(nvc2pl, nvc2pl_c, NPLANE)
 
 /***********************************************************************
@@ -5870,7 +5870,7 @@ extern void nvp2pl_c(
         SpicePlane       *plane
 );
 
-//Vector version  FY LOOK AT ME
+//Vector version
 VECTORIZE_dX_dX__dN(nvp2pl, nvp2pl_c, NPLANE)
 
 /***********************************************************************
@@ -6701,7 +6701,7 @@ extern void psv2pl_c(
         SpicePlane       *plane
 );
 
-//Vector version FY LOOK AT ME
+//Vector version
 VECTORIZE_dX_dX_dX__dN(psv2pl, psv2pl_c, NPLANE)
 
 /***********************************************************************

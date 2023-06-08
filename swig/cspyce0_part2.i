@@ -3898,7 +3898,7 @@ extern void dskw02_c(
 
 extern void dskx02_c(
         SpiceInt         handle,
-        ConstSpiceDLADescr    *dladsc,
+        ConstSpiceDLADescr *dladsc,
         ConstSpiceDouble vertex[3],
         ConstSpiceDouble raydir[3],
         SpiceInt         *OUTPUT,
