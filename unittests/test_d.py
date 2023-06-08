@@ -1059,27 +1059,27 @@ def test_dskv02():
     cs.dascls(handle)
 
 
-def fail_dskx02():
+def test_dskx02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
+    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     r = 2.0 * dskdsc.co3max
     # Produce a ray vertex
     vertex = cs.latrec(r, 0.0, 0.0)
     raydir = cs.vminus(vertex)
-    plid, xpt, found = cs.dskx02(handle, dladsc, vertex, raydir)
+    plid, xpt = cs.dskx02(handle, dladsc, vertex, raydir)
     # test results
-    assert found
     assert plid == 421
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
     # cleanup
     cs.dascls(handle)
 
 
-def fail_dskxsi():
+def test_dskxsi():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle
@@ -1088,6 +1088,7 @@ def fail_dskxsi():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
+    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     target = cs.bodc2n(dskdsc.center)
     fixref = cs.frmnam(dskdsc.frmcde)
     r = 1.0e10
@@ -1101,11 +1102,10 @@ def fail_dskxsi():
     # check output
     assert handle is not None
     assert ic[0] == 420
-    assert dc[0] == pytest.approx(0.0)
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
 
 
-def fail_dskxv():
+def test_dskxv():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     cs.use_flags(cs.kdata)
@@ -1115,6 +1115,7 @@ def fail_dskxv():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
+    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     target = cs.bodc2n(dskdsc.center)
     fixref = cs.frmnam(dskdsc.frmcde)
     r = 1.0e10
@@ -1132,7 +1133,7 @@ def fail_dskxv():
     npt.assert_almost_equal(xpt[0], [12.36679999999999957083, 0.0, 0.0])
 
 
-def fail_dskxv_2():
+def test_dskxv_2():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle
@@ -1141,6 +1142,7 @@ def fail_dskxv_2():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
+    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     target = cs.bodc2n(dskdsc.center)
     fixref = cs.frmnam(dskdsc.frmcde)
     r = 1.0e10

@@ -37,15 +37,17 @@ def setup_module(module):
     download_kernels()
 
 
+# Test changed. cspyce does not have .center, .semiminor or .semimajor
+# attributes. Replaced with indices.
 def test_edlimb():
     viewpt = [2.0, 0.0, 0.0]
     limb = cs.edlimb(np.sqrt(2), 2.0 * np.sqrt(2), np.sqrt(2), viewpt)
     expected_s_minor = [0.0, 0.0, -1.0]
     expected_s_major = [0.0, 2.0, 0.0]
     expected_center = [1.0, 0.0, 0.0]
-    npt.assert_array_almost_equal(limb.center, expected_center)
-    npt.assert_array_almost_equal(limb.semi_major, expected_s_major)
-    npt.assert_array_almost_equal(limb.semi_minor, expected_s_minor)
+    npt.assert_array_almost_equal(limb[:3], expected_center)
+    npt.assert_array_almost_equal(limb[3:6], expected_s_major)
+    npt.assert_array_almost_equal(limb[6:9], expected_s_minor)
 
 
 def test_ednmpt():
@@ -142,14 +144,124 @@ def test_edterm():
     )
     npt.assert_almost_equal(cs.dpr() * solar2, 89.730234322)
 
+
+# Test changed. cspyce.ekacec does not use an "nvals" argument (number of
+# values to add to column). cspyce does not have an exists() function.
+def test_ekacec():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekacec.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle,
+        "test_table_ekacec",
+        ["c1"],
+        ["DATATYPE = CHARACTER*(*), NULLS_OK = TRUE"],
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacec(handle, segno, recno, "c1", ["1.0", "2.0"], False)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+# Test changed. cspyce.ekacec does not use an "nvals" argument (number of
+# values to add to column). cspyce does not have an exists() function.
+def test_ekaced():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekaced.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle,
+        "test_table_ekaced",
+        ["c1"],
+        ["DATATYPE = DOUBLE PRECISION, NULLS_OK = TRUE"],
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekaced(handle, segno, recno, "c1", [1.0, 2.0], False)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+# Test changed. cspyce.ekacec does not use an "nvals" argument (number of
+# values to add to column). cspyce does not have an exists() function.
+def test_ekappr_ekacei():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekappr.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "test_table_ekappr", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+# Test changed. cspyce has no "exists" function.
+def test_ekaclc():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekaclc.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekaclc",
+        2,
+        ["c1"],
+        ["DATATYPE = CHARACTER*(*), INDEXED  = TRUE"],
+    )
+    cs.ekaclc(
+        handle, segno, "c1", ["1.0", "2.0"], [
+            4, 4], [False, False], rcptrs
+    )
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekacld():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekacld.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekacld",
+        2,
+        ["c1"],
+        ["DATATYPE = DOUBLE PRECISION, NULLS_OK = FALSE"]
+    )
+    cs.ekacld(
+        handle, segno, "c1", [1, 1], [False, False], rcptrs, [0, 0]
+    )
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekacli():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekacli.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekacli",
+        2,
+        ["c1"],
+        ["DATATYPE = INTEGER, NULLS_OK = TRUE"]
+    )
+    cs.ekacli(handle, segno, "c1", [1, 2], [
+              1, 1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
 # =============================================================================
-# edterm
-# ekacec
-# ekaced
-# ekacei
-# ekaclc
-# ekacld
-# ekacli
 # ekappr
 # ekbseg
 # ekccnt
