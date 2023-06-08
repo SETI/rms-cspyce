@@ -469,11 +469,11 @@ void initialize_typemap_globals(void) {
     errcode_to_PyErrorType[ValueError] = PyExc_ValueError;
 }
 
-PyObject* RECORD_SWIG_SUPPORT = NULL;
+PyObject* SWIG_SUPPORT_CLASS = NULL;
 
 void initialize_swig_callback(void) {
     PyObject *record_support = PyImport_ImportModule("cspyce.record_support");
-    RECORD_SWIG_SUPPORT = PyObject_GetAttrString(record_support, "_SwigSupport");
+    SWIG_SUPPORT_CLASS = PyObject_GetAttrString(record_support, "_SwigSupport");
     Py_XDECREF(record_support);
 }
 %}
@@ -3200,7 +3200,7 @@ TYPEMAP_OUT(SpiceChar)
 {
 //      $1_type $1_name
 //      $1_type *INPUT
-    record = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "as_record", "sO", "Type", $input);
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_record", "sO", "Type", $input);
     if (!record || record == Py_None) {
         handle_bad_type_error("$symname", "Type");
         SWIG_fail;
@@ -3215,7 +3215,7 @@ TYPEMAP_OUT(SpiceChar)
 {
 //      $1_type $1_name
 //      Type *OUTPUT
-    record = PyObject_CallMethod(RECORD_SWIG_SUPPORT, "create_record", "s", "Type");
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_record", "s", "Type");
     TEST_MALLOC_FAILURE(record);
     base_array = PyObject_GetAttrString(record, "base");
     $1 = PyArray_DATA(base_array);
