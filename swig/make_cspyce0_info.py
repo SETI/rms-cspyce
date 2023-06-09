@@ -281,7 +281,7 @@ def handle_one_function(out, records):
                     if 'INOUT_' in argdef:
                         this_inout = 'I-O'
                         this_main_arg = k
-                    elif 'IN_' in argdef:
+                    elif 'IN_' in argdef or 'INPUT' in argdef:
                         this_inout = 'I'
                         this_main_arg = k
                     elif 'OUT' in argdef:
@@ -291,7 +291,7 @@ def handle_one_function(out, records):
                         this_inout = 'I'
                         this_main_arg = k
 
-                assert this_main_arg >= 0, record
+                assert this_main_arg >= 0, f'"{record}" in {func}, {k} {argdef}'
 
             match = APPLY2.fullmatch(record)   # match ... {...};
             if match:
@@ -300,6 +300,7 @@ def handle_one_function(out, records):
                 subrec = match.group(1)
                 for k, argdef in enumerate(subrec.split(',')):
                     match = ARG_DEF.fullmatch(argdef)
+                    assert match, f'Failed to match "{argdef}" in {func}'
                     (const, argtype, star, name, dim) = match.groups()
                     argtype = (const + ' ' + argtype).lstrip()
                     dim = dim.replace(' ', '')
@@ -517,16 +518,9 @@ def handle_one_function(out, records):
 # Replacements for other random SPICE types
 TYPES_REPLACED = {
     'SpiceCK05Subtype'  : ('ConstSpiceChar',),
-    'SpiceDLADescr'     : ('SpiceInt',),
-    'ConstSpiceDLADescr': ('ConstSpiceInt',),
-    'SpiceDSKDescr'     : ('SpiceDouble',),
     'SpiceEKDataType'   : ('SpiceInt',),
     'SpiceEKExprClass'  : ('SpiceInt',),
     'SpiceSPK18Subtype' : ('ConstSpiceChar',),
-    'SpiceEllipse'      : ('SpiceDouble',),
-    'SpicePlane'        : ('SpiceDouble',),
-    'ConstSpiceEllipse' : ('ConstSpiceDouble',),
-    'ConstSpicePlane'   : ('ConstSpiceDouble',),
     'SpiceCell'         : ('SpiceInt', 'SpiceDouble', 'ConstSpiceDouble'),
 }
 

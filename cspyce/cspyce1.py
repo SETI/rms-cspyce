@@ -866,39 +866,6 @@ def _create_das_char_array(data, epos):
     return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
 @_removing_final_arguments
-def dasrdi(handle, first, last):
-    return cspyce0.dasrdi(handle, first, last, last - first + 1)
-
-@_removing_final_arguments
-def dasrdd(handle, first, last):
-    return cspyce0.dasrdd(handle, first, last, last - first + 1)
-
-@_removing_final_arguments
-def dafgda(handle, begin, end):
-    return cspyce0.dafgda(handle, begin, end, end - begin + 1)
-
-@_removing_final_arguments
-def dskmi2(vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, makvtl, spxisz):
-    return cspyce0.dskmi2(vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, makvtl, spxisz,
-                          worksz, spxisz)
-
-@_removing_final_arguments
-def edterm(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts):
-    return cspyce0.edterm(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts, npts)
-
-@_removing_final_arguments
-def latsrf(method, target, et, fixref, lonlat):
-    lonlat = np.asarray(lonlat)
-    return cspyce0.latsrf(method, target, et, fixref, lonlat, len(lonlat))
-
-@_removing_final_arguments
-def limbpt(method, target, et, fixref, abcorr, corloc, obsrvr, refvec, rolstp, nctus, schstp, soltol, maxn):
-    return cspyce0.limbpt(method, target, et, fixref, abcorr, corloc, obsrvr,
-                          refvec, rolstp, nctus, schstp, soltol, maxn,
-                          # additional arguments are the sizes of the output arrays.
-                          maxn, maxn, maxn, maxn)
-
-@_removing_final_arguments
 def orderc(array):
     array = np.asarray(array)
     return cspyce0.orderc(array, len(array))
@@ -912,22 +879,6 @@ def orderd(array):
 def orderi(array):
     array = np.asarray(array)
     return cspyce0.orderi(array, len(array))
-
-@_removing_final_arguments
-def srfnrm(method, target, et, fixref, srfpts):
-    srfpts = np.asarray(srfpts)
-    return cspyce0.srfnrm(method, target, et, fixref, srfpts, len(srfpts))
-
-@_removing_final_arguments
-def termpt(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr, refvec, rolstp, ncuts, schstp, soltol, maxn):
-    return cspyce0.termpt(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr, refvec, rolstp, ncuts, schstp, soltol, maxn,
-                          # additional arguments oare the sizes of the output arrays
-                          maxn, maxn, maxn, maxn)
-
-@_removing_final_arguments
-def unormg(v1):
-    v1 = np.asarray(v1, dtype=np.double)
-    return cspyce0.unormg(v1, len(v1))
 
 ################################################################################
 # For functions that return only a list of strings, don't embed the results in

@@ -20,6 +20,7 @@
     erract_c("SET", 256, "RETURN");
     errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
     initialize_typemap_globals();
+    initialize_swig_callback();
 %}
 
 %typemap(in, numinputs=0)
@@ -406,27 +407,36 @@ void outvar_set_from_var_double(SpiceDouble INPUT, SpiceDouble* OUTPUT);
 void outvar_set_from_var_char(SpiceChar INPUT, SpiceChar *OUTPUT);
 void outvar_set_from_var_bool(SpiceInt INPUT, SpiceBoolean *OUTPUT);
 
+//SpiceDLADescr
 %{
-    void sized_array_plain(SpiceInt *array) {}
-
-    SpiceInt sized_array_no_resize(SpiceInt in_size, SpiceDouble *array) { return in_size; }
-
-    SpiceInt sized_array_with_resize(SpiceInt in_size, SpiceInt *out_size, SpiceInt *array, SpiceInt new_size) {
-        *out_size = new_size > in_size ? in_size : new_size;
-        return in_size;
+    int DLADescr_in(ConstSpiceDLADescr *arg) {
+        return arg->isize + arg->dsize + arg->csize;
     }
 
-    void sized_array_2d(SpiceInt *array) { }
+    void DLADescr_out(SpiceDLADescr *arg) {
+        arg->isize = 1;
+    }
+
+    int ellipse_in(ConstSpiceEllipse *arg) {
+        return arg->center[0];
+    }
+
+    void ellipse_out(SpiceEllipse *arg) {
+        arg->center[0] = 1;
+    }
+
 %}
-%apply (SpiceInt SIZED_INOUT_ARRAY1[]) {(SpiceInt *array)};
-void sized_array_plain(SpiceInt SIZED_INOUT_ARRAY1[]);
 
-%apply (SpiceInt SIZED_INOUT_ARRAY1[], SpiceInt DIM1) {(SpiceInt in_size, SpiceInt *array)};
-SpiceInt sized_array_no_resize(SpiceInt DIM1, SpiceInt SIZED_INOUT_ARRAY1[]);
+%apply (ConstSpiceDLADescr* INPUT) {ConstSpiceDLADescr *arg};
+int DLADescr_in(ConstSpiceDLADescr *arg);
 
-%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt SIZED_INOUT_ARRAY2[][ANY])
-        {(SpiceInt in_size, SpiceInt* out_size, SpiceInt array[][3])};
-SpiceInt sized_array_with_resize(SpiceInt in_size, SpiceInt *out_size, SpiceInt array[][3], SpiceInt new_size);
+%apply (SpiceDLADescr* OUTPUT) {SpiceDLADescr *arg};
+void DLADescr_out(SpiceDLADescr *arg);
 
-%apply (SpiceInt SIZED_INOUT_ARRAY2[][]) {SpiceInt *array};
-void sized_array_2d(SpiceInt *array);
+%apply (ConstSpiceEllipse* INPUT) {ConstSpiceEllipse *arg};
+int ellipse_in(ConstSpiceEllipse *arg);
+
+%apply (SpiceEllipse* OUTPUT) {SpiceEllipse *arg};
+void ellipse_out(SpiceEllipse *arg);
+
+

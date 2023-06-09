@@ -2,6 +2,8 @@ import pytest
 
 import numpy as np
 import cspyce.typemap_samples as ts
+import cspyce.record_support as record_support
+import numpy.testing as npt
 
 
 def flatten(array):
@@ -697,24 +699,43 @@ class TestReturnValueThroughOutvar:
         assert ts.outvar_set_from_var_bool(1) is True
         assert ts.outvar_set_from_var_bool(-100) is True
 
-class Test_SIZED_INOUT_ARRAY1:
-    def test_basic_int_to_sized_array(self):
-        assert len(ts.sized_array_plain(10)) == 10
-        assert len(ts.sized_array_plain(-1)) == 0
+class Test_C_STRUCTURES:
+    # An ellipse is just a vector of 9 floats
+    def test_ellipse_in(self):
+        ellipse = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        result = ts.ellipse_in(ellipse)  # returns arg->center[0]
+        assert result == 1
 
-    def test_basic_int_to_sized_array_with_size(self):
-        length, array = ts.sized_array_no_resize(10)
-        assert length == 10
-        assert len(array) == 10
+    def test_ellipse_out(self):
+        ellipse = ts.ellipse_out()
+        # Sets arg->center[0] to 1
+        assert ellipse[0] == 1
+        assert len(ellipse) == 9
 
-    def test_resizing_int_to_sized_array(self):
-        # We allocate with size 20, and resize to 5
-        original_length, array = ts.sized_array_with_resize(20, 5)
-        assert original_length == 20
-        assert len(array) == 5
+    def test_ellipse_requires_exactly_nine(self):
+        with pytest.raises(ValueError):
+            ts.ellipse_in([1.0] * 10)
 
-    def test_double_array(self):
-        array = ts.sized_array_2d((11, 12))
-        assert array.shape == (11, 12)
+    # A SpiceDLADescr is a python record
+    def test_dla_in(self):
+        temp = record_support.create_record('SpiceDLADescr')
+        temp.isize, temp.csize, temp.dsize = 1, 20, 400
+        assert ts.DLADescr_in(temp) == 421  # It adds those three fields.  Just because
+
+    # We can pass an array of 8 integers when it expects a SpiceDLADescr
+    def test_dla_in_with_array(self):
+        temp = np.arange(1, 9, dtype=np.int32)
+        assert ts.DLADescr_in(temp) == 4 + 6 + 8
+
+    def test_dla_in_with_wrong_sized_array(self):
+        with pytest.raises(ValueError):
+            temp = np.arange(1, 10, dtype=np.int32)
+            ts.DLADescr_in(temp)
+
+    def test_dla_out(self):
+        descriptor = ts.DLADescr_out()
+        assert descriptor is not None
+        assert descriptor.isize == 1  # set by method
+
 
 

@@ -866,24 +866,6 @@ def test_dskd02():
     )
     cs.dascls(handle)
 
-
-DSK_DESCRIPTOR_TYPE =  np.dtype([
-    ('surfce', np.int32),
-    ('center', np.int32),
-    ('dclass', np.int32),
-    ('dtype_', np.int32),  # had to rename from dtype, which is taken.
-    ('frmcde', np.int32),
-    ('corsys', np.int32),
-    ('corpar', np.double, 10),
-    ('co1min', np.double),
-    ('co1max', np.double),
-    ('co2min', np.double),
-    ('co2max', np.double),
-    ('co3min', np.double),
-    ('co3max', np.double),
-    ('start',  np.double),
-    ('stop',   np.double)])
-
 def test_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
@@ -891,7 +873,6 @@ def test_dskgd():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
 
     assert dskdsc.surfce == 401
     assert dskdsc.center == 401

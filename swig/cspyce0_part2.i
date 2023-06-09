@@ -463,29 +463,15 @@ extern SpiceInt bsrchi_c(
         SpiceInt         nderiv,
         SpiceDouble      **dpdxs, SpiceInt *n)
     {
-
         int nderiv_plus_1 = nderiv + 1;
 
-        *dpdxs = NULL;
-        *n = 0;
-
-        SpiceDouble *result = my_malloc(nderiv_plus_1, "chbder");
-        SpiceDouble *partdp = my_malloc(3 * nderiv_plus_1, "chbder");
-        if (!partdp) {
-            PyMem_Free(result);
-            return;
-        }
-
-        chbder_c(cp, deg_plus_1 - 1, x2s, x, nderiv, partdp, result);
-        PyMem_Free(partdp);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *dpdxs = result;
         *n = nderiv_plus_1;
+        *dpdxs = my_malloc(nderiv_plus_1, "chbder");
+        SpiceDouble *partdp = my_malloc(3 * nderiv_plus_1, "chbder");
+        if (*dpdxs && partdp) {
+            chbder_c(cp, deg_plus_1 - 1, x2s, x, nderiv, partdp, *dpdxs);
+        }
+        PyMem_Free(partdp);
     }
 
     // This function doesn't fit any of our vectorization templates, because
@@ -518,36 +504,25 @@ extern SpiceInt bsrchi_c(
         in21_dim1 = (in21_dim1 == 0 ? 1 : in21_dim1);
         in12_dim1 = (in12_dim1 == 0 ? 1 : in12_dim1);
 
-        SpiceDouble *out21_buffer = my_malloc(size * nderiv_plus_1, my_name);
-        if (!out21_buffer) return;
-
-        SpiceDouble *partdp = my_malloc(3 * nderiv_plus_1, my_name);
-        if (!partdp) {
-            PyMem_Free(out21_buffer);
-            return;
-        }
-
-        for (int i = 0; i < size; i++) {
-            chbder_c(
-                in21 + (i % in21_dim1) * in21_dim2, degp,
-                x2s,
-                in12[i % in12_dim1],
-                nderiv,
-                partdp,
-                out21_buffer + i * nderiv_plus_1
-            );
-        }
-
-        PyMem_Free(partdp);
-
-        if (failed_c()) {
-            PyMem_Free(out21_buffer);
-            return;
-        }
-
-        *out21 = out21_buffer;
         *out21_dim1 = maxdim;
         *out21_dim2 = nderiv_plus_1;
+        *out21 = my_malloc(size * nderiv_plus_1, my_name);
+
+        SpiceDouble *partdp = my_malloc(3 * nderiv_plus_1, my_name);
+
+        if (*out21 && partdp) {
+            for (int i = 0; i < size; i++) {
+                chbder_c(
+                    in21 + (i % in21_dim1) * in21_dim2, degp,
+                    x2s,
+                    in12[i % in12_dim1],
+                    nderiv,
+                    partdp,
+                    *out21 + i * nderiv_plus_1
+                );
+            }
+        }
+        PyMem_Free(partdp);
     }
 %}
 
@@ -888,27 +863,10 @@ extern void ckgr02_c(
         SpiceInt    icd[6];
         dafus_c(descr, 2, 6, dcd, icd);
 
-        int avseg = (icd[3] == 1);
-        if (avseg) {
-            *size = 8;
-        } else {
-            *size = 5;
-        }
-
-        SpiceDouble *buffer = my_malloc(*size, "ckgr03");
-        if (!buffer) {
-            *size = 0;
-            return;
-        }
-
-        ckgr03_c(handle, descr, recno, buffer);
-
-        if (failed_c()) {
-            PyMem_Free(buffer);
-            *size = 0;
-            *record = NULL;
-        } else {
-            *record = buffer;
+        *size = (icd[3] == 1) ? 8 : 5;
+        *record = my_malloc(*size, "ckgr03");
+        if (*record) {
+            ckgr03_c(handle, descr, recno, *record);
         }
     }
 %}
@@ -2478,16 +2436,27 @@ extern void dasrdc_c(
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdd) dasrdd_c;
-%apply (void RETURN_VOID) {void dasrdd_c};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble *data)};
+%rename (dasrdd) my_dasrdd_c;
+%apply (void RETURN_VOID) {void my_dasrdd_c};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceDouble **data, SpiceInt *size)};
 
-extern void dasrdd_c (
+%inline %{
+extern void my_dasrdd_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
-        SpiceDouble         *data
-);
+        SpiceDouble         **data,
+        SpiceInt            *size)
+    {
+        my_assert_ge(first, 1, "dasrdd", "first (#) must be at least 1");
+        my_assert_ge(last, first, "dasrdd", "last (#) must be as large as first (#)");
+        *size = last - first + 1;
+        *data = my_malloc(*size, "dasrdd");
+        if (*data) {
+           dasrdd_c(handle, first, last,  *data);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure dasrdi_c ( DAS, read data, integer )
@@ -2512,16 +2481,27 @@ extern void dasrdd_c (
 * data       O   Data having addresses `first' through `last'.
 ***********************************************************************/
 
-%rename (dasrdi) dasrdi_c;
-%apply (void RETURN_VOID) {void dasrdi_c};
-%apply (SpiceInt *SIZED_INOUT_ARRAY1){(SpiceInt *data)};
+%rename (dasrdi) my_dasrdi_c;
+%apply (void RETURN_VOID) {void my_dasrdi_c};
+%apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceInt **data, SpiceInt *size)};
 
-extern void dasrdi_c (
+%inline %{
+extern void my_dasrdi_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
-        SpiceInt            *data
-);
+        SpiceInt            **data,
+        SpiceInt            *size)
+    {
+        my_assert_ge(first, 1, "dasrdi", "first (#) must be at least 1");
+        my_assert_ge(last, first, "dasrdi", "last (#) must be as large as first (#)");
+        *size = last - first + 1;
+        *data = my_int_malloc(*size, "dasrdi");
+        if (*data) {
+           dasrdi_c(handle, first, last,  *data);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure dasrfr_c ( DAS, read file record )
@@ -2802,11 +2782,11 @@ VECTORIZE_3d_2b__dMN(dazldr, dazldr_c, 3, 3)
 
 %rename (dlabbs) dlabbs_c;
 %apply (void RETURN_VOID) {void dlabbs_c};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt dladsc[DLASIZE]};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *dladsc};
 
 extern void dlabbs_c(
         SpiceInt      handle,
-        SpiceInt      dladsc[DLASIZE],
+        SpiceDLADescr *dladsc,
         SpiceBoolean  *OUTPUT
 );
 
@@ -2833,11 +2813,11 @@ extern void dlabbs_c(
 
 %rename (dlabfs) dlabfs_c;
 %apply (void RETURN_VOID) {void dlabfs_c};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt dladsc[DLASIZE]};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *dladsc};
 
 extern void dlabfs_c(
         SpiceInt      handle,
-        SpiceInt      dladsc[DLASIZE],
+        SpiceDLADescr *dladsc,
         SpiceBoolean  *OUTPUT
 );
 
@@ -2914,14 +2894,14 @@ extern void dlaens_c(
 
 %rename (dlafns) dlafns_c;
 %apply (void RETURN_VOID) {void dlafns_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt nxtdsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDLADescr *OUTPUT)     {SpiceDLADescr *nxtdsc};
 
 extern void dlafns_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
-        SpiceInt      nxtdsc[DLASIZE],
-        SpiceBoolean  *OUTPUT
+        ConstSpiceDLADescr *dladsc,
+        SpiceDLADescr      *nxtdsc,
+        SpiceBoolean       *OUTPUT
 );
 
 /***********************************************************************
@@ -2949,14 +2929,14 @@ extern void dlafns_c(
 
 %rename (dlafps) dlafps_c;
 %apply (void RETURN_VOID) {void dlafps_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt prvdsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *prvdsc};
 
 extern void dlafps_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
-        SpiceInt      prvdsc[DLASIZE],
-        SpiceBoolean  *OUTPUT
+        ConstSpiceDLADescr *dladsc,
+        SpiceDLADescr      *prvdsc,
+        SpiceBoolean       *OUTPUT
 );
 
 /***********************************************************************
@@ -3172,14 +3152,14 @@ VECTORIZE_3d_2b__dMN(drdazl, drdazl_c, 3, 3)
 
 %rename (dskb02) dskb02_c;
 %apply (void RETURN_VOID) {void dskb02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY]) {SpiceDouble vtxbds[3][2]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble voxori[3]};
 %apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt vgrext[3]};
 
 extern void dskb02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      *OUTPUT,
         SpiceInt      *OUTPUT,
         SpiceInt      *OUTPUT,
@@ -3251,13 +3231,13 @@ extern void dskcls_c(
 
 %rename (dskd02) dskd02_c;
 %apply (void RETURN_VOID) {void dskd02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceDouble OUT_ARRAY1[ANY])
                     {(SpiceInt room, SpiceInt *n, SpiceDouble values[MAXVALS])};
 
 extern void dskd02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      item,
         SpiceInt      start,
         SpiceInt      room, SpiceInt *n, SpiceDouble values[MAXVALS]
@@ -3287,13 +3267,13 @@ extern void dskd02_c(
 
 %rename (dskgd) dskgd_c;
 %apply (void RETURN_VOID) {void dskgd_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dskdsc[DSKSIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDSKDescr *OUTPUT) {SpiceDSKDescr *dskdsc};
 
 extern void dskgd_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
-        SpiceDouble   dskdsc[DSKSIZE]
+        ConstSpiceDLADescr *dladsc,
+        SpiceDSKDescr *dskdsc
 );
 
 /***********************************************************************
@@ -3354,11 +3334,11 @@ extern void dskgtl_c(
 
 %rename (dski02) dski02_c;
 %apply (void RETURN_VOID) {void dski02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 
 extern void dski02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      item,
         SpiceInt      start,
         SpiceInt      room,
@@ -3412,32 +3392,36 @@ extern void dski02_c(
 * spaixi     O   Integer component of spatial index.
 ***********************************************************************/
 
-%rename (dskmi2) dskmi2_c;
-%apply (void RETURN_VOID) {void dskmi2_c};
+%rename (dskmi2) my_dskmi2_c;
+%apply (void RETURN_VOID) {void my_dskmi2_c};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                     {(SpiceInt nv, ConstSpiceDouble vrtces[][3])};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                     {(SpiceInt np, ConstSpiceInt plates[][3])};
-%apply (SpiceInt SIZED_INOUT_ARRAY2[][ANY]) {SpiceInt work[][2]};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble spaixd[SPICE_DSK02_SPADSZ]};
-%apply (SpiceInt SIZED_INOUT_ARRAY1[]) {SpiceInt spaixi[]};
+%apply (SpiceDouble OUT_ARRAY1[ANY])
+                    {SpiceDouble spaixd[SPICE_DSK02_SPADSZ]};
+%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt spaixi[SPICE_DSK02_SPAISZ]};
 
-extern void dskmi2_c (
-        SpiceInt            nv,
-        ConstSpiceDouble    vrtces[][3],
-        SpiceInt            np,
-        ConstSpiceInt       plates[][3],
-        SpiceDouble         finscl,
-        SpiceInt            corscl,
-        SpiceInt            worksz,
-        SpiceInt            voxpsz,
-        SpiceInt            voxlsz,
-        SpiceBoolean        makvtl,
-        SpiceInt            spxisz,
-        SpiceInt            work[][2],
-        SpiceDouble         spaixd[SPICE_DSK02_SPADSZ],
-        SpiceInt            spaixi[]
-);
+%inline %{
+    void my_dskmi2_c(
+        SpiceInt         nv, ConstSpiceDouble vrtces[][3],
+        SpiceInt         np, ConstSpiceInt    plates[][3],
+        SpiceDouble      finscl,
+        SpiceInt         corscl,
+        SpiceBoolean     makvtl,
+        SpiceDouble      spaixd[SPICE_DSK02_SPADSZ],
+        SpiceInt         spaixi[SPICE_DSK02_SPAISZ])
+    {
+        SpiceInt voxpsz = SPICE_DSK02_MAXVXP;
+        SpiceInt voxlsz = SPICE_DSK02_MXNVLS;
+        SpiceInt worksz = SPICE_DSK02_MAXCEL;
+        SpiceInt spxisz = SPICE_DSK02_SPAISZ;
+        SpiceInt work[SPICE_DSK02_MAXCEL][2];
+
+        dskmi2_c(nv, vrtces, np, plates, finscl, corscl, worksz, voxpsz, voxlsz,
+                 makvtl, spxisz, work, spaixd, spaixi);
+    }
+%}
 
 /***********************************************************************
 * -Procedure dskn02_c ( DSK, type 2, compute normal vector for plate )
@@ -3465,12 +3449,12 @@ extern void dskmi2_c (
 
 %rename (dskn02) dskn02_c;
 %apply (void RETURN_VOID) {void dskn02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble normal[3]};
 
 extern void dskn02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      plid,
         SpiceDouble   normal[3]
 );
@@ -3578,20 +3562,29 @@ extern void dskopn_c(
 * plates     O   Array containing plates.
 ***********************************************************************/
 
-%rename (dskp02) dskp02_c;
-%apply (void RETURN_VOID) {void dskp02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceInt SIZED_INOUT_ARRAY2[][ANY])
-                    {(SpiceInt room, SpiceInt *n, SpiceInt plates[][3])};
+%rename (dskp02) my_dskp02_c;
+%apply (void RETURN_VOID) {void my_dskp02_c};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceInt **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                {(SpiceInt **plates, SpiceInt *dim1, SpiceInt *dim2)};
 
-extern void dskp02_c(
+%inline %{
+    void my_dskp02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      start,
-        SpiceInt      room, SpiceInt *n, SpiceInt plates[][3]
-);
+        SpiceInt      room,
+        SpiceInt      **plates, SpiceInt *dim1, SpiceInt *dim2)
+    {
+        *dim2 = 3;
+        *plates = my_int_malloc(3 * room, "dskp02");
+        if (*plates) {
+            dskp02_c(handle, dladsc, start, room, dim1, *plates);
+        }
+    }
+%}
 
-//CSPYCE_DEFAULT:plates:100
+//CSPYCE_DEFAULT:room:100
 
 /***********************************************************************
 * -Procedure dskrb2_c ( DSK, determine range bounds for plate set )
@@ -3739,20 +3732,30 @@ extern void dskstl_c(
 * vrtces     O   Array containing vertices.
 ***********************************************************************/
 
-%rename (dskv02) dskv02_c;
-%apply (void RETURN_VOID) {void dskv02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
-%apply (SpiceInt DIM1, SpiceInt *SIZE1, SpiceDouble SIZED_INOUT_ARRAY2[][ANY])
-                    {(SpiceInt room, SpiceInt *n, SpiceDouble vrtces[][3])};
+%rename (dskv02) my_dskv02_c;
+%apply (void RETURN_VOID) {void my_dskv02_c};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                    {(SpiceDouble **vrtces, SpiceInt *dim1, SpiceInt *dim2)};
 
-extern void dskv02_c(
+%inline %{
+extern void my_dskv02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      start,
-        SpiceInt      room, SpiceInt *n, SpiceDouble vrtces[][3]
-);
+        SpiceInt      room,
+        SpiceDouble **vrtces, SpiceInt *dim1, SpiceInt *dim2)
+    {
+        *dim1 = 0;
+        *dim2 = 3;
+        *vrtces = my_malloc(3 * room, "dskv02_c");
+        if (*vrtces) {
+            dskv02_c(handle, dladsc, start, room, dim1, *vrtces);
+        }
+    }
+%}
 
-//CSPYCE_DEFAULT:vrtces:100
+//CSPYCE_DEFAULT:room:100
 
 /***********************************************************************
 * -Procedure dskw02_c ( DSK, write type 2 segment )
@@ -3891,14 +3894,14 @@ extern void dskw02_c(
 
 %rename (dskx02) dskx02_c;
 %apply (void RETURN_VOID) {void dskx02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble vertex[3]};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble xpt[3]};
 
 extern void dskx02_c(
         SpiceInt         handle,
-        ConstSpiceInt    dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         ConstSpiceDouble vertex[3],
         ConstSpiceDouble raydir[3],
         SpiceInt         *OUTPUT,
@@ -3972,8 +3975,8 @@ extern void dskx02_c(
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble xpt[3]};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt dladsc[DLASIZE]};
-%apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dskdsc[DSKSIZE]};
+%apply (SpiceDLADescr *OUTPUT) {SpiceDLADescr *dladsc};
+%apply (SpiceDSKDescr *OUTPUT) {SpiceDSKDescr *dskdsc};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble dc[SPICE_DSKXSI_DCSIZE]};
 %apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt ic[SPICE_DSKXSI_ICSIZE]};
 %apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
@@ -3989,8 +3992,8 @@ extern void dskx02_c(
         ConstSpiceDouble raydir[3],
         SpiceDouble      xpt[3],
         SpiceInt         *handle,
-        SpiceInt         dladsc[DLASIZE],
-        SpiceDouble      dskdsc[DSKSIZE],
+        SpiceDLADescr    *dladsc,
+        SpiceDSKDescr    *dskdsc,
         SpiceDouble      dc[SPICE_DSKXSI_DCSIZE],
         SpiceInt         ic[SPICE_DSKXSI_ICSIZE],
         SpiceBoolean     *found)
@@ -4068,38 +4071,19 @@ extern void dskx02_c(
         SpiceInt       *n3,   SpiceInt *nv, SpiceDouble **xptarr,
         SpiceInt       *n4,   SpiceBoolean **fndarr)
     {
-        *xptarr = NULL;
-        *fndarr = NULL;
-        *n3 = 0;
-        *nv = 3;
-        *n4 = 0;
-
         if (!my_assert_eq(nrays, n2, "dskxv",
             "Array dimension mismatch in dskxv: "
             "vtxarr dimension = #; dirarr dimension = #")) return;
 
-        SpiceBoolean *found = my_malloc(nrays, "dskxv");
-        SpiceDouble *vector = my_malloc(nrays * 3, "dskxv");
-        if (!vector) {
-            PyMem_Free(found);
-            found = NULL;
-            return;
-        }
-
-        dskxv_c(pri, target, nsurf, srflst, et, fixref, nrays,
-                vtxarr, dirarr, vector, found);
-
-        if (failed_c()) {
-            PyMem_Free(found);
-            PyMem_Free(vector);
-            return;
-        }
-
-        *xptarr = vector;
-        *fndarr = found;
         *n3 = nrays;
         *nv = 3;
         *n4 = nrays;
+        *fndarr = my_malloc(nrays, "dskxv");
+        *xptarr =  my_malloc(nrays * 3, "dskxv");
+        if (*fndarr && *xptarr) {
+            dskxv_c(pri, target, nsurf, srflst, et, fixref, nrays,
+                    vtxarr, dirarr, *xptarr, *fndarr);
+        }
     }
 %}
 
@@ -4129,11 +4113,11 @@ extern void dskx02_c(
 
 %rename (dskz02) dskz02_c;
 %apply (void RETURN_VOID) {void dskz02_c};
-%apply (ConstSpiceInt IN_ARRAY1[ANY]) {ConstSpiceInt dladsc[DLASIZE]};
+%apply (ConstSpiceDLADescr *INPUT) {ConstSpiceDLADescr *dladsc};
 
 extern void dskz02_c(
         SpiceInt      handle,
-        ConstSpiceInt dladsc[DLASIZE],
+        ConstSpiceDLADescr *dladsc,
         SpiceInt      *OUTPUT,
         SpiceInt      *OUTPUT
 );
@@ -7536,9 +7520,9 @@ VECTORIZE_2d_di_d__2d(hrmesp, my_hrmesp_c)
             "second yvals dimension = #; should be 2")) return;
 
         SpiceDouble *work = my_malloc(4 * n + 4, "hrmint");
-        if (!work) return;
-
-        hrmint_c(n, xvals, yvals, x, work, f, df);
+        if (work) {
+            hrmint_c(n, xvals, yvals, x, work, f, df);
+        }
         PyMem_Free(work);
     }
 %}
@@ -8117,9 +8101,9 @@ VECTORIZE_2d_di_d__RETURN_d(lgresp, my_lgresp_c)
             "xvals dimension = #; yvals dimension = #")) return;
 
         SpiceDouble *work = my_malloc(2*n + 2, "lgrind");
-        if (!work) return;
-
-        lgrind_c(n, xvals, yvals, work, x, p, dp);
+        if (work) {
+            lgrind_c(n, xvals, yvals, work, x, p, dp);
+        }
         PyMem_Free(work);
     }
 %}
@@ -8907,14 +8891,18 @@ extern void nthwd_c(
 %apply (void RETURN_VOID) {void my_orderc_c};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
                 {(SpiceInt ndim, SpiceInt arrlen, ConstSpiceChar *array)};
-%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *iorder};
+%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
 
 %inline %{
     void my_orderc_c(
         SpiceInt ndim, SpiceInt arrlen, ConstSpiceChar *array,
-        SpiceInt *iorder)
+        SpiceInt *n,   SpiceInt **iorder)
     {
-        orderc_c(arrlen, array, ndim, iorder);
+        *n = ndim;
+        *iorder = my_int_malloc(ndim, "orderc");
+        if (*iorder) {
+            orderc_c(arrlen, array, ndim, *iorder);
+        }
     }
 %}
 
@@ -8939,17 +8927,26 @@ extern void nthwd_c(
 * iorder     O   Order vector for array.
 ***********************************************************************/
 
-%rename (orderd) orderd_c;
-%apply (void RETURN_VOID) {void orderd_c};
+%rename (orderd) my_orderd_c;
+%apply (void RETURN_VOID) {void my_orderd_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                 {(ConstSpiceDouble *array, SpiceInt ndim)};
-%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *iorder};
+%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1)
+                {(SpiceInt *n, SpiceInt **iorder)};
 
-extern void orderd_c(
+%inline %{
+    void my_orderd_c(
         ConstSpiceDouble *array,
         SpiceInt         ndim,
-        SpiceInt         *iorder
-);
+        SpiceInt         *n, SpiceInt **iorder)
+    {
+        *n = ndim;
+        *iorder = my_int_malloc(ndim, "orderd");
+        if (*iorder) {
+            orderd_c(array, ndim, *iorder);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure orderi_c ( Order of an integer array )
@@ -8972,16 +8969,24 @@ extern void orderd_c(
 * iorder     O    Order vector for array.
 ***********************************************************************/
 
-%rename (orderi) orderi_c;
-%apply (void RETURN_VOID) {void orderi_c};
+%rename (orderi) my_orderi_c;
+%apply (void RETURN_VOID) {void my_orderi_c};
 %apply (ConstSpiceInt *IN_ARRAY1, SpiceInt DIM1)
                 {(ConstSpiceInt *array, SpiceInt ndim)};
-%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *iorder};
+%apply (SpiceInt *SIZE1, SpiceInt **OUT_ARRAY1) {(SpiceInt *n, SpiceInt **iorder)};
 
-extern void orderi_c(
+%inline %{
+    void my_orderi_c(
         ConstSpiceInt *array, SpiceInt ndim,
-        SpiceInt      *iorder
-);
+        SpiceInt      *n,     SpiceInt **iorder)
+    {
+        *n = ndim;
+        *iorder = my_int_malloc(ndim, "orderi");
+        if (*iorder) {
+            orderi_c(array, ndim, *iorder);
+        };
+    }
+%}
 
 /***********************************************************************
 * -Procedure pckcls_c ( PCK, close file )
@@ -9261,37 +9266,27 @@ VECTORIZE_dX_dX_dX__dN(pltnrm, pltnrm_c, 3)
         int deg = in21_dim1 - 1;
         int nderiv_plus_1 = nderiv + 1;
 
-        *out21 = NULL;
-        *out21_dim1 = 0;
-        *out21_dim2 = nderiv_plus_1;
-
-        int maxdim = in21_dim1;
+         int maxdim = in21_dim1;
         if (maxdim < in12_dim1) maxdim = in12_dim1;
 
         int size = (maxdim == 0 ? 1 : maxdim);
         in21_dim1 = (in21_dim1 == 0 ? 1 : in21_dim1);
         in12_dim1 = (in12_dim1 == 0 ? 1 : in12_dim1);
 
-        SpiceDouble *out21_buffer = my_malloc(size * nderiv_plus_1, my_name);
-        if (!out21_buffer) return;
-
-        for (int i = 0; i < size; i++) {
-            polyds_c(
-                in21 + (i % in21_dim1) * in21_dim2,
-                deg, nderiv,
-                in12[i % in12_dim1],
-                out21_buffer + i * nderiv_plus_1
-            );
-        }
-
-        if (failed_c()) {
-            PyMem_Free(out21_buffer);
-            return;
-        }
-
-        *out21 = out21_buffer;
         *out21_dim1 = maxdim;
         *out21_dim2 = nderiv_plus_1;
+        *out21 = my_malloc(size * nderiv_plus_1, my_name);
+
+        if (*out21) {
+            for (int i = 0; i < size; i++) {
+                polyds_c(
+                    in21 + (i % in21_dim1) * in21_dim2,
+                    deg, nderiv,
+                    in12[i % in12_dim1],
+                    *out21 + i * nderiv_plus_1
+                );
+            }
+        }
     }
 %}
 
@@ -9491,25 +9486,15 @@ extern void prsint_c(
         SpiceDouble delta,
         SpiceInt    *ndim2, SpiceDouble **dfdt)
     {
-        *dfdt = NULL;
-        *ndim2 = 0;
-
         if (!my_assert_eq(ndim, ndim1, "qderiv",
             "Array dimension mismatch in qderiv: "
             "f0 dimension = #; f2 dimension = #")) return;
 
-        SpiceDouble *result = my_malloc(ndim, "qderiv");
-        if (!result) return;
-
-        qderiv_c(ndim, f0, f2, delta, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *dfdt = result;
         *ndim2 = ndim;
+        *dfdt = my_malloc(ndim, "qderiv");
+        if (*dfdt) {
+            qderiv_c(ndim, f0, f2, delta, *dfdt);
+        }
     }
 %}
 
@@ -11706,25 +11691,15 @@ VECTORIZE_dX_i_dX_i__dMN(twovxf, twovxf_c, 6, 6)
         ConstSpiceDouble *b, SpiceInt ndim1, 
         SpiceDouble     **p, SpiceInt *ndim2)
     {
-        *p = NULL;
-        *ndim2 = 0;
-
         if (!my_assert_eq(ndim, ndim1, "vprojg",
             "Array dimension mismatch in vprojg: "
             "a elements = #; b elements = #")) return;
 
-        SpiceDouble *result = my_malloc(ndim, "vprojg");
-        if (!result) return;
-
-        vprojg_c(a, b, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *p = result;
         *ndim2 = ndim;
+        *p = my_malloc(ndim, "vprojg");
+        if (*p) {
+            vprojg_c(a, b, ndim, *p);
+        }
     }
 %}
 
