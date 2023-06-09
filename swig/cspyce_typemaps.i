@@ -3180,7 +3180,7 @@ TYPEMAP_OUT(SpiceChar)
 /*******************************************************************************
 * Typemaps for records.
 *
-* These typemaps are for data-structures in which the user wants to see a a record
+* These typemaps are for data-structures in which the user wants to see a record
 * with named fields.  The only forms that exist are:
 *
 *     (ConstType *INPUT)

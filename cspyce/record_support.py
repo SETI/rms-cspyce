@@ -32,7 +32,7 @@ DESCRIPTORS = {
 
 
 def create_record(name):
-    """ Creates a new empty record whose descriptor has the indicated name. """
+    """Creates a new uninitialized record whose descriptor has the indicated name."""
     descriptor = DESCRIPTORS.get(name)
     if not descriptor:
         return None
