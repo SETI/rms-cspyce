@@ -1418,6 +1418,9 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 * If the C function will allocate the memory it needs and will return the size:
 *       (type **OUT_ARRAY1, SpiceInt *DIM1)
 *       (SpiceInt *DIM1, type **OUT_ARRAY1)
+* This SWIG code is responsible for initializing the variable into which the C
+* code will put the allocated memory to NULL. This SWIG code is also responsible in
+* all cases for freeing the allocated memory.
 *******************************************************************************/
 
 %define TYPEMAP_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
@@ -1837,6 +1840,12 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 * This version will return a 1-D array if the first dimension is 0; otherwise
 * a 2-D array:
 *       (type **OUT_ARRAY12, SpiceInt *DIM1, SpiceInt *DIM2)
+* Note that ownership of the buffer for **OUT_ARRAY2 and **OUT_ARRAY12 is the same
+* as with *OUT_ARRAY2:
+*
+* This SWIG code is responsible for initializing the variable into which the C
+* code will put the allocated memory to NULL. This SWIG code is also responsible in
+* all cases for freeing the allocated memory if that variable is non-NULL.
 *******************************************************************************/
 
 %define TYPEMAP_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
