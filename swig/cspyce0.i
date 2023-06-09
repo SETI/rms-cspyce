@@ -53,6 +53,18 @@ SpiceDouble *my_malloc(int count, const char *fname) {
     return result;
 }
 
+SpiceInt *my_int_malloc(int count, const char *fname) {
+    SpiceInt *result = (SpiceInt *) PyMem_Malloc(count * sizeof(SpiceInt));
+    if (!result) {
+        chkin_c(fname);
+        setmsg_c("Failed to allocate memory");
+        sigerr_c("SPICE(MALLOCFAILURE)");
+        chkout_c(fname);
+    }
+
+    return result;
+}
+
 /* Internal routine to compare integers for equality */
 int my_assert_eq(int a, int b, const char *fname, const char *message) {
     if (a != b) {
@@ -1335,16 +1347,28 @@ extern void dafcls_c(
 * data       O   Data contained between `begin' and `end'.
 ***********************************************************************/
 
-%rename (dafgda) dafgda_c;
-%apply (void RETURN_VOID) {void dafgda_c};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1){(SpiceDouble *data)};
+%rename (dafgda) my_dafgda_c;
+%apply (void RETURN_VOID) {void my_dafgda_c};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceDouble **data, SpiceInt *size)};
 
-extern void dafgda_c(
+%inline %{
+    void my_dafgda_c(
         SpiceInt    handle,
         SpiceInt    begin,
         SpiceInt    end,
-        SpiceDouble *data
-);
+        SpiceDouble **data, SpiceInt *size)
+    {
+        my_assert_ge(begin, 1, "dafgda", "begin (#) must be at least 1");
+        my_assert_ge(end, begin, "dafgda", "end (#) must at least as large as begin (#)");
+        *size = end - begin + 1;
+        *data = my_malloc(*size, "dafgda");
+        if (*data) {
+            dafgda_c(handle, begin, end, *data);
+        }
+    }
+
+%}
+
 
 /***********************************************************************
 * -Procedure dafgn_c ( DAF, get array name )
@@ -1480,19 +1504,24 @@ extern void dafopr_c(
 %rename (dafus) my_dafus_c;
 %apply (void RETURN_VOID) {void my_dafus_c};
 %apply (ConstSpiceDouble IN_ARRAY1[]) {ConstSpiceDouble sum[]};
-%apply (SpiceInt DIM1, SpiceDouble *SIZED_INOUT_ARRAY1) {(SpiceInt nd, SpiceDouble *dc)};
-%apply (SpiceInt DIM1, SpiceInt *SIZED_INOUT_ARRAY1) {(SpiceInt ni, SpiceInt *ic)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceDouble **dc, SpiceInt *dc_size)};
+%apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceInt **ic, SpiceInt *ic_size)};
 
 %inline %{
     void my_dafus_c(
         ConstSpiceDouble sum[],
         SpiceInt nd,
-        SpiceDouble *dc,
         SpiceInt ni,
-        SpiceInt *ic)
+        SpiceDouble **dc, SpiceInt *dc_size,
+        SpiceInt **ic, SpiceInt *ic_size)
     {
-        // Arguments are in the wrong order. We can't do the interweaving ourselves.
-        dafus_c(sum, nd, ni, dc, ic);
+        *dc_size = max(nd, 0);
+        *ic_size = max(ni, 0);
+        *dc = my_malloc(*dc_size, "dafus");
+        *ic = my_malloc(*ic_size, "dafus");
+        if (*dc && *ic) {
+            dafus_c(sum, nd, ni, *dc, *ic);
+        }
     }
 %}
 
@@ -2414,8 +2443,8 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
 *    trmpts     O   Array of terminator points.
 ***********************************************************************/
 
-%rename (edterm) edterm_c;
-%apply (void RETURN_VOID) {void edterm_c};
+%rename (edterm) my_edterm_c;
+%apply (void RETURN_VOID) {void my_edterm_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *trmtyp};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *source};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -2424,9 +2453,11 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceDouble *OUTPUT)          {SpiceDouble *trgepc};
 %apply (SpiceDouble OUT_ARRAY1[ANY])  {SpiceDouble obspos[3]};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *trmpts[3]};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                                {(SpiceDouble **trmpts, SpiceInt *dim1, SpiceInt *dim2)};
 
-extern void edterm_c(
+%inline %{
+    void my_edterm_c(
         ConstSpiceChar *trmtyp,
         ConstSpiceChar *source,
         ConstSpiceChar *target,
@@ -2437,8 +2468,17 @@ extern void edterm_c(
         SpiceInt       npts,
         SpiceDouble    *trgepc,
         SpiceDouble    obspos[3],
-        SpiceDouble    *trmpts[3]
-);
+        SpiceDouble    **trmpts, SpiceInt *dim1, SpiceInt *dim2)
+    {
+        *dim1 = npts;
+        *dim2 = 3;
+        *trmpts = my_malloc(npts * 3, "edterm");
+        if (*trmpts) {
+            edterm_c(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts,
+                     trgepc, obspos, *trmpts);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure el2cgv_c ( Ellipse to center and generating vectors )
@@ -4563,23 +4603,33 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
 *    srfpts     O   Array of surface points.
 ***********************************************************************/
 
-%rename (latsrf) latsrf_c;
-%apply (void RETURN_VOID) {void latsrf_c};
+%rename (latsrf) my_latsrf_c;
+%apply (void RETURN_VOID) {void my_latsrf_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                             {(SpiceInt npts, ConstSpiceDouble lonlat[][2])};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *srfpts[3]};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                            {(SpiceDouble **srfpts, SpiceInt *sdim1, SpiceInt *sdim2)};
 
-extern void latsrf_c(
+%inline %{
+    void my_latsrf_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *target,
         SpiceDouble      et,
         ConstSpiceChar   *fixref,
         SpiceInt         npts, ConstSpiceDouble lonlat[][2],
-        SpiceDouble      *srfpts[3]
-);
+        SpiceDouble      **srfpts, SpiceInt *sdim1, SpiceInt *sdim2)
+    {
+        *sdim1 = npts;
+        *sdim2 = 3;
+        *srfpts = my_malloc(npts * 3, "latsrf");
+        if (*srfpts) {
+            latsrf_c(method, target, et, fixref, npts, lonlat, *srfpts);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure latsph_c ( Latitudinal to spherical coordinates )
@@ -4701,7 +4751,7 @@ extern void ldpool_c(
 *    tangts     O   Tangent vectors emanating from the observer.
 ***********************************************************************/
 
-%rename (limbpt) limbpt_c;
+%rename (limbpt) my_limbpt_c;
 %apply (void RETURN_VOID) {void my_limbpt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -4710,12 +4760,17 @@ extern void ldpool_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *corloc};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble refvec[3]};
-%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *npts};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *points[3]};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1) {SpiceDouble *epochs};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *tangts[3]};
+%apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1)
+                               {(SpiceInt **npts, SpiceInt *ndim1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                               {(SpiceDouble **epochs, SpiceInt *edim1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **tangts, SpiceInt *tdim1, SpiceInt *tdim2)};
 
-extern void limbpt_c(
+%inline %{
+    void my_limbpt_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *target,
         SpiceDouble      et,
@@ -4729,11 +4784,27 @@ extern void limbpt_c(
         SpiceDouble      schstp,
         SpiceDouble      soltol,
         SpiceInt         maxn,
-        SpiceInt         *npts,
-        SpiceDouble      *points[3],
-        SpiceDouble      *epochs,
-        SpiceDouble      *tangts[3]
-);
+        SpiceInt         **npts,  SpiceInt  *ndim1,
+        SpiceDouble      **points, SpiceInt *pdim1, SpiceInt *pdim2,
+        SpiceDouble      **epochs, SpiceInt *edim1,
+        SpiceDouble      **tangts, SpiceInt *tdim1, SpiceInt *tdim2)
+    {
+        *ndim1 = *pdim1 = *edim1 = *tdim1 = maxn;
+        *pdim2 = *tdim2 = 3;
+
+        *npts = my_int_malloc(maxn,   "limbpt");
+        *points = my_malloc(maxn * 3, "limbpt");
+        *epochs = my_malloc(maxn,     "limbpt");
+        *tangts = my_malloc(maxn * 3, "limbpt");
+
+        if (*npts && *points && *epochs && *tangts) {
+            limbpt_c(method, target, et, fixref, abcorr, corloc, obsrvr, refvec,
+                     rolstp, ncuts, schstp, soltol, maxn,
+                     *npts, *points, *epochs, *tangts);
+        }
+
+    }
+%}
 
 /***********************************************************************
 * -Procedure lspcn_c  ( Longitude of the sun, planetocentric )
@@ -4963,23 +5034,12 @@ VECTORIZE_dXY__dMN(mequ, mequ_c, 3, 3)
         SpiceDouble *m1,    SpiceInt nr, SpiceInt nc,
         SpiceDouble **matrix, SpiceInt *nr_out, SpiceInt *nc_out)
     {
-        *matrix = NULL;
-        *nr_out = 0;
-        *nc_out = 0;
-
-        SpiceDouble *result = my_malloc(nr * nc, "mequg");
-        if (!result) return;
-
-        mequg_c(m1, nr, nc, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *matrix = result;
         *nr_out = nr;
         *nc_out = nc;
+        *matrix = my_malloc(nr * nc, "mequg");
+        if (*matrix) {
+            mequg_c(m1, nr, nc, *matrix);
+        }
     }
 %}
 
@@ -5077,27 +5137,16 @@ VECTORIZE_dXY_dXY__dMN(mtxm, mtxm_c, 3, 3)
         SpiceDouble  *m2, SpiceInt  nr2, SpiceInt  nc2,
         SpiceDouble **m3, SpiceInt *nr3, SpiceInt *nc3)
     {
-        *m3 = NULL;
-        *nr3 = 0;
-        *nc3 = 0;
-
         if (!my_assert_eq(nr1, nr2, "mtmxg",
             "Array dimension mismatch in mtmxg: "
             "matrix 1 rows = #; matrix 2 rows = #")) return;
 
-        SpiceDouble *result = my_malloc(nc1 * nc2, "mtmxg");
-        if (!result) return;
-
-        mtxmg_c(m1, m2, nc1, nr1, nc2, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
-        }
-
-        *m3 = result;
         *nr3 = nc1;
         *nc3 = nc2;
+        *m3 = my_malloc(nc1 * nc2, "mtmxg");
+        if (*m3) {
+            mtxmg_c(m1, m2, nc1, nr1, nc2, *m3);
+        }
     }
 %}
 
@@ -5197,9 +5246,6 @@ VECTORIZE_dXY_dX__dN(mtxv, mtxv_c, 3)
         SpiceDouble  *v2, SpiceInt  nr2,
         SpiceDouble **v3, SpiceInt *nr3)
     {
-        *v3 = NULL;
-        *nr3 = 0;
-
         if (!my_assert_eq(nr1, nr2, "mtxvg",
             "Array dimension mismatch in mtxvg: "
             "matrix rows = #; vector dimension = #")) return;
@@ -9250,24 +9296,33 @@ extern void srfcss_c(
 *               P   Default point-surface membership margin.
 ***********************************************************************/
 
-%rename (srfnrm) srfnrm_c;
-%apply (void RETURN_VOID) {void srfnrm_c};
+%rename (srfnrm) my_srfnrm_c;
+%apply (void RETURN_VOID) {void my_srfnrm_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                           {(SpiceInt npts, ConstSpiceDouble srfpts[][3])};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *normls[3]};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                          {(SpiceDouble **normls, SpiceInt *dim1, SpiceInt *dim2)};
 
-extern void srfnrm_c(
+%inline %{
+    void my_srfnrm_c(
         ConstSpiceChar *method,
         ConstSpiceChar *target,
         SpiceDouble    et,
         ConstSpiceChar *fixref,
         SpiceInt npts, ConstSpiceDouble srfpts[][3],
-        SpiceDouble    *normls[3]
-);
-
+        SpiceDouble **normls, SpiceInt *dim1, SpiceInt *dim2)
+    {
+        *dim1 = npts;
+        *dim2 = 3;
+        *normls = my_malloc(npts * 3, "srfnrm");
+        if (*normls) {
+            srfnrm_c(method, target, et, fixref, npts, srfpts, *normls);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure srfrec_c ( Surface to rectangular coordinates )
@@ -10245,8 +10300,8 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
 *    trmvcs     O   Terminator vectors emanating from the observer.
 ***********************************************************************/
 
-%rename (termpt) termpt_c;
-%apply (void RETURN_VOID) {void termpt_c};
+%rename (termpt) my_termpt_c;
+%apply (void RETURN_VOID) {void my_termpt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *ilusrc};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -10255,13 +10310,18 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *corloc};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble refvec[3]};
-%apply (SpiceInt *SIZED_INOUT_ARRAY1) {SpiceInt *npts};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *points[3]};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1) {SpiceDouble *epochs};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY2[ANY]) {SpiceDouble *trmvcs[3]};
+%apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1)
+                               {(SpiceInt **npts, SpiceInt *ndim1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2)};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                               {(SpiceDouble **epochs, SpiceInt *edim1)};
+%apply (SpiceDouble **OUT_ARRAY2, SpiceInt *SIZE1, SpiceInt *SIZE2)
+                               {(SpiceDouble **trmvcs, SpiceInt *tdim1, SpiceInt *tdim2)};
 
 
-extern void termpt_c(
+%inline %{
+    void my_termpt_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *ilusrc,
         ConstSpiceChar   *target,
@@ -10276,11 +10336,26 @@ extern void termpt_c(
         SpiceDouble      schstp,
         SpiceDouble      soltol,
         SpiceInt         maxn,
-        SpiceInt         *npts,
-        SpiceDouble      *points[3],
-        SpiceDouble      *epochs,
-        SpiceDouble      *trmvcs[3]
-);
+        SpiceInt    **npts,   SpiceInt *ndim1,
+        SpiceDouble **points, SpiceInt *pdim1, SpiceInt *pdim2,
+        SpiceDouble **epochs, SpiceInt *edim1,
+        SpiceDouble **trmvcs, SpiceInt *tdim1, SpiceInt *tdim2)
+    {
+        *ndim1 = *pdim1 = *edim1 = *tdim1 = maxn;
+        *pdim2 = *tdim2 = 3;
+
+        *npts = my_int_malloc(maxn, "termpt");
+        *points = my_malloc(3 * maxn, "termpt");
+        *epochs = my_malloc(maxn, "termpt");
+        *trmvcs = my_malloc(3 * maxn, "termpt");
+
+        if (*npts && *points && *epochs && *trmvcs) {
+            termpt_c(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr,
+                     refvec, rolstp, ncuts, schstp, soltol, maxn,
+                     *npts, *points, *epochs, *trmvcs);
+        }
+    }
+%}
 
 /***********************************************************************
 * -Procedure timdef_c ( Time Software Defaults )
@@ -10937,20 +11012,27 @@ VECTORIZE_dX__dN_d(unorm, unorm_c, 3)
 * vmag      O     Magnitude of v1, that is, |v1|.
 ***********************************************************************/
 
-%rename (unormg) unormg_c;
-%apply (void RETURN_VOID) {void unormg_c};
+%rename (unormg) my_unormg_c;
+%apply (void RETURN_VOID) {void my_unormg_c};
 %apply (ConstSpiceDouble *IN_ARRAY1, SpiceInt DIM1)
                              {(ConstSpiceDouble *v1, SpiceInt ndim)};
-%apply (SpiceDouble *SIZED_INOUT_ARRAY1) {SpiceDouble *vector};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1)
+                             {(SpiceDouble **vector, SpiceInt *nd2)};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *vmag};
 
-extern void unormg_c(
+%inline %{
+    void my_unormg_c(
         ConstSpiceDouble *v1, SpiceInt ndim,
-        SpiceDouble      *vector,
-        SpiceDouble      *vmag
-);
-
-
+        SpiceDouble      **vector, SpiceInt *nd2,
+        SpiceDouble      *vmag)
+    {
+        *nd2 = ndim;
+        *vector = my_malloc(ndim, "unormg");
+        if (*vector) {
+            unormg_c(v1, ndim, *vector, vmag);
+        }
+    }
+%}
 %{
     void my_unormg_nomalloc(ConstSpiceDouble *v1, SpiceInt ndim,
                             SpiceDouble  *vector, SpiceInt *nd2,

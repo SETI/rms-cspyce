@@ -699,26 +699,6 @@ class TestReturnValueThroughOutvar:
         assert ts.outvar_set_from_var_bool(1) is True
         assert ts.outvar_set_from_var_bool(-100) is True
 
-class Test_SIZED_INOUT_ARRAY1:
-    def test_basic_int_to_sized_array(self):
-        assert len(ts.sized_array_plain(10)) == 10
-        assert len(ts.sized_array_plain(-1)) == 0
-
-    def test_basic_int_to_sized_array_with_size(self):
-        length, array = ts.sized_array_no_resize(10)
-        assert length == 10
-        assert len(array) == 10
-
-    def test_resizing_int_to_sized_array(self):
-        # We allocate with size 20, and resize to 5
-        original_length, array = ts.sized_array_with_resize(20, 5)
-        assert original_length == 20
-        assert len(array) == 5
-
-    def test_double_array(self):
-        array = ts.sized_array_2d((11, 12))
-        assert array.shape == (11, 12)
-
 class Test_C_STRUCTURES:
     # An ellipse is just a vector of 9 floats
     def test_ellipse_in(self):
