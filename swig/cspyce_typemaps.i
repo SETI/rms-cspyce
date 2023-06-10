@@ -3083,75 +3083,10 @@ TYPEMAP_OUT(SpiceChar)
 // If you add a new type here, then also add it to record_support.py
 TYPEMAP_RECORDS(ConstSpiceDLADescr, SpiceDLADescr)
 TYPEMAP_RECORDS(ConstSpiceDSKDescr, SpiceDSKDescr)
+TYPEMAP_RECORDS(ConstSpiceEllipse, SpiceEllipse)
+TYPEMAP_RECORDS(ConstSpicePlane, SpicePlane)
 
 #undef TYPEMAP_RECORDS
-
-
-/******************************
-* Typemaps for records that we prefer to implement as Numpy arrays.
-*
-* These typemaps are for data-structures in which the interface with the user is just
-* a plane numpy array.  However we can do better typechecking in the .i files by using
-* the actual type name.
-*
-*     (ConstType *INPUT)
-*     (Type *INPUT)      // Not currently used, but just in case
-*     (Type *OUTPUT)
-*
-*/
-
-%define TYPEMAP_RECORDS_ALIAS(ConstType, Type, Typecode, size)
-
-%typemap(in)
-    (ConstType *INPUT)
-        (PyArrayObject *pyarr=NULL),
-    (Type *INPUT)
-        (PyArrayObject *pyarr=NULL)
-{
-//      $1_type $1_name
-//      $1_type *INPUT
-
-    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
-    TEST_INVALID_ARRAY_SHAPE_1D(pyarr, size);
-    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
-}
-
-%typemap(in, numinputs=0)
-    (Type *OUTPUT)                                              // PATTERN
-        (PyArrayObject *pyarr = NULL)
-{
-//      $1_type $1_name
-//      Type *OUTPUT
-
-    npy_intp dims = size;                                       // DIMENSIONS
-    pyarr = (PyArrayObject *) PyArray_SimpleNew(1, &dims, Typecode);
-    TEST_MALLOC_FAILURE(pyarr);
-
-    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
-}
-
-%typemap(argout)
-    (Type *OUTPUT)
-%{
-    $result = SWIG_Python_AppendOutput($result, pyarr$argnum);
-    pyarr$argnum = NULL;
-%}
-
-%typemap(freearg)
-   (ConstType *INPUT),
-   (Type *INPUT),
-   (Type *OUTPUT)
-%{
-    Py_XDECREF(pyarr$argnum);
-%}
-
-%enddef
-
-TYPEMAP_RECORDS_ALIAS(ConstSpiceEllipse, SpiceEllipse, NPY_DOUBLE, 9)
-TYPEMAP_RECORDS_ALIAS(ConstSpicePlane, SpicePlane, NPY_DOUBLE, 4)
-
-#undef TYPEMAP_RECORDS_ALIAS
-
 
 
 /*******************************************************************************

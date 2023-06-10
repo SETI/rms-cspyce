@@ -137,6 +137,8 @@ except ImportError as err:
         print("Set environment variable 'CSPICE_DEVELOPMENT' to '1' to ignore this error")
         raise err
 
+from cspyce.record_support import Plane, Ellipse
+
 # A set of keywords listing options set globally across the cspyce functions
 GLOBAL_STATUS = set()
 
