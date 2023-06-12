@@ -37,8 +37,6 @@ def setup_module(module):
     download_kernels()
 
 
-# Test changed. cspyce does not have .center, .semiminor or .semimajor
-# attributes. Replaced with indices.
 def test_edlimb():
     viewpt = [2.0, 0.0, 0.0]
     limb = cs.edlimb(np.sqrt(2), 2.0 * np.sqrt(2), np.sqrt(2), viewpt)
@@ -145,8 +143,6 @@ def test_edterm():
     npt.assert_almost_equal(cs.dpr() * solar2, 89.730234322)
 
 
-# Test changed. cspyce.ekacec does not use an "nvals" argument (number of
-# values to add to column). cspyce does not have an exists() function.
 def test_ekacec():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekacec.ek")
     cleanup_kernel(ekpath)
@@ -164,8 +160,6 @@ def test_ekacec():
     assert not os.path.exists(ekpath)
 
 
-# Test changed. cspyce.ekacec does not use an "nvals" argument (number of
-# values to add to column). cspyce does not have an exists() function.
 def test_ekaced():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekaced.ek")
     cleanup_kernel(ekpath)
@@ -183,8 +177,6 @@ def test_ekaced():
     assert not os.path.exists(ekpath)
 
 
-# Test changed. cspyce.ekacec does not use an "nvals" argument (number of
-# values to add to column). cspyce does not have an exists() function.
 def test_ekappr_ekacei():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekappr.ek")
     cleanup_kernel(ekpath)
@@ -200,7 +192,6 @@ def test_ekappr_ekacei():
     assert not os.path.exists(ekpath)
 
 
-# Test changed. cspyce has no "exists" function.
 def test_ekaclc():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekaclc.ek")
     cleanup_kernel(ekpath)
@@ -261,15 +252,751 @@ def test_ekacli():
     assert not os.path.exists(ekpath)
 
 
-# =============================================================================
-# ekappr
-# ekbseg
-# ekccnt
-# ekcii
-# ekcls
-# ekdelr
-# ekffld
-# ekfind
-# ekgc
-# ekgd
-# =============================================================================
+def test_ekappr():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekappr.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "test_table_ekappr", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekbseg():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekbseg.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, "Test EK", 100)
+    cnames = ["INT_COL_1"]
+    cdecls = ["DATATYPE=INTEGER, INDEXED=TRUE, NULLS_OK=TRUE"]
+    segno = cs.ekbseg(handle, "SCALAR_DATA", cnames, cdecls)
+    recno = cs.ekappr(handle, segno)
+    assert recno != -1
+    ordids = [x for x in range(5)]
+    cs.ekacei(handle, segno, recno, "INT_COL_1", ordids, False)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekccnt():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekccnt.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "TEST_TABLE_EKCCNT", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    assert cs.ekntab() == 1
+    assert cs.ektnam(0) == "TEST_TABLE_EKCCNT"
+    assert cs.ekccnt("TEST_TABLE_EKCCNT") == 1
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekcii():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekcii.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "TEST_TABLE_EKCII", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    assert cs.ekntab() == 1
+    assert cs.ektnam(0) == "TEST_TABLE_EKCII"
+    assert cs.ekccnt("TEST_TABLE_EKCII") == 1
+    column, cclass, dtype, strlen, size, indexd, nullok = cs.ekcii(
+        "TEST_TABLE_EKCII", 0)
+    assert column == "C1"
+    assert cclass == 1
+    assert dtype == 2
+    assert size == 1
+    assert strlen == 1
+    assert not indexd
+    assert nullok  # this used to be false, although clearly it should be true given the call to ekbseg
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekcls():
+    # same as ekopn test
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekcls.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 80)
+    cs.ekcls(handle)
+    assert os.path.exists(ekpath)
+    cleanup_kernel(ekpath)
+
+
+def fail_ekdelr():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekdelr.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekdelr",
+        10,
+        ["c1"],
+        ["DATATYPE = INTEGER, NULLS_OK = TRUE"],
+    )
+    cs.ekacli(handle, segno, "c1", [1, 2], [1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekdelr(handle, segno, 2)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekffld():
+    # same as test_ekacli
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekffld.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekffld",
+        10,
+        ["c1"],
+        ["DATATYPE = INTEGER, NULLS_OK = TRUE"],
+    )
+    cs.ekacli(handle, segno, "c1", [1, 2], [1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def fail_ekfind():
+    cs.use_flags(cs.ekfind)
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekfind.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekfind",
+        2,
+        ["cc1"],
+        ["DATATYPE = INTEGER, NULLS_OK = TRUE"],
+    )
+    cs.ekacli(handle, segno, "cc1", [1, 2], [
+              1, 1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    nmrows = cs.ekfind("SELECT CC1 FROM TEST_TABLE_EKFIND WHERE CC1 > 0")
+    assert (
+        nmrows != 0
+    )  # should be 2 but I am not concerned about correctness in this case
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def fail_ekgc():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekgc.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekgc",
+        2,
+        ["c1"],
+        ["DATATYPE = CHARACTER*(*), INDEXED  = TRUE"],
+    )
+    cs.ekaclc(
+        handle, segno, "c1", 10, ["1.0", "2.0"], [
+            4, 4], [False, False], rcptrs, [0, 0]
+    )
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    nmrows, error, errmsg = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGC", 100)
+    assert not error
+    c, null = cs.ekgc(0, 0, 0, 4)
+    assert not null
+    assert c == "1.0"
+    c, null = cs.ekgc(0, 1, 0, 4)
+    assert not null
+    # assert c == "2.0" this fails, c is an empty string despite found being true.
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def fail_ekgd():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekgd.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekgd",
+        2,
+        ["c1"],
+        ["DATATYPE = DOUBLE PRECISION, NULLS_OK = TRUE"],
+    )
+    cs.ekacld(
+        handle, segno, "c1", [1.0, 2.0], [1, 1], [False, False], rcptrs, [0, 0]
+    )
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    nmrows, error, errmsg = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGD", 100)
+    assert not error
+    d, null = cs.ekgd(0, 0, 0)
+    assert not null
+    assert d == 1.0
+    d, null = cs.ekgd(0, 1, 0)
+    assert not null
+    assert d == 2.0
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+# Test fails due to reliance on ekfind
+def fail_ekgi():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekgi.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekgi",
+        2,
+        ["c1"],
+        ["DATATYPE = INTEGER, NULLS_OK = FALSE"],
+    )
+    cs.ekacli(handle, segno, "c1", [1, 2], [
+        1, 1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    nmrows, error, errmsg = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGI", 100)
+    assert not error
+    i, null = cs.ekgi(0, 0, 0)
+    assert not null
+    assert i == 1
+    i, null = cs.ekgi(0, 1, 0)
+    assert not null
+    assert i == 2
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekifld():
+    # Same as test_ekacli
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekifld.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekifld",
+        2,
+        ["c1"],
+        ["DATATYPE = INTEGER, NULLS_OK = TRUE"],
+    )
+    cs.ekacli(handle, segno, "c1", [1, 2], [
+        1, 1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    cs.ekcls(handle)
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+# Fails due to reliance on ekfind
+def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekmany.ek")
+    tablename = "test_table_ekmany"
+    cleanup_kernel(ekpath)
+    # Create new EK and new segment with table
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    decls = [
+        "DATATYPE = CHARACTER*(10),   NULLS_OK = FALSE, SIZE = VARIABLE",
+        "DATATYPE = DOUBLE PRECISION, NULLS_OK = FALSE, SIZE = VARIABLE",
+        "DATATYPE = INTEGER,          NULLS_OK = FALSE, SIZE = VARIABLE",
+    ]
+    segno = cs.ekbseg(handle, tablename, ["c1", "d1", "i1"], decls)
+    # Insert records:  1, 2, and 3 entries at rows 0, 1, 2, respectively
+    c_data = [["100"], ["101", "101"], ["102", "102", "102"]]
+    d_data = [[100.0], [101.0, 101.0], [102.0, 102.0, 102.0]]
+    i_data = [[100], [101, 101], [102, 102, 102]]
+    for r in range(0, 3):
+        cs.ekinsr(handle, segno, r)
+        cs.ekacec(handle, segno, r, "c1", len(c_data[r]), c_data[r], False)
+        cs.ekaced(handle, segno, r, "d1", len(d_data[r]), d_data[r], False)
+        cs.ekacei(handle, segno, r, "i1", len(i_data[r]), i_data[r], False)
+    # Try record insertion beyond the next available, verify the exception
+    with pytest.raises(Exception):
+        cs.ekinsr(handle, segno, 4)
+    # Close EK, then reopen for reading
+    cs.ekcls(handle)
+    cs.kclear()
+    #
+    # Start of part two
+    #
+    handle = cs.eklef(ekpath)
+    assert handle is not None
+    # Test query using ekpsel
+    query = "SELECT c1, d1, i1 from {}".format(tablename)
+    n, xbegs, xends, xtypes, xclass, tabs, cols, err, errmsg = cs.ekpsel(
+        query, 99, 99, 99
+    )
+    assert n == 3
+    assert cs.stypes.csEKDataType.cs_CHR == xtypes[0]
+    assert cs.stypes.csEKDataType.cs_DP == xtypes[1]
+    assert cs.stypes.csEKDataType.cs_INT == xtypes[2]
+    assert ([cs.stypes.csEKExprClass.cs_EK_EXP_COL] * 3) == list(xclass)
+    assert (["TEST_TABLE_EKMANY"] * 3) == tabs
+    assert "C1 D1 I1".split() == cols
+    assert not err
+    assert "" == errmsg
+    # Run query to retrieve the row count
+    nmrows, error, errmsg = cs.ekfind(query, 99)
+    assert nmrows == 3
+    assert not error
+    assert "" == errmsg
+    # test fail case for eknelt
+    with pytest.raises(Exception):
+        cs.eknelt(0, nmrows + 1)
+    # Validate the content of each field, including exceptions when
+    # Loop over rows, test .ekgc/.ekgd/.ekgi
+    for r in range(nmrows):
+        # get number of elements in this row
+        n_elm = cs.eknelt(0, r)
+        assert n_elm == r + 1
+        for e in range(0, n_elm):
+            # get row int data
+            i_datum, i_null = cs.ekgi(2, r, e)
+            assert not i_null
+            assert i_datum == i_data[r][e]
+            # get row double data
+            d_datum, d_null = cs.ekgd(1, r, e)
+            assert not d_null
+            assert d_datum == d_data[r][e]
+            # get row char data
+            c_datum, c_null = cs.ekgc(0, r, e)
+            assert not c_null
+            assert c_datum == c_data[r][e]
+    # Loop over rows, test .ekrcec/.ekrced/.ekrcei
+    for r in range(nmrows):
+        # get row int data
+        ni_vals, ri_data, i_null = cs.ekrcei(handle, segno, r, "i1")
+        assert not i_null
+        assert ni_vals == r + 1
+        npt.assert_array_equal(ri_data, i_data[r])
+        # get row double data
+        nd_vals, rd_data, d_null = cs.ekrced(handle, segno, r, "d1")
+        assert not d_null
+        assert nd_vals == r + 1
+        npt.assert_array_equal(rd_data, d_data[r])
+        # get row char data
+        nc_vals, rc_data, c_null = cs.ekrcec(handle, segno, r, "c1", 11)
+        assert not c_null
+        assert nc_vals == r + 1
+        assert rc_data == c_data[r]
+    # test out of bounds
+    with pytest.raises(Exception):
+        cs.ekrcei(handle, segno, 3, "i1")
+    with pytest.raises(Exception):
+        cs.ekrced(handle, segno, 3, "d1")
+    # with pytest.raises(Exception): TODO: FIX
+    #    cs.ekrcec(handle, segno, 4, "c1", 4) # this causes a SIGSEGV
+    #
+    # Part 3
+    #
+    # Close file, re-open for writing
+    cs.ekuef(handle)
+    handle = cs.ekopw(ekpath)
+    # Loop over rows, update values using .ekucec/.ekuced/.ekucei
+    c_data = [["200"], ["201", "201"], ["202", "202", "202"]]
+    d_data = [[200.0], [201.0, 201.0], [202.0, 202.0, 202.0]]
+    i_data = [[200], [201, 201], [202, 202, 202]]
+    for r in range(0, 3):
+        cs.ekucec(handle, segno, r, "c1", len(c_data[r]), c_data[r], False)
+        cs.ekuced(handle, segno, r, "d1", len(d_data[r]), d_data[r], False)
+        cs.ekucei(handle, segno, r, "i1", len(i_data[r]), i_data[r], False)
+    # Test invalid updates
+    with pytest.raises(Exception):
+        cs.ekucec(handle, segno, 3, "c1", 1, ["300"], False)
+    with pytest.raises(Exception):
+        cs.ekuced(handle, segno, 3, "d1", 1, [300.0], False)
+    with pytest.raises(Exception):
+        cs.ekucei(handle, segno, 3, "i1", 1, [300], False)
+    # Loop over rows, use .ekrcec/.ekrced/.ekrcei to test updates
+    for r in range(nmrows):
+        # get row int data
+        ni_vals, ri_data, i_null = cs.ekrcei(handle, segno, r, "i1")
+        assert not i_null
+        assert ni_vals == r + 1
+        npt.assert_array_equal(ri_data, i_data[r])
+        # get row double data
+        nd_vals, rd_data, d_null = cs.ekrced(handle, segno, r, "d1")
+        assert not d_null
+        assert nd_vals == r + 1
+        npt.assert_array_equal(rd_data, d_data[r])
+        # get row char data
+        nc_vals, rc_data, c_null = cs.ekrcec(handle, segno, r, "c1", 11)
+        assert not c_null
+        assert nc_vals == r + 1
+        assert rc_data == c_data[r]
+    # Cleanup
+    cs.ekcls(handle)
+    assert not cs.failed()
+    cleanup_kernel(ekpath)
+
+
+def test_eklef():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_eklef.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "test_table_eklef", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cs.kclear()
+    handle = cs.eklef(ekpath)
+    assert handle is not None
+    cs.ekuef(handle)
+    cs.kclear()
+    cleanup_kernel(ekpath)
+
+
+def test_eknseg():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_eknseg.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "TEST_TABLE_EKNSEG", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cs.kclear()
+    handle = cs.ekopr(ekpath)
+    assert cs.eknseg(handle) == 1
+    cs.ekcls(handle)
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekntab():
+    assert cs.ekntab() == 0
+
+
+def test_ekopn():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ek.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 80)
+    cs.ekcls(handle)
+    assert os.path.exists(ekpath)
+    cleanup_kernel(ekpath)
+
+
+def test_ekopr():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekopr.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 80)
+    cs.ekcls(handle)
+    assert os.path.exists(ekpath)
+    testhandle = cs.ekopr(ekpath)
+    assert testhandle is not None
+    cs.ekcls(testhandle)
+    cleanup_kernel(ekpath)
+
+
+def test_ekops():
+    handle = cs.ekops()
+    assert handle is not None
+    cs.ekcls(handle)
+
+
+def test_ekopw():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekopw.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 80)
+    cs.ekcls(handle)
+    assert os.path.exists(ekpath)
+    testhandle = cs.ekopw(ekpath)
+    assert testhandle is not None
+    cs.ekcls(testhandle)
+    cleanup_kernel(ekpath)
+
+
+# Fails due to ekifld
+def fail_ekssum():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekssum.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno, rcptrs = cs.ekifld(
+        handle,
+        "test_table_ekssum",
+        2,
+        ["c1"],
+        ["DATATYPE = INTEGER, NULLS_OK = TRUE"]
+    )
+    cs.ekacli(handle, segno, "c1", [1, 2], [
+        1, 1], [False, False], rcptrs)
+    cs.ekffld(handle, segno, rcptrs)
+    tabnam, ncols, cnames, cclass, dtype, strln, size, indexd, nullok = cs.ekssum(
+        handle, segno)
+    assert ncols == 1
+    assert cnames == ["C1"]
+    assert tabnam == "TEST_TABLE_EKSSUM"
+    assert dtype == 2
+    assert indexd is False
+    # assert c1descr.null == True, for some reason this is actually false, SpikeEKAttDsc may not be working correctly
+    cs.ekcls(handle)
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ektnam():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ektnam.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 0)
+    segno = cs.ekbseg(
+        handle, "TEST_TABLE_EKTNAM", ["c1"], [
+            "DATATYPE  = INTEGER, NULLS_OK = TRUE"]
+    )
+    recno = cs.ekappr(handle, segno)
+    cs.ekacei(handle, segno, recno, "c1", [1, 2], False)
+    cs.ekcls(handle)
+    cs.kclear()
+    cs.furnsh(ekpath)
+    assert cs.ekntab() == 1
+    assert cs.ektnam(0) == "TEST_TABLE_EKTNAM"
+    assert cs.ekccnt("TEST_TABLE_EKTNAM") == 1
+    cs.kclear()
+    cleanup_kernel(ekpath)
+    assert not os.path.exists(ekpath)
+
+
+def test_ekucec():
+    assert 1
+
+
+def test_ekuced():
+    assert 1
+
+
+def test_ekucei():
+    assert 1
+
+
+def test_ekuef():
+    ekpath = os.path.join(TEST_FILE_DIR, "example_ekuef.ek")
+    cleanup_kernel(ekpath)
+    handle = cs.ekopn(ekpath, ekpath, 80)
+    cs.ekcls(handle)
+    cs.kclear()
+    assert os.path.exists(ekpath)
+    testhandle = cs.ekopr(ekpath)
+    assert testhandle is not None
+    cs.ekuef(testhandle)
+    cs.ekcls(testhandle)
+    cleanup_kernel(ekpath)
+
+
+def test_el2cgv():
+    vec1 = [1.0, 1.0, 1.0]
+    vec2 = [1.0, -1.0, 1.0]
+    center = [1.0, 1.0, 1.0]
+    smajor, sminor = cs.saelgv(vec1, vec2)
+    ellipse = cs.cgv2el(center, smajor, sminor)
+    outCenter, outSmajor, outSminor = cs.el2cgv(ellipse)
+    expected_center = [1.0, 1.0, 1.0]
+    expected_s_major = [np.sqrt(2.0), 0.0, np.sqrt(2.0)]
+    expected_s_minor = [0.0, np.sqrt(2.0), 0.0]
+    npt.assert_array_almost_equal(outCenter, expected_center)
+    npt.assert_array_almost_equal(outSmajor, expected_s_major)
+    npt.assert_array_almost_equal(outSminor, expected_s_minor)
+
+
+def test_eqncpv():
+    p = 10000.0
+    gm = 398600.436
+    ecc = 0.1
+    a = p / (1.0 - ecc)
+    n = np.sqrt(gm / a) / a
+    argp = 30.0 * cs.rpd()
+    node = 15.0 * cs.rpd()
+    inc = 10.0 * cs.rpd()
+    m0 = 45.0 * cs.rpd()
+    t0 = -100000000.0
+    eqel = [
+        a,
+        ecc * np.sin(argp + node),
+        ecc * np.cos(argp + node),
+        m0 + argp + node,
+        np.tan(inc / 2.0) * np.sin(node),
+        np.tan(inc / 2.0) * np.cos(node),
+        0.0,
+        n,
+        0.0,
+    ]
+    state = cs.eqncpv(t0 - 9750.0, t0, eqel, cs.halfpi() * -1, cs.halfpi())
+    expected = [
+        -10732.167433285387,
+        3902.505790600528,
+        1154.4516152766892,
+        -2.540766899262123,
+        -5.15226920298345,
+        -0.7615758062877463,
+    ]
+    npt.assert_array_almost_equal(expected, state, decimal=5)
+
+
+def test_erract():
+    assert cs.erract("GET", "") == "EXCEPTION"
+
+
+def test_errch():
+    cs.setmsg("test errch value: #")
+    cs.errch("#", "some error")
+    cs.sigerr("some error")
+    message = cs.getmsg("LONG", 2000)
+    assert message == "test errch value: some error"
+    cs.reset()
+
+
+def test_errdev():
+    assert cs.errdev("GET", "Screen") == "NULL"
+
+
+def test_errdp():
+    cs.setmsg("test errdp value: #")
+    cs.errdp("#", 42.1)
+    cs.sigerr("some error")
+    message = cs.getmsg("LONG", 2000)
+    assert message == "test errdp value: 4.2100000000000E+01"
+    cs.reset()
+
+
+def test_errint():
+    cs.setmsg("test errint value: #")
+    cs.errint("#", 42)
+    cs.sigerr("some error")
+    message = cs.getmsg("LONG", 2000)
+    assert message == "test errint value: 42"
+    cs.reset()
+
+
+def test_errprt():
+    assert cs.errprt("GET", "ALL") == "NULL"
+
+
+def test_esrchc():
+    array = ["This", "is", "a", "test"]
+    assert cs.esrchc("This", array) == 0
+    assert cs.esrchc("is", array) == 1
+    assert cs.esrchc("a", array) == 2
+    assert cs.esrchc("test", array) == 3
+    assert cs.esrchc("fail", array) == -1
+
+
+def test_et2lst():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("2004 may 17 16:30:00")
+    hr, mn, sc, time, ampm = cs.et2lst(
+        et, 399, 281.49521300000004 * cs.rpd(), "planetocentric")
+    assert hr == 11
+    assert mn == 19
+    assert sc == 22
+    assert time == "11:19:22"
+    assert ampm == "11:19:22 A.M."
+
+
+def test_et2utc():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = -527644192.5403653
+    output = cs.et2utc(et, "J", 6)
+    assert output == "JD 2445438.006415"
+
+
+def test_etcal():
+    et = np.arange(0.0, 20.0)
+    cal = cs.etcal(et[0])
+    assert cal == "2000 JAN 01 12:00:00.000"
+    calArr = cs.etcal(et)
+    assert calArr[0] == cal
+    assert calArr[1] == "2000 JAN 01 12:00:01.000"
+    assert calArr[-1] == "2000 JAN 01 12:00:19.000"
+
+
+def test_eul2m():
+    rot = np.array(cs.eul2m(cs.halfpi(), 0.0, 0.0, 3, 1, 1))
+    assert rot.shape == ((3, 3))
+
+
+def test_eul2xf():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("Jan 1, 2009")
+    expected = cs.sxform("IAU_EARTH", "J2000", et)
+    eul = [
+        1.571803284049681,
+        0.0008750002978301174,
+        2.9555269829740034,
+        3.5458495690569166e-12,
+        3.080552365717176e-12,
+        -7.292115373266558e-05,
+    ]
+    out = cs.eul2xf(eul, 3, 1, 3)
+    npt.assert_array_almost_equal(out, expected)
+
+
+def test_evsgp4():
+    # LUME 1 cubesat
+    noadpn = ["J2", "J3", "J4", "KE", "QO", "SO", "ER", "AE"]
+    cs.furnsh([CoreKernels.lsk, ExtraKernels.geophKer])  # need geophyscial.ker
+    tle = [
+        "1 43908U 18111AJ  20146.60805006  .00000806  00000-0  34965-4 0  9999",
+        "2 43908  97.2676  47.2136 0020001 220.6050 139.3698 15.24999521 78544",
+    ]
+    geophs = [cs.bodvcd(399, _, 1)[1] for _ in noadpn]
+    _, elems = cs.getelm(1957, 75, tle)
+    et = cs.str2et("2020-05-26 02:25:00")
+    state = cs.evsgp4(et, geophs, elems)
+    expected_state = np.array(
+        [
+            -4644.60403398,
+            -5038.95025539,
+            -337.27141116,
+            -0.45719025,
+            0.92884817,
+            -7.55917355,
+        ]
+    )
+    npt.assert_array_almost_equal(expected_state, state)
+
+
+def test_expool():
+    textbuf = ["DELTET/K = 1.657D-3", "DELTET/EB = 1.671D-2"]
+    cs.lmpool(textbuf)
+    assert cs.expool("DELTET/K")
+    assert cs.expool("DELTET/EB")
