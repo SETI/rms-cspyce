@@ -468,6 +468,14 @@ void initialize_typemap_globals(void) {
     errcode_to_PyErrorType[RuntimeError] = PyExc_RuntimeError;
     errcode_to_PyErrorType[ValueError] = PyExc_ValueError;
 }
+
+PyObject* SWIG_SUPPORT_CLASS = NULL;
+
+void initialize_swig_callback(void) {
+    PyObject *record_support = PyImport_ImportModule("cspyce.record_support");
+    SWIG_SUPPORT_CLASS = PyObject_GetAttrString(record_support, "_SwigSupport");
+    Py_XDECREF(record_support);
+}
 %}
 
 %define TEST_FOR_EXCEPTION
@@ -1410,6 +1418,9 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 * If the C function will allocate the memory it needs and will return the size:
 *       (type **OUT_ARRAY1, SpiceInt *DIM1)
 *       (SpiceInt *DIM1, type **OUT_ARRAY1)
+* This SWIG code is responsible for initializing the variable into which the C
+* code will put the allocated memory to NULL. This SWIG code is also responsible in
+* all cases for freeing the allocated memory.
 *******************************************************************************/
 
 %define TYPEMAP_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
@@ -1793,175 +1804,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 #undef TYPEMAP_ARGOUT
 
 
-
-/*******************************************************************************
-* This family of typemaps converts an integer input into a typed array of that size,
-* which is given to the C function as an argnument, and then returned to the user
-* as a result.  These typemaps are useful in which the size of the array can be calculated
-* from the other arguments passed by the user.
-*
-* We hope, at some point, to replace many of the malloc's() in the code with sized type
-* arrays.  All the allocing and freeing is handled by SWIG code rather than by
-* bespoke code for each function.
-*
-* Optionally, there may also be a DIM1 argument, indicating that the C function needs
-* to know the integer argument that was passed by an argument.  A SIZE1 argument is
-* an out-argument passed to the C function so that C can ask for the array to be shortened.
-*
-*******************************************************************************/
-
-%define CREATE_SIZED_INOUT_ARRAY1(Typecode)
-    SpiceInt size = 0;
-    int error = SWIG_AsVal_int($input, &size);
-    RAISE_BAD_TYPE_ON_ERROR(error, "Integer");
-
-    npy_intp dims = max(size, 0);                               // ARRAY
-    pyarr = (PyArrayObject *) PyArray_SimpleNew(1, &dims, Typecode);
-    TEST_MALLOC_FAILURE(pyarr);
-%enddef
-
-%define CREATE_SIZED_INOUT_ARRAY2(Typecode, dim2)
-    SpiceInt size = 0;
-    int error = SWIG_AsVal_int($input, &size);
-    RAISE_BAD_TYPE_ON_ERROR(error, "Integer");
-
-    npy_intp dims[] = {max(size, 0), dim2};                               // ARRAY
-    pyarr = (PyArrayObject *) PyArray_SimpleNew(2, &dims, Typecode);
-    TEST_MALLOC_FAILURE(pyarr);
-%enddef
-
-%define TYPEMAP_SIZED_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
-
-/*******************************************************
- *  (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
- *  (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[])
-*******************************************************/
-
-%typemap(in)
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
-            (PyArrayObject* pyarr=NULL),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[])
-            (PyArrayObject* pyarr=NULL)
-{
-//      $1_type $1_name, $2_type $2_name
-//     (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1)
-    CREATE_SIZED_INOUT_ARRAY1(Typecode)
-
-    $1 = PyArray_DIM(pyarr, 0);
-    $2 = PyArray_DATA(pyarr);
-}
-
-/*******************************************************
- *  (Type *SIZED_INOUT_ARRAY1)
- *  (Type SIZED_INOUT_ARRAY1[])
-*******************************************************/
-
-%typemap(in)
-    (Type *SIZED_INOUT_ARRAY1)
-            (PyArrayObject* pyarr=NULL),
-    (Type SIZED_INOUT_ARRAY1[])
-            (PyArrayObject* pyarr=NULL)
-{
-//      $1_type $1_name
-//     (Type *SIZED_INOUT_ARRAY1)
-    CREATE_SIZED_INOUT_ARRAY1(Typecode)
-    $1 = PyArray_DATA(pyarr);
-}
-
-%typemap(in)
-    (Type *SIZED_INOUT_ARRAY2[ANY])
-            (PyArrayObject* pyarr=NULL)
-{
-//      $1_type $1_name
-//      (Type *SIZED_INOUT_ARRAY2[ANY])
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim0)
-    $1 = PyArray_DATA(pyarr);
-}
-
-%typemap(in)
-    (Type SIZED_INOUT_ARRAY2[][ANY])
-            (PyArrayObject* pyarr=NULL)
-{
-//      $1_type $1_name
-//      (Type SIZED_INOUT_ARRAY2[][ANY])
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $1_dim1)
-    $1 = PyArray_DATA(pyarr);
-}
-
-%typemap(in)
-    (Type SIZED_INOUT_ARRAY2[][])
-            (PyArrayObject* pyarr=NULL)
-{
-//      $1_type $1_name
-//      (Type SIZED_INOUT_ARRAY2[][ANY])
-    int size1 = 0, size2 = 0;
-    int ok = PyArg_ParseTuple($input, "ii", &size1, &size2);
-    if (!ok) {
-        handle_bad_type_error("$symname", "tuple of integers");
-        SWIG_fail;
-    }
-    npy_intp dims[] = {max(size1, 0), max(size2, 0)};                      // ARRAY
-    pyarr = (PyArrayObject *) PyArray_SimpleNew(2, &dims, Typecode);
-    TEST_MALLOC_FAILURE(pyarr);
-}
-
-%typemap(in)
-     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
-             (PyArrayObject* pyarr=NULL, SpiceInt dimsize[2])
-{
-//      $1_type $1_name, $2_type $2_name, $3_type $3_name
-//     (Type *SIZED_INOUT_ARRAY2[ANY])
-    dimsize[0] = 0;
-    dimsize[1] = $3_dim1;
-    CREATE_SIZED_INOUT_ARRAY2(Typecode, $3_dim1)
-    $1 = PyArray_DIM(pyarr, 0);
-    $2 = &dimsize[0];
-    $3 = PyArray_DATA(pyarr);
-}
-
-// These are the typemaps that don't resize the output.
-%typemap(argout)
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY1),
-    (Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY2[ANY]),
-    (Type SIZED_INOUT_ARRAY2[][ANY]),
-    (Type SIZED_INOUT_ARRAY2[][])
-{
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
-    pyarr$argnum = NULL;
-}
-
-// These are the typemaps that resize the output of a 2-dimensional array
-%typemap(argout)
-     (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
-{
-    npy_intp new_dim[2] = { dimsize$argnum[0], dimsize$argnum[1]};
-    HANDLE_RESIZE(pyarr$argnum, new_dim)
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
-    pyarr$argnum = NULL;
-}
-
-%typemap(freearg)
-    (SpiceInt DIM1, Type *SIZED_INOUT_ARRAY1),
-    (SpiceInt DIM1, Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY1),
-    (Type SIZED_INOUT_ARRAY1[]),
-    (Type *SIZED_INOUT_ARRAY2[ANY]),
-    (Type SIZED_INOUT_ARRAY2[][ANY]),
-    (Type SIZED_INOUT_ARRAY2[][]),
-    (SpiceInt DIM1, SpiceInt *SIZE1, Type SIZED_INOUT_ARRAY2[][ANY])
-%{
-    Py_XDECREF(pyarr$argnum);
-%}
-
-%enddef
-
-TYPEMAP_SIZED_ARGOUT(SpiceInt,      NPY_INT   )
-TYPEMAP_SIZED_ARGOUT(SpiceBoolean,  NPY_INT   )
-TYPEMAP_SIZED_ARGOUT(SpiceDouble,   NPY_DOUBLE)
-
 /*******************************************************************************
 * 2-D numeric typemaps for output
 *
@@ -1998,6 +1840,12 @@ TYPEMAP_SIZED_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 * This version will return a 1-D array if the first dimension is 0; otherwise
 * a 2-D array:
 *       (type **OUT_ARRAY12, SpiceInt *DIM1, SpiceInt *DIM2)
+* Note that ownership of the buffer for **OUT_ARRAY2 and **OUT_ARRAY12 is the same
+* as with *OUT_ARRAY2:
+*
+* This SWIG code is responsible for initializing the variable into which the C
+* code will put the allocated memory to NULL. This SWIG code is also responsible in
+* all cases for freeing the allocated memory if that variable is non-NULL.
 *******************************************************************************/
 
 %define TYPEMAP_ARGOUT(Type, Typecode) // Use to fill in numeric types below!
@@ -3168,6 +3016,143 @@ TYPEMAP_IN(ConstSpiceChar)
 TYPEMAP_OUT(SpiceChar)
 
 #undef TYPEMAP_OUT
+
+/*******************************************************************************
+* Typemaps for records.
+*
+* These typemaps are for data-structures in which the user wants to see a record
+* with named fields.  The only forms that exist are:
+*
+*     (ConstType *INPUT)
+*     (Type *INPUT)      // Not currently used, but just in case
+*     (Type *OUTPUT)
+*
+* Any type used here must have a descriptor added in record_support.py
+*******************************************************************************/
+
+%define TYPEMAP_RECORDS(ConstType, Type)
+
+%typemap(in)
+    (ConstType *INPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL),
+    (Type *INPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL)
+{
+//      $1_type $1_name
+//      $1_type *INPUT
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_record", "sO", "Type", $input);
+    if (!record || record == Py_None) {
+        handle_bad_type_error("$symname", "Type");
+        SWIG_fail;
+    }
+    base_array = PyObject_GetAttrString(record, "base");
+    $1 = PyArray_DATA(base_array);
+}
+
+%typemap(in, numinputs=0)
+    (Type *OUTPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL)
+{
+//      $1_type $1_name
+//      Type *OUTPUT
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_record", "s", "Type");
+    TEST_MALLOC_FAILURE(record);
+    base_array = PyObject_GetAttrString(record, "base");
+    $1 = PyArray_DATA(base_array);
+}
+
+%typemap(argout)
+    (Type *OUTPUT)
+%{
+    $result = SWIG_Python_AppendOutput($result, record$argnum);
+    record$argnum = NULL;
+%}
+
+%typemap(freearg)
+    (ConstType *INPUT),
+    (Type *INPUT),
+    (Type *OUTPUT)
+%{
+    Py_XDECREF(record$argnum);
+    Py_XDECREF(base_array$argnum);
+%}
+
+
+%enddef
+
+// If you add a new type here, then also add it to record_support.py
+TYPEMAP_RECORDS(ConstSpiceDLADescr, SpiceDLADescr)
+TYPEMAP_RECORDS(ConstSpiceDSKDescr, SpiceDSKDescr)
+
+#undef TYPEMAP_RECORDS
+
+
+/******************************
+* Typemaps for records that we prefer to implement as Numpy arrays.
+*
+* These typemaps are for data-structures in which the interface with the user is just
+* a plane numpy array.  However we can do better typechecking in the .i files by using
+* the actual type name.
+*
+*     (ConstType *INPUT)
+*     (Type *INPUT)      // Not currently used, but just in case
+*     (Type *OUTPUT)
+*
+*/
+
+%define TYPEMAP_RECORDS_ALIAS(ConstType, Type, Typecode, size)
+
+%typemap(in)
+    (ConstType *INPUT)
+        (PyArrayObject *pyarr=NULL),
+    (Type *INPUT)
+        (PyArrayObject *pyarr=NULL)
+{
+//      $1_type $1_name
+//      $1_type *INPUT
+
+    CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 1, pyarr)
+    TEST_INVALID_ARRAY_SHAPE_1D(pyarr, size);
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(in, numinputs=0)
+    (Type *OUTPUT)                                              // PATTERN
+        (PyArrayObject *pyarr = NULL)
+{
+//      $1_type $1_name
+//      Type *OUTPUT
+
+    npy_intp dims = size;                                       // DIMENSIONS
+    pyarr = (PyArrayObject *) PyArray_SimpleNew(1, &dims, Typecode);
+    TEST_MALLOC_FAILURE(pyarr);
+
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
+}
+
+%typemap(argout)
+    (Type *OUTPUT)
+%{
+    $result = SWIG_Python_AppendOutput($result, pyarr$argnum);
+    pyarr$argnum = NULL;
+%}
+
+%typemap(freearg)
+   (ConstType *INPUT),
+   (Type *INPUT),
+   (Type *OUTPUT)
+%{
+    Py_XDECREF(pyarr$argnum);
+%}
+
+%enddef
+
+TYPEMAP_RECORDS_ALIAS(ConstSpiceEllipse, SpiceEllipse, NPY_DOUBLE, 9)
+TYPEMAP_RECORDS_ALIAS(ConstSpicePlane, SpicePlane, NPY_DOUBLE, 4)
+
+#undef TYPEMAP_RECORDS_ALIAS
+
+
 
 /*******************************************************************************
 * Typemap for boolean output

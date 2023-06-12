@@ -851,6 +851,7 @@ def test_dskd02():
     )
     cs.dascls(handle)
 
+<<<<<<< HEAD
 
 DSK_DESCRIPTOR_TYPE = np.dtype([
     ('surfce', np.int32),
@@ -870,6 +871,8 @@ DSK_DESCRIPTOR_TYPE = np.dtype([
     ('stop',   np.double)])
 
 
+=======
+>>>>>>> master
 def test_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
@@ -877,7 +880,6 @@ def test_dskgd():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
 
     assert dskdsc.surfce == 401
     assert dskdsc.center == 401
