@@ -5000,6 +5000,7 @@ extern void ekgi_c(
         SpiceInt       *segno,
         SpiceInt       *nrows1, SpiceInt rcptrs[MAXROWS])
     {
+        *nrows1 = nrows;
         ekifld_c(handle, tabnam, ncols, nrows, cnamln, cnames, declen, decls,
                  segno, rcptrs);
     }
