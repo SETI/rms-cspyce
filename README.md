@@ -358,3 +358,63 @@ they can call
 ```python
 cspyce.bodn2c.error.vector(args...)
 ```
+
+## RECORD ENHANCEMENTS
+
+# SpiceCell
+`cspyce` provides an enhanced version of `SpiceCell` to make it simpler to use for
+both CSPICE and in Python. 
+
+To create a `SpiceCell`:
+
+```python
+from cspyce import SpiceCell, SPICE_CELL_INT, SPICE_CELL_DOUBLE
+spice_cell_int = SpiceCell(SPICE_CELL_INT, size=20)
+spice_cell_double = SpiceCell(SPICE_CELL_DOUBLE, size=10)
+```
+If you already have data that you want to convert to a spice cell, you can use a simpler
+interface:
+```python
+spice_cell = SpiceCell(data=[1, 2, 3, 4, 5])
+spice_cell = SpiceCell(data=np.arange(1.0, 10.0))
+```
+If you use these constructions, Python will create a `SpiceCell` whose size is a little 
+bigger than the length of the given data.
+
+Any CSPICE function that expects a `SpiceCell` as an input can also be passed an array,
+a tuple, or anything that can reasonably be converted into an appropriately typed
+`SpiceCell`:
+
+```python
+>>> import cspyce
+>>> cspyce.wninsd(2.0, 4.9, (1.0, 3.0, 5.0, 7.0, 9.0, 11.0))
+<SpiceCell float 6/12 [ 1.   4.9  5.   7.   9.  11. ]>
+```
+
+`SpiceCell` also offers the following operations:
+* `spice_cell.size`: Gets the current maximum size of the `SpiceCell`.
+* `spice_cell.size = value`: Grows or shrinks the maximum size of the `SpiceCell`.
+   If `spice_cell.card > value`, it is reduced to `value`.
+   [This operation does not exist in CSPICE]. 
+* `len(spice_cell)`: Returns the "cardinality" of the `SpiceCell`: the number of elements
+   in the `SpiceCell` currently in use.
+* `spice_cell.card`: Same as `len(spice_cell)`.
+* `spice_cell.card = value`: Updates the cardinality of the `SpiceCell`.
+   Must have `0 ≤ value < spice_cell.size`.
+* `spice_cell.clear()`:  Same as `spice_cell.card = 0`.  Empties the spice cell.
+* `spice_cell[index]`:  Get the index-th element of the `SpiceCell`. 
+   Must have `0 ≤ index < spice_cell.size`.
+* `spice_cell[index] = value`:  Set the index-th element of the `SpiceCell`
+   to the indicated value. Must have `0 ≤ index < spice_cell.size
+* `spice_cell.append(value)`: Adds the indicated value to the `SpiceCell`. 
+   The cell's maximum size is grown if necessary.
+* `spice_cell.extend(values)`: Adds all the indicated values to the spice cell.
+   The `SpiceCell`'s maximum size is grown if necessary.
+* `for value in spice_cell: ...`:  Iterates through the elements of the `SpiceCell`.
+   The elements of the spice cell are those whose `index `is `0 ≤ index < spice_cell.card`
+
+Note that `cspyce`'s `SpiceCell`s are not a fixed size.  Unlike in CSPICE, they 
+can be grown or shrunk.  Unfortunately, CSPICE is not aware of this ability, and its
+functions will stil raise a WINDOWOVERFLOW if the current maximum size of the `SpiceCell`
+is insufficient to hold the results.  
+

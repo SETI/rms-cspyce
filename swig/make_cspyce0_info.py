@@ -278,7 +278,7 @@ def handle_one_function(out, records):
                 this_inout = ''
                 this_main_arg = -1
                 for k, argdef in enumerate(subrec.split(',')):
-                    if 'INOUT_' in argdef:
+                    if 'INOUT_' in argdef or argdef.endswith('INOUT'):
                         this_inout = 'I-O'
                         this_main_arg = k
                     elif 'IN_' in argdef or 'INPUT' in argdef:
@@ -346,7 +346,7 @@ def handle_one_function(out, records):
                 for argdef in argdefs:
                     match = ARG_DEF.fullmatch(argdef.rstrip(' ,)'))
                     if not match:
-                        raise ValueError(f"Bad match on record {argdef}")
+                        raise ValueError(f"Bad match on record {argdef} in function {func}")
                     (const, argtype, star, name, dim) = match.groups()
                     argtype = (const + ' ' + argtype).lstrip()
                     dim = dim.replace(' ', '')
@@ -521,7 +521,7 @@ TYPES_REPLACED = {
     'SpiceEKDataType'   : ('SpiceInt',),
     'SpiceEKExprClass'  : ('SpiceInt',),
     'SpiceSPK18Subtype' : ('ConstSpiceChar',),
-    'SpiceCell'         : ('SpiceInt', 'SpiceDouble', 'ConstSpiceDouble'),
+    'SpiceCell'         : ('SpiceCellDouble', 'SpiceCellInt', 'SpiceCellChar')
 }
 
 

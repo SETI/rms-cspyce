@@ -367,7 +367,7 @@ def test_ckcls():
     assert not os.path.exists(ck1)
 
 
-def test_ckcov(): 
+def test_ckcov():
     cs.furnsh(CassiniKernels.cassSclk)
     ckid = cs.ckobj(CassiniKernels.cassCk)[0]
     cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
@@ -376,7 +376,7 @@ def test_ckcov():
         [267839256480.000000, 267867970464.000000],
         [267868006304.000000, 267876773792.000000],
     ]
-    npt.assert_array_equal(cover, expected_intervals)
+    npt.assert_array_equal(cover.as_intervals(), expected_intervals)
     
 
 def test_ckfrot():
@@ -428,7 +428,7 @@ def test_ckgp():
     ckid = cs.ckobj(CassiniKernels.cassCk)[0]
     cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
     
-    cmat, clkout = cs.ckgp(ckid, cover[0][0], 256, "J2000")
+    cmat, clkout = cs.ckgp(ckid, cover[0], 256, "J2000")
     expected_cmat = [
         [0.5064665782997639365, -0.75794210739897316387, 0.41111478554891744963],
         [-0.42372128242505308071, 0.19647683351734512858, 0.88422685364733510927],
@@ -448,7 +448,7 @@ def test_ckgpav():
     cs.furnsh(CassiniKernels.cassPck)
     ckid = cs.ckobj(CassiniKernels.cassCk)[0]
     cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
-    cmat, avout, clkout = cs.ckgpav(ckid, cover[0][0], 256, "J2000")
+    cmat, avout, clkout = cs.ckgpav(ckid, cover[0], 256, "J2000")
     expected_cmat = [
         [0.5064665782997639365, -0.75794210739897316387, 0.41111478554891744963],
         [-0.42372128242505308071, 0.19647683351734512858, 0.88422685364733510927],
