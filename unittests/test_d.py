@@ -851,28 +851,7 @@ def test_dskd02():
     )
     cs.dascls(handle)
 
-<<<<<<< HEAD
 
-DSK_DESCRIPTOR_TYPE = np.dtype([
-    ('surfce', np.int32),
-    ('center', np.int32),
-    ('dclass', np.int32),
-    ('dtype_', np.int32),  # had to rename from dtype, which is taken.
-    ('frmcde', np.int32),
-    ('corsys', np.int32),
-    ('corpar', np.double, 10),
-    ('co1min', np.double),
-    ('co1max', np.double),
-    ('co2min', np.double),
-    ('co2max', np.double),
-    ('co3min', np.double),
-    ('co3max', np.double),
-    ('start',  np.double),
-    ('stop',   np.double)])
-
-
-=======
->>>>>>> master
 def test_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
@@ -880,7 +859,6 @@ def test_dskgd():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-
     assert dskdsc.surfce == 401
     assert dskdsc.center == 401
     assert dskdsc.dclass == 1
@@ -968,8 +946,7 @@ def fail_dskw02_dskrb2_dskmi2():
     handle = cs.dskopn(dskpath, "TESTdskw02.dsk/AA/29-SEP-2017", 0)
     # create spatial index
     spaixd, spaixi = cs.dskmi2(
-        vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, False, spaisz
-    )
+        vrtces, plates, finscl, corscl, False)
     # do stuff
     corsys = 1
     mncor1 = -cs.pi()
@@ -1068,7 +1045,6 @@ def test_dskx02():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     r = 2.0 * dskdsc.co3max
     # Produce a ray vertex
     vertex = cs.latrec(r, 0.0, 0.0)
@@ -1090,7 +1066,6 @@ def test_dskxsi():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     target = cs.bodc2n(dskdsc.center)
     fixref = cs.frmnam(dskdsc.frmcde)
     r = 1.0e10
@@ -1117,7 +1092,6 @@ def test_dskxv():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     target = cs.bodc2n(dskdsc.center)
     fixref = cs.frmnam(dskdsc.frmcde)
     r = 1.0e10
@@ -1144,7 +1118,6 @@ def test_dskxv_2():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-    dskdsc = np.rec.array(dskdsc, dtype=DSK_DESCRIPTOR_TYPE)[0]
     target = cs.bodc2n(dskdsc.center)
     fixref = cs.frmnam(dskdsc.frmcde)
     r = 1.0e10
