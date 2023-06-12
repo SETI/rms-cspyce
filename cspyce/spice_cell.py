@@ -91,7 +91,7 @@ class SpiceCell:
         self._user_data[index] = value
 
     def __len__(self):
-        return self._header.card_
+        return self._header.card_.item()
 
     def __iter__(self):
         for i in range(self.card):
@@ -116,7 +116,7 @@ class SpiceCell:
 
     @property
     def size(self):
-        return self._header.size_
+        return self._header.size_.item()
 
     @size.setter
     def size(self, size):
@@ -129,7 +129,7 @@ class SpiceCell:
 
     @card.setter
     def card(self, value):
-        assert isinstance(value, int) and 0 <= value <= self.size;
+        assert isinstance(value, int) and 0 <= value <= self.size
         self._header.card_ = value
 
     def as_array(self):
