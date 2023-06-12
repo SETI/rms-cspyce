@@ -409,7 +409,8 @@ def test_ekfind():
     assert not os.path.exists(ekpath)
 
 
-def fail_ekgc():
+def test_ekgc():
+    cs.use_flags(cs.ekgc)
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekgc.ek")
     cleanup_kernel(ekpath)
     handle = cs.ekopn(ekpath, ekpath, 0)
@@ -421,19 +422,18 @@ def fail_ekgc():
         ["DATATYPE = CHARACTER*(*), INDEXED  = TRUE"],
     )
     cs.ekaclc(
-        handle, segno, "c1", 10, ["1.0", "2.0"], [
-            4, 4], [False, False], rcptrs, [0, 0]
+        handle, segno, "c1", ["1.0", "2.0"], [
+            4, 4], [False, False], rcptrs
     )
     cs.ekffld(handle, segno, rcptrs)
     cs.ekcls(handle)
     cs.kclear()
     cs.furnsh(ekpath)
-    nmrows, error, errmsg = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGC", 100)
-    assert not error
-    c, null = cs.ekgc(0, 0, 0, 4)
+    nmrows = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGC")
+    c, null, __ = cs.ekgc(0, 0, 0)
     assert not null
     assert c == "1.0"
-    c, null = cs.ekgc(0, 1, 0, 4)
+    c, null, __ = cs.ekgc(0, 1, 0)
     assert not null
     # assert c == "2.0" this fails, c is an empty string despite found being true.
     cs.kclear()
@@ -453,14 +453,13 @@ def fail_ekgd():
         ["DATATYPE = DOUBLE PRECISION, NULLS_OK = TRUE"],
     )
     cs.ekacld(
-        handle, segno, "c1", [1.0, 2.0], [1, 1], [False, False], rcptrs, [0, 0]
+        handle, segno, "c1", [1.0, 2.0], [1, 1], [False, False], rcptrs
     )
     cs.ekffld(handle, segno, rcptrs)
     cs.ekcls(handle)
     cs.kclear()
     cs.furnsh(ekpath)
-    nmrows, error, errmsg = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGD", 100)
-    assert not error
+    nmrows = cs.ekfind("SELECT C1 FROM TEST_TABLE_EKGD")
     d, null = cs.ekgd(0, 0, 0)
     assert not null
     assert d == 1.0
@@ -920,7 +919,7 @@ def test_esrchc():
     assert cs.esrchc("fail", array) == -1
 
 
-def fail_et2lst():
+def test_et2lst():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2004 may 17 16:30:00")
     hr, mn, sc, time, ampm = cs.et2lst(
