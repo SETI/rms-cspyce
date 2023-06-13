@@ -256,7 +256,7 @@ example, the first input to the `cspyce` function `spkez` is called `targ` and
 it identifies the code of a target being observed. After a call to
 
 ```python
-cspyce.spkez(553, ...
+cspyce.spkez(553, ...)
 ```
 the value of `cspyce.spkez.targ` will be the code actually used, in this case
 either 553 or 55076.
@@ -356,7 +356,7 @@ function `bodn2c`, and wants the vector version if it exists (but it doesn't!),
 they can call
 
 ```python
-cspyce.bodn2c.error.vector(args...)
+cspyce.bodn2c.error.vector(args, ...)
 ```
 
 ## RECORD ENHANCEMENTS
@@ -365,82 +365,105 @@ cspyce.bodn2c.error.vector(args...)
 `cspyce` provides an enhanced version of `SpiceCell` to make it simpler to use for
 both CSPICE and in Python. 
 
+In the documentation that follows, _active elements_ refer to those elements in the 
+`SpiceCell` whose `index` is such that `0 ≤ index < spice_cell.card`. 
+
+#### Constructors
 To create a `SpiceCell`:
 
 ```python
 from cspyce import SpiceCell, SPICE_CELL_INT, SPICE_CELL_DOUBLE
-spice_cell_int = SpiceCell(SPICE_CELL_INT, size=20)
-spice_cell_double = SpiceCell(SPICE_CELL_DOUBLE, size=10)
+spice_cell_int = SpiceCell(typeno=SPICE_CELL_INT, size=20)
+spice_cell_double = SpiceCell(typeno=SPICE_CELL_DOUBLE, size=10)
 ```
+
+With these constructors, `spice_cell.card` will be set to 0 and there will initially be
+no active elements.
+
 If you already have data that you want to convert to a spice cell, you can use a simpler
 interface:
 ```python
-spice_cell = SpiceCell(data=[1, 2, 3, 4, 5])
-spice_cell = SpiceCell(data=np.arange(1.0, 10.0))
+spice_cell = SpiceCell([1, 2, 3, 4, 5])
+spice_cell = SpiceCell(np.arange(1.0, 10.0))
+spice_cell = SpiceCell(np.arange(1.0, 10.0), size=40)  # set size explicitly
 ```
 If you use these constructions, Python will create a `SpiceCell` whose size is a little 
-bigger than the length of the given data.
+bigger than the length of the given data. The passed first argument will be the active
+elements.
 
 Any CSPICE function that expects a `SpiceCell` as an input can also be passed an array,
 a tuple, or anything that can reasonably be converted into an appropriately typed
 `SpiceCell`:
 
-```python
+```shell
 >>> import cspyce
 >>> cspyce.wninsd(2.0, 4.9, (1.0, 3.0, 5.0, 7.0, 9.0, 11.0))
 <SpiceCell float 6/12 [ 1.   4.9  5.   7.   9.  11. ]>
 ```
 
-Active elements refer to those elements in the `SpiceCell` whose `index` is such that 
-`0 ≤ index < spice_cell.card`.
+#### Sequence-like operations
 
-`SpiceCell` offers the following operations:
+`SpiceCell` offers the following methods so that they behave like Python sequences.
 
-`spice_cell.size`: Gets the current maximum size of the `SpiceCell`.
+`spice_cell[index]`, `spice_cell[index] = value`
 
-`spice_cell.size = value`: Grows or shrinks the maximum size of the `SpiceCell`.
-If `spice_cell.card > value`, it is reduced to `value`.
-[This operation does not exist in CSPICE].
-
-`len(spice_cell)`: Returns the "cardinality" of the `SpiceCell`: the number of active 
-elements in the `SpiceCell`
-
-`spice_cell.card`: Same as `len(spice_cell)`.
-
-`spice_cell.card = value`: Changes the number of active elements in the `SpiceCell`.
-   Must have `0 ≤ value < spice_cell.size`.
-
-`spice_cell.clear()`:  Same as `spice_cell.card = 0`.  All elements are inactive
-
-`spice_cell[index]`:  Get the index-th element of the `SpiceCell`. 
-   Must have `-spice_cell.card ≤ index < spice_cell.size`.  As in Python, we allow
+:  Get or sets the `index`-th element of the `SpiceCell`. 
+   Must have `-len(spice_cell) ≤ index < spice_cell.size`.  As in Python, we allow
    negative indices, but -1, -2, etc count backwards from the last active elements.
 
-`spice_cell[index] = value`:  Set the index-th element of the `SpiceCell`
-   to the indicated value. Must have `-spice_cell.card ≤ index < spice_cell.size`. 
-   Negative indices have the same meaning as with `spice_cell[index`
+`len(spice_cell)`
+: Returns the number of active elements of the `SpiceCell`.
 
-`spice_cell.append(value)`: Adds a new active cell to the end of the `SpiceCell`'s 
-active cells.
-The cell's maximum size is grown if necessary.
+`spice_cell.append(value)`
+: Appends a new active cell to the end of the `SpiceCell`'s active cells.
+The cell's maximum size is grown if necessary. 
 
-`spice_cell.extend(values)`: Adds all the indicated values to the end of the
-`SpiceCell`'s active cells.
+`spice_cell.extend(values)`
+: Appends all the values of the sequence to the end of the `SpiceCell`'s active cells.
 The `SpiceCell`'s maximum size is grown if necessary.
 
-`spice_cell` has an iterator which iterates through the active elements of `SpiceCell` 
-   whose `index` is `0 ≤ index < spice_cell.card`.  This means that:
-   * `list(spice_cell)`, `set(spice_cell)`, `tuple(spice_cell)` work as expected.
-   * `for item in spice_cell: ...` iterates through the items as expected.
+`spice_cell += values`
+: Synonym for `spice_cell.extend(values)`
 
-A `SpiceCell` also has two convenience functions:
-* `spice_cell.as_array()` shows the active contents of the array as a numpy array
-* `spice_cell.as_intervals` shows the active contents of the array as a 2-dimension 
-   `card/2`x 2 array.  Many `SpiceCell`s are used to represent intervals in which each
-   pair of numbers represents the lower and upper bounds.
+`spice_cell.clear()`
+: Make all elements inactive. Same as `spice_cell.card = 0`. 
 
-Note that `cspyce`'s `SpiceCell`s are not a fixed size.  Unlike in CSPICE, they 
-can be grown or shrunk.  Unfortunately, CSPICE is not aware of this ability, and its
-functions will stil raise a WINDOWOVERFLOW if the current maximum size of the `SpiceCell`
-is insufficient to hold the results.  
+`iter(spice_cell)` 
+: Iterates through the active elements of `SpiceCell`.
+Because of this iterator, `list(spice_cell)`, `set(spice_cell)`, `tuple(spice_cell)` 
+work as expected.
+You can also write a for loop `for item in spice_cell: ...` to iterate through
+the active elements.
+
+#### SpiceCell specific operations.
+
+`SpiceCell` also has the following methods and properties specific to a `SpiceCell`.
+
+`spice_cell.size`
+: Gets the current maximum size of the `SpiceCell`.
+
+`spice_cell.size = value`
+: Grows or shrinks the maximum size of the `SpiceCell`.
+If the number of active elements is greater than `value`, it is reduced to `value`.
+This operation is a `cspyce` enhancement does not exist in CSPICE.
+
+`spice_cell.card`
+: Same as `len(spice_cell)`.  (Also known as the "cardinality". Hence the name).
+
+`spice_cell.card = value`
+: Changes the number of active elements in the `SpiceCell`. 
+Must have `0 ≤ value < spice_cell.size`.
+
+`spice_cell.as_array()` 
+: Shows the active contents of the array as a numpy array
+
+`spice_cell.as_intervals` 
+: Shows the active contents of the array as a 2-dimensional `card/2`x 2 array.  
+Many `SpiceCell`s are used to represent intervals in which each
+pair of numbers represents the lower and upper bounds.
+
+Although `cspyce`'s `SpiceCell`s can grow and shrink, CSPICE is not aware of this
+capability. Its functions will still raise a WINDOWOVERFLOW if `SpiceCell.size` is
+not large enough to hold the results.  The user must increase `SpiceCell.size` and try
+again.
 

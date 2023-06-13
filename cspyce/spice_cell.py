@@ -25,15 +25,15 @@ class SpiceCell:
     @staticmethod
     def create_spice_cell(my_type, size=1000, length=30):
         length = length if my_type == SPICE_CELL_CHAR else 0
-        return SpiceCell(my_type, size=size, length=length)
+        return SpiceCell(typeno=my_type, size=size, length=length)
 
     @staticmethod
     def as_spice_cell(my_type, record):
         if isinstance(record, SpiceCell) and record._header.dtype_ == my_type:
             return record
-        return SpiceCell(my_type, data=record)
+        return SpiceCell(data=record, typeno=my_type)
 
-    def __init__(self, typeno = None, size:int = 0, length:int = 0, data=None):
+    def __init__(self, data=None, typeno=None, size: int = 0, length: int = 0):
         if data is None:
             if typeno is None or size == 0 or (type == SPICE_CELL_DOUBLE and length == 0):
                 raise ValueError("You must specify either an array, "
@@ -116,6 +116,10 @@ class SpiceCell:
             self.__grow_array(max(self.card + count + 10, 2 * self.size))
         self._user_data[self.card : self.card + count] = values
         self.card += count
+
+    def __iadd__(self, values):
+        self.extend(values)
+        return self
 
     @property
     def size(self):
