@@ -361,7 +361,7 @@ cspyce.bodn2c.error.vector(args...)
 
 ## RECORD ENHANCEMENTS
 
-# SpiceCell
+### SpiceCell
 `cspyce` provides an enhanced version of `SpiceCell` to make it simpler to use for
 both CSPICE and in Python. 
 
@@ -391,27 +391,53 @@ a tuple, or anything that can reasonably be converted into an appropriately type
 <SpiceCell float 6/12 [ 1.   4.9  5.   7.   9.  11. ]>
 ```
 
-`SpiceCell` also offers the following operations:
-* `spice_cell.size`: Gets the current maximum size of the `SpiceCell`.
-* `spice_cell.size = value`: Grows or shrinks the maximum size of the `SpiceCell`.
-   If `spice_cell.card > value`, it is reduced to `value`.
-   [This operation does not exist in CSPICE]. 
-* `len(spice_cell)`: Returns the "cardinality" of the `SpiceCell`: the number of elements
-   in the `SpiceCell` currently in use.
-* `spice_cell.card`: Same as `len(spice_cell)`.
-* `spice_cell.card = value`: Updates the cardinality of the `SpiceCell`.
+Active elements refer to those elements in the `SpiceCell` whose `index` is such that 
+`0 ≤ index < spice_cell.card`.
+
+`SpiceCell` offers the following operations:
+
+`spice_cell.size`: Gets the current maximum size of the `SpiceCell`.
+
+`spice_cell.size = value`: Grows or shrinks the maximum size of the `SpiceCell`.
+If `spice_cell.card > value`, it is reduced to `value`.
+[This operation does not exist in CSPICE].
+
+`len(spice_cell)`: Returns the "cardinality" of the `SpiceCell`: the number of active 
+elements in the `SpiceCell`
+
+`spice_cell.card`: Same as `len(spice_cell)`.
+
+`spice_cell.card = value`: Changes the number of active elements in the `SpiceCell`.
    Must have `0 ≤ value < spice_cell.size`.
-* `spice_cell.clear()`:  Same as `spice_cell.card = 0`.  Empties the spice cell.
-* `spice_cell[index]`:  Get the index-th element of the `SpiceCell`. 
-   Must have `0 ≤ index < spice_cell.size`.
-* `spice_cell[index] = value`:  Set the index-th element of the `SpiceCell`
-   to the indicated value. Must have `0 ≤ index < spice_cell.size
-* `spice_cell.append(value)`: Adds the indicated value to the `SpiceCell`. 
-   The cell's maximum size is grown if necessary.
-* `spice_cell.extend(values)`: Adds all the indicated values to the spice cell.
-   The `SpiceCell`'s maximum size is grown if necessary.
-* `for value in spice_cell: ...`:  Iterates through the elements of the `SpiceCell`.
-   The elements of the spice cell are those whose `index `is `0 ≤ index < spice_cell.card`
+
+`spice_cell.clear()`:  Same as `spice_cell.card = 0`.  All elements are inactive
+
+`spice_cell[index]`:  Get the index-th element of the `SpiceCell`. 
+   Must have `-spice_cell.card ≤ index < spice_cell.size`.  As in Python, we allow
+   negative indices, but -1, -2, etc count backwards from the last active elements.
+
+`spice_cell[index] = value`:  Set the index-th element of the `SpiceCell`
+   to the indicated value. Must have `-spice_cell.card ≤ index < spice_cell.size`. 
+   Negative indices have the same meaning as with `spice_cell[index`
+
+`spice_cell.append(value)`: Adds a new active cell to the end of the `SpiceCell`'s 
+active cells.
+The cell's maximum size is grown if necessary.
+
+`spice_cell.extend(values)`: Adds all the indicated values to the end of the
+`SpiceCell`'s active cells.
+The `SpiceCell`'s maximum size is grown if necessary.
+
+`spice_cell` has an iterator which iterates through the active elements of `SpiceCell` 
+   whose `index` is `0 ≤ index < spice_cell.card`.  This means that:
+   * `list(spice_cell)`, `set(spice_cell)`, `tuple(spice_cell)` work as expected.
+   * `for item in spice_cell: ...` iterates through the items as expected.
+
+A `SpiceCell` also has two convenience functions:
+* `spice_cell.as_array()` shows the active contents of the array as a numpy array
+* `spice_cell.as_intervals` shows the active contents of the array as a 2-dimension 
+   `card/2`x 2 array.  Many `SpiceCell`s are used to represent intervals in which each
+   pair of numbers represents the lower and upper bounds.
 
 Note that `cspyce`'s `SpiceCell`s are not a fixed size.  Unlike in CSPICE, they 
 can be grown or shrunk.  Unfortunately, CSPICE is not aware of this ability, and its

@@ -85,9 +85,13 @@ class SpiceCell:
             self._header.card_ = len(data)
 
     def __getitem__(self, index):
+        if -self.card <= index < 0:
+            index += self.card
         return self._user_data[index]
 
     def __setitem__(self, index, value):
+        if -self.card <= index < 0:
+            index += self.card
         self._user_data[index] = value
 
     def __len__(self):
