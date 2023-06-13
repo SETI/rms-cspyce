@@ -1,6 +1,5 @@
-import collections
-
 import numpy as np
+
 
 SPICE_CELL_HEADER_DESCRIPTOR = np.dtype([
     # Many of these names clash with built-in properties of an array, so we've suffixed
