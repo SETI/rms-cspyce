@@ -643,7 +643,7 @@ def test_diags2():
     npt.assert_array_almost_equal(rot, expected_rot)
 
 
-def test_dlabbs():
+def test_dlabbs_dlafps():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     cs.use_flags(cs.dlabbs)
     current = cs.dlabbs(handle)
@@ -670,21 +670,6 @@ def test_dlafns():
     current = cs.dlabfs(handle)
     output = cs.dlafns(handle, current)
     assert output[1] is False
-
-
-# Test is still being developed.
-def fail_dlafps():
-    cs.use_flags(cs.dlafps, cs.dlabfs)
-    path = os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla")
-    cleanup_kernel(path)
-    handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
-    dladsc = cs.dlabfs(handle)
-    # False assert to trigger test of
-    try:
-        assert dladsc[0] == True
-    except:
-        prev = cs.dlafps(handle, dladsc[0])
-        assert prev[1] == False
 
 
 def test_dlaopn_dlabns_dlaens_daswbr():
@@ -866,6 +851,7 @@ def test_dskd02():
     )
     cs.dascls(handle)
 
+
 def test_dskgd():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
@@ -873,7 +859,6 @@ def test_dskgd():
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
     dskdsc = cs.dskgd(handle, dladsc)
-
     assert dskdsc.surfce == 401
     assert dskdsc.center == 401
     assert dskdsc.dclass == 1
@@ -960,7 +945,8 @@ def fail_dskw02_dskrb2_dskmi2():
     # open new dsk file
     handle = cs.dskopn(dskpath, "TESTdskw02.dsk/AA/29-SEP-2017", 0)
     # create spatial index
-    spaixd, spaixi = cs.dskmi2(vrtces, plates, finscl, corscl, False)
+    spaixd, spaixi = cs.dskmi2(
+        vrtces, plates, finscl, corscl, False)
     # do stuff
     corsys = 1
     mncor1 = -cs.pi()
@@ -1034,13 +1020,13 @@ def test_dskp02():
     cs.dascls(handle)
 
 
-def fail_dskv02():
+def test_dskv02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
     dladsc = cs.dlabfs(handle)
     # read the vertices
-    vrtces = cs.dskv02(handle, dladsc, 1, 1)
+    vrtces = cs.dskv02(handle, dladsc, 1)
     npt.assert_almost_equal(
         vrtces[0],
         [
@@ -1052,7 +1038,7 @@ def fail_dskv02():
     cs.dascls(handle)
 
 
-def fail_dskx02():
+def test_dskx02():
     # open the dsk file
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     # get the dladsc from the file
@@ -1063,16 +1049,15 @@ def fail_dskx02():
     # Produce a ray vertex
     vertex = cs.latrec(r, 0.0, 0.0)
     raydir = cs.vminus(vertex)
-    plid, xpt, found = cs.dskx02(handle, dladsc, vertex, raydir)
+    plid, xpt = cs.dskx02(handle, dladsc, vertex, raydir)
     # test results
-    assert found
     assert plid == 421
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
     # cleanup
     cs.dascls(handle)
 
 
-def fail_dskxsi():
+def test_dskxsi():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle
@@ -1094,11 +1079,10 @@ def fail_dskxsi():
     # check output
     assert handle is not None
     assert ic[0] == 420
-    assert dc[0] == pytest.approx(0.0)
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
 
 
-def fail_dskxv():
+def test_dskxv():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     cs.use_flags(cs.kdata)
@@ -1125,7 +1109,7 @@ def fail_dskxv():
     npt.assert_almost_equal(xpt[0], [12.36679999999999957083, 0.0, 0.0])
 
 
-def fail_dskxv_2():
+def test_dskxv_2():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle

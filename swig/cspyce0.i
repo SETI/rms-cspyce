@@ -2865,7 +2865,7 @@ extern void errprt_c(
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
                                       {(SpiceInt timlen,  SpiceChar time[TIMELEN])};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
-                                      {(SpiceInt ampmlen, SpiceChar ampm[10])};
+                                      {(SpiceInt ampmlen, SpiceChar ampm[TIMELEN])};
 
 %inline %{
     void my_et2lst_c(
@@ -2877,7 +2877,7 @@ extern void errprt_c(
         SpiceInt       *mn,
         SpiceInt       *sc,
         SpiceInt timlen,  SpiceChar time[TIMELEN],
-        SpiceInt ampmlen, SpiceChar ampm[10])
+        SpiceInt ampmlen, SpiceChar ampm[TIMELEN])
     {
         et2lst_c(et, body, lon, type, timlen, ampmlen,
                  hr, mn, sc, time, ampm);

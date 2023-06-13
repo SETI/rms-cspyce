@@ -400,9 +400,9 @@ class Test_cspyce1_kernels(unittest.TestCase):
 
     # et2lst
     self.assertEqual(et2lst(0., 399, 0., 'PLANETOCENTRIC'),
-                     [11, 55, 27, '11:55:27', '11:55:27'])
+                     [11, 55, 27, '11:55:27', '11:55:27 A.M.'])
     self.assertEqual(et2lst(0., 399, 43200., 'PLANETOCENTRIC'),
-                     [23, 46, 9, '23:46:09', '11:46:09'])
+                     [23, 46, 9, '23:46:09', '11:46:09 P.M.'])
 
     # et2utc, utc2et, str2et, etcal
     utc = '2000-01-01T11:58:55.816'
