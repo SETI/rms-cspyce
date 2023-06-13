@@ -3,7 +3,7 @@ import collections
 import numpy as np
 
 SPICE_CELL_HEADER_DESCRIPTOR = np.dtype([
-    # Many of these names clash with built in properties of an array, so we've suffixed
+    # Many of these names clash with built-in properties of an array, so we've suffixed
     # all of them with an underscore
     ("dtype_", np.int32),
     ("length_", np.int32),
@@ -36,7 +36,7 @@ class SpiceCell:
 
     def __init__(self, typeno = None, size:int = 0, length:int = 0, data=None):
         if data is None:
-            if typeno is None or  size == 0  or (type == SPICE_CELL_DOUBLE and length == 0):
+            if typeno is None or size == 0 or (type == SPICE_CELL_DOUBLE and length == 0):
                 raise ValueError("You must specify either an array, "
                                  "or else type, size, and length (for characters)")
 
@@ -163,7 +163,7 @@ class SpiceCell:
 
     @property
     def base(self):
-        # Returns the underlying array for which array[0] is the header.  Swig calls this.
+        # Returns the underlying array for which array[0] is the header. Swig calls this.
         return self._header.base
 
 if __name__ == '__main__':
