@@ -751,11 +751,14 @@ class Test_SpiceCell:
     def test_creation_from_data_only(self):
         with pytest.raises(ValueError):
             SpiceCell()
-        t_int = SpiceCell((1, 2, 3, 4))
-        assert isinstance(t_int[0], int)
-        t_float = SpiceCell([1.0, 2.0, 3.0])
-        assert isinstance(t_float[0], float)
-        t_char = SpiceCell(["abc", "def"])
+        t_int = SpiceCell(data=(1, 2, 3, 4))
+        assert t_int.as_array().dtype == np.int32
+
+        t_float = SpiceCell(data=[1.0, 2.0, 3.0])
+        assert t_float.as_array().dtype == np.double
+
+        t_char = SpiceCell(data=["abc", "def"])
+        assert t_char.as_array().dtype == np.dtype('S4')
 
     def test_creation_from_swig(self):
         t1 = SpiceCell.create_spice_cell(SPICE_CELL_INT, 20)
@@ -768,7 +771,7 @@ class Test_SpiceCell:
         assert isinstance(t3[0], float)
 
     def test_append(self):
-        t1 = SpiceCell(SPICE_CELL_INT, size=10);
+        t1 = SpiceCell(SPICE_CELL_INT, size=10)
         old_size = t1.size
         t1.card = old_size
         t1.append(100)
@@ -795,7 +798,7 @@ class Test_SpiceCell:
         npt.assert_array_equal(t1.as_intervals(), [[3, 4], [5, 6], [7, 8]])
 
     def test_indexing(self):
-        t1 = SpiceCell([1, 2, 3, 4])
+        t1 = SpiceCell(data=[1, 2, 3, 4])
         t1[4] = 5   # Outside the active range, but legal
         assert t1[0] == 1
         assert t1[-1] == 4

@@ -164,9 +164,3 @@ class SpiceCell:
     def base(self):
         # Returns the underlying array for which array[0] is the header. Swig calls this.
         return self._header.base
-
-if __name__ == '__main__':
-    x = SpiceCell(data=range(10))
-    x.append(15)
-    x.extend(range(20, 50))
-    print(x)
