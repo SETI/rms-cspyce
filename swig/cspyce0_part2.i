@@ -5472,7 +5472,7 @@ extern void ekrced_c(
 
 %rename (ekrcei) ekrcei_c;
 %apply (void RETURN_VOID) {void ekrcei_c};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY1[ANY])
+%apply (SpiceInt *SIZE1, SpiceInt OUT_ARRAY1[ANY])
                 {(SpiceInt *nvals, SpiceInt ivals[MAXVALS])};
 
 extern void ekrcei_c(
