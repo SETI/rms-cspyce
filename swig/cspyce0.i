@@ -3203,7 +3203,7 @@ VECTORIZE_6s_d__b(fovtrg, my_fovtrg_c)
 
 %rename (frame) my_frame_c;
 %apply (void RETURN_VOID) {void my_frame_c};
-%apply (SpiceDouble  IN_ARRAY1[ANY]) {ConstSpiceDouble x1[3]};
+%apply (ConstSpiceDouble  IN_ARRAY1[ANY]) {ConstSpiceDouble x1[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble x[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble y[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble z[3]};

@@ -286,7 +286,7 @@ extern SpiceInt bschoc_c(
 
 %rename (bschoi) bschoi_c;
 %apply (SpiceInt RETURN_INT) {SpiceInt bschoi_c};
-%apply (SpiceInt DIM1, SpiceInt *IN_ARRAY1) {(SpiceInt ndim, ConstSpiceInt *array)};
+%apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1) {(SpiceInt ndim, ConstSpiceInt *array)};
 %apply (ConstSpiceInt *IN_ARRAY1) {ConstSpiceInt *order};
 
 extern SpiceInt bschoi_c(
@@ -10114,7 +10114,7 @@ extern void spkpvn_c(
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble descr[5]};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
       {(SpiceInt idlen, SpiceChar ident[SIDLEN])};
-%apply (SpiceInt *OUTPUT) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_spksfs_c(

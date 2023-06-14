@@ -49,6 +49,8 @@ class SpiceCell:
                 typeno = SPICE_CELL_DOUBLE
             elif issubclass(data.dtype.type, str):
                 typeno = SPICE_CELL_CHAR
+                # Include default just in case the array is empty. Add 1 for null byte.
+                length = max(length, 1 + max((len(x) for x in data.ravel()), default=0))
             else:
                 raise ValueError("array has unknown type")
 
@@ -57,8 +59,8 @@ class SpiceCell:
         elif typeno == SPICE_CELL_DOUBLE:
             array_descriptor = np.dtype(np.double)
         elif typeno == SPICE_CELL_CHAR:
+            length = max(30, length)
             array_descriptor = np.dtype(("S", length))
-            length = max(2, length)
         else:
             raise ValueError(f"Bad type {typeno} passed to SpiceCell init")
 

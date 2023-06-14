@@ -757,8 +757,8 @@ class Test_SpiceCell:
         t_float = SpiceCell([1.0, 2.0, 3.0])
         assert t_float.as_array().dtype == np.double
 
-        t_char = SpiceCell(["abc", "def"])
-        assert t_char.as_array().dtype == np.dtype('S4')
+        t_char = SpiceCell(["a" * 50, "def"])
+        assert t_char.as_array().dtype == np.dtype('S51')
 
         with pytest.raises(ValueError):
             temp = np.array((1 + 1j, 2 + 2j))
