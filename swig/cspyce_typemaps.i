@@ -3155,7 +3155,6 @@ TYPEMAP_RECORDS_ALIAS(ConstSpicePlane, SpicePlane, NPY_DOUBLE, 4)
 %{
 typedef SpiceCell SpiceCellInt;
 typedef SpiceCell SpiceCellDouble;
-typedef SpiceCell SpiceCellInterval;
 %}
 
 /******************************
@@ -3171,7 +3170,7 @@ typedef SpiceCell SpiceCellInterval;
 *
 */
 
-%define TYPEMAP_SPICE_CELL(Type, TypeCode, columns)
+%define TYPEMAP_SPICE_CELL(Type, TypeCode)
 %typemap(in)
     (Type *INPUT)
         (PyObject *record = NULL, PyObject* base_array=NULL),
@@ -3180,8 +3179,7 @@ typedef SpiceCell SpiceCellInterval;
 {
 //      $1_type $1_name
 //      $1_type *INPUT
-    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_spice_cell", "Oii",
-                                 $input, TypeCode, columns);
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_spice_cell", "iO", TypeCode, $input);
     if (!record || record == Py_None) {
         handle_bad_type_error("$symname", "Type");
         SWIG_fail;
@@ -3196,7 +3194,7 @@ typedef SpiceCell SpiceCellInterval;
 {
 //      $1_type $1_name
 //      Type *OUTPUT
-    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_spice_cell", "ii", TypeCode, columns);
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_spice_cell", "i", TypeCode);
     TEST_MALLOC_FAILURE(record);
     base_array = PyObject_GetAttrString(record, "base");
     $1 = PyArray_DATA(base_array);
@@ -3221,9 +3219,9 @@ typedef SpiceCell SpiceCellInterval;
 
 %enddef
 
-TYPEMAP_SPICE_CELL(SpiceCellInt,      SPICE_INT, 1)
-TYPEMAP_SPICE_CELL(SpiceCellDouble,   SPICE_DP,  1)
-TYPEMAP_SPICE_CELL(SpiceCellInterval, SPICE_DP,  2)
+TYPEMAP_SPICE_CELL(SpiceCellInt,     SPICE_INT)
+TYPEMAP_SPICE_CELL(SpiceCellDouble,  SPICE_DP)
+TYPEMAP_SPICE_CELL(SpiceCellChar,    SPICE_CHR)
 
 #undef TYPEMAP_SPICE_CELL
 
