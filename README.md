@@ -417,11 +417,13 @@ a tuple, or anything that can reasonably be converted into an appropriately type
 : Returns the number of active elements of the `SpiceCell`.
 
 `spice_cell.append(value)`
-: Appends a new active cell to the end of the `SpiceCell`'s active cells.
+: If `value` is a float or integer, it is added to the `SpiceCell`'s active cells.
+If `value` is an array, all of its elements are added to the `SpiceCell`'s active cells.
 The cell's maximum size is grown if necessary. 
 
 `spice_cell.extend(values)`
-: Appends all the values of the sequence to the end of the `SpiceCell`'s active cells.
+: Appends each value in `values` to the end of the `SpiceCell`'s active cells.
+Each element of `values` can be a float, an integer, or an array.
 The `SpiceCell`'s maximum size is grown if necessary.
 
 `spice_cell += values`
@@ -462,10 +464,41 @@ Must have `0 ≤ value < spice_cell.size`.
 `spice_cell.as_intervals()` 
 : Returns a view of the active contents of the array as a 2-dimensional `card/2`x 2 array. 
 Many `SpiceCell`s are used to represent intervals in which each
-pair of numbers represents the lower and upper bounds.
+pair of numbers represents the lower and upper bounds. 
 
 Although `cspyce`'s `SpiceCell`s can grow and shrink, CSPICE is not aware of this
 capability. Its functions will still raise a WINDOWOVERFLOW if `SpiceCell.size` is
 not large enough to hold the results.  The user must increase `SpiceCell.size` and try
 again.
+
+#### Handling intervals and other structures
+
+Although internally, a `SpiceCell` is a flat array of integers or floats, 
+some CSPICE routines treat the contents of a `SpiceCell` 
+as if it were a 2-dimensional array.
+For example, some CSPICE routines expect the `SpiceCell` to contain pairs of values
+where each pair represents the limits of an interval.
+
+To simplify dealing with this use case, the methods `append` and `extend` have been enhanced.
+You can pass an array or an array-like object to `append`, and all elements of the
+array will be added to the `SpiceCell`.
+Likewise you can pass `extend` a sequence of array-like objects, and all of them will
+be added to the `SpiceCell`.
+
+So, for example, you could write:
+```python
+spice_cell.append([10, 20])
+spice_cell.extend([[35, 50], [90, 100], [120, 140]])
+```
+to add intervals to your SpiceCell.  
+
+To view a `SpiceCell` containing intervals, you can use `spice_cell.as_intervals()` 
+as described above. 
+This is just a shortcut for `spice_cell.as_array().reshape(-1, 2)`, where
+-1 is a special marker to `reshape` saying "figure out this value from the size of the
+array and the other dimensions".
+The expression `spice_cell.as_array().reshape(-1, 3)` would give an array of triples.
+`self.as_array().reshape(-1, 4, 4)` gives an array of 4x4 matrices.
+
+
 

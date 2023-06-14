@@ -1,3 +1,5 @@
+import numbers
+
 import numpy as np
 
 
@@ -41,14 +43,12 @@ class SpiceCell:
 
         if typeno is None:
             data = np.asarray(data)
-            if data.dtype.kind == 'f':
-                typeno = SPICE_CELL_DOUBLE
-            elif data.dtype.kind in 'bis':
+            if issubclass(data.dtype.type, numbers.Integral):
                 typeno = SPICE_CELL_INT
-            elif data.dtype.kind in 'SU':
+            elif issubclass(data.dtype.type, numbers.Real):
+                typeno = SPICE_CELL_DOUBLE
+            elif issubclass(data.dtype.type, str):
                 typeno = SPICE_CELL_CHAR
-                data = np.asarray(data, dtype='S')
-                length = max(2, length, max(len(x) for x in data.ravel()) + 1)
             else:
                 raise ValueError("array has unknown type")
 
@@ -64,7 +64,7 @@ class SpiceCell:
 
         if data is not None:
             data = np.asarray(data, dtype=array_descriptor)
-            size = max(size, len(data) + 6)  # add a little bit of spare room
+            size = max(size, len(data) + 6)  # add some spare room.
 
         self._header = np.rec.array(None, SPICE_CELL_HEADER_DESCRIPTOR, 1)[0]
         self._descriptor = array_descriptor
@@ -80,8 +80,7 @@ class SpiceCell:
         self.__grow_array(size, init=True)
 
         if data is not None:
-            self._user_data[:len(data)] = data
-            self._header._card = len(data)
+            self.append(data)
 
     def __getitem__(self, index):
         # Handle negative indexing
@@ -106,18 +105,21 @@ class SpiceCell:
         self.card = 0
 
     def append(self, value):
-        if self.card == self.size:
-            self.__grow_array(max(10, 2 * self.size))
-        self[self.card] = value
-        self.card += 1
-
-    def extend(self, values):
-        values = np.asarray(values, self._descriptor)
-        count = len(values)
+        value = np.asarray(value, self._descriptor)
+        count = value.size  # number of elements
         if self.card + count > self.size:
             self.__grow_array(max(self.card + count + 10, 2 * self.size))
-        self._user_data[self.card : self.card + count] = values
+        self._user_data[self.card : self.card + count] = value.ravel()
         self.card += count
+
+    def extend(self, values):
+        values = [np.asarray(value, self._descriptor) for value in values]
+        count = sum(value.size for value in values)
+        if self.card + count > self.size:
+            self.__grow_array(max(self.card + count + 10, 2 * self.size))
+        for value in values:
+            self._user_data[self.card: self.card + count] = value.ravel()
+            self.card += value.size
 
     def __iadd__(self, values):
         self.extend(values)

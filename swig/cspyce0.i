@@ -814,7 +814,7 @@ extern void chkout_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *ck};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *level};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *timsys};
-%apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
+%apply (SpiceCellInterval *OUTPUT) {SpiceCell *cover};
 
 extern void ckcov_c(
         ConstSpiceChar *ck,
@@ -6032,7 +6032,7 @@ VECTORIZE_dX_2d__dN(oscltx, oscltx_c, SPICE_OSCLTX_NELTS)
 %apply (void RETURN_VOID) {void pckcov_c};
 %apply (ConstSpiceChar *CONST_STRING)
                           {ConstSpiceChar *pck};
-%apply (SpiceCellDouble *OUTPUT) {SpiceCell* cover};
+%apply (SpiceCellInterval *OUTPUT) {SpiceCell* cover};
 
 extern void pckcov_c(
         ConstSpiceChar *pck,
@@ -8657,7 +8657,7 @@ VECTORIZE_i_d_2s_dX_dX__dN_d_d(spkaps, spkaps_c, 6)
 %rename (spkcov) spkcov_c;
 %apply (void RETURN_VOID) {void spkcov_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
-%apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
+%apply (SpiceCellInterval *OUTPUT) {SpiceCell *cover};
 
 extern void spkcov_c(
         ConstSpiceChar *spk,

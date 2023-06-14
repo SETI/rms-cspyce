@@ -6007,8 +6007,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfdist_c(
         ConstSpiceChar *target,
@@ -6109,8 +6109,8 @@ extern void gfdist_c(
 %apply (ConstSpiceInt     *IN_ARRAY1) {ConstSpiceInt     *qipars};
 %apply (ConstSpiceBoolean *IN_ARRAY1) {ConstSpiceBoolean *qlpars};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar    *op};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 %inline %{
     void my_gfevnt_c(
@@ -6208,8 +6208,8 @@ extern void gfdist_c(
 
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
                 {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
-%apply (SpiceCellDouble* INPUT)  {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT) {SpiceCell *result};
 
 %inline %{
     void my_gffove_c(
@@ -6297,8 +6297,8 @@ extern void gfdist_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble spoint[3]};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfilum_c(
         ConstSpiceChar   *method,
@@ -6391,8 +6391,8 @@ extern void gfilum_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 %inline %{
     void my_gfocce_c(
@@ -6476,8 +6476,8 @@ extern void gfilum_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 
 extern void gfoclt_c(
@@ -6545,8 +6545,8 @@ extern void gfoclt_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 
 extern void gfpa_c(
@@ -6620,8 +6620,8 @@ extern void gfpa_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfposc_c(
         ConstSpiceChar *target,
@@ -6687,8 +6687,8 @@ extern void gfposc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *rframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfrfov_c(
         ConstSpiceChar   *inst,
@@ -6747,8 +6747,8 @@ extern void gfrfov_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfrr_c(
         ConstSpiceChar *target,
@@ -6828,8 +6828,8 @@ extern void gfrr_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfsep_c(
         ConstSpiceChar *targ1,
@@ -6914,8 +6914,8 @@ extern void gfsep_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfsntc_c(
         ConstSpiceChar   *target,
@@ -7019,8 +7019,8 @@ extern void gfstol_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gfsubc_c(
         ConstSpiceChar *target,
@@ -7090,8 +7090,8 @@ extern void gfsubc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *tframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *cnfine};
+%apply (SpiceCellInterval* OUTPUT)    {SpiceCell *result};
 
 extern void gftfov_c(
         ConstSpiceChar *inst,
@@ -11445,8 +11445,8 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 
 %rename (wncomd) wncomd_c;
 %apply (void RETURN_VOID) {void wncomd_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *result};
+%apply (* INPUT) {SpiceCell *window};
+%apply (SpiceCellInterval* OUTPUT) {SpiceCell *result};
 
 extern void wncomd_c(
         SpiceDouble left,
@@ -11478,7 +11478,7 @@ extern void wncomd_c(
 
 %rename (wncond) wncond_c;
 %apply (void RETURN_VOID) {void wncond_c};
-%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INOUT) {SpiceCell *window};
 
 extern void wncond_c(
         SpiceDouble left,
@@ -11511,9 +11511,9 @@ extern void wncond_c(
 %rename (wndifd) wndifd_c;
 %apply (void RETURN_VOID) {void wndifd_c};
 
-%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *a};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *b};
+%apply (SpiceCellInterval* OUTPUT) {SpiceCell *c};
 
 extern void wndifd_c(
         SpiceCell *a,
@@ -11544,7 +11544,7 @@ extern void wndifd_c(
 
 %rename (wnelmd) wnelmd_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean wnelmd_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INPUT) {SpiceCell *window};
 
 extern SpiceBoolean wnelmd_c(
         SpiceDouble point,
@@ -11574,7 +11574,7 @@ extern SpiceBoolean wnelmd_c(
 
 %rename (wnexpd) wnexpd_c;
 %apply (void RETURN_VOID) {void wnexpd_c};
-%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INOUT) {SpiceCell *window};
 
 extern void wnexpd_c(
         SpiceDouble left,
@@ -11634,7 +11634,7 @@ extern void wnextd_c(
 
 %rename (wnfild) wnfild_c;
 %apply (void RETURN_VOID) {void wnfild_c};
-%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INOUT) {SpiceCell *window};
 
 extern void wnfild_c(
         SpiceDouble smlgap,
@@ -11662,7 +11662,7 @@ extern void wnfild_c(
 
 %rename (wnfltd) wnfltd_c;
 %apply (void RETURN_VOID) {void wnfltd_c};
-%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INOUT) {SpiceCell *window};
 
 extern void wnfltd_c(
         SpiceDouble smlint,
@@ -11694,7 +11694,7 @@ extern void wnfltd_c(
 
 %rename (wnincd) wnincd_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean wnincd_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INPUT) {SpiceCell *window};
 
 extern SpiceBoolean wnincd_c(
         SpiceDouble left,
@@ -11726,12 +11726,12 @@ extern SpiceBoolean wnincd_c(
 %rename (wninsd) wninsd_c;
 %apply (void RETURN_VOID) {void wninsd_c};
 
-%apply (SpiceCellDouble *INOUT) {SpiceCellDouble *window};
+%apply (SpiceCellInterval *INOUT) {SpiceCell *window};
 
 extern void wninsd_c(
         SpiceDouble left,
         SpiceDouble right,
-        SpiceCellDouble *window
+        SpiceCell *window
 );
 
 /***********************************************************************
@@ -11758,9 +11758,9 @@ extern void wninsd_c(
 
 %rename (wnintd) wnintd_c;
 %apply (void RETURN_VOID) {void wnintd_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *a};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *b};
+%apply (SpiceCellInterval* OUTPUT) {SpiceCell *c};
 
 extern void wnintd_c(
         SpiceCell *a,
@@ -11797,8 +11797,8 @@ extern void wnintd_c(
 
 %rename (wnreld) wnreld_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean wnreld_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *a};
+%apply (SpiceCellInterval* INPUT)     {SpiceCell *b};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *op};
 
 extern SpiceBoolean wnreld_c(
@@ -11836,7 +11836,7 @@ extern SpiceBoolean wnreld_c(
 
 %rename (wnsumd) wnsumd_c;
 %apply (void RETURN_VOID) {void wnsumd_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
+%apply (SpiceCellInterval* INPUT) {SpiceCell *window};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *meas};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *avg};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *stddev};
@@ -11876,9 +11876,9 @@ extern void wnsumd_c(
 
 %rename (wnunid) wnunid_c;
 %apply (void RETURN_VOID) {void wnunid_c};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
-%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *a};
+%apply (SpiceCellInterval* INPUT)  {SpiceCell *b};
+%apply (SpiceCellInterval* OUTPUT) {SpiceCell *c};
 
 extern void wnunid_c(
         SpiceCell *a,
