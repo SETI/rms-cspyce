@@ -4,15 +4,15 @@ import numpy as np
 SPICE_CELL_HEADER_DESCRIPTOR = np.dtype([
     # Many of these names clash with built-in properties of an array, so we've suffixed
     # all of them with an underscore
-    ("dtype_", np.int32),
-    ("length_", np.int32),
-    ("size_", np.int32),
-    ("card_", np.int32),
-    ("isSet_", np.int32),
-    ("adjust_", np.int32),
-    ("init_", np.int32),
-    ("base_", np.int64),
-    ("data_", np.int64),
+    ("_dtype", np.int32),
+    ("_length", np.int32),
+    ("_size", np.int32),
+    ("_card", np.int32),
+    ("_isSet", np.int32),
+    ("_adjust", np.int32),
+    ("_init", np.int32),
+    ("_base", np.int64),
+    ("_data", np.int64),
 ], align=True)
 
 SPICE_CELL_INT = 2
@@ -29,7 +29,7 @@ class SpiceCell:
 
     @staticmethod
     def as_spice_cell(my_type, record):
-        if isinstance(record, SpiceCell) and record._header.dtype_ == my_type:
+        if isinstance(record, SpiceCell) and record._header._dtype == my_type:
             return record
         return SpiceCell(data=record, typeno=my_type)
 
@@ -69,32 +69,34 @@ class SpiceCell:
         self._header = np.rec.array(None, SPICE_CELL_HEADER_DESCRIPTOR, 1)[0]
         self._descriptor = array_descriptor
 
-        self._header.dtype_ = typeno
-        self._header.length_ = length
-        self._header.size_ = size
-        self._header.card_ = 0
-        self._header.isSet_ = True
-        self._header.adjust_ = False
-        self._header.init_ = False
+        self._header._dtype = typeno
+        self._header._length = length
+        self._header._size = size
+        self._header._card = 0
+        self._header._isSet = True
+        self._header._adjust = False
+        self._header._init = False
 
         self.__grow_array(size, init=True)
 
         if data is not None:
             self._user_data[:len(data)] = data
-            self._header.card_ = len(data)
+            self._header._card = len(data)
 
     def __getitem__(self, index):
+        # Handle negative indexing
         if -self.card <= index < 0:
             index += self.card
         return self._user_data[index]
 
     def __setitem__(self, index, value):
+        # Handle negative indexing
         if -self.card <= index < 0:
             index += self.card
         self._user_data[index] = value
 
     def __len__(self):
-        return self._header.card_.item()
+        return self._header._card.item()
 
     def __iter__(self):
         for i in range(self.card):
@@ -123,7 +125,7 @@ class SpiceCell:
 
     @property
     def size(self):
-        return self._header.size_.item()
+        return self._header._size.item()
 
     @size.setter
     def size(self, size):
@@ -137,7 +139,7 @@ class SpiceCell:
     @card.setter
     def card(self, value):
         assert isinstance(value, int) and 0 <= value <= self.size
-        self._header.card_ = value
+        self._header._card = value
 
     def as_array(self):
         return self._user_data[0:self.card]
@@ -146,8 +148,8 @@ class SpiceCell:
         return self.as_array().reshape(-1, 2)
 
     def __str__(self):
-        typename = ['char', 'float', 'int'][self._header.dtype_]
-        return f"<SpiceCell {typename} {self._header.card_}/{self._header.size_} {self.as_array()}>"
+        typename = ['char', 'double', 'int'][self._header._dtype]
+        return f"<SpiceCell {typename} {self._header._card}/{self._header._size} {self.as_array()}>"
 
     def __repr__(self):
         return self.__str__()
@@ -158,11 +160,11 @@ class SpiceCell:
         else:
             self._data.resize(size + self.CONTROL_SIZE, refcheck=False)
         self._user_data = self._data[6:]
-        self._header.size_ = size
-        self._header.card_ = min(size, self._header.card_)
-        self._header.base_ = self._data.ctypes.data
-        self._header.data_ = self._user_data.ctypes.data
-        assert self._header.data_ - self._header.base_ == self.CONTROL_SIZE * self._descriptor.itemsize
+        self._header._size = size
+        self._header._card = min(size, self._header._card)
+        self._header._base = self._data.ctypes.data
+        self._header._data = self._user_data.ctypes.data
+        assert self._header._data - self._header._base == self.CONTROL_SIZE * self._descriptor.itemsize
 
     @property
     def base(self):

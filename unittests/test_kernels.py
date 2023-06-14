@@ -2,6 +2,7 @@
 
 import sys
 import numpy as np
+import numpy.testing as npt
 import numbers
 import platform
 import unittest
@@ -279,12 +280,10 @@ class Test_cspyce1_kernels(unittest.TestCase):
 
     #### ckcov
     values = ckcov(PATH_ + '17257_17262ra.bc', -82000, False, 'INTERVAL', 1., 'SCLK')
-    self.assertEqual(values[0], 304593554335.0)
-    self.assertEqual(values[1], 304610188193.0)
-    self.assertEqual(values[2], 304610195359.0)
-    self.assertEqual(values[3], 304622337377.0)
-    self.assertEqual(values[4], 304622354271.0)
-    self.assertEqual(values[5], 304625376609.0)
+    npt.assert_array_equal(values.as_intervals(),
+                           [[304593554335.0, 304610188193.0],
+                            [304610195359.0, 304622337377.0],
+                            [304622354271.0, 304625376609.0]])
 
     values = ckcov.flag(PATH_ + '17257_17262ra.bc', 1, False, 'INTERVAL', 1.,
                           'SCLK')

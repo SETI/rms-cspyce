@@ -760,6 +760,13 @@ class Test_SpiceCell:
         t_char = SpiceCell(["abc", "def"])
         assert t_char.as_array().dtype == np.dtype('S4')
 
+        with pytest.raises(ValueError):
+            temp = np.array((1 + 1j, 2 + 2j))
+            SpiceCell(temp)
+
+        with pytest.raises(ValueError):
+            SpiceCell(typeno=1000)
+
     def test_creation_from_swig(self):
         t1 = SpiceCell.create_spice_cell(SPICE_CELL_INT, 20)
         assert t1.size == 20

@@ -361,6 +361,8 @@ cspyce.bodn2c.error.vector(args, ...)
 
 ## RECORD ENHANCEMENTS
 
+-----
+
 ### SpiceCell
 `cspyce` provides an enhanced version of `SpiceCell` to make it simpler to use for
 both CSPICE and in Python. 
@@ -373,8 +375,8 @@ To create a `SpiceCell`:
 
 ```python
 from cspyce import SpiceCell, SPICE_CELL_INT, SPICE_CELL_DOUBLE
-spice_cell_int = SpiceCell(typeno=SPICE_CELL_INT, size=20)
-spice_cell_double = SpiceCell(typeno=SPICE_CELL_DOUBLE, size=10)
+spice_cell = SpiceCell(typeno=SPICE_CELL_INT, size=20)
+spice_cell = SpiceCell(typeno=SPICE_CELL_DOUBLE, size=10)
 ```
 
 With these constructors, `spice_cell.card` will be set to 0 and there will initially be
@@ -398,7 +400,7 @@ a tuple, or anything that can reasonably be converted into an appropriately type
 ```shell
 >>> import cspyce
 >>> cspyce.wninsd(2.0, 4.9, (1.0, 3.0, 5.0, 7.0, 9.0, 11.0))
-<SpiceCell float 6/12 [ 1.   4.9  5.   7.   9.  11. ]>
+<SpiceCell double 6/12 [ 1.   4.9  5.   7.   9.  11. ]>
 ```
 
 #### Sequence-like operations
@@ -407,7 +409,7 @@ a tuple, or anything that can reasonably be converted into an appropriately type
 
 `spice_cell[index]`, `spice_cell[index] = value`
 
-:  Get or sets the `index`-th element of the `SpiceCell`. 
+:  Gets or sets the `index`-th element of the `SpiceCell`. 
    Must have `-len(spice_cell) ≤ index < spice_cell.size`.  As in Python, we allow
    negative indices, but -1, -2, etc count backwards from the last active elements.
 
@@ -429,13 +431,13 @@ The `SpiceCell`'s maximum size is grown if necessary.
 : Make all elements inactive. Same as `spice_cell.card = 0`. 
 
 `iter(spice_cell)` 
-: Iterates through the active elements of `SpiceCell`.
-Because of this iterator, `list(spice_cell)`, `set(spice_cell)`, `tuple(spice_cell)` 
+: Iterates through the active elements of `spice_cell`.
+Because of this iterator, `list(spice_cell)`, `set(spice_cell)`, and `tuple(spice_cell)` 
 work as expected.
 You can also write a for loop `for item in spice_cell: ...` to iterate through
 the active elements.
 
-#### SpiceCell specific operations.
+#### SpiceCell-specific operations.
 
 `SpiceCell` also has the following methods and properties specific to a `SpiceCell`.
 
@@ -445,20 +447,20 @@ the active elements.
 `spice_cell.size = value`
 : Grows or shrinks the maximum size of the `SpiceCell`.
 If the number of active elements is greater than `value`, it is reduced to `value`.
-This operation is a `cspyce` enhancement does not exist in CSPICE.
+This operation is a `cspyce` enhancement that does not exist in CSPICE.
 
 `spice_cell.card`
-: Same as `len(spice_cell)`.  (Also known as the "cardinality". Hence the name).
+: Same as `len(spice_cell)`.  (Also known as the "cardinality"; hence the name).
 
 `spice_cell.card = value`
 : Changes the number of active elements in the `SpiceCell`. 
 Must have `0 ≤ value < spice_cell.size`.
 
 `spice_cell.as_array()` 
-: Shows the active contents of the array as a numpy array
+: Returns a view of the active contents of the array as a numpy array
 
-`spice_cell.as_intervals` 
-: Shows the active contents of the array as a 2-dimensional `card/2`x 2 array.  
+`spice_cell.as_intervals()` 
+: Returns a view of the active contents of the array as a 2-dimensional `card/2`x 2 array. 
 Many `SpiceCell`s are used to represent intervals in which each
 pair of numbers represents the lower and upper bounds.
 
