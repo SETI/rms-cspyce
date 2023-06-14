@@ -525,6 +525,7 @@ def test_ekifld():
 
 # Fails due to reliance on ekfind
 def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
+    cs.use_flags(cs.ekpsel)
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekmany.ek")
     tablename = "test_table_ekmany"
     cleanup_kernel(ekpath)
@@ -542,9 +543,9 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
     i_data = [[100], [101, 101], [102, 102, 102]]
     for r in range(0, 3):
         cs.ekinsr(handle, segno, r)
-        cs.ekacec(handle, segno, r, "c1", len(c_data[r]), c_data[r], False)
-        cs.ekaced(handle, segno, r, "d1", len(d_data[r]), d_data[r], False)
-        cs.ekacei(handle, segno, r, "i1", len(i_data[r]), i_data[r], False)
+        cs.ekacec(handle, segno, r, "c1", c_data[r], False)
+        cs.ekaced(handle, segno, r, "d1", d_data[r], False)
+        cs.ekacei(handle, segno, r, "i1", i_data[r], False)
     # Try record insertion beyond the next available, verify the exception
     with pytest.raises(Exception):
         cs.ekinsr(handle, segno, 4)
@@ -558,23 +559,18 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
     assert handle is not None
     # Test query using ekpsel
     query = "SELECT c1, d1, i1 from {}".format(tablename)
-    n, xbegs, xends, xtypes, xclass, tabs, cols, err, errmsg = cs.ekpsel(
-        query, 99, 99, 99
-    )
-    assert n == 3
-    assert cs.stypes.csEKDataType.cs_CHR == xtypes[0]
-    assert cs.stypes.csEKDataType.cs_DP == xtypes[1]
-    assert cs.stypes.csEKDataType.cs_INT == xtypes[2]
-    assert ([cs.stypes.csEKExprClass.cs_EK_EXP_COL] * 3) == list(xclass)
-    assert (["TEST_TABLE_EKMANY"] * 3) == tabs
-    assert "C1 D1 I1".split() == cols
+    xbegs, xends, xtypes, xclass, tabs, cols, err, errmsg = cs.ekpsel(query)
+    assert xtypes[0] == 0
+    assert xtypes[1] == 1
+    assert xtypes[2] == 2
+    assert ([0] * 3) == list(xclass)
+    assert ([["TEST_TABLE_EKMANY"] * 3]) == tabs
+    assert ["C1 D1 I1".split()] == cols
     assert not err
     assert "" == errmsg
     # Run query to retrieve the row count
-    nmrows, error, errmsg = cs.ekfind(query, 99)
+    nmrows, error, errmsg = cs.ekfind(query)
     assert nmrows == 3
-    assert not error
-    assert "" == errmsg
     # test fail case for eknelt
     with pytest.raises(Exception):
         cs.eknelt(0, nmrows + 1)
@@ -594,25 +590,23 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
             assert not d_null
             assert d_datum == d_data[r][e]
             # get row char data
-            c_datum, c_null = cs.ekgc(0, r, e)
+            c_datum, c_null, __ = cs.ekgc(0, r, e)
             assert not c_null
             assert c_datum == c_data[r][e]
     # Loop over rows, test .ekrcec/.ekrced/.ekrcei
     for r in range(nmrows):
         # get row int data
-        ni_vals, ri_data, i_null = cs.ekrcei(handle, segno, r, "i1")
+        ri_data, i_null = cs.ekrcei(handle, segno, r, "i1")
         assert not i_null
-        assert ni_vals == r + 1
+
         npt.assert_array_equal(ri_data, i_data[r])
         # get row double data
-        nd_vals, rd_data, d_null = cs.ekrced(handle, segno, r, "d1")
+        rd_data, d_null = cs.ekrced(handle, segno, r, "d1")
         assert not d_null
-        assert nd_vals == r + 1
         npt.assert_array_equal(rd_data, d_data[r])
         # get row char data
-        nc_vals, rc_data, c_null = cs.ekrcec(handle, segno, r, "c1", 11)
+        rc_data, c_null = cs.ekrcec(handle, segno, r, "c1")
         assert not c_null
-        assert nc_vals == r + 1
         assert rc_data == c_data[r]
     # test out of bounds
     with pytest.raises(Exception):
