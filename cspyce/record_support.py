@@ -1,5 +1,7 @@
 import numpy as np
 
+from cspyce.spice_cell import SpiceCell
+
 DESCRIPTORS = {
     'SpiceDLADescr': np.dtype([
         ("bwdptr", np.int32),
@@ -78,6 +80,14 @@ class _SwigSupport:
     @staticmethod
     def as_record(name: str, record):
         return as_record(name, record)
+
+    @staticmethod
+    def create_spice_cell(typeno: str):
+        return SpiceCell.create_spice_cell(typeno)
+
+    @staticmethod
+    def as_spice_cell(typeno, record):
+        return SpiceCell.as_spice_cell(typeno, record)
 
     @staticmethod
     def debug(*args):

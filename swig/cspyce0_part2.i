@@ -286,7 +286,7 @@ extern SpiceInt bschoc_c(
 
 %rename (bschoi) bschoi_c;
 %apply (SpiceInt RETURN_INT) {SpiceInt bschoi_c};
-%apply (SpiceInt DIM1, SpiceInt *IN_ARRAY1) {(SpiceInt ndim, ConstSpiceInt *array)};
+%apply (SpiceInt DIM1, ConstSpiceInt *IN_ARRAY1) {(SpiceInt ndim, ConstSpiceInt *array)};
 %apply (ConstSpiceInt *IN_ARRAY1) {ConstSpiceInt *order};
 
 extern SpiceInt bschoi_c(
@@ -2441,7 +2441,7 @@ extern void dasrdc_c(
 %apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceDouble **data, SpiceInt *size)};
 
 %inline %{
-extern void my_dasrdd_c (
+    void my_dasrdd_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
@@ -2486,7 +2486,7 @@ extern void my_dasrdd_c (
 %apply (SpiceInt **OUT_ARRAY1, SpiceInt *SIZE1){(SpiceInt **data, SpiceInt *size)};
 
 %inline %{
-extern void my_dasrdi_c (
+   void my_dasrdi_c (
         SpiceInt            handle,
         SpiceInt            first,
         SpiceInt            last,
@@ -3479,28 +3479,17 @@ extern void dskn02_c(
 * bodids    I-O  Set of ID codes of objects in DSK file.
 ***********************************************************************/
 
-%rename (dskobj) my_dskobj_c;
-%apply (void RETURN_VOID) {void my_dskobj_c};
+%rename (dskobj) dskobj_c;
+%apply (void RETURN_VOID) {void dskobj_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *dskfnm};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt bodids[MAXIDS], SpiceInt *count)};
+%apply (SpiceCellInt *INOUT) {SpiceCell* bodids};
 
-%inline %{
-    void my_dskobj_c(
+extern void dskobj_c(
         ConstSpiceChar *dskfnm,
-        SpiceInt bodids[MAXIDS], SpiceInt *count)
-    {
-        int j;
-        SPICEINT_CELL(ids, MAXIDS);
+        SpiceCell *bodids
+);
 
-        scard_c(0, &ids);
-        dskobj_c(dskfnm, &ids);
-
-        *count = card_c(&ids);
-        for (j = 0; j < *count; j++) {
-            bodids[j] = SPICE_CELL_ELEM_I(&ids, j);
-        }
-    }
-%}
+//CSPYCE_DEFAULT:bodids:()
 
 /***********************************************************************
 * -Procedure dskopn_c ( DSK, open new file )
@@ -3654,29 +3643,19 @@ extern void dskrb2_c(
 * srfids    I-O  Set of ID codes of surfaces in DSK file.
 ***********************************************************************/
 
-%rename (dsksrf) my_dsksrf_c;
-%apply (void RETURN_VOID) {void my_dsksrf_c};
+%rename (dsksrf) dsksrf_c;
+%apply (void RETURN_VOID) {void dsksrf_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *dskfnm};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt srfids[MAXIDS], SpiceInt *count)};
+%apply (SpiceCellInt *INOUT) {SpiceCell *srfids};
 
-%inline %{
-    void my_dsksrf_c(
+extern void dsksrf_c(
         ConstSpiceChar *dskfnm,
-        SpiceInt bodyid,
-        SpiceInt srfids[MAXIDS], SpiceInt *count)
-    {
-        int j;
-        SPICEINT_CELL(ids, MAXIDS);
+        SpiceInt       bodyid,
+        SpiceCell      *srfids
+);
 
-        scard_c(0, &ids);
-        dsksrf_c(dskfnm, bodyid, &ids);
+//CSPYCE_DEFAULT:srfids:()
 
-        *count = card_c(&ids);
-        for (j = 0; j < *count; j++) {
-            srfids[j] = SPICE_CELL_ELEM_I(&ids, j);
-        }
-    }
-%}
 
 /***********************************************************************
 * -Procedure dskstl_c ( DSK, set tolerance )
@@ -3739,7 +3718,7 @@ extern void dskstl_c(
                     {(SpiceDouble **vrtces, SpiceInt *dim1, SpiceInt *dim2)};
 
 %inline %{
-extern void my_dskv02_c(
+    void my_dskv02_c(
         SpiceInt      handle,
         ConstSpiceDLADescr *dladsc,
         SpiceInt      start,
@@ -4583,7 +4562,7 @@ extern void ekappr_c(
 %apply (SpiceInt *OUTPUT) {SpiceInt *segno};
 
 %inline %{
-extern void my_ekbseg_c(
+    void my_ekbseg_c(
         SpiceInt       handle,
         ConstSpiceChar *tabnam,
         SpiceInt       ncols,  SpiceInt cnamln, ConstSpiceChar *cnames,
@@ -6017,24 +5996,22 @@ extern SpiceInt esrchc_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I   SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfdist) my_gfdist_c;
-%apply (void RETURN_VOID) {void my_gfdist_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfdist) gfdist_c;
+%apply (void RETURN_VOID) {void gfdist_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfdist_c(
+extern void gfdist_c(
         ConstSpiceChar *target,
         ConstSpiceChar *abcorr,
         ConstSpiceChar *obsrvr,
@@ -6042,29 +6019,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble    refval,
         SpiceDouble    adjust,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfdist_c(target, abcorr, obsrvr, relate, refval, adjust, step,
-                 nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt       nintvls,
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gfevnt_c (GF, geometric event finder )
@@ -6133,13 +6091,13 @@ extern SpiceInt esrchc_c(
 * nintvls    I   Workspace window interval count
 * bail       I   Logical indicating program interrupt monitoring.
 * udbail     I   Name of a routine that signals a program interrupt.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I   SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
 * windows    O   Array giving start/stop time pairs for the intervals found.
 * step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
+
+// cnfine changed to I from I-O per instructions of MRS.
 
 %rename (gfevnt) my_gfevnt_c;
 %apply (void RETURN_VOID) {void my_gfevnt_c};
@@ -6152,8 +6110,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceInt     *IN_ARRAY1) {ConstSpiceInt     *qipars};
 %apply (ConstSpiceBoolean *IN_ARRAY1) {ConstSpiceBoolean *qlpars};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar    *op};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
 %inline %{
     void my_gfevnt_c(
@@ -6169,31 +6127,15 @@ extern SpiceInt esrchc_c(
         SpiceDouble       tol,
         SpiceDouble       adjust,
         SpiceBoolean      rpt,
-        SpiceDouble       et0,
-        SpiceDouble       et1,
-        SpiceDouble       windows[WINDOWS][2], SpiceInt *intervals)
+        SpiceInt          nintvls,
+        SpiceCell         *cnfine,
+        SpiceCell         *result)
     {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
         gfsstp_c(step);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
         gfevnt_c(&gfstep_c, &gfrefn_c, gquant, qnpars,
                  NAMELEN, qpnams, qcpars, qdpars, qipars, qlpars, op,
                  refval, tol, adjust, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 nintvls, SPICEFALSE, NULL, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
+                 nintvls, SPICEFALSE, NULL, &cnfine, &result);
     }
 %}
 
@@ -6253,19 +6195,22 @@ extern SpiceInt esrchc_c(
 * udrepf     I   Function that finalizes progress reporting.
 * bail       I   Logical indicating program interrupt monitoring.
 * udbail     I   Name of a routine that signals a program interrupt.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I  SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
 * windows    O   Array giving start/stop time pairs for the intervals found.
 * step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
+
+// cnfine changed to I from I-O per instructions of MRS.
 
 %rename (gffove) my_gffove_c;
 %apply (void RETURN_VOID) {void my_gffove_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
+
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
                 {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)  {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT) {SpiceCell *result};
 
 %inline %{
     void my_gffove_c(
@@ -6279,28 +6224,13 @@ extern SpiceInt esrchc_c(
         SpiceDouble      tol,
         SpiceDouble      step,
         SpiceBoolean     rpt,
-        SpiceDouble      et0,
-        SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
+        SpiceCell        *cnfine,
+        SpiceCell        *result)
     {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
         gfsstp_c(step);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
         gffove_c(inst, tshape, raydir, target, tframe, abcorr, obsrvr,
                  tol, &gfstep_c, &gfrefn_c, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 SPICEFALSE, NULL, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
+                 SPICEFALSE, NULL, &cnfine, &result);
     }
 %}
 
@@ -6351,16 +6281,14 @@ extern SpiceInt esrchc_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I   SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfilum) my_gfilum_c;
-%apply (void RETURN_VOID) {void my_gfilum_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfilum) gfilum_c;
+%apply (void RETURN_VOID) {void gfilum_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *angtyp};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
@@ -6370,11 +6298,10 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble spoint[3]};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfilum_c(
+extern void gfilum_c(
         ConstSpiceChar   *method,
         ConstSpiceChar   *angtyp,
         ConstSpiceChar   *target,
@@ -6387,29 +6314,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble      refval,
         SpiceDouble      adjust,
         SpiceDouble      step,
-        SpiceDouble      et0,
-        SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfilum_c(method, angtyp, target, illmn, fixref, abcorr, obsrvr,
-                 spoint, relate, refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt         nintvls,
+        SpiceCell        *cnfine,
+        SpiceCell        *result
+);
 
 /***********************************************************************
 * -Procedure gfocce_c ( GF, occultation event )
@@ -6465,13 +6373,13 @@ extern SpiceInt esrchc_c(
 * udrepf     I   Function that finalizes progress reporting.
 * bail       I   Logical indicating program interrupt monitoring.
 * udbail     I   Name of a routine that signals a program interrupt.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I  SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
 * windows    O   Array giving start/stop time pairs for the intervals found.
 * step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
+
+// cnfine changed to I from I-O per instructions of MRS.
 
 %rename (gfocce) my_gfocce_c;
 %apply (void RETURN_VOID) {void my_gfocce_c};
@@ -6484,8 +6392,8 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
 %inline %{
     void my_gfocce_c(
@@ -6501,28 +6409,13 @@ extern SpiceInt esrchc_c(
         SpiceDouble    tol,
         SpiceDouble    step,
         SpiceBoolean   rpt,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
+        SpiceCell      *cnfine,
+        SpiceCell      *result)
     {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
         gfsstp_c(step);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
         gfocce_c(occtyp, front, fshape, fframe, back, bshape, bframe, abcorr, obsrvr,
                  tol, &gfstep_c, &gfrefn_c, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 SPICEFALSE, NULL, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
+                 SPICEFALSE, NULL, &cnfine, &result);
     }
 %}
 
@@ -6567,16 +6460,14 @@ extern SpiceInt esrchc_c(
 * obsrvr     I   Name of the observing body.
 * step       I   Step size in seconds for finding occultation
 *                events.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I   SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfoclt) my_gfoclt_c;
-%apply (void RETURN_VOID) {void my_gfoclt_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfoclt) gfoclt_c;
+%apply (void RETURN_VOID) {void gfoclt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *occtyp};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *front};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fshape};
@@ -6586,11 +6477,11 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *bframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfoclt_c(
+
+extern void gfoclt_c(
         ConstSpiceChar *occtyp,
         ConstSpiceChar *front,
         ConstSpiceChar *fshape,
@@ -6601,27 +6492,9 @@ extern SpiceInt esrchc_c(
         ConstSpiceChar *abcorr,
         ConstSpiceChar *obsrvr,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        gfoclt_c(occtyp, front, fshape, fframe, back, bshape, bframe, abcorr,
-                 obsrvr, step, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gfpa_c ( GF, phase angle search )
@@ -6660,26 +6533,24 @@ extern SpiceInt esrchc_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I  SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfpa) my_gfpa_c;
-%apply (void RETURN_VOID) {void my_gfpa_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfpa) gfpa_c;
+%apply (void RETURN_VOID) {void gfpa_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *illmn};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfpa_c(
+
+extern void gfpa_c(
         ConstSpiceChar *target,
         ConstSpiceChar *illmn,
         ConstSpiceChar *abcorr,
@@ -6688,29 +6559,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble    refval,
         SpiceDouble    adjust,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfpa_c(target, illmn, abcorr, obsrvr, relate,
-               refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt       nintvls,
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gfposc_c (GF, observer-target vector coordinate search)
@@ -6753,16 +6605,15 @@ extern SpiceInt esrchc_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I   SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
 * windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfposc) my_gfposc_c;
-%apply (void RETURN_VOID) {void my_gfposc_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfposc) gfposc_c;
+%apply (void RETURN_VOID) {void gfposc_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *frame};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
@@ -6770,11 +6621,10 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfposc_c(
+extern void gfposc_c(
         ConstSpiceChar *target,
         ConstSpiceChar *frame,
         ConstSpiceChar *abcorr,
@@ -6785,29 +6635,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble    refval,
         SpiceDouble    adjust,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfposc_c(target, frame, abcorr, obsrvr, obsrvr, coord, relate,
-                 refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt       nintvls,
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gfrfov_c ( GF, is ray in FOV? )
@@ -6844,53 +6675,32 @@ extern SpiceInt esrchc_c(
 * abcorr     I   Aberration correction flag.
 * obsrvr     I   Name of the observing body.
 * step       I   Step size in seconds for finding FOV events.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I  SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfrfov) my_gfrfov_c;
-%apply (void RETURN_VOID) {void my_gfrfov_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfrfov) gfrfov_c;
+%apply (void RETURN_VOID) {void gfrfov_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *inst};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *rframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfrfov_c(
+extern void gfrfov_c(
         ConstSpiceChar   *inst,
         ConstSpiceDouble raydir[3],
         ConstSpiceChar   *rframe,
         ConstSpiceChar   *abcorr,
         ConstSpiceChar   *obsrvr,
         SpiceDouble      step,
-        SpiceDouble      et0,
-        SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        gfrfov_c(inst, raydir, rframe, abcorr, obsrvr,
-                 step, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceCell        *cnfine,
+        SpiceCell        *result
+);
 
 /***********************************************************************
 * -Procedure gfrr_c (GF, range rate search )
@@ -6926,25 +6736,22 @@ extern SpiceInt esrchc_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I  SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfrr) my_gfrr_c;
-%apply (void RETURN_VOID) {void my_gfrr_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfrr) gfrr_c;
+%apply (void RETURN_VOID) {void gfrr_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfrr_c(
+extern void gfrr_c(
         ConstSpiceChar *target,
         ConstSpiceChar *abcorr,
         ConstSpiceChar *obsrvr,
@@ -6952,29 +6759,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble    refval,
         SpiceDouble    adjust,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfrr_c(target, abcorr, obsrvr, relate,
-                 refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt       nintvls,
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gfsep_c (GF, angular separation search)
@@ -7024,16 +6812,14 @@ extern SpiceInt esrchc_c(
 * step       I   Step size in seconds for finding angular separation
 *                events.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I   SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfsep) my_gfsep_c;
-%apply (void RETURN_VOID) {void my_gfsep_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfsep) gfsep_c;
+%apply (void RETURN_VOID) {void gfsep_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *targ1};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *shape1};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *frame1};
@@ -7043,11 +6829,10 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfsep_c(
+extern void gfsep_c(
         ConstSpiceChar *targ1,
         ConstSpiceChar *shape1,
         ConstSpiceChar *frame1,
@@ -7060,30 +6845,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble    refval,
         SpiceDouble    adjust,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfsep_c(targ1, shape1, frame1, targ2, shape2, frame2,
-                abcorr, obsrvr, relate,
-                refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt       nintvls,
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gfsntc_c (GF, surface intercept vector coordinate search)
@@ -7132,16 +6897,14 @@ extern SpiceInt esrchc_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I   SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfsntc) my_gfsntc_c;
-%apply (void RETURN_VOID) {void my_gfsntc_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfsntc) gfsntc_c;
+%apply (void RETURN_VOID) {void gfsntc_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
@@ -7152,11 +6915,10 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfsntc_c(
+extern void gfsntc_c(
         ConstSpiceChar   *target,
         ConstSpiceChar   *fixref,
         ConstSpiceChar   *method,
@@ -7170,30 +6932,10 @@ extern SpiceInt esrchc_c(
         SpiceDouble      refval,
         SpiceDouble      adjust,
         SpiceDouble      step,
-        SpiceDouble      et0,
-        SpiceDouble      et1,
-        SpiceDouble      windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfsntc_c(target, fixref, method, abcorr, obsrvr, dref, dvec,
-                 crdsys, coord, relate,
-                 refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt         nintvls,
+        SpiceCell        *cnfine,
+        SpiceCell        *result
+);
 
 /***********************************************************************
 * -Procedure gfstol_c ( GF, set a tolerance value for GF )
@@ -7262,16 +7004,14 @@ extern void gfstol_c(
 * adjust     I   Adjustment value for absolute extrema searches.
 * step       I   Step size used for locating extrema and roots.
 * nintvls    I   Workspace window interval count.
-* cnfine    I-O  SPICE window to which the search is confined.
+* cnfine     I  SPICE window to which the search is confined.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gfsubc) my_gfsubc_c;
-%apply (void RETURN_VOID) {void my_gfsubc_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gfsubc) gfsubc_c;
+%apply (void RETURN_VOID) {void gfsubc_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fixref};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *method};
@@ -7280,11 +7020,10 @@ extern void gfstol_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *crdsys};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gfsubc_c(
+extern void gfsubc_c(
         ConstSpiceChar *target,
         ConstSpiceChar *fixref,
         ConstSpiceChar *method,
@@ -7296,30 +7035,10 @@ extern void gfstol_c(
         SpiceDouble    refval,
         SpiceDouble    adjust,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        int nintvls = 5 + (int) ((et1 - et0) / step);
-
-        gfsubc_c(target, fixref, method, abcorr, obsrvr, crdsys,
-                 coord, relate,
-                 refval, adjust, step, nintvls, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceInt       nintvls,
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure gftfov_c ( GF, is target in FOV? )
@@ -7358,27 +7077,24 @@ extern void gfstol_c(
 * abcorr     I   Aberration correction flag.
 * obsrvr     I   Name of the observing body.
 * step       I   Step size in seconds for finding FOV events.
-* cnfine    I-O  SPICE window to which the search is restricted.
+* cnfine     I  SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
-* windows    O   Array giving start/stop time pairs for the intervals found.
-* step       I   Time step for searching.
-* et0        I   Beginning time of search window.
-* et1        I   End time of search window.
 ***********************************************************************/
 
-%rename (gftfov) my_gftfov_c;
-%apply (void RETURN_VOID) {void my_gftfov_c};
+// cnfine changed to I from I-O per instructions of MRS.
+
+%rename (gftfov) gftfov_c;
+%apply (void RETURN_VOID) {void gftfov_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *inst};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *target};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *tshape};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *tframe};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
+%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
 
-%inline %{
-    void my_gftfov_c(
+extern void gftfov_c(
         ConstSpiceChar *inst,
         ConstSpiceChar *target,
         ConstSpiceChar *tshape,
@@ -7386,27 +7102,9 @@ extern void gfstol_c(
         ConstSpiceChar *abcorr,
         ConstSpiceChar *obsrvr,
         SpiceDouble    step,
-        SpiceDouble    et0,
-        SpiceDouble    et1,
-        SpiceDouble    windows[WINDOWS][2], SpiceInt *intervals)
-    {
-        SPICEDOUBLE_CELL(cnfine, 2);
-        wnvald_c(2, 0, &cnfine);
-        wninsd_c(et0, et1, &cnfine);
-
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        gftfov_c(inst, target, tshape, tframe, abcorr, obsrvr,
-                 step, &cnfine, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(windows[j][0]), &(windows[j][1]));
-        }
-    }
-%}
+        SpiceCell      *cnfine,
+        SpiceCell      *result
+);
 
 /***********************************************************************
 * -Procedure hrmesp_c ( Hermite polynomial interpolation, equal spacing )
@@ -10417,7 +10115,7 @@ extern void spkpvn_c(
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble descr[5]};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
       {(SpiceInt idlen, SpiceChar ident[SIDLEN])};
-%apply (SpiceInt *OUTPUT) {SpiceBoolean *found};
+%apply (SpiceBoolean *OUTPUT) {SpiceBoolean *found};
 
 %inline %{
     void my_spksfs_c(
@@ -11746,35 +11444,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * result     O   Complement of window with respect to [left,right].
 ***********************************************************************/
 
-%rename (wncomd) my_wncomd_c;
-%apply (void RETURN_VOID) {void my_wncomd_c};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, SpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
+%rename (wncomd) wncomd_c;
+%apply (void RETURN_VOID) {void wncomd_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
+%apply (SpiceCellDouble* OUTPUT) {SpiceCell *result};
 
-%inline %{
-    void my_wncomd_c(
+extern void wncomd_c(
         SpiceDouble left,
         SpiceDouble right,
-        SpiceInt    n,   SpiceDouble window[][2],
-        SpiceInt    *n1, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells1, 2 * WINDOWS);
-        moved_c(window, nx2, cells1.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells1);
-
-        SPICEDOUBLE_CELL(cells2, 2 * WINDOWS);
-        scard_c(0, &cells2);
-
-        wncomd_c(left, right, &cells1, &cells2);
-
-        nx2 = (int) card_c(&cells2);
-        moved_c(cells2.data, nx2, result);
-        *n1 = nx2 / 2;
-    }
-%}
+        SpiceCell   *window,
+        SpiceCell   *result
+);
 
 /***********************************************************************
 * -Procedure wncond_c ( Contract the intervals of a DP window )
@@ -11786,8 +11466,7 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * void wncond_c (
 *       SpiceDouble     left,
 *       SpiceDouble     right,
-*       SpiceCell     * window
-*       SpiceCell     * result )
+*       SpiceCell     * window )
 *
 * -Brief_I/O
 *
@@ -11796,35 +11475,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * left       I   Amount added to each left endpoint.
 * right      I   Amount subtracted from each right endpoint.
 * window    I-O  Window to be contracted.
-* result     O   Contracted window.
 ***********************************************************************/
 
-%rename (wncond) my_wncond_c;
-%apply (void RETURN_VOID) {void my_wncond_c};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, SpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *size, SpiceDouble result[WINDOWS][2])};
+%rename (wncond) wncond_c;
+%apply (void RETURN_VOID) {void wncond_c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
 
-%inline %{
-    void my_wncond_c(
+extern void wncond_c(
         SpiceDouble left,
         SpiceDouble right,
-        SpiceInt n, SpiceDouble window[][2],
-        SpiceInt *size, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        wncond_c(left, right, &cells);
-
-        nx2 = (int) card_c(&cells);
-        moved_c(cells.data, nx2, result);
-        *size = nx2 / 2;
-    }
-%}
+        SpiceCell   *window
+);
 
 /***********************************************************************
 * -Procedure wndifd_c ( Difference two DP windows )
@@ -11848,39 +11509,18 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * c          O   Difference of `a' and `b'.
 ***********************************************************************/
 
-%rename (wndifd) my_wndifd_c;
-%apply (void RETURN_VOID) {void my_wndifd_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(SpiceInt *nc, SpiceDouble c[WINDOWS][2])};
+%rename (wndifd) wndifd_c;
+%apply (void RETURN_VOID) {void wndifd_c};
 
-%inline %{
-    void my_wndifd_c(
-        SpiceInt na,  ConstSpiceDouble a[][2],
-        SpiceInt nb,  ConstSpiceDouble b[][2],
-        SpiceInt *nc, SpiceDouble c[WINDOWS][2])
-    {
-        int nx2 = 2 * na;
-        SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
-        moved_c(a, nx2, cells_a.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_a);
+%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
+%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
 
-        nx2 = 2 * nb;
-        SPICEDOUBLE_CELL(cells_b, 2 * WINDOWS);
-        moved_c(b, nx2, cells_b.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_b);
-
-        nx2 = 2 * WINDOWS;
-        SPICEDOUBLE_CELL(cells_c, 2 * WINDOWS);
-        scard_c(0, &cells_c);
-
-        wndifd_c(&cells_a, &cells_b, &cells_c);
-
-        nx2 = (int) card_c(&cells_c);
-        moved_c(cells_c.data, nx2, c);
-        *nc = nx2 / 2;
-    }
-%}
+extern void wndifd_c(
+        SpiceCell *a,
+        SpiceCell *b,
+        SpiceCell *c
+);
 
 /***********************************************************************
 * -Procedure wnelmd_c ( Element of a DP window )
@@ -11903,24 +11543,14 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * flag       R   True if the point is an element; False otherwise.
 ***********************************************************************/
 
-%rename (wnelmd) my_wnelmd_c;
-%apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean my_wnelmd_c};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, SpiceDouble window[][2])};
+%rename (wnelmd) wnelmd_c;
+%apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean wnelmd_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
 
-%inline %{
-    SpiceBoolean my_wnelmd_c(
+extern SpiceBoolean wnelmd_c(
         SpiceDouble point,
-        SpiceInt n, SpiceDouble window[][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        return wnelmd_c(point, &cells);
-    }
-%}
+        SpiceCell *window
+);
 
 /***********************************************************************
 * -Procedure wnexpd_c ( Expand the intervals of a DP window )
@@ -11932,8 +11562,7 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * void wnexpd_c (
 *       SpiceDouble    left,
 *       SpiceDouble    right,
-*       SpiceCell    * window,
-*       SpiceCell    * result )
+*       SpiceCell    * window )
 *
 * -Brief_I/O
 *
@@ -11942,35 +11571,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * left       I   Amount subtracted from each left endpoint.
 * right      I   Amount added to each right endpoint.
 * window    I-O  Window to be expanded.
-* result     O   Expanded window.
 ***********************************************************************/
 
-%rename (wnexpd) my_wnexpd_c;
-%apply (void RETURN_VOID) {void my_wnexpd_c};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, SpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *size, SpiceDouble result[WINDOWS][2])};
+%rename (wnexpd) wnexpd_c;
+%apply (void RETURN_VOID) {void wnexpd_c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
 
-%inline %{
-    void my_wnexpd_c(
+extern void wnexpd_c(
         SpiceDouble left,
         SpiceDouble right,
-        SpiceInt n, SpiceDouble window[][2],
-        SpiceInt *size, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        wnexpd_c(left, right, &cells);
-
-        nx2 = (int) card_c(&cells);
-        moved_c(cells.data, nx2, result);
-        *size = nx2 / 2;
-    }
-%}
+        SpiceCell   *window
+);
 
 /***********************************************************************
 * -Procedure wnextd_c ( Extract the endpoints from a DP window )
@@ -11982,8 +11593,7 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 *
 * void wnextd_c (
 *       SpiceChar     side,
-*       SpiceCell   * window,
-*       SpiceCell   * result )
+*       SpiceCell   * window )
 *
 * -Brief_I/O
 *
@@ -11991,34 +11601,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * --------  ---  --------------------------------------------------
 * side       I   Extract left ('L') or right ('R') endpoints.
 * window    I-O  Window to be extracted.
-* result     O   Extracted window.
 ***********************************************************************/
 
-%rename (wnextd) my_wnextd_c;
-%apply (void RETURN_VOID) {void my_wnextd_c};
+%rename (wnextd) wnextd_c;
+%apply (void RETURN_VOID) {void wnextd_c};
 %apply (SpiceChar IN_STRING) {SpiceChar side};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, SpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *size, SpiceDouble result[WINDOWS][2])};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
 
-%inline %{
-    void my_wnextd_c(
+extern void wnextd_c(
         SpiceChar side,
-        SpiceInt n, SpiceDouble window[][2],
-        SpiceInt *size, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-
-        wnextd_c(side, &cells);
-
-        nx2 = (int) card_c(&cells);
-        moved_c(cells.data, nx2, result);
-        *size = nx2 / 2;
-    }
-%}
+        SpiceCell   *window
+);
 
 /***********************************************************************
 * -Procedure wnfild_c ( Fill small gaps in a DP window )
@@ -12038,34 +11631,16 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * --------  ---  --------------------------------------------------
 * smlgap     I   Limiting measure of small gaps.
 * window    I-O  Window to be filled.
-* result     O   Window after being filled.
 ***********************************************************************/
 
-%rename (wnfild) my_wnfild_c;
-%apply (void RETURN_VOID) {void my_wnfild_c};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, SpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
+%rename (wnfild) wnfild_c;
+%apply (void RETURN_VOID) {void wnfild_c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
 
-%inline %{
-    void my_wnfild_c(
+extern void wnfild_c(
         SpiceDouble smlgap,
-        SpiceInt n, SpiceDouble window[][2],
-        SpiceInt *n1, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        wnfild_c(smlgap, &cells);
-
-        nx2 = (int) card_c(&cells);
-        moved_c(cells.data, nx2, result);
-        *n1 = nx2 / 2;
-    }
-%}
+        SpiceCell   *window
+);
 
 /***********************************************************************
 * -Procedure wnfltd_c ( Filter small intervals from a DP window )
@@ -12084,34 +11659,16 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * --------  ---  --------------------------------------------------
 * smlint     I   Limiting measure of small intervals.
 * window    I-O  Window to be filtered.
-* result     O   Window after being filtered.
 ***********************************************************************/
 
-%rename (wnfltd) my_wnfltd_c;
-%apply (void RETURN_VOID) {void my_wnfltd_c};
-%apply (SpiceInt DIM1, SpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, ConstSpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
+%rename (wnfltd) wnfltd_c;
+%apply (void RETURN_VOID) {void wnfltd_c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *window};
 
-%inline %{
-    void my_wnfltd_c(
+extern void wnfltd_c(
         SpiceDouble smlint,
-        SpiceInt n,   ConstSpiceDouble window[][2],
-        SpiceInt *n1, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        wnfltd_c(smlint, &cells);
-
-        nx2 = (int) card_c(&cells);
-        moved_c(cells.data, nx2, result);
-        *n1 = nx2 / 2;
-    }
-%}
+        SpiceCell   *window
+);
 
 /***********************************************************************
 * -Procedure wnincd_c ( Included in a double precision window )
@@ -12136,25 +11693,15 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * flag       R   True if the interval is included; False otherwise.
 ***********************************************************************/
 
-%rename (wnincd) my_wnincd_c;
-%apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean my_wnincd_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, ConstSpiceDouble window[][2])};
+%rename (wnincd) wnincd_c;
+%apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean wnincd_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
 
-%inline %{
-    SpiceBoolean my_wnincd_c(
+extern SpiceBoolean wnincd_c(
         SpiceDouble left,
         SpiceDouble right,
-        SpiceInt n, ConstSpiceDouble window[][2])
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        return wnincd_c(left, right, &cells);
-    }
-%}
+        SpiceCell   *window
+);
 
 /***********************************************************************
 * -Procedure wninsd_c ( Insert an interval into a DP window )
@@ -12175,35 +11722,18 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * left       I   Left endpoint of new interval.
 * right      I   Right endpoint of new interval.
 * window    I-O  Input window.
-* result     O   New window.
 ***********************************************************************/
 
-%rename (wninsd) my_wninsd_c;
-%apply (void RETURN_VOID) {void my_wninsd_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
-                {(SpiceInt n, ConstSpiceDouble window[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY])
-                {(SpiceInt *n1, SpiceDouble result[WINDOWS][2])};
+%rename (wninsd) wninsd_c;
+%apply (void RETURN_VOID) {void wninsd_c};
 
-%inline %{
-    void my_wninsd_c(
+%apply (SpiceCellDouble *INOUT) {SpiceCellDouble *window};
+
+extern void wninsd_c(
         SpiceDouble left,
         SpiceDouble right,
-        SpiceInt n, ConstSpiceDouble window[][2],
-        SpiceInt *n1, SpiceDouble result[WINDOWS][2])
-    {
-        int nx2 = n * 2;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        wninsd_c(left, right, &cells);
-
-        nx2 = (int) card_c(&cells);
-        moved_c(cells.data, nx2, result);
-        *n1 = nx2 / 2;
-    }
-%}
+        SpiceCellDouble *window
+);
 
 /***********************************************************************
 * -Procedure wnintd_c ( Intersect two DP windows )
@@ -12227,39 +11757,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * c          O   Intersection of `a' and `b'.
 ***********************************************************************/
 
-%rename (wnintd) my_wnintd_c;
-%apply (void RETURN_VOID) {void my_wnintd_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(SpiceInt *nc, SpiceDouble c[WINDOWS][2])};
+%rename (wnintd) wnintd_c;
+%apply (void RETURN_VOID) {void wnintd_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
+%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
 
-%inline %{
-    void my_wnintd_c(
-        SpiceInt na,  ConstSpiceDouble a[][2],
-        SpiceInt nb,  ConstSpiceDouble b[][2],
-        SpiceInt *nc, SpiceDouble c[WINDOWS][2])
-    {
-        int nx2 = 2 * na;
-        SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
-        moved_c(a, nx2, cells_a.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_a);
-
-        nx2 = 2 * nb;
-        SPICEDOUBLE_CELL(cells_b, 2 * WINDOWS);
-        moved_c(b, nx2, cells_b.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_b);
-
-        nx2 = 2 * WINDOWS;
-        SPICEDOUBLE_CELL(cells_c, 2 * WINDOWS);
-        scard_c(0, &cells_c);
-
-        wnintd_c(&cells_a, &cells_b, &cells_c);
-
-        nx2 = (int) card_c(&cells_c);
-        moved_c(cells_c.data, nx2, c);
-        *nc = nx2 / 2;
-    }
-%}
+extern void wnintd_c(
+        SpiceCell *a,
+        SpiceCell *b,
+        SpiceCell *c
+);
 
 /***********************************************************************
 * -Procedure wnreld_c ( Compare two DP windows )
@@ -12288,31 +11796,17 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * flag       R   True if the comparison is satisfied.
 ***********************************************************************/
 
-%rename (wnreld) my_wnreld_c;
-%apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean my_wnreld_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
+%rename (wnreld) wnreld_c;
+%apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean wnreld_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *op};
 
-%inline %{
-    SpiceBoolean my_wnreld_c(
-        SpiceInt na, ConstSpiceDouble a[][2],
+extern SpiceBoolean wnreld_c(
+        SpiceCell *a,
         ConstSpiceChar *op,
-        SpiceInt nb, ConstSpiceDouble b[][2])
-    {
-        int nx2 = 2 * na;
-        SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
-        moved_c(a, nx2, cells_a.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_a);
-
-        nx2 = 2 * nb;
-        SPICEDOUBLE_CELL(cells_b, 2 * WINDOWS);
-        moved_c(b, nx2, cells_b.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_b);
-
-        return wnreld_c(&cells_a, op, &cells_b);
-    }
-%}
+        SpiceCell *b
+);
 
 /***********************************************************************
 * -Procedure wnsumd_c ( Summary of a double precision window )
@@ -12341,32 +11835,23 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * idxlon     O   Location of longest interval.
 ***********************************************************************/
 
-%rename (wnsumd) my_wnsumd_c;
-%apply (void RETURN_VOID) {void my_wnsumd_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt n, ConstSpiceDouble window[][2])};
+%rename (wnsumd) wnsumd_c;
+%apply (void RETURN_VOID) {void wnsumd_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *window};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *meas};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *avg};
 %apply (SpiceDouble *OUTPUT) {SpiceDouble *stddev};
 %apply (SpiceInt    *OUTPUT) {SpiceInt    *idxsml};
 %apply (SpiceInt    *OUTPUT) {SpiceInt    *idxlon};
 
-%inline %{
-    void my_wnsumd_c(
-        SpiceInt n, ConstSpiceDouble window[][2],
+extern void wnsumd_c(
+        SpiceCell   *window,
         SpiceDouble *meas,
         SpiceDouble *avg,
         SpiceDouble *stddev,
         SpiceInt    *idxsml,
-        SpiceInt    *idxlon)
-    {
-        int nx2 = 2 * n;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        moved_c(window, nx2, cells.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells);
-
-        wnsumd_c(&cells, meas, avg, stddev, idxsml, idxlon);
-    }
-%}
+        SpiceInt    *idxlon
+);
 
 /***********************************************************************
 * -Procedure wnunid_c ( Union two DP windows )
@@ -12390,38 +11875,16 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 * c          O   Union of `a' and `b'.
 ***********************************************************************/
 
-%rename (wnunid) my_wnunid_c;
-%apply (void RETURN_VOID) {void my_wnunid_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt na, ConstSpiceDouble a[][2])};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY]) {(SpiceInt nb, ConstSpiceDouble b[][2])};
-%apply (SpiceInt *SIZE1, SpiceDouble OUT_ARRAY2[ANY][ANY]) {(SpiceInt *nc, SpiceDouble c[WINDOWS][2])};
+%rename (wnunid) wnunid_c;
+%apply (void RETURN_VOID) {void wnunid_c};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *a};
+%apply (SpiceCellDouble* INPUT) {SpiceCell *b};
+%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
 
-%inline %{
-    void my_wnunid_c(
-        SpiceInt na,  ConstSpiceDouble a[][2],
-        SpiceInt nb,  ConstSpiceDouble b[][2],
-        SpiceInt *nc, SpiceDouble c[WINDOWS][2])
-    {
-        int nx2 = 2 * na;
-        SPICEDOUBLE_CELL(cells_a, 2 * WINDOWS);
-        moved_c(a, nx2, cells_a.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_a);
-
-        nx2 = 2 * nb;
-        SPICEDOUBLE_CELL(cells_b, 2 * WINDOWS);
-        moved_c(b, nx2, cells_b.data);
-        wnvald_c(2 * WINDOWS, nx2, &cells_b);
-
-        nx2 = 2 * WINDOWS;
-        SPICEDOUBLE_CELL(cells_c, 2 * WINDOWS);
-        scard_c(0, &cells_c);
-
-        wnunid_c(&cells_a, &cells_b, &cells_c);
-
-        nx2 = (int) card_c(&cells_c);
-        moved_c(cells_c.data, nx2, c);
-        *nc = nx2 / 2;
-    }
-%}
+extern void wnunid_c(
+        SpiceCell *a,
+        SpiceCell *b,
+        SpiceCell *c
+);
 
 /**********************************************************************/

@@ -5,6 +5,8 @@ import cspyce.typemap_samples as ts
 import cspyce.record_support as record_support
 import numpy.testing as npt
 
+from cspyce import SPICE_CELL_DOUBLE, SpiceCell, SPICE_CELL_INT
+
 
 def flatten(array):
     return tuple(tuple(array.ravel()))
@@ -736,6 +738,79 @@ class Test_C_STRUCTURES:
         descriptor = ts.DLADescr_out()
         assert descriptor is not None
         assert descriptor.isize == 1  # set by method
+
+
+class Test_SpiceCell:
+    def test_normal_creation(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_DOUBLE, size=10)
+        assert t1.card == 0
+        assert t1.size == 10
+        t1.append(3)
+        assert t1.card == 1
+
+    def test_creation_from_data_only(self):
+        with pytest.raises(ValueError):
+            SpiceCell()
+        t_int = SpiceCell((1, 2, 3, 4))
+        assert t_int.as_array().dtype == np.int32
+
+        t_float = SpiceCell([1.0, 2.0, 3.0])
+        assert t_float.as_array().dtype == np.double
+
+        t_char = SpiceCell(["a" * 50, "def"])
+        assert t_char.as_array().dtype == np.dtype('S51')
+
+        with pytest.raises(ValueError):
+            temp = np.array((1 + 1j, 2 + 2j))
+            SpiceCell(temp)
+
+        with pytest.raises(ValueError):
+            SpiceCell(typeno=1000)
+
+    def test_creation_from_swig(self):
+        t1 = SpiceCell.create_spice_cell(SPICE_CELL_INT, 20)
+        assert t1.size == 20
+
+        t2 = SpiceCell.as_spice_cell(SPICE_CELL_INT, t1)
+        assert t1 is t2
+
+        t3 = SpiceCell.as_spice_cell(SPICE_CELL_DOUBLE, ())
+        assert isinstance(t3[0], float)
+
+    def test_append(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        old_size = t1.size
+        t1.card = old_size
+        t1.append(100)
+        assert t1.card == old_size + 1
+        assert t1.size > old_size
+
+    def test_clear(self):
+        t1 = SpiceCell(range(100))
+        t1.clear()
+        assert t1.card == 0
+        assert len(t1) == 0
+
+    def test_extend(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        old_size = t1.size
+        t1.extend(range(old_size))
+        t1 += range(old_size - 1)
+        assert t1.card == 2 * old_size - 1
+        assert t1.size > old_size
+
+    def test_as_array(self):
+        t1 = SpiceCell(range(3, 9))
+        npt.assert_array_equal(t1.as_array(), [3, 4, 5, 6, 7, 8])
+        npt.assert_array_equal(t1.as_intervals(), [[3, 4], [5, 6], [7, 8]])
+
+    def test_indexing(self):
+        t1 = SpiceCell([1, 2, 3, 4])
+        t1[4] = 5   # Outside the active range, but legal
+        assert t1[0] == 1
+        assert t1[-1] == 4
+        t1[1], t1[-2] = 20, 30
+        assert tuple(t1) == (1, 20, 30, 4)
 
 
 

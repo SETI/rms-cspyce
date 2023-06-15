@@ -261,28 +261,14 @@ extern SpiceDouble b1950_c (void);
 *    ids        O   Array of ID codes of frames of the specified class.
 ***********************************************************************/
 
-%rename (bltfrm) my_bltfrm_c;
-%apply (void RETURN_VOID) {void my_bltfrm_c};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1)
-                          {(SpiceInt ids[MAXIDS], SpiceInt *count)};
+%rename (bltfrm) bltfrm_c;
+%apply (void RETURN_VOID) {void bltfrm_c};
+%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
 
-%inline %{
-    void my_bltfrm_c(
+extern void bltfrm_c(
         SpiceInt frmcls,
-        SpiceInt ids[MAXIDS], SpiceInt *count)
-    {
-        int j;
-        SPICEINT_CELL(cells, MAXIDS);
-
-        scard_c(0, &cells);
-        bltfrm_c(frmcls, &cells);
-
-        *count = card_c(&cells);
-        for (j = 0; j < *count; j++) {
-            ids[j] = SPICE_CELL_ELEM_I(&cells, j);
-        }
-    }
-%}
+        SpiceCell *ids
+);
 
 //CSPYCE_TYPE:ids:frame_code
 
@@ -823,36 +809,22 @@ extern void chkout_c(
 * cover      O   Array giving start/stop time pairs for the intervals covered.
 ***********************************************************************/
 
-%rename (ckcov) my_ckcov_c;
-%apply (void RETURN_VOID) {void my_ckcov_c};
+%rename (ckcov) ckcov_c;
+%apply (void RETURN_VOID) {void ckcov_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *ck};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *level};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *timsys};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                          {(SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
 
-%inline %{
-    void my_ckcov_c(
+extern void ckcov_c(
         ConstSpiceChar *ck,
         SpiceInt       idcode,
         SpiceBoolean   needav,
         ConstSpiceChar *level,
         SpiceDouble    tol,
         ConstSpiceChar *timsys,
-        SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)
-    {
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        ckcov_c(ck, idcode, needav, level, tol, timsys, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(cover[j][0]), &(cover[j][1]));
-        }
-    }
-%}
+        SpiceCell      *cover
+);
 
 //CSPYCE_TYPE:idcode:body_code
 
@@ -972,28 +944,17 @@ VECTORIZE_i_2d_s__dLM_dN_d_b(ckgpav, ckgpav_c, 3, 3, 3)
 * bodids    I-O  Array of ID codes of objects in CK file.
 ***********************************************************************/
 
-%rename (ckobj) my_ckobj_c;
-%apply (void RETURN_VOID) {void my_ckobj_c};
+%rename (ckobj) ckobj_c;
+%apply (void RETURN_VOID) {void ckobj_c};
 %apply (ConstSpiceChar *CONST_STRING)    {ConstSpiceChar *ck};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt bodids[MAXIDS], SpiceInt *bodies)};
+%apply (SpiceCellInt *INOUT) {SpiceCell *bodids};
 
-%inline %{
-    void my_ckobj_c(
+extern void ckobj_c(
         ConstSpiceChar *ck,
-        SpiceInt bodids[MAXIDS], SpiceInt *bodies)
-    {
-        int j;
-        SPICEINT_CELL(ids, MAXIDS);
+        SpiceCell      *bodids
+);
 
-        scard_c(0, &ids);
-        ckobj_c(ck, &ids);
-
-        *bodies = card_c(&ids);
-        for (j = 0; j < *bodies; j++) {
-            bodids[j] = SPICE_CELL_ELEM_I(&ids, j);
-        }
-    }
-%}
+//CSPYCE_DEFAULT:bodids:()
 
 /***********************************************************************
 * -Procedure clight_c ( C, Speed of light in a vacuum )
@@ -3242,7 +3203,7 @@ VECTORIZE_6s_d__b(fovtrg, my_fovtrg_c)
 
 %rename (frame) my_frame_c;
 %apply (void RETURN_VOID) {void my_frame_c};
-%apply (SpiceDouble  IN_ARRAY1[ANY]) {ConstSpiceDouble x1[3]};
+%apply (ConstSpiceDouble  IN_ARRAY1[ANY]) {ConstSpiceDouble x1[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble x[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble y[3]};
 %apply (SpiceDouble OUT_ARRAY1[ANY]) {SpiceDouble z[3]};
@@ -4466,28 +4427,14 @@ extern SpiceDouble jyear_c(void);
 *    ids        O   Array of ID codes of frames of the specified class.
 ***********************************************************************/
 
-%rename (kplfrm) my_kplfrm_c;
-%apply (void RETURN_VOID) {void my_kplfrm_c};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1)
-                          {(SpiceInt ids[MAXIDS], SpiceInt *count)};
+%rename (kplfrm) kplfrm_c;
+%apply (void RETURN_VOID) {void kplfrm_c};
+%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
 
-%inline %{
-    void my_kplfrm_c(
+extern void kplfrm_c(
         SpiceInt frmcls,
-        SpiceInt ids[MAXIDS], SpiceInt *count)
-    {
-        int j;
-        SPICEINT_CELL(cells, MAXIDS);
-
-        scard_c(0, &cells);
-        kplfrm_c(frmcls, &cells);
-
-        *count = card_c(&cells);
-        for (j = 0; j < *count; j++) {
-            ids[j] = SPICE_CELL_ELEM_I(&cells, j);
-        }
-    }
-%}
+        SpiceCell *ids
+);
 
 //CSPYCE_TYPE:ids:frame_code
 
@@ -6081,31 +6028,17 @@ VECTORIZE_dX_2d__dN(oscltx, oscltx_c, SPICE_OSCLTX_NELTS)
 *    cover      O   Array giving start/stop time pairs for the intervals covered.
 ***********************************************************************/
 
-%rename (pckcov) my_pckcov_c;
-%apply (void RETURN_VOID) {void my_pckcov_c};
+%rename (pckcov) pckcov_c;
+%apply (void RETURN_VOID) {void pckcov_c};
 %apply (ConstSpiceChar *CONST_STRING)
                           {ConstSpiceChar *pck};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                          {(SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble *OUTPUT) {SpiceCell* cover};
 
-%inline %{
-    void my_pckcov_c(
+extern void pckcov_c(
         ConstSpiceChar *pck,
-        SpiceInt idcode,
-        SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)
-    {
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        pckcov_c(pck, idcode, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(cover[j][0]), &(cover[j][1]));
-        }
-    }
-%}
+        SpiceInt       idcode,
+        SpiceCell      *cover
+);
 
 //CSPYCE_TYPE:idcode:frame_code
 
@@ -6130,28 +6063,15 @@ VECTORIZE_dX_2d__dN(oscltx, oscltx_c, SPICE_OSCLTX_NELTS)
 *   ids        O   Array of frame class ID codes for frames in PCK file.
 ***********************************************************************/
 
-%rename (pckfrm) my_pckfrm_c;
-%apply (void RETURN_VOID) {void my_pckfrm_c};
+%rename (pckfrm) pckfrm_c;
+%apply (void RETURN_VOID) {void pckfrm_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *pck};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt ids[MAXIDS], SpiceInt *frames)};
+%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
 
-%inline %{
-    void my_pckfrm_c(
+extern void pckfrm_c(
         ConstSpiceChar *pck,
-        SpiceInt ids[MAXIDS], SpiceInt *frames)
-    {
-        int j;
-        SPICEINT_CELL(cells, MAXIDS);
-
-        scard_c(0, &cells);
-        pckfrm_c(pck, &cells);
-
-        *frames = card_c(&cells);
-        for (j = 0; j < *frames; j++) {
-            ids[j] = SPICE_CELL_ELEM_I(&cells, j);
-        }
-    }
-%}
+        SpiceCell      *ids
+);
 
 /***********************************************************************
 * -Procedure pcpool_c ( Put character strings into the kernel pool )
@@ -8734,30 +8654,16 @@ VECTORIZE_i_d_2s_dX_dX__dN_d_d(spkaps, spkaps_c, 6)
 * cover      O   Array giving start/stop time pairs for the intervals covered.
 ***********************************************************************/
 
-%rename (spkcov) my_spkcov_c;
-%apply (void RETURN_VOID) {void my_spkcov_c};
+%rename (spkcov) spkcov_c;
+%apply (void RETURN_VOID) {void spkcov_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
-%apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
-                        {(SpiceDouble cover[WINDOWS][2], SpiceInt *intervals)};
+%apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
 
-%inline %{
-    void my_spkcov_c(
+extern void spkcov_c(
         ConstSpiceChar *spk,
         SpiceInt       idcode,
-        SpiceDouble    cover[WINDOWS][2], SpiceInt *intervals)
-    {
-        int j;
-        SPICEDOUBLE_CELL(cells, 2 * WINDOWS);
-        scard_c(0, &cells);
-
-        spkcov_c(spk, idcode, &cells);
-
-        *intervals = (int) card_c(&cells) / 2;
-        for (j = 0; j < *intervals; j++) {
-            wnfetd_c(&cells, j, &(cover[j][0]), &(cover[j][1]));
-        }
-    }
-%}
+        SpiceCell      *cover
+);
 
 //CSPYCE_TYPE:idcode:body_code
 
@@ -9064,28 +8970,15 @@ VECTORIZE_i_d_2s_dX__dN_d_d(spkltc, spkltc_c, 6)
 * ids        O   Array of ID codes of objects in SPK file.
 ***********************************************************************/
 
-%rename (spkobj) my_spkobj_c;
-%apply (void RETURN_VOID) {void my_spkobj_c};
+%rename (spkobj)  spkobj_c;
+%apply (void RETURN_VOID) {void spkobj_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
-%apply (SpiceInt OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt ids[MAXIDS], SpiceInt *bodies)};
+%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
 
-%inline %{
-    void my_spkobj_c(
+extern void spkobj_c(
         ConstSpiceChar *spk,
-        SpiceInt ids[MAXIDS], SpiceInt *bodies)
-    {
-        int j;
-        SPICEINT_CELL(cells, MAXIDS);
-
-        scard_c(0, &cells);
-        spkobj_c(spk, &cells);
-
-        *bodies = card_c(&cells);
-        for (j = 0; j < *bodies; j++) {
-            ids[j] = SPICE_CELL_ELEM_I(&cells, j);
-        }
-    }
-%}
+        SpiceCell *ids
+);
 
 //CSPYCE_TYPE:ids:body_code
 

@@ -3152,6 +3152,78 @@ TYPEMAP_RECORDS_ALIAS(ConstSpicePlane, SpicePlane, NPY_DOUBLE, 4)
 
 #undef TYPEMAP_RECORDS_ALIAS
 
+%{
+typedef SpiceCell SpiceCellInt;
+typedef SpiceCell SpiceCellDouble;
+%}
+
+/******************************
+* Typemaps for records that we prefer to implement as Numpy arrays.
+*
+* These typemaps are for data-structures in which the interface with the user is just
+* a plane numpy array.  However we can do better typechecking in the .i files by using
+* the actual type name.
+*
+*     (ConstType *INPUT)
+*     (Type *INPUT)      // Not currently used, but just in case
+*     (Type *OUTPUT)
+*
+*/
+
+%define TYPEMAP_SPICE_CELL(Type, TypeCode)
+%typemap(in)
+    (Type *INPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL),
+    (Type *INOUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL)
+{
+//      $1_type $1_name
+//      $1_type *INPUT
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_spice_cell", "iO", TypeCode, $input);
+    if (!record || record == Py_None) {
+        handle_bad_type_error("$symname", "Type");
+        SWIG_fail;
+    }
+    base_array = PyObject_GetAttrString(record, "base");
+    $1 = PyArray_DATA(base_array);
+}
+
+%typemap(in, numinputs=0)
+    (Type *OUTPUT)
+        (PyObject *record = NULL, PyObject* base_array=NULL)
+{
+//      $1_type $1_name
+//      Type *OUTPUT
+    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_spice_cell", "i", TypeCode);
+    TEST_MALLOC_FAILURE(record);
+    base_array = PyObject_GetAttrString(record, "base");
+    $1 = PyArray_DATA(base_array);
+}
+
+%typemap(argout)
+    (Type *OUTPUT),
+    (Type *INOUT)
+%{
+    $result = SWIG_Python_AppendOutput($result, record$argnum);
+    record$argnum = NULL;
+%}
+
+%typemap(freearg)
+    (Type *INPUT),
+    (Type *INOUT),
+    (Type *OUTPUT)
+%{
+    Py_XDECREF(record$argnum);
+    Py_XDECREF(base_array$argnum);
+%}
+
+%enddef
+
+TYPEMAP_SPICE_CELL(SpiceCellInt,     SPICE_INT)
+TYPEMAP_SPICE_CELL(SpiceCellDouble,  SPICE_DP)
+TYPEMAP_SPICE_CELL(SpiceCellChar,    SPICE_CHR)
+
+#undef TYPEMAP_SPICE_CELL
 
 
 /*******************************************************************************

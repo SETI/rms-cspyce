@@ -2,6 +2,7 @@
 
 import sys
 import numpy as np
+import numpy.testing as npt
 import numbers
 import platform
 import unittest
@@ -225,7 +226,7 @@ class Test_cspyce1_kernels(unittest.TestCase):
     self.assertEqual(bods2c_error('  699 '), 699)
     self.assertEqual(bods2c_error(str(INTMAX)), INTMAX)
 
-    self.assertAllEqual(bltfrm(1), range(1,22), 0)
+    self.assertAllEqual(bltfrm(1).as_array(), range(1,22), 0)
 #     self.assertAllEqual(kplfrm(1), range(1,22), 0)
 
     #### boddef
@@ -279,19 +280,17 @@ class Test_cspyce1_kernels(unittest.TestCase):
 
     #### ckcov
     values = ckcov(PATH_ + '17257_17262ra.bc', -82000, False, 'INTERVAL', 1., 'SCLK')
-    self.assertEqual(values[0,0], 304593554335.0)
-    self.assertEqual(values[0,1], 304610188193.0)
-    self.assertEqual(values[1,0], 304610195359.0)
-    self.assertEqual(values[1,1], 304622337377.0)
-    self.assertEqual(values[2,0], 304622354271.0)
-    self.assertEqual(values[2,1], 304625376609.0)
+    npt.assert_array_equal(values.as_intervals(),
+                           [[304593554335.0, 304610188193.0],
+                            [304610195359.0, 304622337377.0],
+                            [304622354271.0, 304625376609.0]])
 
     values = ckcov.flag(PATH_ + '17257_17262ra.bc', 1, False, 'INTERVAL', 1.,
                           'SCLK')
-    self.assertEqual(values.shape, (0,2))
+    self.assertEqual(values.card, 0)
 
-    self.assertRaises(KeyError, ckcov_error, PATH_ + '17257_17262ra.bc', 1,
-                                               False, 'INTERVAL', 1., 'SCLK')
+    with self.assertRaises(KeyError):
+        ckcov_error(PATH_ + '17257_17262ra.bc', 1, False, 'INTERVAL', 1., 'SCLK')
 
     #### pckcov, pckfrm
     self.assertRaises(IOError, pckcov, PATH_ + 'pck00010.tpc', 10016)
@@ -299,8 +298,8 @@ class Test_cspyce1_kernels(unittest.TestCase):
     frames = pckfrm(PATH_ + 'earth_000101_180317_171224.bpc')
 
     limits = [-4.31358161e+04, 5.74516869e+08]
-    self.assertAllClose(pckcov(PATH_ + 'earth_000101_180317_171224.bpc', 3000),
-                            [limits])
+    self.assertAllClose(pckcov(PATH_ + 'earth_000101_180317_171224.bpc', 3000).as_array(),
+                            limits)
 
     #### ckgp and ckgpav
     sclk = 304593554335.
@@ -366,7 +365,7 @@ class Test_cspyce1_kernels(unittest.TestCase):
     self.assertTrue(np.all(found2x))
 
     #### ckobj
-    self.assertEqual(ckobj(PATH_ + '17257_17262ra.bc'), [-82000])
+    self.assertEqual(ckobj(PATH_ + '17257_17262ra.bc').as_array(), [-82000])
 
     #### cnmfrm
     self.assertEqual(cnmfrm('SATURN'), [10016, 'IAU_SATURN'])
@@ -521,19 +520,21 @@ class Test_cspyce1_kernels(unittest.TestCase):
     self.assertRaises(IOError, spkcov, 'foo.bsp', -82)
 
     spkpath = PATH_ + '171106R_SCPSE_17224_17258.bsp'
-    self.assertRaises(KeyError, spkcov, spkpath, 401)
+    with self.assertRaises(KeyError):
+        spkcov(spkpath, 401)
 
     limits = [5.55782400e+08, 5.58745200e+08]
-    self.assertAllEqual(spkcov(spkpath, -82), [limits], 1.)
-    self.assertAllEqual(spkcov(spkpath, 699), [limits], 1.)
+    self.assertAllEqual(spkcov(spkpath, -82).as_intervals(), [limits], 1.)
+    self.assertAllEqual(spkcov(spkpath, 699).as_intervals(), [limits], 1.)
 
-    self.assertAllEqual(spkcov.flag(spkpath, 699), [limits], 1.)
-    self.assertAllEqual(spkcov.flag(spkpath, 401), np.empty((0,2)))
+    self.assertAllEqual(spkcov.flag(spkpath, 699).as_intervals(), [limits], 1.)
+    self.assertAllEqual(spkcov.flag(spkpath, 401).as_intervals(), np.empty((0,2)))
 
     bodies = set([-82, 301, 399, 699] + list(range(1,11)) +
                                         list(range(601,613)) +
                                         list(range(615,618)))
-    self.assertEqual(set(spkobj(PATH_ + '171106R_SCPSE_17224_17258.bsp')), bodies)
+    temp = spkobj(PATH_ + '171106R_SCPSE_17224_17258.bsp')
+    self.assertEqual(set(temp), bodies)
 
     #### illum, illumf, illumg, ilumin, phaseq
     trgepc = 556991636.744989
