@@ -359,6 +359,7 @@ they can call
 cspyce.bodn2c.error.vector(args, ...)
 ```
 
+---
 ## RECORD ENHANCEMENTS
 
 -----
@@ -414,7 +415,7 @@ a tuple, or anything that can reasonably be converted into an appropriately type
    negative indices, but -1, -2, etc count backwards from the last active elements.
 
 `len(spice_cell)`
-: Returns the number of active elements of the `SpiceCell`.
+: Returns the number of active elements of `spice_cell`.
 
 `spice_cell.append(value)`
 : If `value` is a float or integer, it is added to the `SpiceCell`'s active cells.
