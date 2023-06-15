@@ -362,8 +362,6 @@ cspyce.bodn2c.error.vector(args, ...)
 ---
 ## RECORD ENHANCEMENTS
 
------
-
 ### SpiceCell
 `cspyce` provides an enhanced version of `SpiceCell` to make it simpler to use for
 both CSPICE and in Python. 
@@ -453,7 +451,7 @@ If the number of active elements is greater than `value`, it is reduced to `valu
 This operation is a `cspyce` enhancement that does not exist in CSPICE.
 
 `spice_cell.card`
-: Same as `len(spice_cell)`.  (Also known as the "cardinality"; hence the name).
+: Same as `len(spice_cell)`.  (Also known as the "cardinality", hence the name).
 
 `spice_cell.card = value`
 : Changes the number of active elements in the `SpiceCell`. 
