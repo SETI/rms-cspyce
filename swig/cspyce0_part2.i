@@ -4433,7 +4433,7 @@ extern void ekacei_c(
 %rename (ekacld) my_ekacld_c;
 %apply (void RETURN_VOID) {void my_ekacld_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *column};
-%apply (ConstSpiceInt     IN_ARRAY1[]) {ConstSpiceDouble  dvals[]};
+%apply (ConstSpiceDouble  IN_ARRAY1[]) {ConstSpiceDouble  dvals[]};
 %apply (ConstSpiceInt     IN_ARRAY1[]) {ConstSpiceInt     entszs[]};
 %apply (ConstSpiceBoolean IN_ARRAY1[]) {ConstSpiceBoolean nlflgs[]};
 %apply (ConstSpiceInt     IN_ARRAY1[]) {ConstSpiceInt     rcptrs[]};
