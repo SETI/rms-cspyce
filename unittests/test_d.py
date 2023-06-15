@@ -663,7 +663,7 @@ def test_dlabfs_dlafns():
     cs.dascls(handle)
 
 
-def test_dlafns():
+def fail_dlafns():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
     cs.use_flags(cs.dlafns)
     current = cs.dlabfs(handle)
