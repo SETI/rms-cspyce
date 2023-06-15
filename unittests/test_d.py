@@ -645,10 +645,9 @@ def test_diags2():
 
 def test_dlabbs_dlafps():
     handle = cs.dasopr(ExtraKernels.phobosDsk)
-    cs.use_flags(cs.dlabbs)
     current = cs.dlabbs(handle)
     assert current is not None
-    assert current[0][5] == 1300
+    assert current[5] == 1300
     with pytest.raises(Exception):
         prev = cs.dlafps(handle, current)
     cs.dascls(handle)
@@ -1085,9 +1084,8 @@ def test_dskxsi():
 def test_dskxv():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
-    cs.use_flags(cs.kdata)
     # get handle
-    dsk1, filtyp, source, handle, found = cs.kdata(0, "DSK")
+    dsk1, filtyp, source, handle = cs.kdata(0, "DSK")
     # get the dladsc from the file
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
@@ -1113,7 +1111,7 @@ def test_dskxv_2():
     # load kernels
     cs.furnsh(ExtraKernels.phobosDsk)
     # get handle
-    dsk1, filtyp, source, handle, found = cs.kdata(0, "DSK")
+    dsk1, filtyp, source, handle = cs.kdata(0, "DSK")
     # get the dladsc from the file
     dladsc = cs.dlabfs(handle)
     # get dskdsc for target radius
