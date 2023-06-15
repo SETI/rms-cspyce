@@ -49,7 +49,7 @@ class SpiceCell:
                 typeno = SPICE_CELL_DOUBLE
             elif issubclass(data.dtype.type, str):
                 typeno = SPICE_CELL_CHAR
-                # Include default just in case the array is empty. Add 1 for null byte.
+                # Include default just in case the array is empty. Add one for null byte.
                 length = max(length, 1 + max((len(x) for x in data.ravel()), default=0))
             else:
                 raise ValueError("array has unknown type")
