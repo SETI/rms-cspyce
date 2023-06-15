@@ -438,7 +438,7 @@ work as expected.
 You can also write a for loop `for item in spice_cell: ...` to iterate through
 the active elements.
 
-#### SpiceCell-specific operations.
+#### SpiceCell-specific operations
 
 `SpiceCell` also has the following methods and properties specific to a `SpiceCell`.
 
