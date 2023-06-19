@@ -57,6 +57,7 @@ jobs:
 
       - name: Determine compiler version for Windows
         if: matrix.os == 'windows-latest'
+          # We ask Python what it uses as the compiler.  I can't find anything simpler.
         run: |
           python3 -c 'import distutils.ccompiler as cc; x = cc.new_compiler(); x.initialize(); print(x.cc)' > compiler-version.txt
           cat compiler-version.txt
@@ -69,7 +70,8 @@ jobs:
         with:
           path: build/
           # We need to rebuild the cspice library if the source files have changed,
-          # or if there is some change in the build process.
+          # if there is some change in the build process, or if the compiler version
+          # has changed.
           key: ${{ matrix.os }}-${{ runner.arch }}-${{ matrix.python-version }}-${{ env.cache-name }}-${{ hashFiles('setup.py', 'compiler-version.txt', 'cspice/**/*') }}
 
       - name: Compile C libraries
