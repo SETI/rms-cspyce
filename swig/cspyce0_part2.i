@@ -3396,11 +3396,10 @@ extern void dski02_c(
 %apply (void RETURN_VOID) {void my_dskmi2_c};
 %apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
                     {(SpiceInt nv, ConstSpiceDouble vrtces[][3])};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY2[][ANY])
+%apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY2[][ANY])
                     {(SpiceInt np, ConstSpiceInt plates[][3])};
-%apply (SpiceDouble OUT_ARRAY1[ANY])
-                    {SpiceDouble spaixd[SPICE_DSK02_SPADSZ]};
-%apply (SpiceInt OUT_ARRAY1[ANY]) {SpiceInt spaixi[SPICE_DSK02_SPAISZ]};
+%apply (SpiceDouble **OUT_ARRAY1, SpiceInt *SIZE1) {(SpiceDouble **spaixd, SpiceInt *n1)};
+%apply (SpiceInt    **OUT_ARRAY1, SpiceInt *SIZE1) {(SpiceInt **spaixi,    SpiceInt *n2)};
 
 %inline %{
     void my_dskmi2_c(
@@ -3409,17 +3408,21 @@ extern void dski02_c(
         SpiceDouble      finscl,
         SpiceInt         corscl,
         SpiceBoolean     makvtl,
-        SpiceDouble      spaixd[SPICE_DSK02_SPADSZ],
-        SpiceInt         spaixi[SPICE_DSK02_SPAISZ])
+        SpiceInt         spxisz,
+        SpiceDouble**    spaixd, SpiceInt *n1,
+        SpiceInt**       spaixi, SpiceInt *n2)
     {
-        SpiceInt voxpsz = SPICE_DSK02_MAXVXP;
-        SpiceInt voxlsz = SPICE_DSK02_MXNVLS;
-        SpiceInt worksz = SPICE_DSK02_MAXCEL;
-        SpiceInt spxisz = SPICE_DSK02_SPAISZ;
-        SpiceInt work[SPICE_DSK02_MAXCEL][2];
+        SpiceInt *work   = my_int_malloc(2 * worksz, "dskmi2");
+        *spaixd = my_malloc(SPICE_DSK02_SPADSZ, "dskmi2");
+        *n1 = SPICE_DSK02_SPADSZ;
+        *spaixi = my_int_malloc(spxisz, "dskmi2");
+        *n2 = spxisz;
 
-        dskmi2_c(nv, vrtces, np, plates, finscl, corscl, worksz, voxpsz, voxlsz,
-                 makvtl, spxisz, work, spaixd, spaixi);
+        if (work && *spaixi) {
+            dskmi2_c(nv, vrtces, np, plates, finscl, corscl, worksz, voxpsz, voxlsz,
+                     makvtl, spxisz, work, *spaixd, *spaixi);
+        }
+        PyMem_Free(work);
     }
 %}
 

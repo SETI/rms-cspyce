@@ -898,7 +898,7 @@ def test_dski02():
     cs.dascls(handle)
 
 
-def fail_dskw02_dskrb2_dskmi2():
+def test_dskw02_dskrb2_dskmi2():
     dskpath = os.path.join(TEST_FILE_DIR, "TESTdskw02.dsk")
     cleanup_kernel(dskpath)
     # open the dsk file
