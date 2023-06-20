@@ -521,8 +521,7 @@ def test_ekifld():
     assert not os.path.exists(ekpath)
 
 
-# Fails due to reliance on ekfind
-def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
+def test_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekmany.ek")
     tablename = "test_table_ekmany"
     cleanup_kernel(ekpath)

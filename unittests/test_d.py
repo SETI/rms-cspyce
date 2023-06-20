@@ -648,7 +648,7 @@ def test_dlabbs_dlafps():
     current = cs.dlabbs(handle)
     assert current is not None
     assert current[5] == 1300
-    with pytest.raises(Exception):
+    with pytest.raises(OSError):
         prev = cs.dlafps(handle, current)
     cs.dascls(handle)
 
@@ -658,17 +658,9 @@ def test_dlabfs_dlafns():
     current = cs.dlabfs(handle)
     assert current is not None
     assert current[5] == 1300
-    with pytest.raises(Exception):
+    with pytest.raises(OSError):
         next = cs.dlafns(handle, current)
     cs.dascls(handle)
-
-
-def fail_dlafns():
-    handle = cs.dasopr(ExtraKernels.phobosDsk)
-    cs.use_flags(cs.dlafns)
-    current = cs.dlabfs(handle)
-    output = cs.dlafns(handle, current)
-    assert output[1] is False
 
 
 def test_dlaopn_dlabns_dlaens_daswbr():
