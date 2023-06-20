@@ -696,9 +696,13 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
     // Convert the results to Python strings and add them to the list
     for (int i = 0; i < rows; i++) {
         char *str = &buffer[i * columns];
-        PyObject *value = PyString_FromString(str);
+        int length = strlen(str);
+        while (length > 0 && str[length - 1] == ' ') {
+            length--;
+        }
+        PyObject *value = PyUnicode_FromStringAndSize(str, length);
         TEST_MALLOC_FAILURE(value)
-        PyList_SetItem(result, i, value);
+        PyList_SET_ITEM(result, i, value);
     }
     result = Py_BuildValue("[N]", result);  // N steals the reference
 %enddef
