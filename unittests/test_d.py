@@ -898,7 +898,7 @@ def test_dski02():
     cs.dascls(handle)
 
 
-def fail_dskw02_dskrb2_dskmi2():
+def test_dskw02_dskrb2_dskmi2():
     dskpath = os.path.join(TEST_FILE_DIR, "TESTdskw02.dsk")
     cleanup_kernel(dskpath)
     # open the dsk file
@@ -933,7 +933,7 @@ def fail_dskw02_dskrb2_dskmi2():
     worksz = cs_DSK02_MAXCEL
     voxpsz = cs_DSK02_MAXVXP
     voxlsz = cs_DSK02_MXNVLS
-    spaisz = cs_DSK02_SPAISZ
+    spxisz = cs_DSK02_SPAISZ
     # get verts, number from dskb02 test
     vrtces = cs.dskv02(handle, dladsc, 1)
     # get plates, number from dskb02 test
@@ -945,7 +945,8 @@ def fail_dskw02_dskrb2_dskmi2():
     handle = cs.dskopn(dskpath, "TESTdskw02.dsk/AA/29-SEP-2017", 0)
     # create spatial index
     spaixd, spaixi = cs.dskmi2(
-        vrtces, plates, finscl, corscl, False)
+        vrtces, plates, finscl, corscl, worksz, voxpsz, voxlsz, False, spxisz)
+
     # do stuff
     corsys = 1
     mncor1 = -cs.pi()
