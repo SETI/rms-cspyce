@@ -31,17 +31,17 @@ class Test_L(unittest.TestCase):
 
     #### lparse
     x = lparse(" ,bob,   carol,, ted,  alice", ",")
-    self.assertEqual(x, ['', 'bob', 'carol', '', 'ted', 'alice'])
+    self.assertEqual(x, ('', 'bob', 'carol', '', 'ted', 'alice'))
 
     x = lparse("//option1//option2/ //", "/", )
-    self.assertEqual(x, ['', '', 'option1', '', 'option2', '', '', ''])
+    self.assertEqual(x, ('', '', 'option1', '', 'option2', '', '', ''))
 
     #### lparsm
     x = lparsm("Run and find out.", " ")
-    self.assertEqual(x, ['Run', 'and', 'find', 'out.'])
+    self.assertEqual(x, ('Run', 'and', 'find', 'out.'))
 
     x = lparsm("  1986-187// 13:15:12.184 ", " ,/-:")
-    self.assertEqual(x, ['1986', '187', '', '13', '15', '12.184'])
+    self.assertEqual(x, ('1986', '187', '', '13', '15', '12.184'))
 
     #### lstlec
     x = lstlec("EINSTEIN", ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])

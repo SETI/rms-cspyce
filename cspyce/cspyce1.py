@@ -881,21 +881,6 @@ def orderi(array):
     return cspyce0.orderi(array, len(array))
 
 ################################################################################
-# For functions that return only a list of strings, don't embed the results in
-# an additional layer [].
-################################################################################
-
-def lparse(list_, delim):
-    result = cspyce0.lparse(list_, delim)
-    if len(result) == 1 and isinstance(result[0], list):
-        return result[0]
-
-def lparsm(list_, delims):
-    result = cspyce0.lparsm(list_, delims)
-    if len(result) == 1 and isinstance(result[0], list):
-        return result[0]
-
-################################################################################
 # When a function returns a value and a "found" flag, and the flag is False,
 # the unused return values contain random values. We change these to something
 # sensible.
