@@ -704,7 +704,10 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
         TEST_MALLOC_FAILURE(value)
         PyList_SET_ITEM(result, i, value);
     }
-    result = Py_BuildValue("[N]", result);  // N steals the reference
+    if (resultobj == Py_None) {
+        // The first object in a resultobj can't be a list.  It gets confused
+        result = Py_BuildValue("[N]", result);  // N steals the reference
+    }
 %enddef
 
 %{

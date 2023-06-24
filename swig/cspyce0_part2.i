@@ -5489,6 +5489,7 @@ extern void ekrcei_c(
 * handle     I   Handle of EK.
 * segno      I   Number of segment to be summarized.
 * segsum     O   EK segment summary.
+* nrows      O   The number of rows in the segment.
 * ncols      O   The number of columns in the segment.
 * tabnam     O   The name of the table to which the segment belongs.
 * cnames     O   Column names.
@@ -5502,7 +5503,8 @@ extern void ekrcei_c(
 
 %rename (ekssum) my_ekssum_c;
 %apply (void RETURN_VOID) {void my_ekssum_c};
-%apply (SpiceChar    OUT_STRING[ANY], SpiceInt *SIZE1) {(SpiceChar tabnam[NAMELEN], SpiceInt *nrows)};
+%apply (SpiceChar    OUT_STRING[ANY]) {SpiceChar tabnam[NAMELEN]};
+%apply (SpiceInt     *OUTPUT)                     {(SpiceInt  *nrows)};
 %apply (SpiceInt     *OUTPUT)                     {(SpiceInt  *ncols)};
 %apply (SpiceChar    OUT_STRINGS[ANY][ANY], SpiceInt *NSTRINGS) {(SpiceChar cnames[SPICE_EK_MXCLSG][NAMELEN], SpiceInt *n1)};
 %apply (SpiceInt     OUT_ARRAY1[ANY], SpiceInt *SIZE1) {(SpiceInt     cclass[SPICE_EK_MXCLSG], SpiceInt *n2)};
@@ -5516,7 +5518,8 @@ extern void ekrcei_c(
     void my_ekssum_c(
         SpiceInt     handle,
         SpiceInt     segno,
-        SpiceChar    tabnam[NAMELEN], SpiceInt *nrows,
+        SpiceChar    tabnam[NAMELEN],
+        SpiceInt     *nrows,
         SpiceInt     *ncols,
         SpiceChar    cnames[SPICE_EK_MXCLSG][NAMELEN], SpiceInt *n1,
         SpiceInt     cclass[SPICE_EK_MXCLSG], SpiceInt *n2,
