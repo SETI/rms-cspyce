@@ -633,7 +633,7 @@ class Test_OUT_STRINGS_SizeFromArg:
     #   "a", "bb", "ccc", "dddd", et.
     def test_out_strings(self):
         result = ts.out_strings(10)
-        (dim1, dim2), [strings] = result
+        (dim1, dim2), strings = result
         assert (50, 256) == (dim1, dim2)  # This is part of the declaration
         assert 10 == len(strings)
         assert "a" == strings[0]

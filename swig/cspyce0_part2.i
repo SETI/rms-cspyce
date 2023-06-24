@@ -5537,7 +5537,7 @@ extern void ekrcei_c(
         *nrows = segsum.nrows;
         *ncols = segsum.ncols;
 
-        for (int k = 0; k < *nrows; k++) {
+        for (int k = 0; k < *ncols; k++) {
             strncpy(&(cnames[k]), &(segsum.cnames[k]), SPICE_EK_CSTRLN);
             cclass[k] = (SpiceInt) segsum.cdescrs[k].cclass;
             dtype[k]  = (SpiceInt) segsum.cdescrs[k].dtype;
