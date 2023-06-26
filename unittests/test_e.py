@@ -500,7 +500,7 @@ def test_ekgi():
 
 
 def test_ekifld():
-    # Same as test_ekacli
+    # Same as test_ekacli2
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekifld.ek")
     cleanup_kernel(ekpath)
     handle = cs.ekopn(ekpath, ekpath, 0)
@@ -872,7 +872,7 @@ def test_errdev():
     assert cs.errdev("GET", "Screen") == "NULL"
 
 
-def fail_errdp():
+def test_errdp():
     cs.setmsg("test errdp value: #")
     cs.errdp("#", 42.1)
     cs.sigerr("some error")
@@ -922,7 +922,7 @@ def test_et2utc():
     assert output == "JD 2445438.006415"
 
 
-def fail_etcal():
+def test_etcal():
     et = np.arange(0.0, 20.0)
     cal = cs.etcal(et[0])
     assert cal == "2000 JAN 01 12:00:00.000"
@@ -953,7 +953,7 @@ def test_eul2xf():
     npt.assert_array_almost_equal(out, expected)
 
 
-def fail_evsgp4():
+def test_evsgp4():
     # LUME 1 cubesat
     noadpn = ["J2", "J3", "J4", "KE", "QO", "SO", "ER", "AE"]
     cs.furnsh([CoreKernels.lsk, ExtraKernels.geophKer])  # need geophyscial.ker
