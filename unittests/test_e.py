@@ -731,7 +731,7 @@ def test_ekopw():
     cleanup_kernel(ekpath)
 
 
-def fail_ekssum():
+def test_ekssum():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekssum.ek")
     cleanup_kernel(ekpath)
     handle = cs.ekopn(ekpath, ekpath, 0)
@@ -745,13 +745,13 @@ def fail_ekssum():
     cs.ekacli(handle, segno, "c1", [1, 2], [
         1, 1], [False, False], rcptrs)
     cs.ekffld(handle, segno, rcptrs)
-    tabnam, ncols, cnames, cclass, dtype, strln, size, indexd, nullok = cs.ekssum(
+    tabnam, nrows, ncols, cnames, cclass, dtype, strln, size, indexd, nullok = cs.ekssum(
         handle, segno)
     assert ncols == 1
-    assert cnames == ["C1"]
+    assert cnames == ("C1",)
     assert tabnam == "TEST_TABLE_EKSSUM"
     assert dtype == 2
-    assert indexd is False
+    assert indexd[0] == 0
     # assert c1descr.null == True, for some reason this is actually false, SpikeEKAttDsc may not be working correctly
     cs.ekcls(handle)
     cleanup_kernel(ekpath)
