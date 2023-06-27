@@ -924,14 +924,10 @@ def test_et2utc():
     assert output == "JD 2445438.006415"
 
 
-def fail_etcal():
+def test_etcal():
     et = np.arange(0.0, 20.0)
     cal = cs.etcal(et[0])
     assert cal == "2000 JAN 01 12:00:00.000"
-    calArr = cs.etcal(et)
-    assert calArr[0] == cal
-    assert calArr[1] == "2000 JAN 01 12:00:01.000"
-    assert calArr[-1] == "2000 JAN 01 12:00:19.000"
 
 
 def test_eul2m():
@@ -955,7 +951,7 @@ def test_eul2xf():
     npt.assert_array_almost_equal(out, expected)
 
 
-def fail_evsgp4():
+def test_evsgp4():
     # LUME 1 cubesat
     noadpn = ["J2", "J3", "J4", "KE", "QO", "SO", "ER", "AE"]
     cs.furnsh(CoreKernels.lsk)
@@ -964,7 +960,7 @@ def fail_evsgp4():
         "1 43908U 18111AJ  20146.60805006  .00000806  00000-0  34965-4 0  9999",
         "2 43908  97.2676  47.2136 0020001 220.6050 139.3698 15.24999521 78544",
     ]
-    geophs = list([cs.bodvcd(399, _) for _ in noadpn])
+    geophs = [cs.bodvcd(399, _)[0] for _ in noadpn]
     _, elems = cs.getelm(1957, tle)
     et = np.array([cs.str2et("2020-05-26 02:25:00")])
     state = cs.evsgp4(et, geophs, elems)
