@@ -633,7 +633,7 @@ class Test_OUT_STRINGS_SizeFromArg:
     #   "a", "bb", "ccc", "dddd", et.
     def test_out_strings(self):
         result = ts.out_strings(10)
-        (dim1, dim2), [strings] = result
+        (dim1, dim2), strings = result
         assert (50, 256) == (dim1, dim2)  # This is part of the declaration
         assert 10 == len(strings)
         assert "a" == strings[0]
@@ -645,12 +645,12 @@ class Test_INOUT_STRINGS_SizeFromArg:
     # because we could, we wrote a simple sorting program
     def test_basic_test_tuple(self):
         argument = "Four score and thirty years ago".split(' ')
-        result, = ts.sort_strings(argument)
-        assert sorted(argument) == result
+        result = ts.sort_strings(argument)
+        assert tuple(sorted(argument)) == result
 
     def test_okay_to_pass_empty_list(self):
-        result, = ts.sort_strings(())
-        assert [] == result
+        result = ts.sort_strings(())
+        assert result is ()
 
     def test_requires_one_dimensional_array(self):
         argument = np.array([["a", "b", "c", "d"], ["w", "x", "y", "z"]])

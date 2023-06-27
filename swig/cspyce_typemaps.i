@@ -690,7 +690,7 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
 
 // result must be a variable which will be Py_DECREF-ed if an error occurs
 %define CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer, rows, columns, result)
-    result = PyList_New(rows);
+    result = PyTuple_New(rows);
     TEST_MALLOC_FAILURE(result);
 
     // Convert the results to Python strings and add them to the list
@@ -702,9 +702,8 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
         }
         PyObject *value = PyUnicode_FromStringAndSize(str, length);
         TEST_MALLOC_FAILURE(value)
-        PyList_SET_ITEM(result, i, value);
+        PyTuple_SET_ITEM(result, i, value);
     }
-    result = Py_BuildValue("[N]", result);  // N steals the reference
 %enddef
 
 %{

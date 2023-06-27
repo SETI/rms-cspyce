@@ -143,11 +143,11 @@ class Test_cspyce1_kernels(unittest.TestCase):
 
     self.assertEqual(list(gipool('ITEST')), [3141,186,282])
     self.assertEqual(list(gdpool('DTEST')), [3.1415,186.282,.0175])
-    self.assertEqual(gcpool('CTEST'), ['LARRY', 'MOE', 'CURLY'])
+    self.assertEqual(list(gcpool('CTEST')), ['LARRY', 'MOE', 'CURLY'])
 
     self.assertEqual(list(gipool('ITEST',1)), [186,282])
     self.assertEqual(list(gdpool('DTEST',1)), [186.282,.0175])
-    self.assertEqual(gcpool('CTEST',1), ['MOE', 'CURLY'])
+    self.assertEqual(list(gcpool('CTEST',1)), ['MOE', 'CURLY'])
 
     self.assertRaises(KeyError, gipool, 'ITESTxxx')
     self.assertRaises(KeyError, gdpool, 'DTESTxxx')
