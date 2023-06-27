@@ -1051,7 +1051,7 @@ def test_dskx02():
     raydir = cs.vminus(vertex)
     plid, xpt = cs.dskx02(handle, dladsc, vertex, raydir)
     # test results
-    assert plid == 421
+    assert plid in range(420, 424)   # correct result according to MRS
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
     # cleanup
     cs.dascls(handle)
@@ -1078,7 +1078,7 @@ def test_dskxsi():
     )
     # check output
     assert handle is not None
-    assert ic[0] == 420
+    assert ic[0] in range(420, 424)  # correct answer according to MRS
     npt.assert_almost_equal(xpt, [12.36679999999999957083, 0.0, 0.0])
 
 
