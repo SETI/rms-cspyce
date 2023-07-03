@@ -2487,11 +2487,9 @@ TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
  }
 
 %typemap(argout)
-    (Type *CONST_STRING),
     (Type IN_STRING) ""
 
 %typemap(freearg)
-    (Type *CONST_STRING),
     (Type IN_STRING) ""
 
 /*******************************************************
