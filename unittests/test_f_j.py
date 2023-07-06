@@ -35,12 +35,12 @@ def cleanup_kernel(path):
 
 def setup_module(module):
     download_kernels()
-    
+
 
 def test_failed():
     assert not cs.failed()
-    
-    
+
+
 def test_fovray():
     # load kernels
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -60,7 +60,7 @@ def test_fovray():
         "CASSINI_ISS_NAC", [0.0, 0.0, 1.0], frame, "S", "CASSINI", et
     )
     assert visible is True
-    
+
 
 def test_fovtrg():
     # load kernels
@@ -85,8 +85,8 @@ def test_fovtrg():
         et,
     )
     assert visible is True
-    
-    
+
+
 def test_frame():
     vec = [23.0, -3.0, 18.0]
     x, y, z = cs.frame(vec)
@@ -96,11 +96,11 @@ def test_frame():
     npt.assert_array_almost_equal(expected_x, x)
     npt.assert_array_almost_equal(expected_y, y)
     npt.assert_array_almost_equal(expected_z, z)
-    
-    
+
+
 def test_frinfo():
     assert cs.frinfo(13000) == [399, 2, 3000]
-    
+
 
 # INSERT FRMCHG FUNCTION HERE
 
@@ -108,14 +108,14 @@ def test_frinfo():
 def test_frmnam():
     assert cs.frmnam(13000) == "ITRF93"
     assert cs.frmnam(13000) == "ITRF93"
-    
-    
+
+
 def test_furnsh():
     cs.furnsh(CoreKernels.testMetaKernel)
     # 4 kernels + the meta kernel = 5
     assert cs.ktotal("ALL") == 5
-    
-    
+
+
 def test_gcpool():
     # same as pcpool test
     import string
@@ -124,16 +124,16 @@ def test_gcpool():
     cs.pcpool("pcpool_test", data)
     cvals = cs.gcpool("pcpool_test")
     assert data == list(cvals)
-    
-    
+
+
 def test_gdpool():
     # same as pdpool test
     data = np.arange(0.0, 10.0)
     cs.pdpool("pdpool_array", data)
     dvals = cs.gdpool("pdpool_array")
     npt.assert_array_almost_equal(data, dvals)
-    
-    
+
+
 def test_georec():
     cs.furnsh(CoreKernels.testMetaKernel)
     radii = cs.bodvrd("EARTH", "RADII")
@@ -144,8 +144,8 @@ def test_georec():
     output = cs.georec(lon, lat, alt, radii[0], flat)
     expected = [-2541.74621567, 4780.329376, 3360.4312092]
     npt.assert_array_almost_equal(expected, output)
-    
-    
+
+
 def test_getelm():
     tle = [
         "1 18123U 87 53  A 87324.61041692 -.00000023  00000-0 -75103-5 0 00675",
@@ -178,8 +178,8 @@ def test_getfat():
     arch, outtype = cs.getfat(CassiniKernels.cassSclk)
     assert arch == "KPL"
     assert outtype == "SCLK"
-    
-    
+
+
 def test_getfov():
     kernel = os.path.join(TEST_FILE_DIR, "getfov_test.ti")
     cleanup_kernel(kernel)
@@ -187,10 +187,14 @@ def test_getfov():
         kernelFile.write("\\begindata\n")
         kernelFile.write("INS-999004_FOV_SHAPE            = 'POLYGON'\n")
         kernelFile.write("INS-999004_FOV_FRAME            = 'SC999_INST004'\n")
-        kernelFile.write("INS-999004_BORESIGHT            = (  0.0,  1.0,  0.0 )\n")
-        kernelFile.write("INS-999004_FOV_BOUNDARY_CORNERS = (  0.0,  0.8,  0.5,\n")
-        kernelFile.write("                                     0.4,  0.8, -0.2,\n")
-        kernelFile.write("                                    -0.4,  0.8, -0.2 )\n")
+        kernelFile.write(
+            "INS-999004_BORESIGHT            = (  0.0,  1.0,  0.0 )\n")
+        kernelFile.write(
+            "INS-999004_FOV_BOUNDARY_CORNERS = (  0.0,  0.8,  0.5,\n")
+        kernelFile.write(
+            "                                     0.4,  0.8, -0.2,\n")
+        kernelFile.write(
+            "                                    -0.4,  0.8, -0.2 )\n")
         kernelFile.write("\\begintext\n")
         kernelFile.close()
     cs.furnsh(kernel)
@@ -201,8 +205,8 @@ def test_getfov():
     expected = np.array([[0.0, 0.8, 0.5], [0.4, 0.8, -0.2], [-0.4, 0.8, -0.2]])
     npt.assert_array_almost_equal(expected, bounds)
     cleanup_kernel(kernel)
-    
-    
+
+
 def test_getfvn():
     kernel = os.path.join(TEST_FILE_DIR, "getfvn_test.ti")
     cleanup_kernel(kernel)
@@ -210,10 +214,14 @@ def test_getfvn():
         kernelFile.write("\\begindata\n")
         kernelFile.write("INS-999004_FOV_SHAPE            = 'POLYGON'\n")
         kernelFile.write("INS-999004_FOV_FRAME            = 'SC999_INST004'\n")
-        kernelFile.write("INS-999004_BORESIGHT            = (  0.0,  1.0,  0.0 )\n")
-        kernelFile.write("INS-999004_FOV_BOUNDARY_CORNERS = (  0.0,  0.8,  0.5,\n")
-        kernelFile.write("                                     0.4,  0.8, -0.2,\n")
-        kernelFile.write("                                    -0.4,  0.8, -0.2)\n")
+        kernelFile.write(
+            "INS-999004_BORESIGHT            = (  0.0,  1.0,  0.0 )\n")
+        kernelFile.write(
+            "INS-999004_FOV_BOUNDARY_CORNERS = (  0.0,  0.8,  0.5,\n")
+        kernelFile.write(
+            "                                     0.4,  0.8, -0.2,\n")
+        kernelFile.write(
+            "                                    -0.4,  0.8, -0.2)\n")
         kernelFile.write("NAIF_BODY_CODE += ( -999004 )\n")
         kernelFile.write("NAIF_BODY_NAME += ( 'SC999_INST004' )\n")
         kernelFile.write("\\begintext\n")
@@ -226,16 +234,16 @@ def test_getfvn():
     expected = np.array([[0.0, 0.8, 0.5], [0.4, 0.8, -0.2], [-0.4, 0.8, -0.2]])
     npt.assert_array_almost_equal(expected, bounds)
     cleanup_kernel(kernel)
-    
-  
+
+
 # Fails due to known issue
 def fail_getmsg():
     cs.sigerr("test error")
     message = cs.getmsg("SHORT", 200)
     assert message == "test error"
     cs.reset()
-    
-    
+
+
 def fail_gfdist():
     cs.furnsh(CoreKernels.testMetaKernel)
     et0 = cs.str2et("2007 JAN 01 00:00:00 TDB")
@@ -270,8 +278,7 @@ def fail_gfdist():
         "2007-APR-01 00:00:00.000000 (TDB)",
     ]
     assert temp_results == expected
-    
-    
+
 
 # =============================================================================
 # def fail_gfevnt():
@@ -322,7 +329,7 @@ def fail_gfdist():
 #         cnfine,
 #         result,
 #     )
-# 
+#
 #     # Verify the expected results
 #     assert len(result) == 26
 #     sTimout = "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
@@ -335,8 +342,8 @@ def fail_gfdist():
 #         cs.gfclrh()  # pragma: no cover
 #     cs.gfsstp(0.5)
 # =============================================================================
-    
-    
+
+
 # =============================================================================
 # def fail_gffove():
 #     cs.furnsh(CoreKernels.testMetaKernel)
@@ -392,8 +399,8 @@ def fail_gfdist():
 #         cs.gfclrh()  # pragma: no cover
 #     cs.gfsstp(0.5)
 # =============================================================================
-    
-    
+
+
 # =============================================================================
 # def test_gfilum():
 #     cs.furnsh(CoreKernels.testMetaKernel)
@@ -460,8 +467,8 @@ def fail_gfdist():
 #     assert startEpoch.startswith("1971 OCT 02")
 #     assert endEpoch.startswith("1971 NOV 29")
 # =============================================================================
-    
-    
+
+
 # =============================================================================
 # def fail_gfocce():
 #     if cs.gfbail():
@@ -507,7 +514,7 @@ def fail_gfdist():
 #     count = cs.wncard(result)
 #     assert count == 1
 # =============================================================================
-    
+
 
 # =============================================================================
 # def test_gfocce():
@@ -554,7 +561,7 @@ def fail_gfdist():
 #     count = spice.wncard(result)
 #     assert count == 1
 # =============================================================================
-    
+
 
 # =============================================================================
 # def test_gfoclt():
@@ -702,8 +709,8 @@ def fail_gfdist():
 #     assert start_time == end_time
 #     assert start_time == "2007-JUN-21 17:54:13.201561 (TDB)"
 # =============================================================================
-    
-    
+
+
 # =============================================================================
 # def test_gfrfov():
 #     spice.furnsh(CoreKernels.testMetaKernel)
@@ -739,7 +746,7 @@ def fail_gfdist():
 #     assert spice.timout(result[2], sTimout) == "2013-FEB-25 11:55:00 UTC"
 #     assert spice.timout(result[3], sTimout) == "2013-FEB-25 12:05:33 UTC"
 # =============================================================================
-    
+
 
 # =============================================================================
 # def test_gfrr():
@@ -899,8 +906,8 @@ def test_gipool():
     cs.pipool("pipool_array", data)
     ivals = cs.gipool("pipool_array", 0)
     npt.assert_array_almost_equal(data, ivals)
-    
-    
+
+
 def test_gnpool():
     cs.furnsh(CoreKernels.testMetaKernel)
     var = "BODY599*"
@@ -918,8 +925,8 @@ def test_gnpool():
     ]
     kervar = cs.gnpool(var, index)
     assert set(expected) == set(kervar)
-    
-    
+
+
 def test_halfpi():
     assert cs.halfpi() == np.pi / 2
 
@@ -929,16 +936,16 @@ def test_hrmesp():
     answer, deriv = cs.hrmesp(-1.0, 2.0, yvals, 2.0)
     assert answer == pytest.approx(141.0)
     assert deriv == pytest.approx(456.0)
-    
-    
+
+
 def test_hrmint():
     xvals = [-1.0, 0.0, 3.0, 5.0]
     yvals = [[6.0, 3.0], [5.0, 0.0], [2210.0, 5115.0], [78180.0, 109395.0]]
     answer, deriv = cs.hrmint(xvals, yvals, 2.0)
     assert answer == pytest.approx(141.0)
     assert deriv == pytest.approx(456.0)
-    
-    
+
+
 def fail_hx2dp():
     assert cs.hx2dp("1^1") == 1.0
     assert cs.hx2dp("7F5EB^5") == 521707.0
@@ -948,29 +955,294 @@ def fail_hx2dp():
     assert cs.hx2dp("1Z^+2")[: len(badReturn)] == badReturn
 
 
-# =============================================================================
-# ident
-# illum
-# illumf
-# illumg
-# ilumin
-# inedpl
-# inelpl
-# inrypl
-# intmax
-# intmin
-# invert
-# invort
-# invstm
-# isordv
-# isrchc
-# isrchd
-# isrchi
-# isrot
-# iswhsp
-# j1900
-# j1950
-# j2000
-# j2100
-# jyear
-# =============================================================================
+def test_ident():
+    ident = cs.ident()
+    expected = np.identity(3)
+    npt.assert_array_almost_equal(ident, expected)
+
+
+def test_illum():
+    # Nearly the same as first half of test_edterm
+    # possibly not smart to pick a terminator point for test.
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("2007 FEB 3 00:00:00.000")
+    trgepc, obspos, trmpts = cs.edterm(
+        "UMBRAL", "SUN", "MOON", et, "IAU_MOON", "LT+S", "EARTH", 3
+    )
+    expected_trmpts0 = [
+        -1.53978381936825627463e02,
+        -1.73056331949840728157e03,
+        1.22893325627419600088e-01,
+    ]
+    npt.assert_array_almost_equal(trmpts[0], expected_trmpts0)
+    phase, solar, emissn = cs.illum("MOON", et, "LT+S", "EARTH", trmpts[0])
+    npt.assert_almost_equal(cs.dpr() * phase, 9.206597597007834)
+    npt.assert_almost_equal(cs.dpr() * solar, 90.26976568986987)
+    npt.assert_almost_equal(cs.dpr() * emissn, 99.27359835825851)
+
+
+# Test changed. Added 'found' variable, got rid of 'n' result
+def test_illumf():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassPck)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.satSpk)
+    cs.furnsh(CassiniKernels.cassTourSpk)
+    cs.furnsh(CassiniKernels.cassCk)
+    et = cs.str2et("2013 FEB 25 11:50:00 UTC")
+    # start of test
+    camid = cs.bodn2c("CASSINI_ISS_NAC")
+    shape, obsref, bsight, bounds = cs.getfov(camid)
+    # run sincpt on boresight vector
+    spoint, etemit, srfvec, found = cs.sincpt(
+        "Ellipsoid", "Enceladus", et, "IAU_ENCELADUS", "CN+S", "CASSINI", obsref, bsight
+    )
+    trgepc2, srfvec2, phase, incid, emissn, visibl, lit = cs.illumf(
+        "Ellipsoid", "Enceladus", "Sun", et, "IAU_ENCELADUS", "CN+S", "CASSINI", spoint
+    )
+    phase = phase * cs.dpr()
+    incid = incid * cs.dpr()
+    emissn = emissn * cs.dpr()
+    assert phase == pytest.approx(161.82854377660345)
+    assert incid == pytest.approx(134.92108561449996)
+    assert emissn == pytest.approx(63.23618556218115)
+    assert not lit  # Incidence angle is greater than 90deg
+    assert visibl  # Emission angle is less than 90deg
+
+
+def test_illumg():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassPck)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.satSpk)
+    cs.furnsh(CassiniKernels.cassTourSpk)
+    cs.furnsh(CassiniKernels.cassCk)
+    et = cs.str2et("2013 FEB 25 11:50:00 UTC")
+    spoint, trgepc, srfvec = cs.subpnt(
+        "Near Point/Ellipsoid", "Enceladus", et, "IAU_ENCELADUS", "CN+S", "Earth"
+    )
+    trgepc2, srfvec2, phase, incid, emissn = cs.illumg(
+        "Ellipsoid", "Enceladus", "Sun", et, "IAU_ENCELADUS", "CN+S", "CASSINI", spoint
+    )
+    phase = phase * cs.dpr()
+    incid = incid * cs.dpr()
+    emissn = emissn * cs.dpr()
+    assert phase == pytest.approx(161.859925246638)
+    assert incid == pytest.approx(18.47670084384343)
+    assert emissn == pytest.approx(143.6546170649875)
+
+
+def test_ilumin():
+    # Same as first half of test_edterm
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("2007 FEB 3 00:00:00.000")
+    trgepc, obspos, trmpts = cs.edterm(
+        "UMBRAL", "SUN", "MOON", et, "IAU_MOON", "LT+S", "EARTH", 3
+    )
+    expected_trgepc = 223732863.86351672
+    expected_obspos = [
+        394721.1024056578753516078,
+        27265.11780063395417528227,
+        -19069.08478859506431035697,
+    ]
+    expected_trmpts0 = [
+        -1.53978381936825627463e02,
+        -1.73056331949840728157e03,
+        1.22893325627419600088e-01,
+    ]
+    expected_trmpts1 = [
+        87.37506200891714058798,
+        864.40670594653545322217,
+        1504.56817899807947469526,
+    ]
+    expected_trmpts2 = [42.213243378688254,
+                        868.21134651980412, -1504.3223922609538]
+    npt.assert_almost_equal(trgepc, expected_trgepc)
+    npt.assert_array_almost_equal(obspos, expected_obspos)
+    npt.assert_array_almost_equal(trmpts[0], expected_trmpts0)
+    npt.assert_array_almost_equal(trmpts[1], expected_trmpts1)
+    npt.assert_array_almost_equal(trmpts[2], expected_trmpts2)
+    iluet0, srfvec0, phase0, solar0, emissn0 = cs.ilumin(
+        "Ellipsoid", "MOON", et, "IAU_MOON", "LT+S", "EARTH", trmpts[0]
+    )
+    npt.assert_almost_equal(cs.dpr() * solar0, 90.269765819)
+    iluet1, srfvec1, phase1, solar1, emissn1 = cs.ilumin(
+        "Ellipsoid", "MOON", et, "IAU_MOON", "LT+S", "EARTH", trmpts[1]
+    )
+    npt.assert_almost_equal(cs.dpr() * solar1, 90.269765706)
+    iluet2, srfvec2, phase2, solar2, emissn2 = cs.ilumin(
+        "Ellipsoid", "MOON", et, "IAU_MOON", "LT+S", "EARTH", trmpts[2]
+    )
+    npt.assert_almost_equal(cs.dpr() * solar2, 90.269765730)
+
+
+# Test changed
+def test_inedpl():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    TIME = "Oct 31 2002, 12:55:00 PST"
+    FRAME = "J2000"
+    CORR = "LT+S"
+    et = cs.str2et(TIME)
+    state, ltime = cs.spkezr("EARTH", et, FRAME, CORR, "SUN")
+    pos = state[0:3]
+    radii = cs.bodvrd("EARTH", "RADII")
+    pos = [pos[0] / radii[0] ** 2.0, pos[1] /
+           radii[1] ** 2.0, pos[2] / radii[2] ** 2.0]
+    plane = cs.nvc2pl(pos, 1.0)
+    term = cs.inedpl(radii[0], radii[1], radii[2], plane)
+    expected_center = [0.21512031, 0.15544527, 0.067391641]
+    expected_s_major = [
+        -3.73561164720596843836e03,
+        5.16970328302375583007e03,
+        1.35988201424391742850e-11,
+    ]
+    expected_s_minor = [
+        -1276.33357469839393161237,
+        -922.27470443423590040766,
+        6159.97371233560443215538,
+    ]
+    center = term[0][0:3]
+    semi_major = term[0][3:6]
+    semi_minor = term[0][6:9]
+    npt.assert_array_almost_equal(center, expected_center)
+    npt.assert_array_almost_equal(semi_major, expected_s_major, decimal=5)
+    npt.assert_array_almost_equal(semi_minor, expected_s_minor, decimal=5)
+    npt.assert_almost_equal(cs.vnorm(semi_major), 6378.1365, decimal=2)
+    npt.assert_almost_equal(cs.vnorm(semi_minor), 6358.0558, decimal=2)
+
+
+def test_inelpl():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("SATURN", "RADII")
+    vertex = [100.0 * radii[0], 0.0, radii[0] * 100.0]
+    limb = cs.edlimb(radii[0], radii[1], radii[2], vertex)
+    normal = [0.0, 0.0, 1.0]
+    point = [0.0, 0.0, 0.0]
+    plane = cs.nvp2pl(normal, point)
+    nxpts, xpt1, xpt2 = cs.inelpl(limb, plane)
+    expectedXpt1 = [602.68000, 60264.9865, 0.0]
+    expectedXpt2 = [602.68000, -60264.9865, 0.0]
+    assert nxpts == 2.0
+    npt.assert_array_almost_equal(expectedXpt1, xpt1, decimal=4)
+    npt.assert_array_almost_equal(expectedXpt2, xpt2, decimal=4)
+
+
+def test_inrypl():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    radii = cs.bodvrd("SATURN", "RADII")
+    vertex = [3.0 * radii[0], 0.0, radii[2] * 0.5]
+    dire = [0.0, np.cos(30.0 * cs.rpd()), -1.0 * np.sin(30.0 * cs.rpd())]
+    normal = [0.0, 0.0, 1.0]
+    point = [0.0, 0.0, 0.0]
+    plane = cs.nvp2pl(normal, point)
+    nxpts, xpt = cs.inrypl(vertex, dire, plane)
+    expectedXpt = np.array([180804.0, 47080.6050513, 0.0])
+    assert nxpts == 1
+    np.testing.assert_almost_equal(np.array(xpt), expectedXpt, decimal=6)
+
+
+def test_intmax():
+    assert cs.intmax() >= 2147483647 or cs.intmax() >= 32768
+
+
+def test_intmin():
+    assert cs.intmin() <= -2147483648 or cs.intmin() <= -32768
+
+
+def test_invert():
+    m1 = np.array([[0.0, -1.0, 0.0], [0.5, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    expected = np.array([[0.0, 2.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
+    mout = cs.invert(m1)
+    assert np.array_equal(expected, mout)
+
+
+def test_invort():
+    # I think this is valid...
+    m = cs.ident()
+    mit = cs.invort(m)
+    npt.assert_array_almost_equal(m, mit)
+
+
+def test_invstm():
+    cs.furnsh(ExtraKernels.earthStnSpk)
+    cs.furnsh(ExtraKernels.earthHighPerPck)
+    cs.furnsh(ExtraKernels.earthTopoTf)
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("2003 Oct 13 06:00:00")
+    mat = cs.tisbod("J2000", 3000, et)
+    invmat = cs.invstm(mat)
+    state = [
+        175625246.29100420,
+        164189388.12540060,
+        -62935198.26067264,
+        11946.73372264,
+        -12771.29732556,
+        13.84902914,
+    ]
+    istate1 = cs.mxvg(invmat, state)
+    xmat = cs.sxform("ITRF93", "J2000", et)
+    istate2 = cs.mxvg(xmat, state)
+    npt.assert_array_almost_equal(istate1, istate2)
+
+
+def test_isordv():
+    assert cs.isordv([0, 1])
+    assert cs.isordv([0, 1, 2])
+    assert cs.isordv([0, 1, 2, 3])
+    assert cs.isordv([1, 1, 1]) is False
+
+
+def test_isrchc():
+    array = ["1", "0", "4", "2"]
+    assert cs.isrchc("4", array) == 2
+    assert cs.isrchc("2", array) == 3
+    assert cs.isrchc("3", array) == -1
+
+
+def test_isrchd():
+    array = [1.0, 0.0, 4.0, 2.0]
+    assert cs.isrchd(4.0, array) == 2
+    assert cs.isrchd(2.0, array) == 3
+    assert cs.isrchd(3.0, array) == -1
+
+
+def test_isrchi():
+    array = [1, 0, 4, 2]
+    assert cs.isrchi(4, array) == 2
+    assert cs.isrchi(2, array) == 3
+    assert cs.isrchi(3, array) == -1
+
+
+def test_isrot():
+    assert cs.isrot(cs.ident(), 0.0001, 0.0001)
+
+
+def test_iswhsp():
+    assert cs.iswhsp("       ")
+    assert cs.iswhsp("cs") is False
+
+
+def test_j1900():
+    assert cs.j1900() == 2415020.0
+
+
+def test_j1950():
+    assert cs.j1950() == 2433282.5
+
+
+def test_j2000():
+    assert cs.j2000() == 2451545.0
+
+
+def test_j2100():
+    assert cs.j2100() == 2488070.0
+
+
+def test_jyear():
+    assert cs.jyear() == 31557600.0
