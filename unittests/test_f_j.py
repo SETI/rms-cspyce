@@ -244,26 +244,29 @@ def fail_getmsg():
     cs.reset()
 
 
-def fail_gfdist():
+def test_gfdist():
     cs.furnsh(CoreKernels.testMetaKernel)
     et0 = cs.str2et("2007 JAN 01 00:00:00 TDB")
     et1 = cs.str2et("2007 APR 01 00:00:00 TDB")
-    cnfine = cs.SpiceCell.create_spice_cell(1, size=2)
-    cs.wninsd(et0, et1, cnfine)
-    result = cs.SpiceCell.create_spice_cell(1, size=1000)
-    cs.gfdist(
-        "moon", "none", "earth", ">", 400000, 0.0, cs.spd(), 1000, cnfine, result
-    )
-    count = cs.wncard(result)
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=1000)
+    result = cs.gfdist(
+        "moon", "none", "earth", ">", 400000, 0.0, cs.spd(), 1000, cnfine)
+    count = int(len(result) / 2)
     assert count == 4
     temp_results = []
-    for i in range(0, count):
-        left, right = cs.wnfetd(result, i)
+    arr = np.arange(0, (len(result)), 1)
+    subarrays = [arr[i:i+2] for i in range(0, len(result), 2)]
+    for i in subarrays:
+        x = i[0]
+        y = i[1]
+        left, right = result[x], result[y]
         timstr_left = cs.timout(
-            left, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41
+            left, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
         )
         timstr_right = cs.timout(
-            right, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41
+            right, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
         )
         temp_results.append(timstr_left)
         temp_results.append(timstr_right)
@@ -343,560 +346,613 @@ def fail_gfdist():
 #     cs.gfsstp(0.5)
 # =============================================================================
 
+# Resulting in seg fault
+def fail_gffove():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassCk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassPck)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassTourSpk)
+    cs.furnsh(CassiniKernels.satSpk)
+    # Cassini ISS NAC observed Enceladus on 2013-FEB-25 from ~11:00 to ~12:00
+    # Split confinement window, from continuous CK coverage, into two pieces
+    et_start = cs.str2et("2013-FEB-25 10:00:00.000")
+    et_end = cs.str2et("2013-FEB-25 11:45:00.000")
+    step = (et_end - et_start) / 1.0
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et_start, et_end, cnfine)
+    result = cs.SpiceCell(typeno=1, size=1000)
 
-# =============================================================================
-# def fail_gffove():
-#     cs.furnsh(CoreKernels.testMetaKernel)
-#     cs.furnsh(CassiniKernels.cassCk)
-#     cs.furnsh(CassiniKernels.cassFk)
-#     cs.furnsh(CassiniKernels.cassIk)
-#     cs.furnsh(CassiniKernels.cassPck)
-#     cs.furnsh(CassiniKernels.cassSclk)
-#     cs.furnsh(CassiniKernels.cassTourSpk)
-#     cs.furnsh(CassiniKernels.satSpk)
-#     # Cassini ISS NAC observed Enceladus on 2013-FEB-25 from ~11:00 to ~12:00
-#     # Split confinement window, from continuous CK coverage, into two pieces
-#     et_start = cs.str2et("2013-FEB-25 10:00:00.000")
-#     et_end = cs.str2et("2013-FEB-25 11:45:00.000")
-#     cnfine = cs.SpiceCell.create_spice_cell(1, size=2)
-#     cs.wninsd(et_start, et_end, cnfine)
-#     result = cs.SpiceCell.create_spice_cell(1, size=1000)
-#     # call gffove
-#     udstep = spiceypy.utils.callbacks.SpiceUDSTEP(spice.gfstep)
-#     udrefn = spiceypy.utils.callbacks.SpiceUDREFN(spice.gfrefn)
-#     udrepi = spiceypy.utils.callbacks.SpiceUDREPI(spice.gfrepi)
-#     udrepu = spiceypy.utils.callbacks.SpiceUDREPU(spice.gfrepu)
-#     udrepf = spiceypy.utils.callbacks.SpiceUDREPF(spice.gfrepf)
-#     udbail = spiceypy.utils.callbacks.SpiceUDBAIL(spice.gfbail)
-#     cs.gfsstp(1.0)
-#     cs.gffove(
-#         "CASSINI_ISS_NAC",
-#         "ELLIPSOID",
-#         [0.0, 0.0, 0.0],
-#         "ENCELADUS",
-#         "IAU_ENCELADUS",
-#         "LT+S",
-#         "CASSINI",
-#         1.0e-6,
-#         udstep,
-#         udrefn,
-#         True,
-#         udrepi,
-#         udrepu,
-#         udrepf,
-#         True,
-#         udbail,
-#         cnfine,
-#         result,
-#     )
-#     # Verify the expected results
-#     assert len(result) == 2
-#     sTimout = "YYYY-MON-DD HR:MN:SC UTC ::RND"
-#     assert cs.timout(result[0], sTimout) == "2013-FEB-25 10:42:33 UTC"
-#     assert cs.timout(result[1], sTimout) == "2013-FEB-25 11:45:00 UTC"
-#     # Cleanup
-#     if cs.gfbail():
-#         cs.gfclrh()  # pragma: no cover
-#     cs.gfsstp(0.5)
-# =============================================================================
+    # call gffove
+    result = cs.gffove(
+        "CASSINI_ISS_NAC",
+        "ELLIPSOID",
+        [0.0, 0.0, 0.0],
+        "ENCELADUS",
+        "IAU_ENCELADUS",
+        "LT+S",
+        "CASSINI",
+        1.0e-6,
+        step,
+        True,
+        cnfine
+    )
+    # Verify the expected results
+    assert len(result) == 2
+    sTimout = "YYYY-MON-DD HR:MN:SC UTC ::RND"
+    assert cs.timout(result[0], sTimout) == "2013-FEB-25 10:42:33 UTC"
+    assert cs.timout(result[1], sTimout) == "2013-FEB-25 11:45:00 UTC"
+    # Cleanup
+    if cs.gfbail():
+        cs.gfclrh()  # pragma: no cover
 
 
-# =============================================================================
-# def test_gfilum():
-#     cs.furnsh(CoreKernels.testMetaKernel)
-#     cs.furnsh(ExtraKernels.marsSpk)  # to get Phobos ephemeris
-#     # Hard-code the future position of MER-1
-#     # pos, lt = cs.spkpos("MER-1", cs.str2et("2006 OCT 02 00:00:00 UTC"), "iau_mars", "CN+S", "Mars")
-#     pos = [
-#         3376.17890941875839416753,
-#         -325.55203839445334779157,
-#         -121.47422900638389364758,
-#     ]
-#     # Two-month Viking orbiter window for Phobos;
-#     # - marsSPK runs from [1971 OCT 01] to [1972 OCT 01]
-#     startET = cs.str2et("1971 OCT 02 00:00:00 UTC")
-#     endET = cs.str2et("1971 NOV 30 12:00:00 UTC")
-#     # Create confining and result windows for incidence angle GF check
-#     cnfine = cs.SpiceCell.create_spice_cell(1, size=2000)
-#     cs.wninsd(startET, endET, cnfine)
-#     wnsolr = cs.SpiceCell.create_spice_cell(1, size=2000)
-#     # Find windows where solar incidence angle at MER-1 position is < 60deg
-#     cs.gfilum(
-#         "Ellipsoid",
-#         "INCIDENCE",
-#         "Mars",
-#         "Sun",
-#         "iau_mars",
-#         "CN+S",
-#         "PHOBOS",
-#         pos,
-#         "<",
-#         60.0 * cs.rpd(),
-#         0.0,
-#         21600.0,
-#         1000,
-#         cnfine,
-#         wnsolr,
-#     )
-#     # Create result window for emission angle GF check
-#     result = cs.SpiceCell.create_spice_cell(1, size=2000)
-#     # Find windows, within solar incidence angle windows found above (wnsolar),
-#     # where emission angle from MER-1 position to Phobos is < 20deg
-#     cs.gfilum(
-#         "Ellipsoid",
-#         "EMISSION",
-#         "Mars",
-#         "Sun",
-#         "iau_mars",
-#         "CN+S",
-#         "PHOBOS",
-#         pos,
-#         "<",
-#         20.0 * cs.rpd(),
-#         0.0,
-#         900.0,
-#         1000,
-#         wnsolr,
-#         result,
-#     )
-#     # Ensure there were some results
-#     assert cs.wncard(result) > 0
-#     startEpoch = cs.timout(result[0], "YYYY MON DD HR:MN:SC.###### UTC")
-#     endEpoch = cs.timout(result[-1], "YYYY MON DD HR:MN:SC.###### UTC")
-#     # Check times of results
-#     assert startEpoch.startswith("1971 OCT 02")
-#     assert endEpoch.startswith("1971 NOV 29")
-# =============================================================================
+def test_gfilum():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(ExtraKernels.marsSpk)  # to get Phobos ephemeris
+    # Hard-code the future position of MER-1
+    # pos, lt = cs.spkpos("MER-1", cs.str2et("2006 OCT 02 00:00:00 UTC"), "iau_mars", "CN+S", "Mars")
+    pos = [
+        3376.17890941875839416753,
+        -325.55203839445334779157,
+        -121.47422900638389364758,
+    ]
+    # Two-month Viking orbiter window for Phobos;
+    # - marsSPK runs from [1971 OCT 01] to [1972 OCT 01]
+    startET = cs.str2et("1971 OCT 02 00:00:00 UTC")
+    endET = cs.str2et("1971 NOV 30 12:00:00 UTC")
+    # Create confining and result windows for incidence angle GF check
+    cnfine = cs.SpiceCell(typeno=1, size=2000)
+    cs.wninsd(startET, endET, cnfine)
+    wnsolr = cs.SpiceCell(typeno=1, size=2000)
+    # Find windows where solar incidence angle at MER-1 position is < 60deg
+    wnsolr = cs.gfilum(
+        "Ellipsoid",
+        "INCIDENCE",
+        "Mars",
+        "Sun",
+        "iau_mars",
+        "CN+S",
+        "PHOBOS",
+        pos,
+        "<",
+        60.0 * cs.rpd(),
+        0.0,
+        21600.0,
+        1000,
+        cnfine
+    )
+    # Create result window for emission angle GF check
+    result = cs.SpiceCell(typeno=1, size=2000)
+    # Find windows, within solar incidence angle windows found above (wnsolar),
+    # where emission angle from MER-1 position to Phobos is < 20deg
+    result = cs.gfilum(
+        "Ellipsoid",
+        "EMISSION",
+        "Mars",
+        "Sun",
+        "iau_mars",
+        "CN+S",
+        "PHOBOS",
+        pos,
+        "<",
+        20.0 * cs.rpd(),
+        0.0,
+        900.0,
+        1000,
+        wnsolr
+    )
+    # Ensure there were some results
+    assert len(result) > 0
+    startEpoch = cs.timout(result[0], "YYYY MON DD HR:MN:SC.###### UTC")
+    endEpoch = cs.timout(result[-1], "YYYY MON DD HR:MN:SC.###### UTC")
+    # Check times of results
+    assert startEpoch.startswith("1971 OCT 02")
+    assert endEpoch.startswith("1971 NOV 29")
 
 
-# =============================================================================
-# def fail_gfocce():
-#     if cs.gfbail():
-#         cs.gfclrh()  # pragma: no cover
-#     cs.furnsh(CoreKernels.testMetaKernel)
-#     et0 = cs.str2et("2001 DEC 01 00:00:00 TDB")
-#     et1 = cs.str2et("2002 JAN 01 00:00:00 TDB")
-#     cnfine = cs.SpiceCell.create_spice_cell(1, size=2)
-#     cs.wninsd(et0, et1, cnfine)
-#     result = cs.SpiceCell.create_spice_cell(1, size=1000)
-#     cs.gfsstp(20.0)
-#     udstep = spiceypy.utils.callbacks.SpiceUDSTEP(spice.gfstep)
-#     udrefn = spiceypy.utils.callbacks.SpiceUDREFN(spice.gfrefn)
-#     udrepi = spiceypy.utils.callbacks.SpiceUDREPI(spice.gfrepi)
-#     udrepu = spiceypy.utils.callbacks.SpiceUDREPU(spice.gfrepu)
-#     udrepf = spiceypy.utils.callbacks.SpiceUDREPF(spice.gfrepf)
-#     udbail = spiceypy.utils.callbacks.SpiceUDBAIL(spice.gfbail)
-#     # call gfocce
-#     cs.gfocce(
-#         "Any",
-#         "moon",
-#         "ellipsoid",
-#         "iau_moon",
-#         "sun",
-#         "ellipsoid",
-#         "iau_sun",
-#         "lt",
-#         "earth",
-#         1.0e-6,
-#         udstep,
-#         udrefn,
-#         True,
-#         udrepi,
-#         udrepu,
-#         udrepf,
-#         True,
-#         udbail,
-#         cnfine,
-#         result,
-#     )
-#     if cs.gfbail():
-#         cs.gfclrh()  # pragma: no cover
-#     count = cs.wncard(result)
-#     assert count == 1
-# =============================================================================
+def fail_gfocce():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et0 = cs.str2et("2001 DEC 01 00:00:00 TDB")
+    et1 = cs.str2et("2002 JAN 01 00:00:00 TDB")
+    cnfine = cs.SpiceCell.create_spice_cell(1, size=2)
+    cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell.create_spice_cell(1, size=1000)
+    step = (et1 - et0) / 20.0
+    # call gfocce
+    cs.gfocce(
+        "Any",
+        "moon",
+        "ellipsoid",
+        "iau_moon",
+        "sun",
+        "ellipsoid",
+        "iau_sun",
+        "lt",
+        "earth",
+        1.0e-6,
+        step,
+        True,
+        cnfine
+    )
+    if cs.gfbail():
+        cs.gfclrh()  # pragma: no cover
+    count = cs.wncard(result)
+    assert count == 1
 
 
-# =============================================================================
-# def test_gfocce():
-#     if spice.gfbail():
-#         spice.gfclrh()  # pragma: no cover
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     et0 = spice.str2et("2001 DEC 01 00:00:00 TDB")
-#     et1 = spice.str2et("2002 JAN 01 00:00:00 TDB")
-#     cnfine = spice.cell_double(2)
-#     spice.wninsd(et0, et1, cnfine)
-#     result = spice.cell_double(1000)
-#     spice.gfsstp(20.0)
-#     udstep = spiceypy.utils.callbacks.SpiceUDSTEP(spice.gfstep)
-#     udrefn = spiceypy.utils.callbacks.SpiceUDREFN(spice.gfrefn)
-#     udrepi = spiceypy.utils.callbacks.SpiceUDREPI(spice.gfrepi)
-#     udrepu = spiceypy.utils.callbacks.SpiceUDREPU(spice.gfrepu)
-#     udrepf = spiceypy.utils.callbacks.SpiceUDREPF(spice.gfrepf)
-#     udbail = spiceypy.utils.callbacks.SpiceUDBAIL(spice.gfbail)
-#     # call gfocce
-#     spice.gfocce(
-#         "Any",
-#         "moon",
-#         "ellipsoid",
-#         "iau_moon",
-#         "sun",
-#         "ellipsoid",
-#         "iau_sun",
-#         "lt",
-#         "earth",
-#         1.0e-6,
-#         udstep,
-#         udrefn,
-#         True,
-#         udrepi,
-#         udrepu,
-#         udrepf,
-#         True,
-#         udbail,
-#         cnfine,
-#         result,
-#     )
-#     if spice.gfbail():
-#         spice.gfclrh()  # pragma: no cover
-#     count = spice.wncard(result)
-#     assert count == 1
-# =============================================================================
+def test_gfoclt():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et0 = cs.str2et("2001 DEC 01 00:00:00 TDB")
+    et1 = cs.str2et("2002 JAN 01 00:00:00 TDB")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=1000)
+    result = cs.gfoclt(
+        "any",
+        "moon",
+        "ellipsoid",
+        "iau_moon",
+        "sun",
+        "ellipsoid",
+        "iau_sun",
+        "lt",
+        "earth",
+        180.0,
+        cnfine,
+    )
+    count = len(result) / 2
+    assert count == 1
+    start, end = result[0], result[1]
+    start_time = cs.timout(
+        start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
+    )
+    end_time = cs.timout(
+        end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    assert start_time == "2001-DEC-14 20:10:14.203347 (TDB)"
+    assert end_time == "2001-DEC-14 21:35:50.328804 (TDB)"
 
 
-# =============================================================================
-# def test_gfoclt():
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     et0 = spice.str2et("2001 DEC 01 00:00:00 TDB")
-#     et1 = spice.str2et("2002 JAN 01 00:00:00 TDB")
-#     cnfine = spice.cell_double(2)
-#     spice.wninsd(et0, et1, cnfine)
-#     result = spice.cell_double(1000)
-#     spice.gfoclt(
-#         "any",
-#         "moon",
-#         "ellipsoid",
-#         "iau_moon",
-#         "sun",
-#         "ellipsoid",
-#         "iau_sun",
-#         "lt",
-#         "earth",
-#         180.0,
-#         cnfine,
-#         result,
-#     )
-#     count = spice.wncard(result)
-#     assert count == 1
-#     start, end = spice.wnfetd(result, 0)
-#     start_time = spice.timout(
-#         start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41
-#     )
-#     end_time = spice.timout(end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41)
-#     assert start_time == "2001-DEC-14 20:10:14.203347 (TDB)"
-#     assert end_time == "2001-DEC-14 21:35:50.328804 (TDB)"
-# =============================================================================
-
-# =============================================================================
-# def test_gfpa():
-#     relate = ["=", "<", ">", "LOCMIN", "ABSMIN", "LOCMAX", "ABSMAX"]
-#     expected = {
-#         "=": [
-#             "2006-DEC-02 13:31:34.425",
-#             "2006-DEC-02 13:31:34.425",
-#             "2006-DEC-07 14:07:55.480",
-#             "2006-DEC-07 14:07:55.480",
-#             "2007-JAN-01 00:00:00.007",
-#             "2007-JAN-01 00:00:00.007",
-#             "2007-JAN-06 08:16:25.522",
-#             "2007-JAN-06 08:16:25.522",
-#             "2007-JAN-30 11:41:32.568",
-#             "2007-JAN-30 11:41:32.568",
-#         ],
-#         "<": [
-#             "2006-DEC-02 13:31:34.425",
-#             "2006-DEC-07 14:07:55.480",
-#             "2007-JAN-01 00:00:00.007",
-#             "2007-JAN-06 08:16:25.522",
-#             "2007-JAN-30 11:41:32.568",
-#             "2007-JAN-31 00:00:00.000",
-#         ],
-#         ">": [
-#             "2006-DEC-01 00:00:00.000",
-#             "2006-DEC-02 13:31:34.425",
-#             "2006-DEC-07 14:07:55.480",
-#             "2007-JAN-01 00:00:00.007",
-#             "2007-JAN-06 08:16:25.522",
-#             "2007-JAN-30 11:41:32.568",
-#         ],
-#         "LOCMIN": [
-#             "2006-DEC-05 00:16:50.327",
-#             "2006-DEC-05 00:16:50.327",
-#             "2007-JAN-03 14:18:31.987",
-#             "2007-JAN-03 14:18:31.987",
-#         ],
-#         "ABSMIN": ["2007-JAN-03 14:18:31.987", "2007-JAN-03 14:18:31.987"],
-#         "LOCMAX": [
-#             "2006-DEC-20 14:09:10.402",
-#             "2006-DEC-20 14:09:10.402",
-#             "2007-JAN-19 04:27:54.610",
-#             "2007-JAN-19 04:27:54.610",
-#         ],
-#         "ABSMAX": ["2007-JAN-19 04:27:54.610", "2007-JAN-19 04:27:54.610"],
-#     }
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     et0 = spice.str2et("2006 DEC 01")
-#     et1 = spice.str2et("2007 JAN 31")
-#     cnfine = spice.cell_double(2)
-#     spice.wninsd(et0, et1, cnfine)
-#     result = spice.cell_double(2000)
-#     for relation in relate:
-#         spice.gfpa(
-#             "Moon",
-#             "Sun",
-#             "LT+S",
-#             "Earth",
-#             relation,
-#             0.57598845,
-#             0.0,
-#             spice.spd(),
-#             5000,
-#             cnfine,
-#             result,
-#         )
-#         count = spice.wncard(result)
-#         if count > 0:
-#             temp_results = []
-#             for i in range(0, count):
-#                 left, right = spice.wnfetd(result, i)
-#                 timstr_left = spice.timout(left, "YYYY-MON-DD HR:MN:SC.###", 41)
-#                 timstr_right = spice.timout(right, "YYYY-MON-DD HR:MN:SC.###", 41)
-#                 temp_results.append(timstr_left)
-#                 temp_results.append(timstr_right)
-#             assert temp_results == expected.get(relation)
-# =============================================================================
+def test_gfpa():
+    relate = ["=", "<", ">", "LOCMIN", "ABSMIN", "LOCMAX", "ABSMAX"]
+    expected = {
+        "=": [
+            "2006-DEC-02 13:31:34.425",
+            "2006-DEC-02 13:31:34.425",
+            "2006-DEC-07 14:07:55.480",
+            "2006-DEC-07 14:07:55.480",
+            "2007-JAN-01 00:00:00.007",
+            "2007-JAN-01 00:00:00.007",
+            "2007-JAN-06 08:16:25.522",
+            "2007-JAN-06 08:16:25.522",
+            "2007-JAN-30 11:41:32.568",
+            "2007-JAN-30 11:41:32.568",
+        ],
+        "<": [
+            "2006-DEC-02 13:31:34.425",
+            "2006-DEC-07 14:07:55.480",
+            "2007-JAN-01 00:00:00.007",
+            "2007-JAN-06 08:16:25.522",
+            "2007-JAN-30 11:41:32.568",
+            "2007-JAN-31 00:00:00.000",
+        ],
+        ">": [
+            "2006-DEC-01 00:00:00.000",
+            "2006-DEC-02 13:31:34.425",
+            "2006-DEC-07 14:07:55.480",
+            "2007-JAN-01 00:00:00.007",
+            "2007-JAN-06 08:16:25.522",
+            "2007-JAN-30 11:41:32.568",
+        ],
+        "LOCMIN": [
+            "2006-DEC-05 00:16:50.327",
+            "2006-DEC-05 00:16:50.327",
+            "2007-JAN-03 14:18:31.987",
+            "2007-JAN-03 14:18:31.987",
+        ],
+        "ABSMIN": ["2007-JAN-03 14:18:31.987", "2007-JAN-03 14:18:31.987"],
+        "LOCMAX": [
+            "2006-DEC-20 14:09:10.402",
+            "2006-DEC-20 14:09:10.402",
+            "2007-JAN-19 04:27:54.610",
+            "2007-JAN-19 04:27:54.610",
+        ],
+        "ABSMAX": ["2007-JAN-19 04:27:54.610", "2007-JAN-19 04:27:54.610"],
+    }
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et0 = cs.str2et("2006 DEC 01")
+    et1 = cs.str2et("2007 JAN 31")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=2000)
+    for relation in relate:
+        cs.gfpa(
+            "Moon",
+            "Sun",
+            "LT+S",
+            "Earth",
+            relation,
+            0.57598845,
+            0.0,
+            cs.spd(),
+            5000,
+            cnfine
+        )
+        count = len(result) / 2
+        if count > 0:
+            temp_results = []
+            arr = np.arange(0, (len(result)), 1)
+            subarrays = [arr[i:i+2] for i in range(0, len(result), 2)]
+            for i in subarrays:
+                x = i[0]
+                y = i[1]
+                left, right = result[x], result[y]
+                timstr_left = cs.timout(left, "YYYY-MON-DD HR:MN:SC.###")
+                timstr_right = cs.timout(right, "YYYY-MON-DD HR:MN:SC.###")
+                temp_results.append(timstr_left)
+                temp_results.append(timstr_right)
+            assert temp_results == expected.get(relation)
 
 
-# =============================================================================
-# def test_gfposc():
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     et0 = spice.str2et("2007 JAN 01")
-#     et1 = spice.str2et("2008 JAN 01")
-#     cnfine = spice.cell_double(2)
-#     spice.wninsd(et0, et1, cnfine)
-#     result = spice.cell_double(1000)
-#     spice.gfposc(
-#         "sun",
-#         "iau_earth",
-#         "none",
-#         "earth",
-#         "latitudinal",
-#         "latitude",
-#         "absmax",
-#         0.0,
-#         0.0,
-#         90.0 * spice.spd(),
-#         1000,
-#         cnfine,
-#         result,
-#     )
-#     count = spice.wncard(result)
-#     assert count == 1
-#     start, end = spice.wnfetd(result, 0)
-#     start_time = spice.timout(
-#         start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41
-#     )
-#     end_time = spice.timout(end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41)
-#     assert start_time == end_time
-#     assert start_time == "2007-JUN-21 17:54:13.201561 (TDB)"
-# =============================================================================
+def test_gfposc():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et0 = cs.str2et("2007 JAN 01")
+    et1 = cs.str2et("2008 JAN 01")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=1000)
+    result = cs.gfposc(
+        "sun",
+        "iau_earth",
+        "none",
+        "earth",
+        "latitudinal",
+        "latitude",
+        "absmax",
+        0.0,
+        0.0,
+        90.0 * cs.spd(),
+        1000,
+        cnfine
+    )
+    count = len(result) / 2
+    assert count == 1
+    start, end = result[0], result[1]
+    start_time = cs.timout(
+        start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
+    )
+    end_time = cs.timout(end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    assert start_time == end_time
+    assert start_time == "2007-JUN-21 17:54:13.201561 (TDB)"
 
 
-# =============================================================================
-# def test_gfrfov():
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     spice.furnsh(CassiniKernels.cassCk)
-#     spice.furnsh(CassiniKernels.cassFk)
-#     spice.furnsh(CassiniKernels.cassIk)
-#     spice.furnsh(CassiniKernels.cassPck)
-#     spice.furnsh(CassiniKernels.cassSclk)
-#     spice.furnsh(CassiniKernels.cassTourSpk)
-#     spice.furnsh(CassiniKernels.satSpk)
-#     # Changed ABCORR to NONE from S for this test, so we do not need SSB
-#     # begin test
-#     inst = "CASSINI_ISS_WAC"
-#     # Cassini ISS NAC observed Enceladus on 2013-FEB-25 from ~11:00 to ~12:00
-#     # Split confinement window, from continuous CK coverage, into two pieces
-#     et_start1 = spice.str2et("2013-FEB-25 07:20:00.000")
-#     et_end1 = spice.str2et("2013-FEB-25 11:45:00.000")  # \
-#     et_start2 = spice.str2et("2013-FEB-25 11:55:00.000")  # _>synthetic 10min gap
-#     et_end2 = spice.str2et("2013-FEB-26 14:25:00.000")
-#     cnfine = spice.cell_double(4)
-#     spice.wninsd(et_start1, et_end1, cnfine)
-#     spice.wninsd(et_start2, et_end2, cnfine)
-#     # The ray direction vector is from Cassini toward Enceladus during the gap
-#     et_nom = spice.str2et("2013-FEB-25 11:50:00.000")  # \
-#     raydir, lt = spice.spkpos("Enceladus", et_nom, "J2000", "NONE", "Cassini")
-#     result = spice.cell_double(2000)
-#     spice.gfrfov(inst, raydir, "J2000", "NONE", "Cassini", 10.0, cnfine, result)
-#     # Verify the expected results
-#     assert len(result) == 4
-#     sTimout = "YYYY-MON-DD HR:MN:SC UTC ::RND"
-#     assert spice.timout(result[0], sTimout) == "2013-FEB-25 11:26:46 UTC"
-#     assert spice.timout(result[1], sTimout) == "2013-FEB-25 11:45:00 UTC"
-#     assert spice.timout(result[2], sTimout) == "2013-FEB-25 11:55:00 UTC"
-#     assert spice.timout(result[3], sTimout) == "2013-FEB-25 12:05:33 UTC"
-# =============================================================================
+def test_gfrfov():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassCk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassPck)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassTourSpk)
+    cs.furnsh(CassiniKernels.satSpk)
+    # Changed ABCORR to NONE from S for this test, so we do not need SSB
+    # begin test
+    inst = "CASSINI_ISS_WAC"
+    # Cassini ISS NAC observed Enceladus on 2013-FEB-25 from ~11:00 to ~12:00
+    # Split confinement window, from continuous CK coverage, into two pieces
+    et_start1 = cs.str2et("2013-FEB-25 07:20:00.000")
+    et_end1 = cs.str2et("2013-FEB-25 11:45:00.000")  # \
+    et_start2 = cs.str2et("2013-FEB-25 11:55:00.000")  # _>synthetic 10min gap
+    et_end2 = cs.str2et("2013-FEB-26 14:25:00.000")
+    cnfine = cs.SpiceCell(typeno=1, size=4)
+    cnfine = cs.wninsd(et_start1, et_end1, cnfine)
+    cnfine = cs.wninsd(et_start2, et_end2, cnfine)
+    # The ray direction vector is from Cassini toward Enceladus during the gap
+    et_nom = cs.str2et("2013-FEB-25 11:50:00.000")  # \
+    raydir, lt = cs.spkpos("Enceladus", et_nom, "J2000", "NONE", "Cassini")
+    result = cs.SpiceCell(typeno=1, size=2000)
+    result = cs.gfrfov(inst, raydir, "J2000", "NONE", "Cassini", 10.0, cnfine)
+    # Verify the expected results
+    assert len(result) == 4
+    sTimout = "YYYY-MON-DD HR:MN:SC UTC ::RND"
+    assert cs.timout(result[0], sTimout) == "2013-FEB-25 11:26:46 UTC"
+    assert cs.timout(result[1], sTimout) == "2013-FEB-25 11:45:00 UTC"
+    assert cs.timout(result[2], sTimout) == "2013-FEB-25 11:55:00 UTC"
+    assert cs.timout(result[3], sTimout) == "2013-FEB-25 12:05:33 UTC"
 
 
-# =============================================================================
-# def test_gfrr():
-#     relate = ["=", "<", ">", "LOCMIN", "ABSMIN", "LOCMAX", "ABSMAX"]
-#     expected = {
-#         "=": [
-#             "2007-JAN-02 00:35:19.583",
-#             "2007-JAN-02 00:35:19.583",
-#             "2007-JAN-19 22:04:54.905",
-#             "2007-JAN-19 22:04:54.905",
-#             "2007-FEB-01 23:30:13.439",
-#             "2007-FEB-01 23:30:13.439",
-#             "2007-FEB-17 11:10:46.547",
-#             "2007-FEB-17 11:10:46.547",
-#             "2007-MAR-04 15:50:19.940",
-#             "2007-MAR-04 15:50:19.940",
-#             "2007-MAR-18 09:59:05.966",
-#             "2007-MAR-18 09:59:05.966",
-#         ],
-#         "<": [
-#             "2007-JAN-02 00:35:19.583",
-#             "2007-JAN-19 22:04:54.905",
-#             "2007-FEB-01 23:30:13.439",
-#             "2007-FEB-17 11:10:46.547",
-#             "2007-MAR-04 15:50:19.940",
-#             "2007-MAR-18 09:59:05.966",
-#         ],
-#         ">": [
-#             "2007-JAN-01 00:00:00.000",
-#             "2007-JAN-02 00:35:19.583",
-#             "2007-JAN-19 22:04:54.905",
-#             "2007-FEB-01 23:30:13.439",
-#             "2007-FEB-17 11:10:46.547",
-#             "2007-MAR-04 15:50:19.940",
-#             "2007-MAR-18 09:59:05.966",
-#             "2007-APR-01 00:00:00.000",
-#         ],
-#         "LOCMIN": [
-#             "2007-JAN-11 07:03:59.001",
-#             "2007-JAN-11 07:03:59.001",
-#             "2007-FEB-10 06:26:15.451",
-#             "2007-FEB-10 06:26:15.451",
-#             "2007-MAR-12 03:28:36.414",
-#             "2007-MAR-12 03:28:36.414",
-#         ],
-#         "ABSMIN": ["2007-JAN-11 07:03:59.001", "2007-JAN-11 07:03:59.001"],
-#         "LOCMAX": [
-#             "2007-JAN-26 02:27:33.772",
-#             "2007-JAN-26 02:27:33.772",
-#             "2007-FEB-24 09:35:07.822",
-#             "2007-FEB-24 09:35:07.822",
-#             "2007-MAR-25 17:26:56.158",
-#             "2007-MAR-25 17:26:56.158",
-#         ],
-#         "ABSMAX": ["2007-MAR-25 17:26:56.158", "2007-MAR-25 17:26:56.158"],
-#     }
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     et0 = spice.str2et("2007 JAN 01")
-#     et1 = spice.str2et("2007 APR 01")
-#     cnfine = spice.cell_double(2)
-#     spice.wninsd(et0, et1, cnfine)
-#     for relation in relate:
-#         result = spice.cell_double(2000)
-#         spice.gfrr(
-#             "moon",
-#             "none",
-#             "sun",
-#             relation,
-#             0.3365,
-#             0.0,
-#             spice.spd(),
-#             2000,
-#             cnfine,
-#             result,
-#         )
-#         count = spice.wncard(result)
-#         if count > 0:
-#             temp_results = []
-#             for i in range(0, count):
-#                 left, right = spice.wnfetd(result, i)
-#                 timstr_left = spice.timout(left, "YYYY-MON-DD HR:MN:SC.###", 41)
-#                 timstr_right = spice.timout(right, "YYYY-MON-DD HR:MN:SC.###", 41)
-#                 temp_results.append(timstr_left)
-#                 temp_results.append(timstr_right)
-#             assert temp_results == expected.get(relation)
-# =============================================================================
+def test_gfrr():
+    relate = ["=", "<", ">", "LOCMIN", "ABSMIN", "LOCMAX", "ABSMAX"]
+    expected = {
+        "=": [
+            "2007-JAN-02 00:35:19.583",
+            "2007-JAN-02 00:35:19.583",
+            "2007-JAN-19 22:04:54.905",
+            "2007-JAN-19 22:04:54.905",
+            "2007-FEB-01 23:30:13.439",
+            "2007-FEB-01 23:30:13.439",
+            "2007-FEB-17 11:10:46.547",
+            "2007-FEB-17 11:10:46.547",
+            "2007-MAR-04 15:50:19.940",
+            "2007-MAR-04 15:50:19.940",
+            "2007-MAR-18 09:59:05.966",
+            "2007-MAR-18 09:59:05.966",
+        ],
+        "<": [
+            "2007-JAN-02 00:35:19.583",
+            "2007-JAN-19 22:04:54.905",
+            "2007-FEB-01 23:30:13.439",
+            "2007-FEB-17 11:10:46.547",
+            "2007-MAR-04 15:50:19.940",
+            "2007-MAR-18 09:59:05.966",
+        ],
+        ">": [
+            "2007-JAN-01 00:00:00.000",
+            "2007-JAN-02 00:35:19.583",
+            "2007-JAN-19 22:04:54.905",
+            "2007-FEB-01 23:30:13.439",
+            "2007-FEB-17 11:10:46.547",
+            "2007-MAR-04 15:50:19.940",
+            "2007-MAR-18 09:59:05.966",
+            "2007-APR-01 00:00:00.000",
+        ],
+        "LOCMIN": [
+            "2007-JAN-11 07:03:59.001",
+            "2007-JAN-11 07:03:59.001",
+            "2007-FEB-10 06:26:15.451",
+            "2007-FEB-10 06:26:15.451",
+            "2007-MAR-12 03:28:36.414",
+            "2007-MAR-12 03:28:36.414",
+        ],
+        "ABSMIN": ["2007-JAN-11 07:03:59.001", "2007-JAN-11 07:03:59.001"],
+        "LOCMAX": [
+            "2007-JAN-26 02:27:33.772",
+            "2007-JAN-26 02:27:33.772",
+            "2007-FEB-24 09:35:07.822",
+            "2007-FEB-24 09:35:07.822",
+            "2007-MAR-25 17:26:56.158",
+            "2007-MAR-25 17:26:56.158",
+        ],
+        "ABSMAX": ["2007-MAR-25 17:26:56.158", "2007-MAR-25 17:26:56.158"],
+    }
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et0 = cs.str2et("2007 JAN 01")
+    et1 = cs.str2et("2007 APR 01")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cs.wninsd(et0, et1, cnfine)
+    for relation in relate:
+        result = cs.SpiceCell(typeno=1, size=2000)
+        cs.gfrr(
+            "moon",
+            "none",
+            "sun",
+            relation,
+            0.3365,
+            0.0,
+            cs.spd(),
+            2000,
+            cnfine
+        )
+        count = len(result) / 2
+        if count > 0:
+            temp_results = []
+            arr = np.arange(0, (len(result)), 1)
+            subarrays = [arr[i:i+2] for i in range(0, len(result), 2)]
+            for i in subarrays:
+                x = i[0]
+                y = i[1]
+                left, right = result[x], result[y]
+                timstr_left = cs.timout(left, "YYYY-MON-DD HR:MN:SC.###")
+                timstr_right = cs.timout(right, "YYYY-MON-DD HR:MN:SC.###")
+                temp_results.append(timstr_left)
+                temp_results.append(timstr_right)
+            assert temp_results == expected.get(relation)
 
 
-# =============================================================================
-# def test_gfsep():
-#     spice.furnsh(CoreKernels.testMetaKernel)
-#     expected = [
-#         "2007-JAN-03 14:20:24.628017 (TDB)",
-#         "2007-FEB-02 06:16:24.111794 (TDB)",
-#         "2007-MAR-03 23:22:42.005064 (TDB)",
-#         "2007-APR-02 16:49:16.145506 (TDB)",
-#         "2007-MAY-02 09:41:43.840096 (TDB)",
-#         "2007-JUN-01 01:03:44.537483 (TDB)",
-#         "2007-JUN-30 14:15:26.586223 (TDB)",
-#         "2007-JUL-30 01:14:49.010797 (TDB)",
-#         "2007-AUG-28 10:39:01.398087 (TDB)",
-#         "2007-SEP-26 19:25:51.519413 (TDB)",
-#         "2007-OCT-26 04:30:56.635336 (TDB)",
-#         "2007-NOV-24 14:31:04.341632 (TDB)",
-#         "2007-DEC-24 01:40:12.245932 (TDB)",
-#     ]
-#     et0 = spice.str2et("2007 JAN 01")
-#     et1 = spice.str2et("2008 JAN 01")
-#     cnfine = spice.cell_double(2)
-#     spice.wninsd(et0, et1, cnfine)
-#     result = spice.cell_double(2000)
-#     spice.gfsep(
-#         "MOON",
-#         "SPHERE",
-#         "NULL",
-#         "SUN",
-#         "SPHERE",
-#         "NULL",
-#         "NONE",
-#         "EARTH",
-#         "LOCMAX",
-#         0.0,
-#         0.0,
-#         6.0 * spice.spd(),
-#         1000,
-#         cnfine,
-#         result,
-#     )
-#     count = spice.wncard(result)
-#     assert count == 13
-#     temp_results = []
-#     for i in range(0, count):
-#         start, end = spice.wnfetd(result, i)
-#         assert start == end
-#         temp_results.append(
-#             spice.timout(start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND", 41)
-#         )
-#     assert temp_results == expected
-# =============================================================================
+def test_gfsep():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    expected = [
+        "2007-JAN-03 14:20:24.628017 (TDB)",
+        "2007-FEB-02 06:16:24.111794 (TDB)",
+        "2007-MAR-03 23:22:42.005064 (TDB)",
+        "2007-APR-02 16:49:16.145506 (TDB)",
+        "2007-MAY-02 09:41:43.840096 (TDB)",
+        "2007-JUN-01 01:03:44.537483 (TDB)",
+        "2007-JUN-30 14:15:26.586223 (TDB)",
+        "2007-JUL-30 01:14:49.010797 (TDB)",
+        "2007-AUG-28 10:39:01.398087 (TDB)",
+        "2007-SEP-26 19:25:51.519413 (TDB)",
+        "2007-OCT-26 04:30:56.635336 (TDB)",
+        "2007-NOV-24 14:31:04.341632 (TDB)",
+        "2007-DEC-24 01:40:12.245932 (TDB)",
+    ]
+    et0 = cs.str2et("2007 JAN 01")
+    et1 = cs.str2et("2008 JAN 01")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=2000)
+    result = cs.gfsep(
+        "MOON",
+        "SPHERE",
+        "NULL",
+        "SUN",
+        "SPHERE",
+        "NULL",
+        "NONE",
+        "EARTH",
+        "LOCMAX",
+        0.0,
+        0.0,
+        6.0 * cs.spd(),
+        1000,
+        cnfine
+    )
+    count = len(result) / 2
+    assert count == 13
+    temp_results = []
+    arr = np.arange(0, (len(result)), 1)
+    subarrays = [arr[i:i+2] for i in range(0, len(result), 2)]
+    for i in subarrays:
+        x = i[0]
+        y = i[1]
+        start, end = result[x], result[y]
+        assert start == end
+        temp_results.append(
+            cs.timout(start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+        )
+    assert temp_results == expected
 
 
+def test_gfsntc():
+    kernel = os.path.join(TEST_FILE_DIR, "gfnstc_test.tf")
+    cleanup_kernel(kernel)
+    with open(kernel, "w") as kernelFile:
+        kernelFile.write("\\begindata\n")
+        kernelFile.write("FRAME_SEM                     =  10100000\n")
+        kernelFile.write("FRAME_10100000_NAME           = 'SEM'\n")
+        kernelFile.write("FRAME_10100000_CLASS          =  5\n")
+        kernelFile.write("FRAME_10100000_CLASS_ID       =  10100000\n")
+        kernelFile.write("FRAME_10100000_CENTER         =  10\n")
+        kernelFile.write("FRAME_10100000_RELATIVE       = 'J2000'\n")
+        kernelFile.write("FRAME_10100000_DEF_STYLE      = 'PARAMETERIZED'\n")
+        kernelFile.write("FRAME_10100000_FAMILY         = 'TWO-VECTOR'\n")
+        kernelFile.write("FRAME_10100000_PRI_AXIS       = 'X'\n")
+        kernelFile.write(
+            "FRAME_10100000_PRI_VECTOR_DEF = 'OBSERVER_TARGET_POSITION'\n")
+        kernelFile.write("FRAME_10100000_PRI_OBSERVER   = 'SUN'\n")
+        kernelFile.write("FRAME_10100000_PRI_TARGET     = 'EARTH'\n")
+        kernelFile.write("FRAME_10100000_PRI_ABCORR     = 'NONE'\n")
+        kernelFile.write("FRAME_10100000_SEC_AXIS       = 'Y'\n")
+        kernelFile.write(
+            "FRAME_10100000_SEC_VECTOR_DEF = 'OBSERVER_TARGET_VELOCITY'\n")
+        kernelFile.write("FRAME_10100000_SEC_OBSERVER   = 'SUN'\n")
+        kernelFile.write("FRAME_10100000_SEC_TARGET     = 'EARTH'\n")
+        kernelFile.write("FRAME_10100000_SEC_ABCORR     = 'NONE'\n")
+        kernelFile.write("FRAME_10100000_SEC_FRAME      = 'J2000'\n")
+        kernelFile.close()
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(kernel)
+    et0 = cs.str2et("2007 JAN 01")
+    et1 = cs.str2et("2008 JAN 01")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=2000)
+    result = cs.gfsntc(
+        "EARTH",
+        "IAU_EARTH",
+        "Ellipsoid",
+        "NONE",
+        "SUN",
+        "SEM",
+        [1.0, 0.0, 0.0],
+        "LATITUDINAL",
+        "LATITUDE",
+        "=",
+        0.0,
+        0.0,
+        90.0 * cs.spd(),
+        1000,
+        cnfine
+    )
+    count = len(result) / 2
+    assert count > 0
+    beg, end = result[0], result[1]
+    begstr = cs.timout(
+        beg, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    endstr = cs.timout(
+        end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    assert begstr == "2007-MAR-21 00:01:25.527303 (TDB)"
+    assert endstr == "2007-MAR-21 00:01:25.527303 (TDB)"
+    beg, end = result[2], result[3]
+    begstr = cs.timout(
+        beg, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    endstr = cs.timout(
+        end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    assert begstr == "2007-SEP-23 09:46:39.606982 (TDB)"
+    assert endstr == "2007-SEP-23 09:46:39.606982 (TDB)"
+    cleanup_kernel(kernel)
+
+
+def test_gfstol():
+    cs.gfstol(1.0e-16)
+    cs.gfstol(1.0e-6)
+
+
+def test_gfsubc():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et0 = cs.str2et("2007 JAN 01")
+    et1 = cs.str2et("2008 JAN 01")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et0, et1, cnfine)
+    result = cs.SpiceCell(typeno=1, size=2000)
+    result = cs.gfsubc(
+        "earth",
+        "iau_earth",
+        "Near point: ellipsoid",
+        "none",
+        "sun",
+        "geodetic",
+        "latitude",
+        ">",
+        16.0 * cs.rpd(),
+        0.0,
+        cs.spd() * 90.0,
+        1000,
+        cnfine
+    )
+    count = len(result) / 2
+    assert count > 0
+    start, end = result[0], result[1]
+    start_time = cs.timout(
+        start, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
+    )
+    end_time = cs.timout(end, "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND")
+    assert start_time == "2007-MAY-04 17:08:56.724320 (TDB)"
+    assert end_time == "2007-AUG-09 01:51:29.307830 (TDB)"
+
+
+def test_gftfov():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassCk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassPck)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassTourSpk)
+    cs.furnsh(CassiniKernels.satSpk)
+    # Changed ABCORR to LT from LT+S for this test, so we do not need SSB
+    # begin test
+    # Cassini ISS NAC observed Enceladus on 2013-FEB-25 from ~11:00 to ~12:00
+    # Split confinement window, from continuous CK coverage, into two pieces
+    et_start1 = cs.str2et("2013-FEB-25 07:20:00.000")
+    et_end1 = cs.str2et("2013-FEB-25 11:45:00.000")  # \
+    et_start2 = cs.str2et("2013-FEB-25 11:55:00.000")  # _>synthetic 10min gap
+    et_end2 = cs.str2et("2013-FEB-26 14:25:00.000")
+    cnfine = cs.SpiceCell(typeno=1, size=4)
+    cnfine = cs.wninsd(et_start1, et_end1, cnfine)
+    cnfine = cs.wninsd(et_start2, et_end2, cnfine)
+    # Subtract off the position of the spacecraft relative to the solar system barycenter the result is the ray's direction vector.
+    result = cs.gftfov(
+        "CASSINI_ISS_NAC",
+        "ENCELADUS",
+        "ELLIPSOID",
+        "IAU_ENCELADUS",
+        "LT",
+        "CASSINI",
+        10.0,
+        cnfine
+    )
+    # Verify the expected results
+    assert len(result) == 4
+    sTimout = "YYYY-MON-DD HR:MN:SC UTC ::RND"
+    assert cs.timout(result[0], sTimout) == "2013-FEB-25 10:42:33 UTC"
+    assert cs.timout(result[1], sTimout) == "2013-FEB-25 11:45:00 UTC"
+    assert cs.timout(result[2], sTimout) == "2013-FEB-25 11:55:00 UTC"
+    assert cs.timout(result[3], sTimout) == "2013-FEB-25 12:04:30 UTC"
 # =============================================================================
-# =============================================================================
-# # frmchg
-# =============================================================================
-# gfsep
-# gfsntc
-# gfstol
-# gfsubc
-# gftfov
+# frmchg
 # =============================================================================
 
 
