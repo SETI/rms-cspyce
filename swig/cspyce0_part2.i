@@ -6112,9 +6112,9 @@ extern void gfdist_c(
 %apply (void RETURN_VOID) {void my_gfevnt_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *gquant};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
-                {(SpiceInt qnpars, SpiceInt ignore, ConstSpiceChar *qpnams)};
+                {(SpiceInt qpnams_ct, SpiceInt qpnams_length, ConstSpiceChar *qpnams)};
 %apply (SpiceInt DIM1, SpiceInt DIM2, ConstSpiceChar *IN_STRINGS)
-                {(SpiceInt ignore2, SpiceInt ignore3, ConstSpiceChar *qcpars)};
+                {(SpiceInt qcpars_ct, SpiceInt qcpars_length, ConstSpiceChar *qcpars)};
 %apply (ConstSpiceDouble  *IN_ARRAY1) {ConstSpiceDouble  *qdpars};
 %apply (ConstSpiceInt     *IN_ARRAY1) {ConstSpiceInt     *qipars};
 %apply (ConstSpiceBoolean *IN_ARRAY1) {ConstSpiceBoolean *qlpars};
@@ -6126,8 +6126,8 @@ extern void gfdist_c(
     void my_gfevnt_c(
         SpiceDouble       step,
         ConstSpiceChar    *gquant,
-        SpiceInt          qnpars, SpiceInt ignore, ConstSpiceChar *qpnams,
-        SpiceInt          ignore2, SpiceInt ignore3, ConstSpiceChar *qcpars,
+        SpiceInt          qpnams_ct, SpiceInt qpnams_length, ConstSpiceChar *qpnams,
+        SpiceInt          qcpars_ct, SpiceInt qcpars_length, ConstSpiceChar *qcpars,
         ConstSpiceDouble  *qdpars,
         ConstSpiceInt     *qipars,
         ConstSpiceBoolean *qlpars,
@@ -6140,11 +6140,36 @@ extern void gfdist_c(
         SpiceCell         *cnfine,
         SpiceCell         *result)
     {
+        my_assert_eq(qpnams_ct, qcpars_ct, "gfevnt", "Same number of qpnams and qcpars");
+        int count = qpnams_ct;
+        // This is the only function in which two different arrays of strings share a
+        // single width argument. WHY???  Typemaps can't handle that.
+        int length = max(qpnams_length, qcpars_length);
+        char *temp = NULL;
+        if (qpnams_length != qcpars_length) {
+            // The two are not the same length. Make a copy of the shorter one into
+            // a new buffer.
+            temp = my_char_malloc(count * length, "gfevnt");
+            if (!temp) return;
+            if (qpnams_length < length) {
+                for (int i = 0; i < count; ++i) {
+                    memcpy(temp + i * length, qpnams + i * qpnams_length, qpnams_length);
+                }
+                qpnams = temp;
+            } else {
+                for (int i = 0; i < count; ++i) {
+                    memcpy(temp + i * length, qcpars + i * qcpars_length, qcpars_length);
+                }
+                qcpars = temp;
+            }
+        }
         gfsstp_c(step);
-        gfevnt_c(&gfstep_c, &gfrefn_c, gquant, qnpars,
-                 NAMELEN, qpnams, qcpars, qdpars, qipars, qlpars, op,
+        gfevnt_c(&gfstep_c, &gfrefn_c, gquant, qpnams_ct,
+                 length, qpnams, qcpars, qdpars, qipars, qlpars, op,
                  refval, tol, adjust, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
                  nintvls, SPICEFALSE, NULL, cnfine, result);
+
+        PyMem_Free(temp);
     }
 %}
 
