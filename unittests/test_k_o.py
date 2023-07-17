@@ -685,28 +685,141 @@ def test_nvc2pl():
     npt.assert_almost_equal(plane[-1], expected_constant, decimal=6)
 
 
-def fail_nvp2pl():
+def test_nvp2pl():
     normal = [1.0, 1.0, 1.0]
     point = [1.0, 4.0, 9.0]
     expected_constant = 8.0829038
     expected_normal = [0.57735027, 0.57735027, 0.57735027]
     plane = cs.nvp2pl(normal, point)
-    npt.assert_array_almost_equal(plane.normal, expected_normal)
-    npt.assert_almost_equal(plane.constant, expected_constant, decimal=6)
+    npt.assert_array_almost_equal(plane[0:3], expected_normal)
+    npt.assert_almost_equal(plane[-1], expected_constant, decimal=6)
 
 
+def test_occult():
+    # load kernels
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(ExtraKernels.earthStnSpk)
+    cs.furnsh(ExtraKernels.earthHighPerPck)
+    cs.furnsh(ExtraKernels.earthTopoTf)
+    # start test
+    # Mercury transited the Sun w.r.t. Earth-based observer ca. 2006-11-08 for about 5h
+    # cf. https://science.nasa.gov/science-news/science-at-nasa/2006/20oct_transitofmercury
+    # Mercury was occulted by the sun about six months later
+    et_sun_transited_by_mercury = cs.str2et("2006-11-08T22:00")
+    occult_code_one = cs.occult(
+        "MERCURY",
+        "point",
+        " ",
+        "SUN",
+        "ellipsoid",
+        "IAU_SUN",
+        "CN",
+        "DSS-13",
+        et_sun_transited_by_mercury,
+    )
+    # Mercury is in front of the Sun as seen by observer (DSS-13)
+    assert occult_code_one == 2  # cs_OCCULT_ANNLR2
+    et_sun_mercury_both_visible = cs.str2et("2006-11-09T02:00")
+    occult_code_two = cs.occult(
+        "MERCURY",
+        "point",
+        " ",
+        "SUN",
+        "ellipsoid",
+        "IAU_SUN",
+        "CN",
+        "DSS-13",
+        et_sun_mercury_both_visible,
+    )
+    # Both Mercury and the Sun are visible to observer (DSS-13)
+    assert occult_code_two == 0  # cs_OCCULT_NOOCC
+    et_sun_totally_occulted_mercury = cs.str2et("2007-05-03T05:00")
+    occult_code_three = cs.occult(
+        "MERCURY",
+        "point",
+        " ",
+        "SUN",
+        "ellipsoid",
+        "IAU_SUN",
+        "CN",
+        "DSS-13",
+        et_sun_totally_occulted_mercury,
+    )
+    # The Sun is in front of Mercury as seen by observer (DSS-13)
+    assert occult_code_three == -3  # cs_OCCULT_TOTAL1
+    # cleanup
+
+
+def test_orderc():
+    inarray = ["a", "abc", "ab"]
+    expected_order = [0, 2, 1]
+    order = cs.orderc(inarray)
+    npt.assert_array_almost_equal(expected_order, order)
+    # Using ndim
+    order = cs.orderc(inarray)
+    npt.assert_array_almost_equal(expected_order, order)
+
+
+def test_orderd():
+    inarray = [0.0, 2.0, 1.0]
+    expected_order = [0, 2, 1]
+    order = cs.orderd(inarray)
+    npt.assert_array_almost_equal(expected_order, order)
+    # Using ndim
+    order = cs.orderd(inarray)
+    npt.assert_array_almost_equal(expected_order, order)
+
+
+def test_orderi():
+    inarray = [0, 2, 1]
+    expected_order = [0, 2, 1]
+    order = cs.orderi(inarray)
+    npt.assert_array_almost_equal(expected_order, order)
+    # Using ndim
+    order = cs.orderi(inarray)
+    npt.assert_array_almost_equal(expected_order, order)
+
+
+def test_oscelt():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("Dec 25, 2007")
+    state, ltime = cs.spkezr("Moon", et, "J2000", "LT+S", "EARTH")
+    mass_earth = cs.bodvrd("EARTH", "GM")
+    elts = cs.oscelt(state, et, mass_earth[0])
+    expected = [
+        3.65914105273643566761e05,
+        4.23931145731340453494e05,
+        4.87177926278510253777e-01,
+        6.18584206992959551030e00,
+        1.88544634402406319218e00,
+        1.86769787246217056236e04,
+        2.51812865183709204197e08,
+        1.00000000000000000000e00,
+    ]
+    npt.assert_array_almost_equal(elts, expected, decimal=4)
+
+
+def test_oscltx():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("Dec 25, 2007")
+    state, ltime = cs.spkezr("Moon", et, "J2000", "LT+S", "EARTH")
+    mass_earth = cs.bodvrd("EARTH", "GM")
+    elts = cs.oscltx(state, et, mass_earth[0])
+    expected = [
+        3.65914105273643566761e05,
+        4.23931145731340453494e05,
+        4.87177926278510253777e-01,
+        6.18584206992959551030e00,
+        1.88544634402406319218e00,
+        1.86769787246217056236e04,
+        2.51812865183709204197e08,
+        1.00000000000000000000e00,
+        4.40283687897870881778e-02,
+        -8.63147169311087925081e-01,
+        0.00000000000000000000e00,
+    ]
+    npt.assert_array_almost_equal(elts, expected, decimal=4)
 # =============================================================================
-# =============================================================================
-# # nextwd
-# =============================================================================
-# =============================================================================
-# # nthwd
-# =============================================================================
-# nvp2pl
-# occult
-# orderc
-# orderd
-# orderi
-# oscelt
-# oscltx
+# nextwd
+# nthwd
 # =============================================================================
