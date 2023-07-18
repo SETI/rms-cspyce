@@ -685,17 +685,12 @@ def test_nvc2pl():
     npt.assert_almost_equal(plane[-1], expected_constant, decimal=6)
 
 
-<<<<<<< HEAD
 def test_nvp2pl():
-=======
-def fail_nvp2pl():
->>>>>>> master
     normal = [1.0, 1.0, 1.0]
     point = [1.0, 4.0, 9.0]
     expected_constant = 8.0829038
     expected_normal = [0.57735027, 0.57735027, 0.57735027]
     plane = cs.nvp2pl(normal, point)
-<<<<<<< HEAD
     npt.assert_array_almost_equal(plane[0:3], expected_normal)
     npt.assert_almost_equal(plane[-1], expected_constant, decimal=6)
 
@@ -824,12 +819,14 @@ def test_oscltx():
         0.00000000000000000000e00,
     ]
     npt.assert_array_almost_equal(elts, expected, decimal=4)
+
+
 # =============================================================================
 # nextwd
 # nthwd
-=======
-    npt.assert_array_almost_equal(plane.normal, expected_normal)
-    npt.assert_almost_equal(plane.constant, expected_constant, decimal=6)
+== == == =
+npt.assert_array_almost_equal(plane.normal, expected_normal)
+npt.assert_almost_equal(plane.constant, expected_constant, decimal=6)
 
 
 # =============================================================================
@@ -846,5 +843,5 @@ def test_oscltx():
 # orderi
 # oscelt
 # oscltx
->>>>>>> master
+>>>>>> > master
 # =============================================================================
