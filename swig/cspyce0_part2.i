@@ -6144,7 +6144,7 @@ extern void gfdist_c(
         gfevnt_c(&gfstep_c, &gfrefn_c, gquant, qnpars,
                  NAMELEN, qpnams, qcpars, qdpars, qipars, qlpars, op,
                  refval, tol, adjust, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 nintvls, SPICEFALSE, NULL, &cnfine, &result);
+                 nintvls, SPICEFALSE, NULL, cnfine, result);
     }
 %}
 
@@ -6239,7 +6239,7 @@ extern void gfdist_c(
         gfsstp_c(step);
         gffove_c(inst, tshape, raydir, target, tframe, abcorr, obsrvr,
                  tol, &gfstep_c, &gfrefn_c, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 SPICEFALSE, NULL, &cnfine, &result);
+                 SPICEFALSE, NULL, cnfine, result);
     }
 %}
 
@@ -6424,7 +6424,7 @@ extern void gfilum_c(
         gfsstp_c(step);
         gfocce_c(occtyp, front, fshape, fframe, back, bshape, bframe, abcorr, obsrvr,
                  tol, &gfstep_c, &gfrefn_c, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 SPICEFALSE, NULL, &cnfine, &result);
+                 SPICEFALSE, NULL, cnfine, result);
     }
 %}
 
