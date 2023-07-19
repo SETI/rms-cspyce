@@ -814,6 +814,25 @@ class Test_SpiceCell:
         t1[1], t1[-2] = 20, 30
         assert tuple(t1) == (1, 20, 30, 4)
 
+class Test_SpiceCell_Typemap():
+    def test_spice_cell_in(self):
+        cell = SpiceCell((1, 2, 3, 4))
+        # This function sums the items of the integer SpiceCell.
+        assert ts.SpiceCell_in(cell) == 10
+
+    def test_spice_cell_out(self):
+        # This function returns a double SpiceCell with a single element
+        cell = ts.SpiceCell_out(1.0)
+        assert isinstance(cell, SpiceCell)
+        assert list(cell) == [1.0]
+        assert isinstance(cell[0], float)
+
+    def test_spice_cell_in_out(self):
+        cell = SpiceCell((1, 2, 3, 4))
+        # This appends the value to the integer SpiceCell
+        result = ts.SpiceCell_append(cell, 10)
+        assert list(cell) == [1, 2, 3, 4, 10]
+        assert result is cell
 
 class Test_FileName:
     def test_string(self):

@@ -6,7 +6,10 @@
 # The location of this class is known by the function initialize_swig_callback() in
 # cspyce_typemaps.i.
 #
+# DANGER:  This file is loaded in the middle of loading cspyce0.  In order to avoid
+# circular imports, do not include any top-level imports of cspyce.
 ##########################
+
 import os
 from typing import Union
 
@@ -50,4 +53,3 @@ class _SwigPythonCallback:
         See Py_BuildValue for complete format details.
         """
         print(args)
-
