@@ -839,6 +839,16 @@ PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int ty
     }
 }
 
+void *get_arraylike_object_data(PyObject *object) {
+    // Special field holding information about array-like objects
+    PyObject *capsule = PyObject_GetAttrString(object, "__array_struct__");
+    // Interface is a malloc'ed structure owned by the capsule.
+    PyArrayInterface* interface = PyCapsule_GetPointer(capsule, NULL);
+    void *result = interface->data;
+    Py_DECREF(capsule);
+    return result;
+}
+
 #if 0
 // The are useful functions for when we need to try and debug the generated code.
 // Leaving them out of the build, but they can be added whenever necessary.
@@ -3035,9 +3045,9 @@ TYPEMAP_OUT(SpiceChar)
 
 %typemap(in)
     (ConstType *INPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL),
+        (PyObject *record = NULL),
     (Type *INPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL)
+        (PyObject *record = NULL)
 {
 //      $1_type $1_name
 //      $1_type *INPUT
@@ -3046,20 +3056,18 @@ TYPEMAP_OUT(SpiceChar)
         handle_bad_type_error("$symname", "Type");
         SWIG_fail;
     }
-    base_array = PyObject_GetAttrString(record, "base");
-    $1 = PyArray_DATA(base_array);
+    $1 = get_arraylike_object_data(record);
 }
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL)
+        (PyObject *record = NULL)
 {
 //      $1_type $1_name
 //      Type *OUTPUT
     record = PyObject_CallMethod(SWIG_CALLBACK_CLASS , "create_record", "s", "Type");
     TEST_MALLOC_FAILURE(record);
-    base_array = PyObject_GetAttrString(record, "base");
-    $1 = PyArray_DATA(base_array);
+    $1 = get_arraylike_object_data(record);
 }
 
 %typemap(argout)
@@ -3075,7 +3083,6 @@ TYPEMAP_OUT(SpiceChar)
     (Type *OUTPUT)
 %{
     Py_XDECREF(record$argnum);
-    Py_XDECREF(base_array$argnum);
 %}
 
 

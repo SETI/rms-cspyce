@@ -842,7 +842,8 @@ class Test_FileName:
         assert ts.decode_filename(b'a/b/bytes.bin') =='a/b/bytes.bin'
 
     def test_Path(self):
-        assert ts.decode_filename(Path("a") / "b" / "filepath") == 'a/b/filepath'
+        expected_value = os.sep.join(["a", "b", "filepath"])
+        assert ts.decode_filename(Path("a") / "b" / "filepath") == expected_value
 
     def test_pathlike(self):
         class MyPath (os.PathLike):
