@@ -283,70 +283,51 @@ def test_gfdist():
     assert temp_results == expected
 
 
-# =============================================================================
-# def fail_gfevnt():
-#     cs.furnsh(CoreKernels.testMetaKernel)
-#     #
-#     et_start = cs.str2et("2001 jan 01 00:00:00.000")
-#     et_end = cs.str2et("2001 dec 31 00:00:00.000")
-#     cnfine = cs.SpiceCell.create_spice_cell(1, size=2)
-#     cs.wninsd(et_start, et_end, cnfine)
-#     result = cs.SpiceCell.create_spice_cell(1, size=1000)
-#     qpnams = ["TARGET", "OBSERVER", "ABCORR"]
-#     qcpars = ["MOON  ", "EARTH   ", "LT+S  "]
-#     # Set the step size to 1/1000 day and convert to seconds
-#     cs.gfsstp(0.001 * cs.spd())
-#     # setup callbacks
-#     udstep = spiceypy.utils.callbacks.SpiceUDSTEP(spice.gfstep)
-#     udrefn = spiceypy.utils.callbacks.SpiceUDREFN(spice.gfrefn)
-#     udrepi = spiceypy.utils.callbacks.SpiceUDREPI(spice.gfrepi)
-#     udrepu = spiceypy.utils.callbacks.SpiceUDREPU(spice.gfrepu)
-#     udrepf = spiceypy.utils.callbacks.SpiceUDREPF(spice.gfrepf)
-#     udbail = spiceypy.utils.callbacks.SpiceUDBAIL(spice.gfbail)
-#     qdpars = np.zeros(10, dtype=float)
-#     qipars = np.zeros(10, dtype=np.int32)
-#     qlpars = np.zeros(10, dtype=np.int32)
-#     # call gfevnt
-#     cs.gfevnt(
-#         udstep,
-#         udrefn,
-#         "DISTANCE",
-#         3,
-#         81,
-#         qpnams,
-#         qcpars,
-#         qdpars,
-#         qipars,
-#         qlpars,
-#         "LOCMAX",
-#         0,
-#         1.0e-6,
-#         0,
-#         True,
-#         udrepi,
-#         udrepu,
-#         udrepf,
-#         10000,
-#         True,
-#         udbail,
-#         cnfine,
-#         result,
-#     )
-#
-#     # Verify the expected results
-#     assert len(result) == 26
-#     sTimout = "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
-#     assert cs.timout(result[0], sTimout) == "2001-JAN-24 19:22:01.418715 (TDB)"
-#     assert cs.timout(result[1], sTimout) == "2001-JAN-24 19:22:01.418715 (TDB)"
-#     assert cs.timout(result[2], sTimout) == "2001-FEB-20 21:52:07.900872 (TDB)"
-#     assert cs.timout(result[3], sTimout) == "2001-FEB-20 21:52:07.900872 (TDB)"
-#     # Cleanup
-#     if cs.gfbail():
-#         cs.gfclrh()  # pragma: no cover
-#     cs.gfsstp(0.5)
-# =============================================================================
+def fail_gfevnt():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    #
+    et_start = cs.str2et("2001 jan 01 00:00:00.000")
+    et_end = cs.str2et("2001 dec 31 00:00:00.000")
+    cnfine = cs.SpiceCell(typeno=1, size=2)
+    cnfine = cs.wninsd(et_start, et_end, cnfine)
+    result = cs.SpiceCell(typeno=1, size=1000)
+    qpnams = ["TARGET", "OBSERVER", "ABCORR"]
+    qcpars = ["MOON  ", "EARTH   ", "LT+S  "]
+    # Set the step size to 1/1000 day and convert to seconds
+    step = (et_end - et_start)/(0.001 * cs.spd())
+    # setup callbacks
+    qdpars = np.zeros(10, dtype=float)
+    qipars = np.zeros(10, dtype=np.int32)
+    qlpars = np.zeros(10, dtype=np.int32)
+    # call gfevnt
+    result = cs.gfevnt(
+        step,
+        "DISTANCE",
+        qpnams,
+        qcpars,
+        qdpars,
+        qipars,
+        qlpars,
+        "LOCMAX",
+        0.0,
+        1.0e-6,
+        0.0,
+        True,
+        10000,
+        cnfine
+    )
+
+    # Verify the expected results
+    assert len(result) == 26
+    sTimout = "YYYY-MON-DD HR:MN:SC.###### (TDB) ::TDB ::RND"
+    assert cs.timout(result[0], sTimout) == "2001-JAN-24 19:22:01.418715 (TDB)"
+    assert cs.timout(result[1], sTimout) == "2001-JAN-24 19:22:01.418715 (TDB)"
+    assert cs.timout(result[2], sTimout) == "2001-FEB-20 21:52:07.900872 (TDB)"
+    assert cs.timout(result[3], sTimout) == "2001-FEB-20 21:52:07.900872 (TDB)"
 
 # Resulting in seg fault
+
+
 def fail_gffove():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(CassiniKernels.cassCk)
@@ -385,8 +366,6 @@ def fail_gffove():
     assert cs.timout(result[0], sTimout) == "2013-FEB-25 10:42:33 UTC"
     assert cs.timout(result[1], sTimout) == "2013-FEB-25 11:45:00 UTC"
     # Cleanup
-    if cs.gfbail():
-        cs.gfclrh()  # pragma: no cover
 
 
 def test_gfilum():
@@ -453,7 +432,7 @@ def test_gfilum():
     assert endEpoch.startswith("1971 NOV 29")
 
 
-def fail_gfocce():
+def test_gfocce():
     cs.furnsh(CoreKernels.testMetaKernel)
     et0 = cs.str2et("2001 DEC 01 00:00:00 TDB")
     et1 = cs.str2et("2002 JAN 01 00:00:00 TDB")
