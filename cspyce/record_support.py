@@ -1,6 +1,5 @@
 from typing import Optional
 import numpy as np
-from cspyce.spice_cell import SpiceCell
 
 PROTOTYPES = {name: np.rec.array(None, fields, 1)
               for name, fields in [
@@ -58,47 +57,4 @@ def as_record(name: str, record) -> Optional[np.record]:
         pass
     # Add more attempts to convert it into a record here.
     return None
-
-##########################
-#
-# It is simpler to callback from C to Python if everything is grouped as methods in a
-# single class.  Methods can be called using a simple C-string rather than a PyObject*.
-#
-# The location of this class is known by the function initialize_swig_callback() in
-# cspyce_typemaps.i.
-#
-##########################
-
-
-class _SwigSupport:
-    @staticmethod
-    def create_record(name: str):
-        return create_record(name)
-
-    @staticmethod
-    def as_record(name: str, record):
-        return as_record(name, record)
-
-    @staticmethod
-    def create_spice_cell(typeno: str):
-        return SpiceCell.create_spice_cell(typeno)
-
-    @staticmethod
-    def as_spice_cell(typeno, record):
-        return SpiceCell.as_spice_cell(typeno, record)
-
-    @staticmethod
-    def debug(*args):
-        """
-        Useful for debugging or setting a breakpoint in Spice code.
-
-        Typically called with
-           PyObject *result = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "debug", format, args...);
-           Py_XDECREF(result);
-        Format and args might be something like:
-           ...., "issO", 23, "message1", "message2", pyArray
-        where "i" indicates an integer, "s" a c-string, and O a Python object.
-        See Py_BuildValue for complete format details.
-        """
-        print(args)
 

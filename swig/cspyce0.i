@@ -3368,7 +3368,7 @@ extern void frmnam_c(
 %apply (void RETURN_VOID) {void furnsh_c};
 
 extern void furnsh_c(
-        ConstSpiceChar *CONST_STRING
+        ConstSpiceChar *CONST_FILENAME
 );
 
 /***********************************************************************
@@ -4642,7 +4642,7 @@ VECTORIZE_3d__3d(latsph, latsph_c)
 %apply (void RETURN_VOID) {void ldpool_c};
 
 extern void ldpool_c(
-        ConstSpiceChar *CONST_STRING
+        ConstSpiceChar *CONST_FILENAME
 );
 
 /***********************************************************************

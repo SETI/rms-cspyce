@@ -137,7 +137,7 @@ except ImportError as err:
         print("Set environment variable 'CSPICE_DEVELOPMENT' to '1' to ignore this error")
         raise err
 
-from cspyce.spice_cell import SPICE_CELL_INT, SPICE_CELL_DOUBLE, SpiceCell
+from cspyce.spice_cell import *
 
 
 # A set of keywords listing options set globally across the cspyce functions

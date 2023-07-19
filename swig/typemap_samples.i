@@ -439,4 +439,15 @@ int ellipse_in(ConstSpiceEllipse *arg);
 %apply (SpiceEllipse* OUTPUT) {SpiceEllipse *arg};
 void ellipse_out(SpiceEllipse *arg);
 
+%{
+    const SpiceChar* decode_filename(const char* filename) {
+       return filename;
+    }
+%}
+
+%apply (ConstSpiceChar *CONST_FILENAME) {const char *filename};
+%apply (SpiceChar *RETURN_STRING) {const SpiceChar* decode_filename};
+
+const SpiceChar* decode_filename(const char *filename);
+
 

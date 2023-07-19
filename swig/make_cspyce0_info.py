@@ -37,11 +37,12 @@ TYPE_INFO = {
 
 # How to interpret a typemap in an extern declaration
 MAP_INFO = {
-    'OUT_BOOLEAN' : ('O', 'SpiceBoolean'),
-    'OUTPUT'      : ('O', ''),
-    'IN_STRING'   : ('I', 'SpiceChar'),
-    'CONST_STRING': ('I', 'ConstSpiceChar'),
-    'IN_ARRAY1'   : ('I', ''),
+    'OUT_BOOLEAN'    : ('O', 'SpiceBoolean'),
+    'OUTPUT'         : ('O', ''),
+    'IN_STRING'      : ('I', 'SpiceChar'),
+    'CONST_STRING'   : ('I', 'ConstSpiceChar'),
+    'IN_ARRAY1'      : ('I', ''),
+    'CONST_FILENAME' : ('I', 'ConstSpiceChar'),
 }
 
 # Argument names that always refer to body codes or body names
