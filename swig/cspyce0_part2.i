@@ -6144,7 +6144,7 @@ extern void gfdist_c(
         gfevnt_c(&gfstep_c, &gfrefn_c, gquant, qnpars,
                  NAMELEN, qpnams, qcpars, qdpars, qipars, qlpars, op,
                  refval, tol, adjust, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 nintvls, SPICEFALSE, NULL, &cnfine, &result);
+                 nintvls, SPICEFALSE, NULL, cnfine, result);
     }
 %}
 
@@ -6239,7 +6239,7 @@ extern void gfdist_c(
         gfsstp_c(step);
         gffove_c(inst, tshape, raydir, target, tframe, abcorr, obsrvr,
                  tol, &gfstep_c, &gfrefn_c, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 SPICEFALSE, NULL, &cnfine, &result);
+                 SPICEFALSE, NULL, cnfine, result);
     }
 %}
 
@@ -6424,7 +6424,7 @@ extern void gfilum_c(
         gfsstp_c(step);
         gfocce_c(occtyp, front, fshape, fframe, back, bshape, bframe, abcorr, obsrvr,
                  tol, &gfstep_c, &gfrefn_c, rpt, &gfrepi_c, &gfrepu_c, &gfrepf_c,
-                 SPICEFALSE, NULL, &cnfine, &result);
+                 SPICEFALSE, NULL, cnfine, result);
     }
 %}
 
@@ -8383,7 +8383,7 @@ extern void lxqstr_c(
 %rename (matchi) matchi_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean matchi_c};
 
-extern void matchi_c(
+extern SpiceBoolean matchi_c(
         ConstSpiceChar *CONST_STRING,
         SpiceChar      *CONST_STRING,
         SpiceChar      IN_STRING,
@@ -8418,7 +8418,7 @@ extern void matchi_c(
 %rename (matchw) matchw_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean matchw_c};
 
-extern void matchw_c(
+extern SpiceBoolean matchw_c(
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
         SpiceChar      IN_STRING,
