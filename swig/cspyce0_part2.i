@@ -8408,7 +8408,7 @@ extern void lxqstr_c(
 %rename (matchi) matchi_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean matchi_c};
 
-extern void matchi_c(
+extern SpiceBoolean matchi_c(
         ConstSpiceChar *CONST_STRING,
         SpiceChar      *CONST_STRING,
         SpiceChar      IN_STRING,
@@ -8443,7 +8443,7 @@ extern void matchi_c(
 %rename (matchw) matchw_c;
 %apply (SpiceBoolean RETURN_BOOLEAN) {SpiceBoolean matchw_c};
 
-extern void matchw_c(
+extern SpiceBoolean matchw_c(
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
         SpiceChar      IN_STRING,
