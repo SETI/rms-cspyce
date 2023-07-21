@@ -28,6 +28,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+import pytest
 
 import requests
 from requests import RequestException
@@ -306,3 +307,25 @@ def download_kernels() -> None:
     get_cassini_test_kernels()  # Download Cassini kernels
     get_extra_test_kernels()  # Download any extra test kernels we need
     write_test_meta_kernel()  # Create the meta kernel file for tests
+
+
+_PATHLIKE_FILENAME_VARIANT_FUNCTIONS =  [
+    lambda x: os.fsencode(x),
+    lambda x: os.fsdecode(x),
+    lambda x: x if isinstance(x, os.PathLike) else Path(x),
+]
+
+def checking_pathlike_filename_variants(variable_name: str):
+    """
+    Adding this annotation to a test (and adding the variable itself as an argument to the
+    test) will cause the test to be called three times.  Each time, the variable will be
+    bound to a different function:
+    1) A function that returns its filename argument as a string,
+    2) A function that returns its filename argument as a byte string,
+    3) A function that returns its filename argument as a Path.
+    These are the three "path-like values" defined by Python
+    """
+    def outer(function):
+        return pytest.mark.parametrize(variable_name, _PATHLIKE_FILENAME_VARIANT_FUNCTIONS)(function)
+    return outer
+

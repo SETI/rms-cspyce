@@ -8,6 +8,7 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
+    checking_pathlike_filename_variants,
     download_kernels,
     cleanup_core_kernels,
     TEST_FILE_DIR
@@ -110,8 +111,10 @@ def test_frmnam():
     assert cs.frmnam(13000) == "ITRF93"
 
 
-def test_furnsh():
-    cs.furnsh(CoreKernels.testMetaKernel)
+@checking_pathlike_filename_variants("modifier")
+def test_furnsh(modifier):
+    kernel = CoreKernels.testMetaKernel
+    cs.furnsh(modifier(kernel))
     # 4 kernels + the meta kernel = 5
     assert cs.ktotal("ALL") == 5
 
