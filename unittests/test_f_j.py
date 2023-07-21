@@ -237,7 +237,7 @@ def test_getfvn():
 
 
 # Fails due to known issue
-def fail_getmsg():
+def test_getmsg():
     cs.sigerr("test error")
     message = cs.getmsg("SHORT", 200)
     assert message == "test error"
@@ -283,8 +283,7 @@ def test_gfdist():
     assert temp_results == expected
 
 
-# Come back when pull request is merged
-def fail_gfevnt():
+def test_gfevnt():
     cs.furnsh(CoreKernels.testMetaKernel)
     #
     et_start = cs.str2et("2001 jan 01 00:00:00.000")
