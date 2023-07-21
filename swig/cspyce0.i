@@ -65,6 +65,18 @@ SpiceInt *my_int_malloc(int count, const char *fname) {
     return result;
 }
 
+SpiceChar *my_char_malloc(int count, const char *fname) {
+    SpiceChar *result = (SpiceChar *) PyMem_Malloc(count * sizeof(SpiceChar));
+    if (!result) {
+        chkin_c(fname);
+        setmsg_c("Failed to allocate memory");
+        sigerr_c("SPICE(MALLOCFAILURE)");
+        chkout_c(fname);
+    }
+
+    return result;
+}
+
 /* Internal routine to compare integers for equality */
 int my_assert_eq(int a, int b, const char *fname, const char *message) {
     if (a != b) {

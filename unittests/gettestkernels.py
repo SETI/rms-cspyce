@@ -309,11 +309,12 @@ def download_kernels() -> None:
     write_test_meta_kernel()  # Create the meta kernel file for tests
 
 
-_PATHLIKE_FILENAME_VARIANT_FUNCTIONS =  [
-    lambda x: os.fsencode(x),
-    lambda x: os.fsdecode(x),
-    lambda x: x if isinstance(x, os.PathLike) else Path(x),
-]
+_PATHLIKE_FILENAME_VARIANT_FUNCTIONS =  {
+    'string':   lambda pathlike: os.fsdecode(pathlike),
+    'bytes':    lambda pathlike: os.fsencode(pathlike),
+    'filepath': lambda pathlike: pathlike if isinstance(pathlike, os.PathLike) else Path(pathlike),
+}
+
 
 def checking_pathlike_filename_variants(variable_name: str):
     """
@@ -325,7 +326,8 @@ def checking_pathlike_filename_variants(variable_name: str):
     3) A function that returns its filename argument as a Path.
     These are the three "path-like values" defined by Python
     """
+    parameters = [pytest.param(value, id=key) for key, value in
+                  _PATHLIKE_FILENAME_VARIANT_FUNCTIONS.items()]
     def outer(function):
-        return pytest.mark.parametrize(variable_name, _PATHLIKE_FILENAME_VARIANT_FUNCTIONS)(function)
+        return pytest.mark.parametrize(variable_name, parameters)(function)
     return outer
-

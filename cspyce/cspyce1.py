@@ -865,21 +865,6 @@ def _create_das_char_array(data, epos):
     itemsize = max(epos + 1, max(len(x) for x in byte_data))
     return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
-@_removing_final_arguments
-def orderc(array):
-    array = np.asarray(array)
-    return cspyce0.orderc(array, len(array))
-
-@_removing_final_arguments
-def orderd(array):
-    array = np.asarray(array)
-    return cspyce0.orderd(array, len(array))
-
-@_removing_final_arguments
-def orderi(array):
-    array = np.asarray(array)
-    return cspyce0.orderi(array, len(array))
-
 ################################################################################
 # When a function returns a value and a "found" flag, and the flag is False,
 # the unused return values contain random values. We change these to something
