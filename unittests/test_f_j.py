@@ -283,8 +283,7 @@ def test_gfdist():
     assert temp_results == expected
 
 
-# Come back when pull request is merged
-def fail_gfevnt():
+def test_gfevnt():
     cs.furnsh(CoreKernels.testMetaKernel)
     #
     et_start = cs.str2et("2001 jan 01 00:00:00.000")
@@ -295,7 +294,7 @@ def fail_gfevnt():
     qpnams = ["TARGET", "OBSERVER", "ABCORR"]
     qcpars = ["MOON  ", "EARTH   ", "LT+S  "]
     # Set the step size to 1/1000 day and convert to seconds
-    step = (et_end - et_start)/(0.001 * cs.spd())
+    step = 0.001 * cs.spd()
     # setup callbacks
     qdpars = np.zeros(10, dtype=float)
     qipars = np.zeros(10, dtype=np.int32)
@@ -326,8 +325,6 @@ def fail_gfevnt():
     assert cs.timout(result[2], sTimout) == "2001-FEB-20 21:52:07.900872 (TDB)"
     assert cs.timout(result[3], sTimout) == "2001-FEB-20 21:52:07.900872 (TDB)"
 
-# Resulting in seg fault
-
 
 def test_gffove():
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -342,7 +339,7 @@ def test_gffove():
     # Split confinement window, from continuous CK coverage, into two pieces
     et_start = cs.str2et("2013-FEB-25 10:00:00.000")
     et_end = cs.str2et("2013-FEB-25 11:45:00.000")
-    step = (et_end - et_start) / 1.0
+    step = 1.0
     cnfine = cs.SpiceCell(typeno=1, size=2)
     cnfine = cs.wninsd(et_start, et_end, cnfine)
     result = cs.SpiceCell(typeno=1, size=1000)
@@ -433,15 +430,14 @@ def test_gfilum():
     assert endEpoch.startswith("1971 NOV 29")
 
 
-# Fails due to unknown reason
-def fail_gfocce():
+def test_gfocce():
     cs.furnsh(CoreKernels.testMetaKernel)
     et0 = cs.str2et("2001 DEC 01 00:00:00 TDB")
     et1 = cs.str2et("2002 JAN 01 00:00:00 TDB")
     cnfine = cs.SpiceCell(typeno=1, size=2)
     cnfine = cs.wninsd(et0, et1, cnfine)
     result = cs.SpiceCell(typeno=1, size=1000)
-    step = (et1 - et0) / 20.0
+    step = 20.0
     # call gfocce
     result = cs.gfocce(
         "Any",

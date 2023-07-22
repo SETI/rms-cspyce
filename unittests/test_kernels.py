@@ -206,6 +206,8 @@ class Test_cspyce1_kernels(unittest.TestCase):
     self.assertFalse(stpool.flag('SPK_FILES', 2, '*')[1])
 
     #### bodc2n, bodn2c, bodc2s, bods2c
+    boddef('BIG!', -INTMAX)
+    
     self.assertEqual(bodc2n.flag(699), ['SATURN',True])
     self.assertEqual(bodc2n_error(699), 'SATURN')
     self.assertEqual(bodc2n.flag(INTMAX)[1], False)
