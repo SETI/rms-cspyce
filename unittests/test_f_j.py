@@ -111,10 +111,10 @@ def test_frmnam():
     assert cs.frmnam(13000) == "ITRF93"
 
 
-@checking_pathlike_filename_variants("modifier")
-def test_furnsh(modifier):
+@checking_pathlike_filename_variants("path_type_variant")
+def test_furnsh(path_type_variant):
     kernel = CoreKernels.testMetaKernel
-    cs.furnsh(modifier(kernel))
+    cs.furnsh(path_type_variant(kernel))
     # 4 kernels + the meta kernel = 5
     assert cs.ktotal("ALL") == 5
 
