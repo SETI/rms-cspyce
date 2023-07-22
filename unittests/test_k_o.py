@@ -3,7 +3,6 @@ import numpy as np
 import numpy.testing as npt
 import os
 import pytest
-from pathlib import Path
 
 from gettestkernels import (
     CoreKernels,
