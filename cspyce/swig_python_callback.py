@@ -36,10 +36,6 @@ class _SwigPythonCallback:
         return sc.as_spice_cell(typeno, record)
 
     @staticmethod
-    def convert_filename_to_byte_string(file: Union[str, bytes, os.PathLike]) -> bytes:
-        return os.fsencode(file)
-
-    @staticmethod
     def debug(*args):
         """
         Useful for debugging or setting a breakpoint in Spice code.

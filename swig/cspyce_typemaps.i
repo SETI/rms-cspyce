@@ -3354,10 +3354,10 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
 {
 //      $1_type $1_name
 //      $1_type *CONST_FILENAME
-    byte_string = PyObject_CallMethod(
-        SWIG_CALLBACK_CLASS , "convert_filename_to_byte_string", "O", $input);
 
-    if (!byte_string) {
+    // Badly named function converts string/bytes/os.FilePath to bytes.
+    int status = PyUnicode_FSConverter($input, &byte_string);
+    if (status == 0) {
         handle_bad_type_error("$symname", "String, Byte String, or Path");
         SWIG_fail;
     }
