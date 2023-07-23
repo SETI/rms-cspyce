@@ -962,7 +962,7 @@ def test_evsgp4():
     ]
     geophs = [cs.bodvcd(399, _)[0] for _ in noadpn]
     _, elems = cs.getelm(1957, tle)
-    et = np.array([cs.str2et("2020-05-26 02:25:00")])
+    et = cs.str2et("2020-05-26 02:25:00")
     state = cs.evsgp4(et, geophs, elems)
     expected_state = np.array(
         [
