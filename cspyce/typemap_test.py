@@ -1,11 +1,13 @@
-import pytest
+import os
+from pathlib import Path
 
 import numpy as np
-import cspyce.typemap_samples as ts
-import cspyce.record_support as record_support
 import numpy.testing as npt
+import pytest
 
-from cspyce import SPICE_CELL_DOUBLE, SpiceCell, SPICE_CELL_INT
+import cspyce.record_support as record_support
+import cspyce.typemap_samples as ts
+from cspyce import SPICE_CELL_DOUBLE, SPICE_CELL_INT, SpiceCell
 
 
 def flatten(array):
@@ -811,6 +813,52 @@ class Test_SpiceCell:
         assert t1[-1] == 4
         t1[1], t1[-2] = 20, 30
         assert tuple(t1) == (1, 20, 30, 4)
+
+class Test_SpiceCell_Typemap():
+    def test_spice_cell_in(self):
+        cell = SpiceCell((1, 2, 3, 4))
+        # This function sums the items of the integer SpiceCell.
+        assert ts.SpiceCell_in(cell) == 10
+
+    def test_spice_cell_out(self):
+        # This function returns a double SpiceCell with a single element
+        cell = ts.SpiceCell_out(1.0)
+        assert isinstance(cell, SpiceCell)
+        assert list(cell) == [1.0]
+        assert isinstance(cell[0], float)
+
+    def test_spice_cell_in_out(self):
+        cell = SpiceCell((1, 2, 3, 4))
+        # This appends the value to the integer SpiceCell
+        result = ts.SpiceCell_append(cell, 10)
+        assert list(cell) == [1, 2, 3, 4, 10]
+        assert result is cell
+
+class Test_FileName:
+    def test_string(self):
+        assert ts.decode_filename('a/b/string.txt') == 'a/b/string.txt'
+
+    def test_byte_array(self):
+        assert ts.decode_filename(b'a/b/bytes.bin') =='a/b/bytes.bin'
+
+    def test_Path(self):
+        expected_value = os.sep.join(["a", "b", "filepath"])
+        assert ts.decode_filename(Path("a") / "b" / "filepath") == expected_value
+
+    def test_pathlike(self):
+        class MyPath (os.PathLike):
+            # Implementation of os.PathLike
+            def __fspath__(self):
+                return "a/b/c/MyPath"
+        assert ts.decode_filename(MyPath()) == "a/b/c/MyPath"
+
+    def test_errors(self):
+        with pytest.raises(ValueError):
+            ts.decode_filename(None)
+        with pytest.raises(ValueError):
+            ts.decode_filename(np.pi)
+        with pytest.raises(ValueError):
+            ts.decode_filename(np.zeros(10))
 
 
 

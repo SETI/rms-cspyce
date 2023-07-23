@@ -10,7 +10,8 @@ from gettestkernels import (
     ExtraKernels,
     download_kernels,
     cleanup_core_kernels,
-    TEST_FILE_DIR
+    TEST_FILE_DIR,
+    checking_pathlike_filename_variants
 )
 
 
@@ -156,8 +157,8 @@ def test_latsrf():
     assert radii[0] > 9.77
     assert radii[1] > 9.51
 
-
-def test_ldpool():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ldpool(path_type_variant):
     ldpool_names = [
         "DELTET/DELTA_T_A",
         "DELTET/K",
@@ -203,7 +204,7 @@ def test_ldpool():
             kernelFile.write(line + "\n")
         kernelFile.write("\\begintext\n")
         kernelFile.close()
-    cs.ldpool(kernel)
+    cs.ldpool(path_type_variant(kernel))
     for var, expectLen in zip(ldpool_names, ldpool_lens):
         n, vartype = cs.dtpool(var)
         assert expectLen == n

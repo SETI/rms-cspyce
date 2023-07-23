@@ -469,11 +469,11 @@ void initialize_typemap_globals(void) {
     errcode_to_PyErrorType[ValueError] = PyExc_ValueError;
 }
 
-PyObject* SWIG_SUPPORT_CLASS = NULL;
+PyObject* SWIG_CALLBACK_CLASS  = NULL;
 
 void initialize_swig_callback(void) {
-    PyObject *record_support = PyImport_ImportModule("cspyce.record_support");
-    SWIG_SUPPORT_CLASS = PyObject_GetAttrString(record_support, "_SwigSupport");
+    PyObject *record_support = PyImport_ImportModule("cspyce.swig_python_callback");
+    SWIG_CALLBACK_CLASS  = PyObject_GetAttrString(record_support, "_SwigPythonCallback");
     Py_XDECREF(record_support);
 }
 %}
@@ -837,6 +837,16 @@ PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int ty
         Py_XDECREF(capsule);
         return NULL;
     }
+}
+
+void *get_arraylike_object_data(PyObject *object) {
+    // Special field holding information about array-like objects
+    PyObject *capsule = PyObject_GetAttrString(object, "__array_struct__");
+    // Interface is a malloc'ed structure owned by the capsule.
+    PyArrayInterface* interface = PyCapsule_GetPointer(capsule, NULL);
+    void *result = interface->data;
+    Py_DECREF(capsule);
+    return result;
 }
 
 #if 0
@@ -3035,31 +3045,29 @@ TYPEMAP_OUT(SpiceChar)
 
 %typemap(in)
     (ConstType *INPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL),
+        (PyObject *record = NULL),
     (Type *INPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL)
+        (PyObject *record = NULL)
 {
 //      $1_type $1_name
 //      $1_type *INPUT
-    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_record", "sO", "Type", $input);
+    record = PyObject_CallMethod(SWIG_CALLBACK_CLASS , "as_record", "sO", "Type", $input);
     if (!record || record == Py_None) {
         handle_bad_type_error("$symname", "Type");
         SWIG_fail;
     }
-    base_array = PyObject_GetAttrString(record, "base");
-    $1 = PyArray_DATA(base_array);
+    $1 = get_arraylike_object_data(record);
 }
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL)
+        (PyObject *record = NULL)
 {
 //      $1_type $1_name
 //      Type *OUTPUT
-    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_record", "s", "Type");
+    record = PyObject_CallMethod(SWIG_CALLBACK_CLASS , "create_record", "s", "Type");
     TEST_MALLOC_FAILURE(record);
-    base_array = PyObject_GetAttrString(record, "base");
-    $1 = PyArray_DATA(base_array);
+    $1 = get_arraylike_object_data(record);
 }
 
 %typemap(argout)
@@ -3075,7 +3083,6 @@ TYPEMAP_OUT(SpiceChar)
     (Type *OUTPUT)
 %{
     Py_XDECREF(record$argnum);
-    Py_XDECREF(base_array$argnum);
 %}
 
 
@@ -3174,31 +3181,34 @@ typedef SpiceCell SpiceCellDouble;
 %define TYPEMAP_SPICE_CELL(Type, TypeCode)
 %typemap(in)
     (Type *INPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL),
+        (PyObject *record = NULL),
     (Type *INOUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL)
+        (PyObject *record = NULL)
 {
 //      $1_type $1_name
 //      $1_type *INPUT
-    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "as_spice_cell", "iO", TypeCode, $input);
+    record = PyObject_CallMethod(SWIG_CALLBACK_CLASS , "as_spice_cell", "iO", TypeCode, $input);
     if (!record || record == Py_None) {
         handle_bad_type_error("$symname", "Type");
         SWIG_fail;
     }
-    base_array = PyObject_GetAttrString(record, "base");
-    $1 = PyArray_DATA(base_array);
+    PyObject *header_address = PyObject_GetAttrString(record, "_header_address");
+    $1 = PyLong_AsVoidPtr(header_address);
+    Py_XDECREF(header_address);
 }
 
 %typemap(in, numinputs=0)
     (Type *OUTPUT)
-        (PyObject *record = NULL, PyObject* base_array=NULL)
+        (PyObject *record = NULL)
 {
 //      $1_type $1_name
 //      Type *OUTPUT
-    record = PyObject_CallMethod(SWIG_SUPPORT_CLASS, "create_spice_cell", "i", TypeCode);
+    record = PyObject_CallMethod(SWIG_CALLBACK_CLASS , "create_spice_cell", "i", TypeCode);
     TEST_MALLOC_FAILURE(record);
-    base_array = PyObject_GetAttrString(record, "base");
-    $1 = PyArray_DATA(base_array);
+
+    PyObject *header_address = PyObject_GetAttrString(record, "_header_address");
+    $1 = PyLong_AsVoidPtr(header_address);
+    Py_XDECREF(header_address);
 }
 
 %typemap(argout)
@@ -3215,7 +3225,6 @@ typedef SpiceCell SpiceCellDouble;
     (Type *OUTPUT)
 %{
     Py_XDECREF(record$argnum);
-    Py_XDECREF(base_array$argnum);
 %}
 
 %enddef
@@ -3338,6 +3347,31 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
     Py_INCREF(Py_None);
     $result = Py_None;
 }
+
+%typemap(in)
+    (ConstSpiceChar* CONST_FILENAME)
+        (PyObject *byte_string = NULL)
+{
+//      $1_type $1_name
+//      $1_type *CONST_FILENAME
+
+    // Badly named function converts string/bytes/os.FilePath to bytes.
+    int status = PyUnicode_FSConverter($input, &byte_string);
+    if (status == 0) {
+        handle_bad_type_error("$symname", "String, Byte String, or Path");
+        SWIG_fail;
+    }
+    $1 = PyBytes_AsString(byte_string);
+}
+
+%typemap(freearg)
+    (ConstSpiceChar* CONST_FILENAME)
+{
+    Py_XDECREF(byte_string$argnum);
+}
+
+
+
 
 /*******************************************************************************
 *******************************************************************************/

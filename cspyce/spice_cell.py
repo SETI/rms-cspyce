@@ -2,8 +2,13 @@ import numbers
 
 import numpy as np
 
+__ALL__ = ["SpiceCell",
+           "SPICE_CELL_INT",
+           "SPICE_CELL_DOUBLE",
+           # "SPICE_CELL_CHAR",
+           ]
 
-SPICE_CELL_HEADER_DESCRIPTOR = np.dtype([
+SPICE_HEADER_PROTOTYPE = np.rec.array(None, np.dtype([
     # Many of these names clash with built-in properties of an array, so we've suffixed
     # all of them with an underscore
     ("_dtype", np.int32),
@@ -15,7 +20,7 @@ SPICE_CELL_HEADER_DESCRIPTOR = np.dtype([
     ("_init", np.int32),
     ("_base", np.int64),
     ("_data", np.int64),
-], align=True)
+], align=True), 1)
 
 SPICE_CELL_INT = 2
 SPICE_CELL_DOUBLE = 1
@@ -68,7 +73,9 @@ class SpiceCell:
             data = np.asarray(data, dtype=array_descriptor)
             size = max(size, len(data) + 6)  # add some spare room.
 
-        self._header = np.rec.array(None, SPICE_CELL_HEADER_DESCRIPTOR, 1)[0]
+        self._header = np.zeros_like(SPICE_HEADER_PROTOTYPE)[0]
+        # Used by SWIG for the address of the header data.
+        self._header_address = self._header.__array_interface__['data'][0]
         self._descriptor = array_descriptor
 
         self._header._dtype = typeno
@@ -169,8 +176,3 @@ class SpiceCell:
         self._header._base = self._data.ctypes.data
         self._header._data = self._user_data.ctypes.data
         assert self._header._data - self._header._base == self.CONTROL_SIZE * self._descriptor.itemsize
-
-    @property
-    def base(self):
-        # Returns the underlying array for which array[0] is the header. Swig calls this.
-        return self._header.base
