@@ -83,7 +83,7 @@ PyObject* in_array01_1(SpiceInt *arg, SpiceInt dim);
 
 %{
    PyObject* in_array2_1(SpiceInt arg[3][5]) {
-       PyObject* info = int_array_to_tuple(arg, 15);
+       PyObject* info = int_array_to_tuple((int *)arg, 15);
        return Py_BuildValue("Nii", info, 3, 5);
    }
 
@@ -93,7 +93,7 @@ PyObject* in_array01_1(SpiceInt *arg, SpiceInt dim);
    }
 
    PyObject *in_array2_3(SpiceInt arg[][5], SpiceInt dim1) {
-       PyObject* info = int_array_to_tuple(arg, dim1 * 5);
+       PyObject* info = int_array_to_tuple((int *)arg, dim1 * 5);
        return Py_BuildValue("Nii", info, dim1, 5);
    }
 
@@ -188,14 +188,14 @@ void out_array01_malloc(SpiceDouble start, SpiceInt length, SpiceDouble **arrayP
 
 %{
     void out_array2_1(SpiceInt start, SpiceInt array[2][3]) {
-        SpiceInt* ptr = array;
+        SpiceInt* ptr = (SpiceInt *)array;
         for (SpiceInt i = 0; i < 6; i++) {
            ptr[i] = start + i;
         }
     }
 
     void out_array2_2(SpiceInt start, SpiceInt length, SpiceInt array[1000][2], SpiceInt *size) {
-        SpiceInt *ptr = array;
+        SpiceInt *ptr = (SpiceInt *)array;
         for (SpiceInt i = 0; i < 2000; i++) {
            ptr[i] = start + i;
         }
@@ -216,7 +216,7 @@ void out_array01_malloc(SpiceDouble start, SpiceInt length, SpiceDouble **arrayP
     }
 
     SpiceInt out_array2_4(SpiceInt start, SpiceInt length, SpiceInt dim1, SpiceInt *size1, SpiceDouble result[4][5]) {
-        SpiceDouble *ptr = result;
+        SpiceDouble *ptr = (SpiceDouble *)result;
         for (SpiceInt i = 0; i < 20; i++) {
             ptr[i] = start + i;
         }
@@ -226,7 +226,7 @@ void out_array01_malloc(SpiceDouble start, SpiceInt length, SpiceDouble **arrayP
 
     void out_array2_5(SpiceInt length, SpiceInt *size1, SpiceBoolean result[4][5]) {
         *size1 = length;
-        SpiceBoolean *ptr = result;
+        SpiceBoolean *ptr = (SpiceBoolean *)result;
         for (SpiceInt i = 0; i < 20; i++) {
             ptr[i] = (i % 3) == 0;
         }
@@ -325,7 +325,7 @@ void inout_string_ptr(SpiceInt dim, SpiceChar *result);
 void out_string(SpiceInt value, SpiceChar result[10]);
 
 %{
-    PyObject* in_strings(const SpiceChar *strings, SpiceInt dim1, SpiceInt dim2) {
+    PyObject* in_strings(ConstSpiceChar *strings, SpiceInt dim1, SpiceInt dim2) {
         PyObject* result = PyTuple_New(dim1 + 1);
         for (SpiceInt i = 0; i < dim1; i++) {
             PyTuple_SetItem(result, i, Py_BuildValue("s", strings + i * dim2));
@@ -334,19 +334,25 @@ void out_string(SpiceInt value, SpiceChar result[10]);
         return result;
     }
 
-    PyObject* out_strings(SpiceInt length, SpiceInt dim1, SpiceInt dim2, SpiceInt *size, SpiceChar* buffer) {
+    PyObject* out_strings(SpiceInt length, SpiceInt dim1, SpiceInt dim2, SpiceInt *size, SpiceChar buffer[][256]) {
+        if (dim2 != 256) {
+            chkin_c("out_strings");
+            setmsg_c("Expected dimension to be 256");
+            sigerr_c("SPICE(ARRAYSHAPEMISMATCH)");
+            chkout_c("out_strings");
+            return 0;
+        }
+        memset(buffer, 0, dim1 * dim2);
         for (SpiceInt i = 0; i < length; i++) {
-            SpiceChar* ptr = buffer + i * dim2;
-            memset(ptr, 0, dim1);
-            memset(ptr, 'a' + i, i + 1);
+            memset(buffer[i], 'a' + i, i + 1);
         }
         *size = length;
         return Py_BuildValue("ii", dim1, dim2);
     }
 %}
 
-%apply (SpiceChar *IN_STRINGS, SpiceInt DIM1, SpiceInt DIM2) {(const SpiceChar *strings, SpiceInt dim1, SpiceInt dim2)};
-PyObject* in_strings(const SpiceChar *strings, SpiceInt dim1, SpiceInt dim2);
+%apply (ConstSpiceChar *IN_STRINGS, SpiceInt DIM1, SpiceInt DIM2) {(ConstSpiceChar *strings, SpiceInt dim1, SpiceInt dim2)};
+PyObject* in_strings(ConstSpiceChar *strings, SpiceInt dim1, SpiceInt dim2);
 
 %apply (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, SpiceChar OUT_STRINGS[ANY][ANY]) {(SpiceInt dim1, SpiceInt dim2, SpiceInt *size, SpiceChar buffer[50][256])};
 PyObject* out_strings(SpiceInt length, SpiceInt dim1, SpiceInt dim2, SpiceInt *size, SpiceChar buffer[50][256]);
@@ -365,7 +371,8 @@ void double_in_out_array(SpiceInt dim1, SpiceInt *array);
 
 %{
     void sort_strings(SpiceInt rows, SpiceInt columns, SpiceChar* array) {
-        qsort(array, rows, columns, strcmp);
+        int (*comparator)(const void* p, const void* q) = (int (*)(const void *, const void *))strcmp;
+        qsort(array, rows, columns, comparator);
     }
 %}
 
