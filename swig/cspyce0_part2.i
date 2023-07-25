@@ -5707,7 +5707,7 @@ extern void ekuced_c(
 
 %rename (ekucei) ekucei_c;
 %apply (void RETURN_VOID) {void ekucei_c};
-%apply (SpiceInt DIM1, ConstSpiceDouble IN_ARRAY1[])
+%apply (SpiceInt DIM1, ConstSpiceInt IN_ARRAY1[])
                 {(SpiceInt nvals, ConstSpiceInt ivals[])};
 
 extern void ekucei_c(
