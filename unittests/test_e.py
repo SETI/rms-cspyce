@@ -520,7 +520,7 @@ def test_ekifld():
     assert not os.path.exists(ekpath)
 
 
-def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
+def test_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
     ekpath = os.path.join(TEST_FILE_DIR, "example_ekmany.ek")
     tablename = "test_table_ekmany"
     cleanup_kernel(ekpath)
@@ -602,7 +602,7 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
         # get row char data
         rc_data, c_null = cs.ekrcec(handle, segno, r, "c1")
         assert not c_null
-        assert rc_data == c_data[r]
+        assert list(rc_data) == c_data[r]
     # test out of bounds
     with pytest.raises(IndexError):
         cs.ekrcei(handle, segno, 3, "i1")
@@ -642,9 +642,9 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
         assert not d_null
         npt.assert_array_equal(rd_data, d_data[r])
         # get row char data
-        rc_data, c_null = cs.ekrcec(handle, segno, r, "c1", 11)
+        rc_data, c_null = cs.ekrcec(handle, segno, r, "c1")
         assert not c_null
-        assert list(rc_data[0]) == c_data[r]
+        assert list(rc_data) == c_data[r]
     # Cleanup
     cs.ekcls(handle)
     assert not cs.failed()
