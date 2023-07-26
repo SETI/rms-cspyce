@@ -644,11 +644,7 @@ def test_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
         # get row char data
         rc_data, c_null = cs.ekrcec(handle, segno, r, "c1")
         assert not c_null
-<<<<<<< HEAD
         assert list(rc_data) == c_data[r]
-=======
-        assert list(rc_data[0]) == c_data[r]
->>>>>>> master
     # Cleanup
     cs.ekcls(handle)
     assert not cs.failed()
