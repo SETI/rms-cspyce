@@ -560,8 +560,10 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
     assert xtypes[1] == 1
     assert xtypes[2] == 2
     assert ([0] * 3) == list(xclass)
-    assert ([["TEST_TABLE_EKMANY"] * 3]) == tabs
-    assert ["C1 D1 I1".split()] == cols
+    assert ('TEST_TABLE_EKMANY',
+            'TEST_TABLE_EKMANY', 
+            'TEST_TABLE_EKMANY') == tabs
+    assert ('C1', 'D1', 'I1') == cols
     # Run query to retrieve the row count
     nmrows = cs.ekfind(query)
     assert nmrows == 3
@@ -601,11 +603,11 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
         # get row char data
         rc_data, c_null = cs.ekrcec(handle, segno, r, "c1")
         assert not c_null
-        assert rc_data == c_data[r]
+        assert list(rc_data) == c_data[r]
     # test out of bounds
-    with pytest.raises(Exception):
+    with pytest.raises(IndexError):
         cs.ekrcei(handle, segno, 3, "i1")
-    with pytest.raises(Exception):
+    with pytest.raises(IndexError):
         cs.ekrced(handle, segno, 3, "d1")
     # with pytest.raises(Exception): TODO: FIX
     #    cs.ekrcec(handle, segno, 4, "c1", 4) # this causes a SIGSEGV
@@ -641,9 +643,9 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
         assert not d_null
         npt.assert_array_equal(rd_data, d_data[r])
         # get row char data
-        rc_data, c_null = cs.ekrcec(handle, segno, r, "c1", 11)
+        rc_data, c_null = cs.ekrcec(handle, segno, r, "c1")
         assert not c_null
-        assert rc_data == c_data[r]
+        assert list(rc_data) == c_data[r]
     # Cleanup
     cs.ekcls(handle)
     assert not cs.failed()
@@ -897,8 +899,9 @@ def fail_errint():
     cs.reset()
 
 
-def fail_errprt():
-    assert cs.errprt("GET", "ALL") == "NULL"
+def test_errprt():
+    assert cs.errprt("GET", "ALL") == ("SHORT, LONG, EXPLAIN, TRACEBACK, "
+                                      "DEFAULT")
 
 
 def test_esrchc():
