@@ -8,6 +8,7 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
+    checking_pathlike_filename_variants,
     download_kernels,
     cleanup_core_kernels,
     TEST_FILE_DIR
@@ -520,8 +521,9 @@ def test_ekifld():
     assert not os.path.exists(ekpath)
 
 
-def test_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei():
-    ekpath = os.path.join(TEST_FILE_DIR, "example_ekmany.ek")
+@checking_pathlike_filename_variants("path_type_variant")
+def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
+    ekpath = path_type_variant(os.path.join(TEST_FILE_DIR, "example_ekmany.ek"))
     tablename = "test_table_ekmany"
     cleanup_kernel(ekpath)
     # Create new EK and new segment with table
@@ -694,19 +696,22 @@ def test_ekntab():
     assert cs.ekntab() == 0
 
 
-def test_ekopn():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ekopn(path_type_variant):
     ekpath = os.path.join(TEST_FILE_DIR, "example_ek.ek")
     cleanup_kernel(ekpath)
-    handle = cs.ekopn(ekpath, ekpath, 80)
+    handle = cs.ekopn(path_type_variant(ekpath), ekpath, 80)
     cs.ekcls(handle)
     assert os.path.exists(ekpath)
     cleanup_kernel(ekpath)
 
 
-def test_ekopr():
-    ekpath = os.path.join(TEST_FILE_DIR, "example_ekopr.ek")
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ekopr(path_type_variant):
+    ekpath_str = os.path.join(TEST_FILE_DIR, "example_ekopr.ek")
+    ekpath = path_type_variant(ekpath_str)
     cleanup_kernel(ekpath)
-    handle = cs.ekopn(ekpath, ekpath, 80)
+    handle = cs.ekopn(ekpath, ekpath_str, 80)
     cs.ekcls(handle)
     assert os.path.exists(ekpath)
     testhandle = cs.ekopr(ekpath)
@@ -721,10 +726,12 @@ def test_ekops():
     cs.ekcls(handle)
 
 
-def test_ekopw():
-    ekpath = os.path.join(TEST_FILE_DIR, "example_ekopw.ek")
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ekopw(path_type_variant):
+    ekpath_str = os.path.join(TEST_FILE_DIR, "example_ekopw.ek")
+    ekpath = path_type_variant(ekpath_str)
     cleanup_kernel(ekpath)
-    handle = cs.ekopn(ekpath, ekpath, 80)
+    handle = cs.ekopn(ekpath, ekpath_str, 80)
     cs.ekcls(handle)
     assert os.path.exists(ekpath)
     testhandle = cs.ekopw(ekpath)

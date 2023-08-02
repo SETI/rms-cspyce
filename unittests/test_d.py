@@ -8,6 +8,7 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
+    checking_pathlike_filename_variants,
     download_kernels,
     cleanup_core_kernels,
     TEST_FILE_DIR
@@ -390,8 +391,10 @@ def test_dafus():
     npt.assert_array_almost_equal(ic, [1, 0, 1, 2, 1025, 27164])
 
 
-def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc():
-    daspath = os.path.join(TEST_FILE_DIR, "ex_dasac.das")
+@checking_pathlike_filename_variants("path_type_variant")
+def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc(path_type_variant):
+    daspath_str = os.path.join(TEST_FILE_DIR, "ex_dasac.das")
+    daspath = path_type_variant(daspath_str)
     cleanup_kernel(daspath)
     handle = cs.dasonw(daspath, "TEST", "ex_dasac", 140)
     assert handle is not None
@@ -404,7 +407,7 @@ def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc():
     handle = cs.dasopr(daspath)
     assert handle is not None
     # check that dashfn points to the correct path
-    assert cs.dashfn(handle) == daspath
+    assert cs.dashfn(handle) == daspath_str
     # extract out the comment, say we only want 3 things out
     comments = cs.dasec(handle)
     assert set(comments) == {"spice", "naif", "python"} & set(comments)
@@ -426,8 +429,7 @@ def test_dasac_dasopr_dasec_dasdc_dashfn_dasrfr_dashfs_dasllc():
     cs.dascls(handle)
     # test dashfs
     handle = cs.dasopr(daspath)
-    nresvr, nresvc, ncomr, ncomc, free, lastla, lastrc, lastwd = cs.dashfs(
-        handle)
+    nresvr, nresvc, ncomr, ncomc, free, lastla, lastrc, lastwd = cs.dashfs(handle)
     assert nresvr == 0
     assert nresvc == 0
     assert ncomr == 140
@@ -480,10 +482,12 @@ def test_dasadi():
     cs.dascls(h)
 
 
-def test_dasopw_dascls_dasopr():
-    daspath = os.path.join(TEST_FILE_DIR, "ex_das.das")
+@checking_pathlike_filename_variants("path_type_variant")
+def test_dasopw_dascls_dasopr(path_type_variant):
+    daspath_str = os.path.join(TEST_FILE_DIR, "ex_das.das")
+    daspath = path_type_variant(daspath_str)
     cleanup_kernel(daspath)
-    handle = cs.dasonw(daspath, "TEST", daspath, 0)
+    handle = cs.dasonw(daspath, "TEST", daspath_str, 0)
     assert handle is not None
     cs.dascls(handle)
     handle = cs.dasopw(daspath)
@@ -663,8 +667,9 @@ def test_dlabfs_dlafns():
     cs.dascls(handle)
 
 
-def test_dlaopn_dlabns_dlaens_daswbr():
-    path = os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla")
+@checking_pathlike_filename_variants("path_type_variant")
+def test_dlaopn_dlabns_dlaens_daswbr(path_type_variant):
+    path = path_type_variant(os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla"))
     cleanup_kernel(path)
     handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
     cs.dlabns(handle)  # start segm
@@ -782,8 +787,9 @@ def test_drdsph():
     npt.assert_array_almost_equal(output, expected)
 
 
-def test_dskopn_dskcls():
-    dskpath = os.path.join(TEST_FILE_DIR, "TEST.dsk")
+@checking_pathlike_filename_variants("path_type_variant")
+def test_dskopn_dskcls(path_type_variant):
+    dskpath = path_type_variant(os.path.join(TEST_FILE_DIR, "TEST.dsk"))
     cleanup_kernel(dskpath)
     handle = cs.dskopn(dskpath, "TEST.DSK/NAIF/NJB/20-OCT-2006/14:37:00", 0)
     assert handle is not None
@@ -991,18 +997,22 @@ def test_dskn02():
     cs.dascls(handle)
 
 
-def test_dskobj_dsksrf():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_dskobj_dsksrf(path_type_variant):
     cs.reset()
-    bodyids = cs.dskobj(ExtraKernels.phobosDsk)
+    phobos = path_type_variant(ExtraKernels.phobosDsk)
+    bodyids = cs.dskobj(phobos)
     assert 401 in bodyids
-    srfids = cs.dsksrf(ExtraKernels.phobosDsk, 401)
+    srfids = cs.dsksrf(phobos, 401)
     assert 401 in srfids
     cs.reset()
 
 
-def test_dskp02():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_dskp02(path_type_variant):
     # open the dsk file
-    handle = cs.dasopr(ExtraKernels.phobosDsk)
+    phobos = path_type_variant(ExtraKernels.phobosDsk)
+    handle = cs.dasopr(phobos)
     # get the dladsc from the file
     dladsc = cs.dlabfs(handle)
     # get the first plate

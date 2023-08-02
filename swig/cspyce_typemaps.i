@@ -660,11 +660,11 @@ void handle_invalid_array_shape_x2d(const char *symname, PyArrayObject *pyarr, i
 %{
 PyArrayObject*
 get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags) {
-    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_ISINTEGER(input)) {
+    if (typecode == NPY_INT && PyArray_Check(input) && PyArray_ISINTEGER((PyArrayObject *)(input))) {
         // We allow the conversion of all integer types to integer arrays.
         flags |= NPY_ARRAY_FORCECAST;
     }
-    return PyArray_FROMANY(input, typecode, min, max, flags);
+    return (PyArrayObject *) PyArray_FROMANY(input, typecode, min, max, flags);
 }
 %}
 
@@ -716,13 +716,13 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
         errch_c("#", typecode_string(typecode));
         errch_c("#", symname);
         sigerr_c("SPICE(INVALIDTYPE)");
-    } else if (PyArray_NDIM(input) < min || PyArray_NDIM(input) > max) {
+    } else if (PyArray_NDIM((PyArrayObject *) input) < min || PyArray_NDIM((PyArrayObject *) input) > max) {
         if (min == max) {
             setmsg_c("Invalid array rank # in module #; # is required");
         } else {
             setmsg_c("Invalid array rank # in module #; # or # is required");
         }
-        errint_c("#", (int) PyArray_NDIM(input));
+        errint_c("#", (int) PyArray_NDIM((PyArrayObject *) input));
         errch_c( "#", symname);
         errint_c("#", (int) (min));
         if (min != max) {
@@ -739,7 +739,7 @@ void handle_bad_array_conversion(const char* symname, int typecode, PyObject *in
                  "array of type \"#\" could not be converted");
         errch_c("#", typecode_string(typecode));
         errch_c("#", symname);
-        errch_c("#", typecode_string(PyArray_TYPE(input)));
+        errch_c("#", typecode_string(PyArray_TYPE((PyArrayObject *)(input))));
         sigerr_c("SPICE(INVALIDARRAYTYPE)");
     }
     // We don't like the error that's already been set up by the array conversion code
@@ -822,7 +822,7 @@ void capsule_cleanup(PyObject *capsule) {
 // On failure, this function returns False, and *data is unchanged.
 //
 PyArrayObject* create_array_with_owned_data(int nd, npy_intp const *dims, int typenum, void **data) {
-    PyArrayObject* array = PyArray_SimpleNewFromData(nd, dims, typenum, *data);
+    PyArrayObject* array = (PyArrayObject *) PyArray_SimpleNewFromData(nd, dims, typenum, *data);
     PyObject *capsule = array ? PyCapsule_New(*data, NULL, capsule_cleanup) : NULL;
     // If this is successful, it steals ownership of capsule.
     int result = capsule ? PyArray_SetBaseObject(array, capsule) : -1;
@@ -1716,7 +1716,7 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[1] = {dimsize$argnum[0]};
-    pyarr$argnum = create_array_with_owned_data(1, dims, Typecode, &buffer$argnum);
+    pyarr$argnum = create_array_with_owned_data(1, dims, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
@@ -1778,7 +1778,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dim = max(dimsize$argnum[0], 1);
-    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode, &buffer$argnum);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
     if (dimsize$argnum[0] == 0) {
@@ -2260,7 +2260,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(2, dims, Typecode, &buffer$argnum);
+    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(2, dims, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
@@ -2276,7 +2276,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
     int nd = (dims[0] == 0) ? 1 : 2;
-    pyarr$argnum = create_array_with_owned_data(nd, &dims[2 - nd], Typecode, &buffer$argnum);
+    pyarr$argnum = create_array_with_owned_data(nd, &dims[2 - nd], Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
@@ -2345,7 +2345,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[3] = {dimsize$argnum[0], dimsize$argnum[1], dimsize$argnum[2]};
     int nd = dims[0] == 0 ? 2 : 3;
-    pyarr$argnum = create_array_with_owned_data(nd, &dims[3 - nd], Typecode, &buffer$argnum);
+    pyarr$argnum = create_array_with_owned_data(nd, &dims[3 - nd], Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
     $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
@@ -2967,7 +2967,7 @@ TYPEMAP_IN(ConstSpiceChar)
 //      $1_type $1_name, $2_type $2_name
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $1_dim0, $1_dim1)
-    $1 = buffer;                                                // ARRAY
+    $1 = ($1_ltype) buffer;                                     // ARRAY
     $2 = &nstrings;                                             // NSTRINGS
 }
 
@@ -2979,7 +2979,7 @@ TYPEMAP_IN(ConstSpiceChar)
 //      (SpiceInt DIM1, SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $4_dim0, $4_dim1)
-    $4 = buffer;                                                // ARRAY
+    $4 = ($4_ltype) buffer;                                     // ARRAY
     $1 = dimsize[0];                                            // DIM1
     $2 = dimsize[1];                                            // DIM2
     $3 = &nstrings;                                             // NSTRINGS
@@ -2993,7 +2993,7 @@ TYPEMAP_IN(ConstSpiceChar)
 //      (SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 
     HANDLE_OUT_STRINGS_ANY_ANY(Type, $3_dim0, $3_dim1)
-    $3 = buffer;                                                // ARRAY
+    $3 = ($3_ltype) buffer;                                     // ARRAY
     $1 = dimsize[1];                                            // DIM2
     $2 = &nstrings;                                             // NSTRINGS
 }
@@ -3141,7 +3141,7 @@ TYPEMAP_RECORDS(ConstSpiceDSKDescr, SpiceDSKDescr)
 %typemap(argout)
     (Type *OUTPUT)
 %{
-    $result = SWIG_Python_AppendOutput($result, pyarr$argnum);
+    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
     pyarr$argnum = NULL;
 %}
 

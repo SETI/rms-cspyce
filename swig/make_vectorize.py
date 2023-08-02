@@ -193,11 +193,14 @@ class MacroGenerator:
         self.use_return = use_return
         self.indent = Indent(0)
 
-    def out(self, string=""):
+    def out(self, string="", indent=True):
         if not string:
             self.file.write("\n")
-        else:
+        elif indent:
             self.file.write(str(self.indent) + string + "\n")
+        else:
+            self.file.write(string + "\n")
+
 
     @staticmethod
     def parse_argstring(argstring):
@@ -304,6 +307,8 @@ class MacroGenerator:
 
     def generate_cspice_call(self):
         out = self.out
+        out(f'#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"', indent=False)
+        out(f'#pragma GCC diagnostic push', indent=False)
         if self.use_return:
             out(f'{self.outargs[0].name}_buffer[i] = FUNC(')
         else:
@@ -315,7 +320,7 @@ class MacroGenerator:
             for k, arg in enumerate(funcargs):
                 suffix = ',' if k < len(funcargs) - 1 else ");"
                 out(f'{arg.get_call(sizer_count)}{suffix}')
-
+        out(f'#pragma GCC diagnostic pop', indent=False)
     def __get_out_letters(self):
         out_letters = []
         for arg in self.outargs:
