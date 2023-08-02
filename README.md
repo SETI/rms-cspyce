@@ -52,10 +52,12 @@ Python module. To that end, it has the following features.
 - Many `cspyce` functions take sensible default values if input arguments are
   omitted.
 
-- The CSPICE concepts of "windows" and "cells" are not needed in Python. In
-  CSPICE, these allow a function to return a variable amount of information,
-  which the program can then iterate through. The `cspyce` counterpart of each of
-  these functions simply returns a complete list of the results.
+- All `cspyce` functions that take filename arguments now support 
+  [path-like-argument](https://docs.python.org/3/glossary.html#term-path-like-object)s. 
+  A path-like argument could be a strings, a byte string, or a `pathlib.Path`.
+  The [`pathlib.Path`](https://docs.python.org/3/library/pathlib.html) class provides an
+  object-oriented class for manipulating file-system paths and performing common operations
+  on files.
 
 ## ENHANCEMENTS
 

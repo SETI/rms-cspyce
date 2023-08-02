@@ -8,7 +8,8 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
-    checking_pathlike_filename_variants, download_kernels,
+    checking_pathlike_filename_variants,
+    download_kernels,
     cleanup_core_kernels,
     TEST_FILE_DIR
 )

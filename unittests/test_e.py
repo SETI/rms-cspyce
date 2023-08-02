@@ -8,7 +8,8 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
-    checking_pathlike_filename_variants, download_kernels,
+    checking_pathlike_filename_variants,
+    download_kernels,
     cleanup_core_kernels,
     TEST_FILE_DIR
 )
@@ -727,9 +728,10 @@ def test_ekops():
 
 @checking_pathlike_filename_variants("path_type_variant")
 def test_ekopw(path_type_variant):
-    ekpath = path_type_variant(os.path.join(TEST_FILE_DIR, "example_ekopw.ek"))
+    ekpath_str = os.path.join(TEST_FILE_DIR, "example_ekopw.ek")
+    ekpath = path_type_variant(ekpath_str)
     cleanup_kernel(ekpath)
-    handle = cs.ekopn(ekpath, str(ekpath), 80)
+    handle = cs.ekopn(ekpath, ekpath_str, 80)
     cs.ekcls(handle)
     assert os.path.exists(ekpath)
     testhandle = cs.ekopw(ekpath)
