@@ -1312,7 +1312,7 @@ def test_spkw05():
     cleanup_kernel(spk5)
     
 
-# Test changed: 
+# Test changed: discrete_states array needs to be flattened
 def test_spkw08():
     spk8 = os.path.join(TEST_FILE_DIR, "test8.bsp")
     cleanup_kernel(spk8)
@@ -1827,7 +1827,7 @@ def test_srfs2c():
     
     
 def test_srfscc():
-    kernel = os.path.join(cwd, "srfscc_ex1.tm")
+    kernel = os.path.join(TEST_FILE_DIR, "srfscc_ex1.tm")
     cleanup_kernel(kernel)
     with open(kernel, "w") as kernelFile:
         kernelFile.write("\\begindata\n")
@@ -1838,35 +1838,37 @@ def test_srfscc():
         kernelFile.write("NAIF_SURFACE_BODY += ( 499, 499,  401 )\n")
         kernelFile.write("\\begintext\n")
         kernelFile.close()
-    spice.furnsh(kernel)
-    assert spice.srfscc("MGS MOLA  64 pixel/deg", 499) == 1
-    assert spice.srfscc("PHOBOS GASKELL Q512", 401) == 1
-    assert spice.srfscc("MGS MOLA 128 pixel/deg", 499) == 2
-    assert spice.srfscc("1", 401) == 1
-    assert spice.srfscc("2", 499) == 2
-    with pytest.raises(spice.stypes.SpiceyError):
-        spice.srfscc("ZZZ", 499)
-    spice.reset()
+    cs.furnsh(kernel)
+    assert cs.srfscc("MGS MOLA  64 pixel/deg", 499) == 1
+    assert cs.srfscc("PHOBOS GASKELL Q512", 401) == 1
+    assert cs.srfscc("MGS MOLA 128 pixel/deg", 499) == 2
+    assert cs.srfscc("1", 401) == 1
+    assert cs.srfscc("2", 499) == 2
+    with pytest.raises(KeyError):
+        cs.srfscc("ZZZ", 499)
+    cs.reset()
     cleanup_kernel(kernel)
     
-    
+
+# Test changed: cspyce.srfxpt() non-vector version does not support iterable
+# 'et' variable.
 def test_srfxpt():
     # load kernels
-    spice.furnsh(CoreKernels.testMetaKernel)
-    spice.furnsh(CassiniKernels.cassSclk)
-    spice.furnsh(CassiniKernels.cassFk)
-    spice.furnsh(CassiniKernels.cassPck)
-    spice.furnsh(CassiniKernels.cassIk)
-    spice.furnsh(CassiniKernels.cassSclk)
-    spice.furnsh(CassiniKernels.satSpk)
-    spice.furnsh(CassiniKernels.cassTourSpk)
-    spice.furnsh(CassiniKernels.cassCk)
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassPck)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.satSpk)
+    cs.furnsh(CassiniKernels.cassTourSpk)
+    cs.furnsh(CassiniKernels.cassCk)
     # start test
-    et = spice.str2et("2013 FEB 25 11:50:00 UTC")
-    camid = spice.bodn2c("CASSINI_ISS_NAC")
-    shape, frame, bsight, n, bounds = spice.getfov(camid, 4)
+    et = cs.str2et("2013 FEB 25 11:50:00 UTC")
+    camid = cs.bodn2c("CASSINI_ISS_NAC")
+    shape, frame, bsight, bounds = cs.getfov(camid)
     # run srfxpt on boresight vector
-    spoint, dist, trgepc, obspos = spice.srfxpt(
+    spoint, dist, trgepc, obspos, found = cs.srfxpt(
         "Ellipsoid", "Enceladus", et, "LT+S", "CASSINI", frame, bsight
     )
     npt.assert_almost_equal(dist, 683459.6415073496)
@@ -1883,37 +1885,307 @@ def test_srfxpt():
     ]
     npt.assert_array_almost_equal(spoint, expected_spoint)
     npt.assert_array_almost_equal(obspos, expected_obspos)
-    # Iterable ET argument:  et-10, et, et+10
-    ets = [et - 10.0, et, et + 10.0]
-    spoints, dists, trgepcs, obsposs = spice.srfxpt(
-        "Ellipsoid", "Enceladus", ets, "LT+S", "CASSINI", frame, bsight
-    )
-    assert 0.0 == spice.vnorm(spice.vsub(spoints[1], spoint))
-    assert 0.0 == (dists[1] - dist)
-    assert 0.0 == (trgepcs[1] - trgepc)
-    assert 0.0 == spice.vnorm(spice.vsub(obsposs[1], obspos))
-    # Cleanup
-    
     
 
+def test_stelab():
+    IDOBS = 399
+    IDTARG = 301
+    UTC = "July 4 2004"
+    FRAME = "J2000"
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et(UTC)
+    sobs = cs.spkssb(IDOBS, et, FRAME)
+    starg, ltime = cs.spkapp(IDTARG, et, FRAME, sobs, "LT")
+    expected_starg = [
+        2.01738718005936592817e05,
+        -2.60893145259797573090e05,
+        -1.47722589585214853287e05,
+        9.24727104822839152121e-01,
+        5.32379608845730878386e-01,
+        2.17669748758417824774e-01,
+    ]
+    npt.assert_array_almost_equal(starg, expected_starg)
+    cortarg = cs.stelab(starg[0:3], starg[3:6])
+    expected_cortarg = [
+        201739.80378842627396807075,
+        -260892.46619604207808151841,
+        -147722.30606629714020527899,
+    ]
+    npt.assert_array_almost_equal(expected_cortarg, cortarg)
+    
+    
+def test_stlabx():
+    IDOBS = 399
+    IDTARG = 301
+    UTC = "July 4 2004"
+    FRAME = "J2000"
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et(UTC)
+    sobs = cs.spkssb(IDOBS, et, FRAME)
+    pos, ltime = cs.spkapo(IDTARG, et, FRAME, sobs, "XLT")
+    # note the values below won't match due to the different kernels used
+    expected_pos = [201809.933536, -260878.049826, -147716.077987]
+    npt.assert_array_almost_equal(pos, expected_pos, 1)
+    pcorr = cs.stlabx(pos, sobs[3:6])
+    expected_pcorr = [201782.730972, -260894.375627, -147724.405897]
+    npt.assert_array_almost_equal(pcorr, expected_pcorr, 1)
+    
+
+def test_stpool():
+    kernel = os.path.join(TEST_FILE_DIR, "stpool_t.ker")
+    cleanup_kernel(kernel)
+    with open(kernel, "w") as kernelFile:
+        kernelFile.write("\\begindata\n")
+        kernelFile.write("SPK_FILES = ( 'this_is_the_full_path_specification_*',\n")
+        kernelFile.write("              'of_a_file_with_a_long_name',\n")
+        kernelFile.write("              'this_is_the_full_path_specification_*',\n")
+        kernelFile.write("              'of_a_second_file_name' )\n")
+        kernelFile.close()
+    cs.furnsh(kernel)
+    string= cs.stpool("SPK_FILES", 0, "*")
+    assert string == "this_is_the_full_path_specification_of_a_file_with_a_long_name"
+    string = cs.stpool("SPK_FILES", 1, "*")
+    assert string == "this_is_the_full_path_specification_of_a_second_file_name"
+    cleanup_kernel(kernel)
+    
+    
+def test_str2et():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    date = "Thu Mar 20 12:53:29 PST 1997"
+    et = cs.str2et(date)
+    npt.assert_almost_equal(et, -87836728.81438904)
+    
+    
+def test_subpnt():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("2008 aug 11 00:00:00")
+    radii = cs.bodvrd("MARS", "RADII")
+    re = radii[0]
+    rp = radii[2]
+    f = (re - rp) / re
+    methods = ["Intercept:  ellipsoid", "Near point: ellipsoid"]
+    expecteds = [
+        [
+            349199089.604657,
+            349199089.64135259,
+            0.0,
+            199.30230503198658,
+            199.30230503198658,
+            26.262401237213588,
+            25.99493675077423,
+            160.69769496801342,
+            160.69769496801342,
+            25.994934171245205,
+            25.994934171245202,
+        ],
+        [
+            349199089.6046486,
+            349199089.60464859,
+            0.0,
+            199.30230503240247,
+            199.30230503240247,
+            25.99493675092049,
+            25.99493675092049,
+            160.69769496759753,
+            160.69769496759753,
+            25.729407227461937,
+            25.994934171391463,
+        ],
+    ]
+    for expected, method in zip(expecteds, methods):
+        spoint, trgepc, srfvec = cs.subpnt(
+            method, "Mars", et, "IAU_MARS", "LT+S", "Earth"
+        )
+        odist = np.linalg.norm(srfvec)
+        npt.assert_almost_equal(odist, expected[1], decimal=5)
+        spglon, spglat, spgalt = cs.recpgr("mars", spoint, re, f)
+        npt.assert_almost_equal(spgalt, expected[2], decimal=5)
+        npt.assert_almost_equal(spglon * cs.dpr(), expected[3], decimal=5)
+        npt.assert_almost_equal(spglat * cs.dpr(), expected[5], decimal=5)
+        spcrad, spclon, spclat = cs.reclat(spoint)
+        npt.assert_almost_equal(spclon * cs.dpr(), expected[7], decimal=5)
+        npt.assert_almost_equal(spclat * cs.dpr(), expected[9], decimal=5)
+        obspos = np.subtract(spoint, srfvec)
+        opglon, opglat, opgalt = cs.recpgr("mars", obspos, re, f)
+        npt.assert_almost_equal(opgalt, expected[0], decimal=5)
+        npt.assert_almost_equal(opglon * cs.dpr(), expected[4], decimal=5)
+        npt.assert_almost_equal(opglat * cs.dpr(), expected[6], decimal=5)
+        opcrad, opclon, opclat = cs.reclat(obspos)
+        npt.assert_almost_equal(opclon * cs.dpr(), expected[8], decimal=5)
+        npt.assert_almost_equal(opclat * cs.dpr(), expected[10], decimal=5)
+
+
+# Test changed: cspyce.subpt_error() does not take iterable 'et' arg
+def test_subpt():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("JAN 1, 2006")
+    point1, alt1 = np.array(
+        cs.subpt("near point", "earth", et, "lt+s", "moon"), dtype=object
+    )
+    point2, alt2 = np.array(
+        cs.subpt("intercept", "earth", et, "lt+s", "moon"), dtype=object
+    )
+    dist = np.linalg.norm(np.subtract(point1, point2))
+    sep = cs.vsep(point1, point2) * cs.dpr()
+    npt.assert_almost_equal(dist, 16.705476097706171)
+    npt.assert_almost_equal(sep, 0.15016657506598063)
+    
+    
+def test_subslr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("2008 aug 11 00:00:00")
+    radii = cs.bodvrd("MARS", "RADII")
+    re = radii[0]
+    rp = radii[2]
+    f = (re - rp) / re
+    methods = ["Intercept:  ellipsoid", "Near point: ellipsoid"]
+    expecteds = [
+        [
+            0.0,
+            175.8106755102322,
+            23.668550281477703,
+            -175.81067551023222,
+            23.420819936106213,
+            175.810721536362,
+            23.42082337182491,
+            -175.810721536362,
+            23.42081994605096,
+        ],
+        [
+            0.0,
+            175.8106754100492,
+            23.420823361866685,
+            -175.81067551023222,
+            23.175085577910583,
+            175.81072152220804,
+            23.420823371828,
+            -175.81072152220804,
+            23.420819946054046,
+        ],
+    ]
+    for expected, method in zip(expecteds, methods):
+        spoint, trgepc, srfvec = cs.subslr(
+            method, "Mars", et, "IAU_MARS", "LT+S", "Earth"
+        )
+        spglon, spglat, spgalt = cs.recpgr("mars", spoint, re, f)
+        npt.assert_almost_equal(spgalt, expected[0], decimal=5)
+        npt.assert_almost_equal(spglon * cs.dpr(), expected[1], decimal=5)
+        npt.assert_almost_equal(spglat * cs.dpr(), expected[2], decimal=5)
+        spcrad, spclon, spclat = cs.reclat(spoint)
+        npt.assert_almost_equal(spclon * cs.dpr(), expected[3], decimal=5)
+        npt.assert_almost_equal(spclat * cs.dpr(), expected[4], decimal=5)
+        sunpos, sunlt = cs.spkpos("sun", trgepc, "iau_mars", "lt+s", "mars")
+        supgln, supglt, supgal = cs.recpgr("mars", sunpos, re, f)
+        npt.assert_almost_equal(supgln * cs.dpr(), expected[5], decimal=5)
+        npt.assert_almost_equal(supglt * cs.dpr(), expected[6], decimal=5)
+        supcrd, supcln, supclt = cs.reclat(sunpos)
+        npt.assert_almost_equal(supcln * cs.dpr(), expected[7], decimal=5)
+        npt.assert_almost_equal(supclt * cs.dpr(), expected[8], decimal=5)
+        
+        
+def test_subsol():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    point = cs.subsol("near point", "earth", 0.0, "lt+s", "mars")
+    npt.assert_array_almost_equal(
+        point, [5850.44947427, 509.68837118, -2480.24722673], decimal=4
+    )
+    intercept = cs.subsol("intercept", "earth", 0.0, "lt+s", "mars")
+    npt.assert_array_almost_equal(
+        intercept, [5844.4362338, 509.16450054, -2494.39569089], decimal=4
+    )
+    
+    
+def test_sumad():
+    assert cs.sumad([1.0, 2.0, 3.0]) == 6.0
+    
+    
+def test_sumai():
+    assert cs.sumai([1, 2, 3]) == 6
+    
+    
+def test_surfnm():
+    point = [0.0, 0.0, 3.0]
+    npt.assert_array_almost_equal(cs.surfnm(1.0, 2.0, 3.0, point),
+                                  [0.0, 0.0, 1.0])
+    
+    
+# Test changed. cspyce.surfpt() returns [Numpy array, Boolean]
+def test_surfpt():
+    position = [2.0, 0.0, 0.0]
+    u = [-1.0, 0.0, 0.0]
+    point = cs.surfpt(position, u, 1.0, 2.0, 3.0)
+    npt.assert_array_almost_equal(point[0], [1.0, 0.0, 0.0])
+    
+
+# Test changed. cspyce.surfpv() returns [Numpy array, Boolean]
+def test_surfpv():
+    stvrtx = [2.0, 0.0, 0.0, 0.0, 0.0, 3.0]
+    stdir = [-1.0, 0.0, 0.0, 0.0, 0.0, 4.0]
+    stx = cs.surfpv(stvrtx, stdir, 1.0, 2.0, 3.0)
+    expected = [1.0, 0.0, 0.0, 0.0, 0.0, 7.0]
+    npt.assert_array_almost_equal(expected, stx[0])
+    
+    
+def test_swpool():
+    # add TEST_VAR_SWPOOL
+    cs.pdpool("TEST_VAR_SWPOOL", [-666.0])
+    # establish check for TEST_VAR_SWPOOL
+    cs.swpool("TEST_SWPOOL", ["TEST_VAR_SWPOOL"])
+    # update TEST_VAR_SWPOOL
+    cs.pdpool("TEST_VAR_SWPOOL", [555.0])
+    # check for updated variable
+    updated = cs.cvpool("TEST_SWPOOL")
+    value = cs.gdpool("TEST_VAR_SWPOOL", 0)
+    assert len(value) == 1
+    assert value[0] == 555.0
+    cs.clpool()
+    assert updated is True
+    
+    
+def test_sxform():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    lon = 118.25 * cs.rpd()
+    lat = 34.05 * cs.rpd()
+    alt = 0.0
+    utc = "January 1, 1990"
+    et = cs.str2et(utc)
+    abc = cs.bodvrd("EARTH", "RADII")
+    equatr = abc[0]
+    polar = abc[2]
+    f = (equatr - polar) / equatr
+    estate = cs.georec(lon, lat, alt, equatr, f)
+    estate = np.append(estate, [0.0, 0.0, 0.0])
+    xform = np.array(cs.sxform("IAU_EARTH", "J2000", et))
+    jstate = np.dot(xform, estate)
+    expected = np.array(
+        [
+            -4131.45969,
+            -3308.36805,
+            3547.02462,
+            0.241249619,
+            -0.301019201,
+            0.000234215666,
+        ]
+    )
+    npt.assert_array_almost_equal(jstate, expected, decimal=4)
+
+
+def test_szpool():
+    assert cs.szpool("MAXVAR") == 26003
+    assert cs.szpool("MAXLEN") == 32
+    assert cs.szpool("MAXVAL") == 400000
+    assert cs.szpool("MXNOTE") == 130015
+    assert cs.szpool("MAXAGT") == 1000
+    assert cs.szpool("MAXCHR") == 80
+    assert cs.szpool("MAXLIN") == 15000
 # =============================================================================
-# stcf01
-# stcg01
-# stcl01
-# stelab
-# stlabx
-# stpool
-# str2et
-# subpnt
-# subpt
-# subslr
-# subsol
-# sumad
-# sumai
-# surfnm
-# surfpt
-# surfpv
-# swpool
-# sxform
-# szpool
+# =============================================================================
+# # stcf01
+# =============================================================================
+# =============================================================================
+# # stcg01
+# =============================================================================
+# =============================================================================
+# # stcl01
+# =============================================================================
 # =============================================================================
