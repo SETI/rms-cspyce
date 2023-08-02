@@ -49,7 +49,6 @@ def test_pckopn_pckw02_pckcls():
     cleanup_kernel(pck)
     
 
-# Test changed: cspyce does not have a scard function
 def test_pckcov():
     ids = cs.SpiceCell(typeno=2, size=1000)
     cover = cs.SpiceCell(typeno=1, size=2000)
@@ -187,7 +186,6 @@ def test_pipool():
     npt.assert_array_almost_equal(data, ivals)
     
 
-# Test changed. Reference to ellipse object changed to splices
 def test_pjelpl():
     center = [1.0, 1.0, 1.0]
     vec1 = [2.0, 0.0, 0.0]
@@ -378,8 +376,6 @@ def test_pxform():
     npt.assert_array_almost_equal(jstate, expected, decimal=4)
     
 
-# Test changed: cspyce.reclat() needs to take spoint[0] since cs.surfpt()
-# returns [[numpy array], boolean]
 def test_pxfrm2():
     # load kernels
     cs.furnsh(CoreKernels.testMetaKernel)
