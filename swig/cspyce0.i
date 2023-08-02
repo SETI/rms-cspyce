@@ -823,7 +823,7 @@ extern void chkout_c(
 
 %rename (ckcov) ckcov_c;
 %apply (void RETURN_VOID) {void ckcov_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *ck};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *ck};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *level};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *timsys};
 %apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
@@ -958,7 +958,7 @@ VECTORIZE_i_2d_s__dLM_dN_d_b(ckgpav, ckgpav_c, 3, 3, 3)
 
 %rename (ckobj) ckobj_c;
 %apply (void RETURN_VOID) {void ckobj_c};
-%apply (ConstSpiceChar *CONST_STRING)    {ConstSpiceChar *ck};
+%apply (ConstSpiceChar *CONST_FILENAME)    {ConstSpiceChar *ck};
 %apply (SpiceCellInt *INOUT) {SpiceCell *bodids};
 
 extern void ckobj_c(
@@ -5209,17 +5209,10 @@ VECTORIZE_dXY_dX__dN(mtxv, mtxv_c, 3)
             "Array dimension mismatch in mtxvg: "
             "matrix rows = #; vector dimension = #")) return;
 
-        SpiceDouble *result = my_malloc(nc1, "mtxvg");
-        if (!result) return;
-
-        mtxvg_c(m1, v2, nc1, nr1, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v3 = my_malloc(nc1, "mtxvg");
+        if (*v3) {
+            mtxvg_c(m1, v2, nc1, nr1, *v3);
         }
-
-        *v3 = result;
         *nr3 = nc1;
     }
 %}
@@ -5320,25 +5313,14 @@ VECTORIZE_dXY_dXY__dMN(mxm, mxm_c, 3, 3)
         SpiceDouble  *m2, SpiceInt  nr2, SpiceInt  nc2,
         SpiceDouble **m3, SpiceInt *nr3, SpiceInt *nc3)
     {
-        *m3 = NULL;
-        *nr3 = 0;
-        *nc3 = 0;
-
         if (!my_assert_eq(nc1, nr2, "mxmg",
             "Array dimension mismatch in mxmg: "
             "matrix 1 columns = #; matrix 2 rows = #")) return;
 
-        SpiceDouble *result = my_malloc(nr1 * nc2, "mxmg");
-        if (!result) return;
-
-        mxmg_c(m1, m2, nr1, nc1, nc2, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *m3 = my_malloc(nr1 * nc2, "mxmg");
+        if (*m3) {
+            mxmg_c(m1, m2, nr1, nc1, nc2, *m3);
         }
-
-        *m3 = result;
         *nr3 = nr1;
         *nc3 = nc2;
     }
@@ -5441,25 +5423,14 @@ VECTORIZE_dXY_dXY__dMN(mxmt, mxmt_c, 3, 3)
         SpiceDouble  *m2, SpiceInt nr2, SpiceInt nc2,
         SpiceDouble **m3, SpiceInt *nr3, SpiceInt *nc3)
     {
-        *m3 = NULL;
-        *nr3 = 0;
-        *nc3 = 0;
-
         if (!my_assert_eq(nc1, nc2, "mxmtg",
             "Array dimension mismatch in mxmtg: "
             "matrix 1 columns = #; matrix 2 columns = #")) return;
 
-        SpiceDouble *result = my_malloc(nr1 * nr2, "mxmtg");
-        if (!result) return;
-
-        mxmtg_c(m1, m2, nr1, nc1, nr2, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *m3 = my_malloc(nr1 * nr2, "mxmtg");
+        if (*m3) {
+            mxmtg_c(m1, m2, nr1, nc1, nr2, *m3);
         }
-
-        *m3 = result;
         *nr3 = nr1;
         *nc3 = nr2;
     }
@@ -5560,24 +5531,14 @@ VECTORIZE_dXY_dX__dN(mxv, mxv_c, 3)
         SpiceDouble  *v2, SpiceInt nr2,
         SpiceDouble **v3, SpiceInt *nr3)
     {
-        *v3 = NULL;
-        *nr3 = 0;
-
         if (!my_assert_eq(nc1, nr2, "mxvg",
             "Array dimension mismatch in mxvg: "
             "matrix columns = #; vector length = #")) return;
 
-        SpiceDouble *result = my_malloc(nr1, "mxvg");
-        if (!result) return;
-
-        mxvg_c(m1, v2, nr1, nc1, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v3 = my_malloc(nr1, "mxvg");
+        if (*v3) {
+            mxvg_c(m1, v2, nr1, nc1, *v3);
         }
-
-        *v3 = result;
         *nr3 = nr1;
     }
 %}
@@ -6042,8 +6003,7 @@ VECTORIZE_dX_2d__dN(oscltx, oscltx_c, SPICE_OSCLTX_NELTS)
 
 %rename (pckcov) pckcov_c;
 %apply (void RETURN_VOID) {void pckcov_c};
-%apply (ConstSpiceChar *CONST_STRING)
-                          {ConstSpiceChar *pck};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *pck};
 %apply (SpiceCellDouble *OUTPUT) {SpiceCell* cover};
 
 extern void pckcov_c(
@@ -6077,7 +6037,7 @@ extern void pckcov_c(
 
 %rename (pckfrm) pckfrm_c;
 %apply (void RETURN_VOID) {void pckfrm_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *pck};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *pck};
 %apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
 
 extern void pckfrm_c(
@@ -8668,7 +8628,7 @@ VECTORIZE_i_d_2s_dX_dX__dN_d_d(spkaps, spkaps_c, 6)
 
 %rename (spkcov) spkcov_c;
 %apply (void RETURN_VOID) {void spkcov_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *spk};
 %apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
 
 extern void spkcov_c(
@@ -8984,7 +8944,7 @@ VECTORIZE_i_d_2s_dX__dN_d_d(spkltc, spkltc_c, 6)
 
 %rename (spkobj)  spkobj_c;
 %apply (void RETURN_VOID) {void spkobj_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *spk};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *spk};
 %apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
 
 extern void spkobj_c(
@@ -9560,7 +9520,7 @@ VECTORIZE_2s_d_3s_dX__dM_2d_dN_b(srfxpt, srfxpt_c, 3, 3)
 
 %rename (stcl01) my_stcl01;
 %apply (void RETURN_VOID) {void my_stcl01};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *catfnm};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *catfnm};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar tabnam[NAMELEN]};
 %apply (SpiceInt *OUTPUT)          {SpiceInt *handle};
 
@@ -10852,7 +10812,7 @@ VECTORIZE_d_2s__RETURN_d(unitim, unitim_c)
 %apply (void RETURN_VOID) {void unload_c};
 
 extern void unload_c(
-        ConstSpiceChar *CONST_STRING
+        ConstSpiceChar *CONST_FILENAME
 );
 
 /***********************************************************************
@@ -11053,26 +11013,14 @@ VECTORIZE_dX_dX__dN(vadd, vadd_c, 3)
         ConstSpiceDouble *v2, SpiceInt nd2,
         SpiceDouble     **v3, SpiceInt *nd3)
     {
-        SpiceDouble *result = NULL;
-
-        *v3 = NULL;
-        *nd3 = 0;
-
         if (!my_assert_eq(ndim, nd2, "vaddg",
             "Vector dimension mismatch in vaddg: "
             "vector 1 dimension = #; vector 2 dimension = #")) return;
 
-        result = my_malloc(ndim, "vaddg");
-        if (!result) return;
-
-        vaddg_c(v1, v2, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v3 = my_malloc(ndim, "vaddg");
+        if (*v3) {
+            vaddg_c(v1, v2, ndim, *v3);
         }
-
-        *v3 = result;
         *nd3 = ndim;
     }
 %}
@@ -11354,20 +11302,10 @@ VECTORIZE_dX__dN(vequ, vequ_c, 3)
         ConstSpiceDouble *v1, SpiceInt ndim,
         SpiceDouble     **v2, SpiceInt *nd2)
     {
-        *v2 = NULL;
-        *nd2 = 0;
-
-        SpiceDouble *result = my_malloc(ndim, "vequg");
-        if (!result) return;
-
-        vequg_c(v1, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v2 = my_malloc(ndim, "vequg");
+        if (*v2) {
+            vequg_c(v1, ndim, *v2);
         }
-
-        *v2 = result;
         *nd2 = ndim;
     }
 %}
@@ -11452,20 +11390,10 @@ VECTORIZE_dX__dN(vhat, vhat_c, 3)
         ConstSpiceDouble  *v1, SpiceInt ndim,
         SpiceDouble      **v2, SpiceInt *nd2)
     {
-        *v2 = NULL;
-        *nd2 = 0;
-
-        SpiceDouble *result = my_malloc(ndim, "vhatg");
-        if (!result) return;
-
-        vhatg_c(v1, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v2 = my_malloc(ndim, "vhatg");
+        if (*v2) {
+            vhatg_c(v1, ndim, *v2);
         }
-
-        *v2 = result;
         *nd2 = ndim;
     }
 %}
@@ -11621,24 +11549,14 @@ VECTORIZE_d_dX_d_dX__dN(vlcom, vlcom_c, 3)
         ConstSpiceDouble *v2, SpiceInt nd2,
         SpiceDouble     **v3, SpiceInt *nd3)
     {
-        *v3 = NULL;
-        *nd3 = 0;
-
         if (!my_assert_eq(n, nd2, "vlcomg",
             "Vector dimension mismatch in vlcomg: "
             "vector 1 dimension = #; vector 2 dimension = #")) return;
 
-        SpiceDouble *result = my_malloc(n, "vlcomg");
-        if (!result) return;
-
-        vlcomg_c(n, a, v1, b, v2, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v3 = my_malloc(n, "vlcomg");
+        if (*v3) {
+            vlcomg_c(n, a, v1, b, v2, *v3);
         }
-
-        *v3 = result;
         *nd3 = n;
     }
 %}
@@ -11696,20 +11614,10 @@ VECTORIZE_d_di_d_di__di(vlcomg, my_vlcomg_nomalloc)
         ConstSpiceDouble *v1, SpiceInt ndim,
         SpiceDouble     **v2, SpiceInt *nd2)
     {
-        *v2 = NULL;
-        *nd2 = 0;
-
-        SpiceDouble *result = my_malloc(ndim, "vminug");
-        if (!result) return;
-
-        vminug_c(v1, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v2 = my_malloc(ndim, "vminug");
+        if (*v2) {
+            vminug_c(v1, ndim, *v2);
         }
-
-        *v2 = result;
         *nd2 = ndim;
     }
 %}
@@ -12203,20 +12111,10 @@ VECTORIZE_d_dX__dN(vscl, vscl_c, 3)
         ConstSpiceDouble *v1, SpiceInt  ndim,
         SpiceDouble     **v2, SpiceInt *nd2)
     {
-        *v2 = NULL;
-        *nd2 = 0;
-
-        SpiceDouble *result = my_malloc(ndim, "vsclg");
-        if (!result) return;
-
-        vsclg_c(s, v1, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v2 = my_malloc(ndim, "vsclg");
+        if (*v2) {
+            vsclg_c(s, v1, ndim, *v2);
         }
-
-        *v2 = result;
         *nd2 = ndim;
     }
 %}
@@ -12392,24 +12290,14 @@ VECTORIZE_dX_dX__dN(vsub, vsub_c, 3)
         ConstSpiceDouble *v2, SpiceInt nd2,
         SpiceDouble     **v3, SpiceInt *nd3)
     {
-        *v3 = NULL;
-        *nd3 = 0;
-
         if (!my_assert_eq(ndim, nd2, "vsubg",
             "Vector dimension mismatch in vsubg: "
             "vector 1 dimension = #; vector 2 dimension = #")) return;
 
-        SpiceDouble *result = my_malloc(ndim, "vsubg");
-        if (!result) return;
-
-        vsubg_c(v1, v2, ndim, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *v3 = my_malloc(ndim, "vsubg");
+        if (*v3) {
+            vsubg_c(v1, v2, ndim, *v3);
         }
-
-        *v3 = result;
         *nd3 = ndim;
     }
 %}
@@ -12855,21 +12743,10 @@ VECTORIZE_dXY__dMN(xpose, xpose_c, 3, 3)
         ConstSpiceDouble *matrix, SpiceInt nrow,   SpiceInt  ncol,
         SpiceDouble     **xposem, SpiceInt *nrow1, SpiceInt *nc1)
     {
-        *xposem = NULL;
-        *nrow1 = 0;
-        *nc1 = 0;
-
-        SpiceDouble *result = my_malloc(nrow * ncol, "xposeg");
-        if (!result) return;
-
-        xposeg_c(matrix, nrow, ncol, result);
-
-        if (failed_c()) {
-            PyMem_Free(result);
-            return;
+        *xposem = my_malloc(nrow * ncol, "xposeg");
+        if (*xposem) {
+            xposeg_c(matrix, nrow, ncol, *xposem);
         }
-
-        *xposem = result;
         *nrow1 = ncol;
         *nc1 = nrow;
     }

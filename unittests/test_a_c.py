@@ -8,10 +8,10 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
-    download_kernels,
+    checking_pathlike_filename_variants, download_kernels,
     cleanup_core_kernels,
     TEST_FILE_DIR
-    )
+)
 
 @pytest.fixture(autouse=True)
 def clear_kernel_pool_and_reset():
@@ -367,10 +367,11 @@ def test_ckcls():
     assert not os.path.exists(ck1)
 
 
-def test_ckcov():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ckcov(path_type_variant):
     cs.furnsh(CassiniKernels.cassSclk)
-    ckid = cs.ckobj(CassiniKernels.cassCk)[0]
-    cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
+    ckid = cs.ckobj(path_type_variant(CassiniKernels.cassCk))[0]
+    cover = cs.ckcov(path_type_variant(CassiniKernels.cassCk), ckid, False, "INTERVAL", 0.0, "SCLK")
     expected_intervals = [
         [267832537952.000000, 267839247264.000000],
         [267839256480.000000, 267867970464.000000],
@@ -507,7 +508,8 @@ def test_ckgr03_cknr03():
     cs.kclear()
 
 
-def test_cklpf():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_cklpf(path_type_variant):
     cs.reset()
     cklpf = os.path.join(TEST_FILE_DIR, "cklpfkernel.bc")
     cleanup_kernel(cklpf)
@@ -527,7 +529,7 @@ def test_cklpf():
     )
     cs.ckcls(handle)
     cs.kclear()
-    handle = cs.cklpf(cklpf)
+    handle = cs.cklpf(path_type_variant(cklpf))
     cs.ckupf(handle)
     cs.ckcls(handle)
     cs.kclear()
@@ -543,20 +545,22 @@ def test_ckmeta():
     idcode = cs.ckmeta(-32000, "SCLK")
     assert idcode == -32
     
-    
-def test_ckobj():
+
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ckobj(path_type_variant):
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(CassiniKernels.cassSclk)
-    ids = cs.ckobj(CassiniKernels.cassCk)
+    ids = cs.ckobj(path_type_variant(CassiniKernels.cassCk))
     assert len(ids) == 1
     
 
-def test_ckopn():
+@checking_pathlike_filename_variants("path_type_variant")
+def test_ckopn(path_type_variant):
     # cs crashes if ckcls detects nothing written to ck1
     ck1 = os.path.join(TEST_FILE_DIR, "ckopenkernel.bc")
     cleanup_kernel(ck1)
     ifname = "Test CK type 1 segment created by ccs_ckw01"
-    handle = cs.ckopn(ck1, ifname, 10)
+    handle = cs.ckopn(path_type_variant(ck1), ifname, 10)
     cs.ckw01(
         handle,
         1.0,

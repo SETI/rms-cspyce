@@ -49,9 +49,11 @@ def test_kdata():
     assert ftype == "META"
 
 
-def test_kinfo():
-    cs.furnsh(CoreKernels.testMetaKernel)
-    filetype, source, handle = cs.kinfo(CoreKernels.testMetaKernel)
+@checking_pathlike_filename_variants("path_type_variant")
+def test_kinfo(path_type_variant):
+    kernel = path_type_variant(CoreKernels.testMetaKernel)
+    cs.furnsh(kernel)
+    filetype, source, handle = cs.kinfo(kernel)
     assert filetype == "META"
 
 

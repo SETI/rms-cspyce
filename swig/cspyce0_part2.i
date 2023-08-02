@@ -896,7 +896,7 @@ extern void ckgr02_c(
 %apply (void RETURN_VOID) {void cklpf_c};
 
 extern void cklpf_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -1025,7 +1025,7 @@ extern void cknr03_c(
 %apply (void RETURN_VOID) {void ckopn_c};
 
 extern void ckopn_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
         SpiceInt       *OUTPUT
@@ -2283,7 +2283,7 @@ extern void dasllc_c(
 %apply (void RETURN_VOID) {void dasonw_c};
 
 extern void dasonw_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomr,
@@ -2313,7 +2313,7 @@ extern void dasonw_c(
 %apply (void RETURN_VOID) {void dasopr_c};
 
 extern void dasopr_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -2364,7 +2364,7 @@ extern void dasops_c(
 %apply (void RETURN_VOID) {void dasopw_c};
 
 extern void dasopw_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -2968,7 +2968,7 @@ extern void dlafps_c(
 %apply (void RETURN_VOID) {void dlaopn_c};
 
 extern void dlaopn_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
@@ -3487,7 +3487,7 @@ extern void dskn02_c(
 
 %rename (dskobj) dskobj_c;
 %apply (void RETURN_VOID) {void dskobj_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *dskfnm};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *dskfnm};
 %apply (SpiceCellInt *INOUT) {SpiceCell* bodids};
 
 extern void dskobj_c(
@@ -3524,7 +3524,7 @@ extern void dskobj_c(
 %apply (void RETURN_VOID) {void dskopn_c};
 
 extern void dskopn_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
         SpiceInt       *OUTPUT
@@ -3651,7 +3651,7 @@ extern void dskrb2_c(
 
 %rename (dsksrf) dsksrf_c;
 %apply (void RETURN_VOID) {void dsksrf_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *dskfnm};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *dskfnm};
 %apply (SpiceCellInt *INOUT) {SpiceCell *srfids};
 
 extern void dsksrf_c(
@@ -5045,7 +5045,7 @@ extern void ekinsr_c(
 %apply (void RETURN_VOID) {void eklef_c};
 
 extern void eklef_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -5154,7 +5154,7 @@ extern void ekntab_c(
 %apply (void RETURN_VOID) {void ekopn_c};
 
 extern void ekopn_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
         SpiceInt       *handle
@@ -5183,7 +5183,7 @@ extern void ekopn_c(
 %apply (void RETURN_VOID) {void ekopr_c};
 
 extern void ekopr_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -5236,7 +5236,7 @@ extern void ekops_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *fname};
 
 extern void ekopw_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -5899,7 +5899,7 @@ extern SpiceInt esrchc_c(
 
 %rename (getfat) my_getfat_c;
 %apply (void RETURN_VOID) {void my_getfat_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *file};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *file};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar arch[NAMELEN]};
 %apply (SpiceChar OUT_STRING[ANY]) {SpiceChar kertyp[NAMELEN]};
 
@@ -7623,7 +7623,7 @@ extern void kclear_c(void);
 
 %rename (kinfo) my_kinfo_c;
 %apply (void RETURN_VOID) {void my_kinfo_c};
-%apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *file};
+%apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *file};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt filtln, SpiceChar filtyp[NAMELEN])};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY]) {(SpiceInt srclen, SpiceChar srcfil[FILELEN])};
 %apply (SpiceInt *OUTPUT) {SpiceInt *handle};
@@ -8770,7 +8770,7 @@ extern void pckcls_c(
 %apply (void RETURN_VOID) {void pcklof_c};
 
 extern void pcklof_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -8801,7 +8801,7 @@ extern void pcklof_c(
 %apply (void RETURN_VOID) {void pckopn_c};
 
 extern void pckopn_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
         SpiceInt       *OUTPUT
@@ -9959,7 +9959,7 @@ VECTORIZE_dX_d_2s_d_4s__dN_d(spkcvt, spkcvt_c, 6)
 %apply (void RETURN_VOID) {void spklef_c};
 
 extern void spklef_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -9986,7 +9986,7 @@ extern void spklef_c(
 %apply (void RETURN_VOID) {void spkopa_c};
 
 extern void spkopa_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         SpiceInt       *OUTPUT
 );
 
@@ -10017,7 +10017,7 @@ extern void spkopa_c(
 %apply (void RETURN_VOID) {void spkopn_c};
 
 extern void spkopn_c(
-        ConstSpiceChar *CONST_STRING,
+        ConstSpiceChar *CONST_FILENAME,
         ConstSpiceChar *CONST_STRING,
         SpiceInt       ncomch,
         SpiceInt       *OUTPUT
