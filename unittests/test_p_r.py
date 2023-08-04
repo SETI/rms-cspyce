@@ -338,7 +338,8 @@ def test_prompt(tmp_path):
     result = subprocess.run([sys.executable, script_file],
                             input=user_input + "\n", text=True,
                             capture_output=True)
-    assert result.stderr == user_input  # Contains the prompt
+    # On windows, it seems to include the `\n, on Linux it doesn't.
+    assert result.stderr.strip() == user_input
     assert result.stdout == prompt
 
 
