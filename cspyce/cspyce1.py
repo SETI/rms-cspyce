@@ -866,6 +866,15 @@ def _create_das_char_array(data, epos):
     return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
 ################################################################################
+# For technical reasons, prompt() returns its result twice.  It simpler to just
+# fix it here than create a special typemap just for it.
+################################################################################
+
+def prompt(input):
+    result = cspyce0.prompt(input)
+    return result[0]
+
+################################################################################
 # When a function returns a value and a "found" flag, and the flag is False,
 # the unused return values contain random values. We change these to something
 # sensible.

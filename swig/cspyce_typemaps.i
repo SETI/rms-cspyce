@@ -2493,7 +2493,7 @@ TYPEMAP_INOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type IN_STRING)
     TEST_IS_STRING($input);
     SpiceInt error  = SWIG_AsVal_char($input, &$1);
-    RAISE_BAD_TYPE_ON_ERROR(error, "String");
+    RAISE_BAD_TYPE_ON_ERROR(error, "Character");
  }
 
 %typemap(argout)
