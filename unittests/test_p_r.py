@@ -1,3 +1,8 @@
+import subprocess
+import sys
+import textwrap
+from pathlib import Path
+
 import cspyce as cs
 import numpy as np
 import numpy.testing as npt
@@ -313,6 +318,29 @@ def test_posr():
     assert cs.posr(string, " AN ", 29) == 10
     assert cs.posr(string, " AN ", 9) == -1
     assert cs.posr(string, " AN  ", 29) == -1
+
+
+def test_prompt(tmp_path):
+    prompt = 'PROMPT: '
+    user_input = "My User Input"
+    path = Path(__file__).parent.parent  # root directory
+    script_file = tmp_path / "script.py"
+    script = f"""
+        import sys
+        sys.path.insert(0, "{path}")  # Make sure we get the correct cspyce
+        import cspyce as cs
+        text = cs.prompt("{prompt}")
+        print(text, end='', file=sys.stderr)
+    """
+    with open(script_file, "w") as file:
+        file.write(textwrap.dedent(script))
+
+    result = subprocess.run([sys.executable, script_file],
+                            input=user_input + "\n", text=True,
+                            capture_output=True)
+    # On windows, it seems to include the `\n, on Linux it doesn't.
+    assert result.stderr.strip() == user_input
+    assert result.stdout == prompt
 
 
 def test_prop2b():
