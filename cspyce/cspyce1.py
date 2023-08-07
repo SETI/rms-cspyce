@@ -866,8 +866,8 @@ def _create_das_char_array(data, epos):
     return np.array(byte_data, dtype=np.dtype(('S', itemsize)))
 
 ################################################################################
-# For technical reasons, prompt() returns its result twice.  It simpler to just
-# fix it here than create a special typemap just for it.
+# For technical reasons, prompt() returns its result twice.  It's simpler to just
+# fix it here rather than to create a special typemap just for it.
 ################################################################################
 
 def prompt(input):

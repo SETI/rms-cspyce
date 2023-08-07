@@ -343,7 +343,6 @@ def test_prompt(tmp_path):
     assert result.stdout == prompt
 
 
-
 def test_prop2b():
     mu = 398600.45
     r = 1.0e8
