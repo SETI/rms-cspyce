@@ -40,42 +40,22 @@
 #define NAN (INFINITY-INFINITY)
 #endif
 
-/* Internal routine to malloc a vector of doubles */
-SpiceDouble *my_malloc(int count, const char *fname) {
-    SpiceDouble *result = (SpiceDouble *) PyMem_Malloc(count * sizeof(SpiceDouble));
+/* Internal routine to malloc memory and report an error on problems. */
+void *my_malloc_internal(int size, const char *fname) {
+    void *result = (void *) PyMem_Malloc(size);
     if (!result) {
         chkin_c(fname);
         setmsg_c("Failed to allocate memory");
         sigerr_c("SPICE(MALLOCFAILURE)");
         chkout_c(fname);
     }
-
     return result;
 }
 
-SpiceInt *my_int_malloc(int count, const char *fname) {
-    SpiceInt *result = (SpiceInt *) PyMem_Malloc(count * sizeof(SpiceInt));
-    if (!result) {
-        chkin_c(fname);
-        setmsg_c("Failed to allocate memory");
-        sigerr_c("SPICE(MALLOCFAILURE)");
-        chkout_c(fname);
-    }
-
-    return result;
-}
-
-SpiceChar *my_char_malloc(int count, const char *fname) {
-    SpiceChar *result = (SpiceChar *) PyMem_Malloc(count * sizeof(SpiceChar));
-    if (!result) {
-        chkin_c(fname);
-        setmsg_c("Failed to allocate memory");
-        sigerr_c("SPICE(MALLOCFAILURE)");
-        chkout_c(fname);
-    }
-
-    return result;
-}
+#define my_malloc(count, fname)          ((SpiceDouble *)my_malloc_internal((count) * sizeof(SpiceDouble), fname))
+#define my_int_malloc(count, fname)         ((SpiceInt *)my_malloc_internal((count) * sizeof(SpiceInt), fname))
+#define my_boolean_malloc(count, fname) ((SpiceBoolean *)my_malloc_internal((count) * sizeof(SpiceBoolean), fname))
+#define my_char_malloc(count, fname)       ((SpiceChar *)my_malloc_internal((count) * sizeof(SpiceChar), fname))
 
 /* Internal routine to compare integers for equality */
 int my_assert_eq(int a, int b, const char *fname, const char *message) {
@@ -147,7 +127,7 @@ void stlabx_(ConstSpiceDouble pobj[3],
 
 // From cspyce_typemaps.i
 void set_python_exception_flag(SpiceInt flag);
-SpiceInt get_python_exception_flag(void);
+int get_python_exception_flag(void);
 char *get_message_after_reset(SpiceInt option);
 void reset_messages(void);
 
@@ -1491,7 +1471,7 @@ extern void dafopr_c(
         *dc_size = max(nd, 0);
         *ic_size = max(ni, 0);
         *dc = my_malloc(*dc_size, "dafus");
-        *ic = my_malloc(*ic_size, "dafus");
+        *ic = my_int_malloc(*ic_size, "dafus");
         if (*dc && *ic) {
             dafus_c(sum, nd, ni, *dc, *ic);
         }
@@ -2448,7 +2428,7 @@ VECTORIZE_3d_dX__dN(edlimb, edlimb_c, NELLIPSE)
         *trmpts = my_malloc(npts * 3, "edterm");
         if (*trmpts) {
             edterm_c(trmtyp, source, target, et, fixref, abcorr, obsrvr, npts,
-                     trgepc, obspos, *trmpts);
+                     trgepc, obspos, (SpiceDouble (*)[3])*trmpts);
         }
     }
 %}
@@ -3308,7 +3288,7 @@ extern void frinfo_c(
         SpiceDouble et,
         SpiceDouble xform[6][6])
     {
-        frmchg_(&frame1, &frame2, &et, xform);
+        frmchg_(&frame1, &frame2, &et, (SpiceDouble *)xform);   // CHECK THIS!
     }
 %}
 
@@ -3598,12 +3578,12 @@ VECTORIZE_5d__dN(georec, georec_c, 3)
 %apply (void RETURN_VOID) {void my_getmsg_c};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *option};
 %apply (SpiceInt DIM1, SpiceChar OUT_STRING[ANY])
-                          {(SpiceInt lenout, SpiceChar msg[LONGMSGLEN])};
+                          {(SpiceInt lenout, SpiceChar msg[LONGMSGLEN + 1])};
 
 %inline %{
     void my_getmsg_c(
         ConstSpiceChar *option,
-        SpiceInt lenout, SpiceChar msg[LONGMSGLEN])
+        SpiceInt lenout, SpiceChar msg[LONGMSGLEN + 1])
     {
         if (eqstr_c(option, "SHORT")) {
             strncpy(msg, get_message_after_reset(0), LONGMSGLEN);
@@ -4585,7 +4565,7 @@ VECTORIZE_3d__dN(latrec, latrec_c, 3)
         *sdim2 = 3;
         *srfpts = my_malloc(npts * 3, "latsrf");
         if (*srfpts) {
-            latsrf_c(method, target, et, fixref, npts, lonlat, *srfpts);
+            latsrf_c(method, target, et, fixref, npts, lonlat, (SpiceDouble (*)[3])*srfpts);
         }
     }
 %}
@@ -4759,7 +4739,7 @@ extern void ldpool_c(
         if (*npts && *points && *epochs && *tangts) {
             limbpt_c(method, target, et, fixref, abcorr, corloc, obsrvr, refvec,
                      rolstp, ncuts, schstp, soltol, maxn,
-                     *npts, *points, *epochs, *tangts);
+                     *npts, (SpiceDouble (*)[3])*points, *epochs, (SpiceDouble (*)[3])*tangts);
         }
 
     }
@@ -7254,7 +7234,7 @@ VECTORIZE_dX__3d(recsph, recsph_c)
         SpiceDouble et,
         SpiceDouble rotate[3][3])
     {
-        refchg_(&frame1, &frame2, &et, rotate);
+        refchg_(&frame1, &frame2, &et, (SpiceDouble *)rotate);
     }
 %}
 
@@ -9184,7 +9164,7 @@ extern void srfcss_c(
         *dim2 = 3;
         *normls = my_malloc(npts * 3, "srfnrm");
         if (*normls) {
-            srfnrm_c(method, target, et, fixref, npts, srfpts, *normls);
+            srfnrm_c(method, target, et, fixref, npts, srfpts, (SpiceDouble (*)[3]) *normls);
         }
     }
 %}
@@ -10217,7 +10197,7 @@ VECTORIZE_2s_d__dMN(sxform, sxform_c, 6, 6)
         if (*npts && *points && *epochs && *trmvcs) {
             termpt_c(method, ilusrc, target, et, fixref, abcorr, corloc, obsrvr,
                      refvec, rolstp, ncuts, schstp, soltol, maxn,
-                     *npts, *points, *epochs, *trmvcs);
+                     *npts, (SpiceDouble (*)[3]) *points, *epochs, (SpiceDouble (*)[3]) *trmvcs);
         }
     }
 %}
