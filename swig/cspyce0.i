@@ -49,6 +49,7 @@ void *my_malloc_internal(int size, const char *fname) {
         sigerr_c("SPICE(MALLOCFAILURE)");
         chkout_c(fname);
     }
+
     return result;
 }
 
