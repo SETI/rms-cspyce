@@ -3289,7 +3289,7 @@ extern void frinfo_c(
         SpiceDouble et,
         SpiceDouble xform[6][6])
     {
-        frmchg_(&frame1, &frame2, &et, (SpiceDouble *)xform);   // CHECK THIS!
+        frmchg_(&frame1, &frame2, &et, (SpiceDouble *)xform);
     }
 %}
 
