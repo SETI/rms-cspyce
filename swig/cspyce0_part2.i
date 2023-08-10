@@ -3423,7 +3423,7 @@ extern void dski02_c(
 
         if (work && *spaixi) {
             dskmi2_c(nv, vrtces, np, plates, finscl, corscl, worksz, voxpsz, voxlsz,
-                     makvtl, spxisz, work, *spaixd, *spaixi);
+                     makvtl, spxisz, (SpiceInt (*)[2]) work, *spaixd, *spaixi);
         }
         PyMem_Free(work);
     }
@@ -3571,10 +3571,11 @@ extern void dskopn_c(
         SpiceInt      room,
         SpiceInt      **plates, SpiceInt *dim1, SpiceInt *dim2)
     {
+        *dim1 = room;
         *dim2 = 3;
         *plates = my_int_malloc(3 * room, "dskp02");
         if (*plates) {
-            dskp02_c(handle, dladsc, start, room, dim1, *plates);
+            dskp02_c(handle, dladsc, start, room, dim1, (SpiceInt (*)[3]) *plates);
         }
     }
 %}
@@ -3735,7 +3736,7 @@ extern void dskstl_c(
         *dim2 = 3;
         *vrtces = my_malloc(3 * room, "dskv02_c");
         if (*vrtces) {
-            dskv02_c(handle, dladsc, start, room, dim1, *vrtces);
+            dskv02_c(handle, dladsc, start, room, dim1, (SpiceDouble (*)[3]) *vrtces);
         }
     }
 %}
@@ -4063,11 +4064,11 @@ extern void dskx02_c(
         *n3 = nrays;
         *nv = 3;
         *n4 = nrays;
-        *fndarr = my_malloc(nrays, "dskxv");
+        *fndarr = my_boolean_malloc(nrays, "dskxv");
         *xptarr =  my_malloc(nrays * 3, "dskxv");
         if (*fndarr && *xptarr) {
             dskxv_c(pri, target, nsurf, srflst, et, fixref, nrays,
-                    vtxarr, dirarr, *xptarr, *fndarr);
+                    vtxarr, dirarr, (SpiceDouble (*)[3]) *xptarr, *fndarr);
         }
     }
 %}
@@ -5533,12 +5534,12 @@ extern void ekrcei_c(
 
         ekssum_c(handle, segno, &segsum);
 
-        strncpy(tabnam, segsum.tabnam, SPICE_EK_TSTRLN);
+        strncpy((char *)tabnam, (char *)segsum.tabnam, SPICE_EK_TSTRLN);
         *nrows = segsum.nrows;
         *ncols = segsum.ncols;
 
         for (int k = 0; k < *ncols; k++) {
-            strncpy(&(cnames[k]), &(segsum.cnames[k]), SPICE_EK_CSTRLN);
+            strncpy((char *)cnames[k], (char *)segsum.cnames[k], SPICE_EK_CSTRLN);
             cclass[k] = (SpiceInt) segsum.cdescrs[k].cclass;
             dtype[k]  = (SpiceInt) segsum.cdescrs[k].dtype;
             strln[k]  = segsum.cdescrs[k].strlen;
@@ -7833,7 +7834,7 @@ VECTORIZE_2d_di_d__RETURN_d(lgresp, my_lgresp_c)
             "Array dimension mismatch in lgrind: "
             "xvals dimension = #; yvals dimension = #")) return;
 
-        SpiceDouble *work = my_malloc(2*n + 2, "lgrind");
+        SpiceDouble *work = my_malloc(2 * n + 2, "lgrind");
         if (work) {
             lgrind_c(n, xvals, yvals, work, x, p, dp);
         }

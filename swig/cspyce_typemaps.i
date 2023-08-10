@@ -696,7 +696,7 @@ get_contiguous_array(int typecode, PyObject *input, int min, int max, int flags)
     // Convert the results to Python strings and add them to the list
     for (int i = 0; i < rows; i++) {
         char *str = &buffer[i * columns];
-        int length = strlen(str);
+        size_t length = strlen(str);
         while (length > 0 && str[length - 1] == ' ') {
             length--;
         }
@@ -2130,7 +2130,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
 %typemap(in, numinputs=0)
     (SpiceInt *SIZE1, SpiceInt *SIZE2, Type OUT_ARRAY2[ANY][ANY])
-        (PyArrayObject* pyarr = NULL, SpiceInt dimsize[2], SpiceInt outsize[2])
+        (PyArrayObject* pyarr = NULL, SpiceInt outsize[2])
 {
 //      $1_type $1_name, $2_type $2_name, $3_type $3_name
 //      (SpiceInt *SIZE1, SpiceInt *SIZE2, Type OUT_ARRAY2[ANY][ANY])
@@ -2140,9 +2140,6 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     npy_intp dims[2] = {$3_dim0, $3_dim1};                      // ARRAY
     pyarr = (PyArrayObject *) PyArray_SimpleNew(2, dims, Typecode);
     TEST_MALLOC_FAILURE(pyarr);
-
-    dimsize[0] = (SpiceInt) dims[0];
-    dimsize[1] = (SpiceInt) dims[1];
 
     $3 = ($3_ltype) PyArray_DATA(pyarr);                        // ARRAY
     $1 = &outsize[0];                                           // SIZE1
@@ -2774,9 +2771,9 @@ char *byte_string_to_buffer_minimum_size(
 
 %typemap(in, numinputs=0)
     (Type OUT_STRING[ANY], SpiceInt *SIZE1)                      // PATTERN
-        (Type *buffer = NULL, size_t size1),
+        (Type *buffer = NULL, SpiceInt size1),
     (Type OUT_STRING[ANY], SpiceInt *SIZE1)                      // PATTERN
-        (Type *buffer = NULL, size_t size1)
+        (Type *buffer = NULL, SpiceInt size1)
 {
 //      $1_type $1_name, $2_type $2_name
 //    (Type OUT_STRING[ANY], SpiceInt *SIZE1)                    // PATTERN

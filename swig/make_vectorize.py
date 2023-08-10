@@ -23,6 +23,12 @@ import os
 import re
 from collections import Counter
 from dataclasses import dataclass
+import platform
+
+IS_LINUX = platform.system() == "Linux"
+IS_MACOS = platform.system() == "Darwin"
+IS_WINDOWS = platform.system() == "Windows"
+assert IS_LINUX or IS_MACOS or IS_WINDOWS
 
 
 class Indent:
@@ -291,9 +297,11 @@ class MacroGenerator:
             type, count = arg.get_malloc()
             name = arg.name
             if not last_name:
-                out(f'{type} *{name}_buffer = ({type} *)PyMem_Malloc({count} * sizeof({type}));')
+                out(f'{type} *{name}_buffer = '
+                    f'({type} *)PyMem_Malloc({count} * sizeof({type}));')
             else:
-                out(f'{type} *{name}_buffer = {last_name}_buffer ? ({type} *)PyMem_Malloc({count} * sizeof({type})) : NULL;')
+                out(f'{type} *{name}_buffer = '
+                    f'{last_name}_buffer ? ({type} *)PyMem_Malloc({count} * sizeof({type})) : NULL;')
             last_name = name
         for arg in self.outargs:
             out(f'*{arg.name} = {arg.name}_buffer;')
@@ -307,6 +315,13 @@ class MacroGenerator:
 
     def generate_cspice_call(self):
         out = self.out
+        if IS_MACOS or IS_LINUX:
+            out(f'#pragma GCC diagnostic push', indent=False)
+            out(f'#pragma GCC diagnostic ignored "-Wincompatible-pointer-types"', indent=False)
+        if IS_LINUX:
+            out(f'#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"', indent=False)
+        if IS_WINDOWS:
+            out(f'#pragma warning (push, 0)', indent=False)
         if self.use_return:
             out(f'{self.outargs[0].name}_buffer[i] = FUNC(')
         else:
@@ -318,6 +333,11 @@ class MacroGenerator:
             for k, arg in enumerate(funcargs):
                 suffix = ',' if k < len(funcargs) - 1 else ");"
                 out(f'{arg.get_call(sizer_count)}{suffix}')
+        if IS_MACOS or IS_LINUX:
+            out(f'#pragma GCC diagnostic pop', indent=False)
+        else:
+            out(f'#pragma warning (pop)', indent=False)
+
     def __get_out_letters(self):
         out_letters = []
         for arg in self.outargs:
