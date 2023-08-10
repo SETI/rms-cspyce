@@ -3290,6 +3290,8 @@ extern void frinfo_c(
         SpiceDouble xform[6][6])
     {
         frmchg_(&frame1, &frame2, &et, (SpiceDouble *)xform);
+        // We are calling Fortran, so the resulting matrix needs to be transposed.
+        xpose6_c(xform, xform);
     }
 %}
 
@@ -7236,6 +7238,8 @@ VECTORIZE_dX__3d(recsph, recsph_c)
         SpiceDouble rotate[3][3])
     {
         refchg_(&frame1, &frame2, &et, (SpiceDouble *)rotate);
+        // We are calling Fortran, so the resulting matrix needs to be transposed.
+        xpose_c(rotate, rotate);
     }
 %}
 
