@@ -605,13 +605,11 @@ def test_recazl():
     
     
 def test_refchg():
-    frame1 = 1
-    frame2 = 2
-    et = 123456789.0
+    et = 31415926.0
+    frame1 = cs.namfrm("J2000")
+    frame2 = cs.namfrm("B1950")
+    expected = cs.pxform("J2000", "B1950", et)
     calculated = cs.refchg(frame1, frame2, et)
-    expected = [[ 9.99925708e-01, -1.11789381e-02, -4.85900382e-03],
-                [ 1.11789381e-02,  9.99937513e-01, -2.71625947e-05],
-                [ 4.85900384e-03, -2.71579263e-05,  9.99988195e-01]]
     npt.assert_almost_equal(expected, calculated)
 
     
