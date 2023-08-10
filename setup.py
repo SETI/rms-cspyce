@@ -193,8 +193,8 @@ def get_c_libraries():
 
 
 def get_extensions():
-    cspyce_cflags = ["/nowarn", "/DSWIG_PYTHON_CAST_MODE"] if IS_WINDOWS \
-        else ["-Wno-incompatible-pointer-types", "-DSWIG_PYTHON_CAST_MODE"]
+    cspyce_cflags = ["/DSWIG_PYTHON_CAST_MODE"] if IS_WINDOWS \
+                      else ["-DSWIG_PYTHON_CAST_MODE"]
     include_dirs = [os.path.join(cspice_directory, "include"), numpy.get_include()]
 
     cspyce0_module = Extension(
