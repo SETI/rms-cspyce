@@ -14,6 +14,7 @@ from gettestkernels import (
     TEST_FILE_DIR
 )
 
+
 @pytest.fixture(autouse=True)
 def clear_kernel_pool_and_reset():
     cs.kclear()
@@ -190,29 +191,29 @@ def test_bodvcd():
     assert dim == 3
     expected = np.array([6378.140, 6378.140, 6356.755])
     np.testing.assert_array_almost_equal(expected, values, decimal=1)
-    
-    
+
+
 def test_bodvrd():
     cs.furnsh(CoreKernels.testMetaKernel)
     dim, values = 3, cs.bodvrd("EARTH", "RADII")
     assert dim == 3
     expected = np.array([6378.140, 6378.140, 6356.755])
     np.testing.assert_array_almost_equal(expected, values, decimal=1)
-    
-    
+
+
 def test_brcktd():
     assert cs.brcktd(-1.0, 1.0, 10.0) == 1.0
     assert cs.brcktd(29.0, 1.0, 10.0) == 10.0
     assert cs.brcktd(3.0, -10.0, 10.0) == 3.0
     assert cs.brcktd(3.0, -10.0, -1.0) == -1.0
-    
-    
+
+
 def test_brckti():
     assert cs.brckti(-1, 1, 10) == 1
     assert cs.brckti(29, 1, 10) == 10
     assert cs.brckti(3, -10, 10) == 3
     assert cs.brckti(3, -10, -1) == -1
-    
+
 
 def test_bschoc():
     array = ["FEYNMAN", "BOHR", "EINSTEIN", "NEWTON", "GALILEO"]
@@ -222,7 +223,7 @@ def test_bschoc():
     assert cs.bschoc("GALILEO", array, order) == 4
     assert cs.bschoc("Galileo", array, order) == -1
     assert cs.bschoc("OBETHE", array, order) == -1
-    
+
 
 def test_bschoi():
     array = [100, 1, 10, 10000, 1000]
@@ -248,21 +249,21 @@ def test_bsrchd():
     assert cs.bsrchd(-11.0, array) == 0
     assert cs.bsrchd(22.0, array) == 2
     assert cs.bsrchd(751.0, array) == -1
-    
+
 
 def test_bsrchi():
     array = np.array([-11, 0, 22, 750])
     assert cs.bsrchi(-11, array) == 0
     assert cs.bsrchi(22, array) == 2
     assert cs.bsrchi(751, array) == -1
-    
-    
+
+
 def test_ccifrm():
     frcode, frname, center = cs.ccifrm(2, 3000)
     assert frname == "ITRF93"
     assert frcode == 13000
     assert center == 399
-    
+
 
 def test_cgv2el():
     vec1 = [1.0, 1.0, 1.0]
@@ -275,22 +276,22 @@ def test_cgv2el():
     npt.assert_array_almost_equal(expected_center, ellipse[0:3])
     npt.assert_array_almost_equal(expected_s_major, ellipse[3:6])
     npt.assert_array_almost_equal(expected_s_minor, ellipse[6:9])
-    
-    
+
+
 def test_chbder():
     cp = [1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0]
     x2s = [0.5, 3.0]
     dpdxs = cs.chbder(cp, x2s, 1.0, 3)
     npt.assert_array_almost_equal([-0.340878, 0.382716, 4.288066, -1.514403],
                                   dpdxs)
-    
+
 
 def test_chbigr():
     p, itgrlp = cs.chbigr([0.0, 3.75, 0.0, 1.875, 0.0, 0.375], [20.0, 10.0],
                           30.0)
     assert p == pytest.approx(6.0)
     assert itgrlp == pytest.approx(10.0)
-    
+
 
 def test_chbint():
     p, dpdx = cs.chbint([1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0], [0.5, 3.0], 1.0)
@@ -301,8 +302,8 @@ def test_chbint():
 def test_chbval():
     p = cs.chbval([1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0], [0.5, 3.0], 1.0)
     assert p == pytest.approx(-0.340878, abs=1e-6)
-    
-    
+
+
 def test_chkin():
     cs.reset()
     assert cs.trcdep() == 0
@@ -315,8 +316,8 @@ def test_chkin():
     cs.chkout("test")
     assert cs.trcdep() == 0
     cs.reset()
-    
-    
+
+
 def test_chkout():
     cs.reset()
     assert cs.trcdep() == 0
@@ -372,14 +373,15 @@ def test_ckcls():
 def test_ckcov(path_type_variant):
     cs.furnsh(CassiniKernels.cassSclk)
     ckid = cs.ckobj(path_type_variant(CassiniKernels.cassCk))[0]
-    cover = cs.ckcov(path_type_variant(CassiniKernels.cassCk), ckid, False, "INTERVAL", 0.0, "SCLK")
+    cover = cs.ckcov(path_type_variant(CassiniKernels.cassCk),
+                     ckid, False, "INTERVAL", 0.0, "SCLK")
     expected_intervals = [
         [267832537952.000000, 267839247264.000000],
         [267839256480.000000, 267867970464.000000],
         [267868006304.000000, 267876773792.000000],
     ]
     npt.assert_array_equal(cover.as_intervals(), expected_intervals)
-    
+
 
 def test_ckfrot():
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -403,7 +405,7 @@ def test_ckfrot():
     assert ref == 1
 
 
-def fail_ckfxfm():
+def test_ckfxfm():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(CassiniKernels.cassSclk)
     cs.furnsh(CassiniKernels.cassCk)
@@ -417,7 +419,7 @@ def fail_ckfxfm():
     arc = cs.vnorm(av)
     assert ref == 1
     assert arc > 0
-    
+
 
 def test_ckgp():
     cs.reset()
@@ -428,8 +430,9 @@ def test_ckgp():
     cs.furnsh(CassiniKernels.cassFk)
     cs.furnsh(CassiniKernels.cassPck)
     ckid = cs.ckobj(CassiniKernels.cassCk)[0]
-    cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
-    
+    cover = cs.ckcov(CassiniKernels.cassCk, ckid,
+                     False, "INTERVAL", 0.0, "SCLK")
+
     cmat, clkout = cs.ckgp(ckid, cover[0], 256, "J2000")
     expected_cmat = [
         [0.5064665782997639365, -0.75794210739897316387, 0.41111478554891744963],
@@ -449,7 +452,8 @@ def test_ckgpav():
     cs.furnsh(CassiniKernels.cassFk)
     cs.furnsh(CassiniKernels.cassPck)
     ckid = cs.ckobj(CassiniKernels.cassCk)[0]
-    cover = cs.ckcov(CassiniKernels.cassCk, ckid, False, "INTERVAL", 0.0, "SCLK")
+    cover = cs.ckcov(CassiniKernels.cassCk, ckid,
+                     False, "INTERVAL", 0.0, "SCLK")
     cmat, avout, clkout = cs.ckgpav(ckid, cover[0], 256, "J2000")
     expected_cmat = [
         [0.5064665782997639365, -0.75794210739897316387, 0.41111478554891744963],
@@ -464,7 +468,7 @@ def test_ckgpav():
     npt.assert_array_almost_equal(cmat, expected_cmat)
     npt.assert_array_almost_equal(avout, expected_avout)
     assert clkout == 267832537952.0
-    
+
 
 def test_ckgr02_cknr02():
     cs.kclear()
@@ -487,7 +491,7 @@ def test_ckgr02_cknr02():
     assert sclkr == pytest.approx(0.001000)
     cs.dafcls(handle)
     cs.kclear()
-    
+
 
 def test_ckgr03_cknr03():
     cs.kclear()
@@ -538,14 +542,14 @@ def test_cklpf(path_type_variant):
     assert os.path.isfile(cklpf)
     cleanup_kernel(cklpf)
     assert not os.path.isfile(cklpf)
-    
-    
+
+
 def test_ckmeta():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
     idcode = cs.ckmeta(-32000, "SCLK")
     assert idcode == -32
-    
+
 
 @checking_pathlike_filename_variants("path_type_variant")
 def test_ckobj(path_type_variant):
@@ -553,7 +557,7 @@ def test_ckobj(path_type_variant):
     cs.furnsh(CassiniKernels.cassSclk)
     ids = cs.ckobj(path_type_variant(CassiniKernels.cassCk))
     assert len(ids) == 1
-    
+
 
 @checking_pathlike_filename_variants("path_type_variant")
 def test_ckopn(path_type_variant):
@@ -580,8 +584,8 @@ def test_ckopn(path_type_variant):
     assert os.path.exists(ck1)
     cleanup_kernel(ck1)
     assert not os.path.exists(ck1)
-    
-    
+
+
 def test_ckupf():
     cs.reset()
     handle = cs.cklpf(CassiniKernels.cassCk)
@@ -694,7 +698,7 @@ def fail_ckw02():
     assert end_size != init_size
     cs.kclear()
     cleanup_kernel(ck2)
-    
+
 
 def fail_ckw03():
     ck3 = os.path.join(TEST_FILE_DIR, "type3.bc")
@@ -744,7 +748,7 @@ def fail_ckw03():
     assert end_size != init_size
     cs.kclear()
     cleanup_kernel(ck3)
-    
+
 
 # Test fails.
 def fail_ckw05():
@@ -893,11 +897,11 @@ def fail_ckw05():
     assert clk == pytest.approx(0.5)
     cs.kclear()
     cleanup_kernel(ck5)
-    
-    
+
+
 def test_clight():
     assert cs.clight() == 299792.458
-    
+
 
 def test_clpool():
     cs.pdpool("TEST_VAR", [-666.0])
@@ -907,8 +911,8 @@ def test_clpool():
     cs.clpool()
     with pytest.raises(KeyError):
         cs.gdpool("TEST_VAR", 0)
-        
-        
+
+
 def test_cmprss():
     strings = ["ABC...DE.F...", "...........", ".. ..AB....CD"]
     assert cs.cmprss(".", 2, strings[0]) == "ABC..DE.F.."
@@ -916,14 +920,15 @@ def test_cmprss():
     assert cs.cmprss(".", 1, strings[2]) == ". .AB.CD"
     assert cs.cmprss(".", 3, strings[1]) == "..."
     assert cs.cmprss(".", 1, strings[2]) == ". .AB.CD"
-    assert cs.cmprss(" ", 0, " Embe dde d -sp   a c  es   ") == "Embedded-spaces"
-    
-    
+    assert cs.cmprss(
+        " ", 0, " Embe dde d -sp   a c  es   ") == "Embedded-spaces"
+
+
 def test_cnmfrm():
     ioFrcode, ioFrname = cs.cnmfrm("IO")
     assert ioFrcode == 10023
     assert ioFrname == "IAU_IO"
-    
+
 
 def test_conics():
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -944,7 +949,7 @@ def test_conics():
         -2.01458906615054056388e-03,
     ]
     npt.assert_array_almost_equal(pert, expected_pert, decimal=5)
-    
+
 
 def test_convrt():
     assert cs.convrt(300.0, "statute_miles", "km") == 482.80320
@@ -955,8 +960,8 @@ def test_convrt():
     npt.assert_almost_equal(
         cs.convrt(1, "AU", "km"), 149597870.7, decimal=0
     )
-    
-    
+
+
 def test_cpos():
     string = "BOB, JOHN, TED, AND MARTIN...."
     assert cs.cpos(string, " ,", 0) == 3
@@ -970,8 +975,8 @@ def test_cpos():
     assert cs.cpos(string, " ,", -112) == 3
     assert cs.cpos(string, " ,", -1) == 3
     assert cs.cpos(string, " ,", 1230) == -1
-    
-    
+
+
 def test_cposr():
     string = "BOB, JOHN, TED, AND MARTIN...."
     assert cs.cposr(string, " ,", 29) == 19
@@ -987,7 +992,7 @@ def test_cposr():
     assert cs.cposr(string, " ,", 30) == 19
     assert cs.cposr(string, " ,", -1) == -1
     assert cs.cposr(string, " ,", -10) == -1
-    
+
 
 def test_cvpool():
     # add TEST_VAR_CVPOOL
@@ -1003,7 +1008,7 @@ def test_cvpool():
     assert value[0] == 565.0
     cs.clpool()
     assert updated is True
-    
+
 
 def test_cyllat():
     assert cs.cyllat(1.0, (180.0 * cs.rpd()), -1.0) == [
@@ -1011,13 +1016,13 @@ def test_cyllat():
         np.pi,
         -np.pi / 4,
     ]
-    
-    
+
+
 def test_cylrec():
     npt.assert_array_almost_equal(
         cs.cylrec(0.0, np.radians(33.0), 0.0), [0.0, 0.0, 0.0]
     )
-    
+
 
 def test_cylsph():
     a = np.array(cs.cylsph(1.0, np.deg2rad(180.0), 1.0))
