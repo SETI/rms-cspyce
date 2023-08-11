@@ -523,7 +523,8 @@ def test_ekifld():
 
 @checking_pathlike_filename_variants("path_type_variant")
 def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
-    ekpath = path_type_variant(os.path.join(TEST_FILE_DIR, "example_ekmany.ek"))
+    ekpath = path_type_variant(os.path.join(
+        TEST_FILE_DIR, "example_ekmany.ek"))
     tablename = "test_table_ekmany"
     cleanup_kernel(ekpath)
     # Create new EK and new segment with table
@@ -562,7 +563,7 @@ def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
     assert xtypes[2] == 2
     assert ([0] * 3) == list(xclass)
     assert ('TEST_TABLE_EKMANY',
-            'TEST_TABLE_EKMANY', 
+            'TEST_TABLE_EKMANY',
             'TEST_TABLE_EKMANY') == tabs
     assert ('C1', 'D1', 'I1') == cols
     # Run query to retrieve the row count
@@ -903,7 +904,7 @@ def fail_errint():
 
 def test_errprt():
     assert cs.errprt("GET", "ALL") == ("SHORT, LONG, EXPLAIN, TRACEBACK, "
-                                      "DEFAULT")
+                                       "DEFAULT")
 
 
 def test_esrchc():
