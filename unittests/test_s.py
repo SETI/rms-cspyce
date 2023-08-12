@@ -574,7 +574,6 @@ def test_spkapp():
     npt.assert_array_almost_equal(state_vec, expected_vec, decimal=6)
     
 
-# Test changed: acc needs to be of size 3, not 6
 def test_spkaps():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2000 JAN 1 12:00:00 TDB")
@@ -1270,8 +1269,7 @@ def test_spkw03():
     assert end_size != init_size
     cleanup_kernel(spk3)
     
-
-# Test changed: the array needs to be flattened before 
+ 
 def test_spkw05():
     spk5 = os.path.join(TEST_FILE_DIR, "test5.bsp")
     cleanup_kernel(spk5)
@@ -1312,7 +1310,6 @@ def test_spkw05():
     cleanup_kernel(spk5)
     
 
-# Test changed: discrete_states array needs to be flattened
 def test_spkw08():
     spk8 = os.path.join(TEST_FILE_DIR, "test8.bsp")
     cleanup_kernel(spk8)
@@ -1850,8 +1847,6 @@ def test_srfscc():
     cleanup_kernel(kernel)
     
 
-# Test changed: cspyce.srfxpt() non-vector version does not support iterable
-# 'et' variable.
 def test_srfxpt():
     # load kernels
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -2015,7 +2010,6 @@ def test_subpnt():
         npt.assert_almost_equal(opclat * cs.dpr(), expected[10], decimal=5)
 
 
-# Test changed: cspyce.subpt_error() does not take iterable 'et' arg
 def test_subpt():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("JAN 1, 2006")
@@ -2108,8 +2102,7 @@ def test_surfnm():
     npt.assert_array_almost_equal(cs.surfnm(1.0, 2.0, 3.0, point),
                                   [0.0, 0.0, 1.0])
     
-    
-# Test changed. cspyce.surfpt() returns [Numpy array, Boolean]
+
 def test_surfpt():
     position = [2.0, 0.0, 0.0]
     u = [-1.0, 0.0, 0.0]
@@ -2117,7 +2110,6 @@ def test_surfpt():
     npt.assert_array_almost_equal(point[0], [1.0, 0.0, 0.0])
     
 
-# Test changed. cspyce.surfpv() returns [Numpy array, Boolean]
 def test_surfpv():
     stvrtx = [2.0, 0.0, 0.0, 0.0, 0.0, 3.0]
     stdir = [-1.0, 0.0, 0.0, 0.0, 0.0, 4.0]
