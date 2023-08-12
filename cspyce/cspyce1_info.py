@@ -54,7 +54,8 @@ ERROR_INFO = [      # (function name, return value to remove if any, postscript 
                          'TypeError(WRONGDATATYPE) if it has the wrong type; ' +
                          'IndexError(INDEXOUTOFRANGE) if the start index is out of range.'),
     ('tparse', 'errmsg', 'Raise ValueError(INVALIDTIMESTRING) if the sample string is invalid.'),
-    ('tpictr', 'errmsg', 'Raise ValueError(INVALIDTIMESTRING) if the sample string is invalid.'),
+    ('tpictr', ('ok',
+                'errmsg'), 'Raise ValueError(INVALIDTIMESTRING) if the sample string is invalid.'),
 
 # Functions defined in cspyce0_part2.i
     ('ckfrot',  'found', 'Raise IOError(CKINSUFFDATA) if the requested information is unavailable.'),

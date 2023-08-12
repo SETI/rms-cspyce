@@ -429,28 +429,28 @@ class Test_cspyce1_kernels(unittest.TestCase):
     self.assertRaises(KeyError, frinfo, INTMAX)
 
     # frmchg, sxform, pxform, xf2rav, pxfrm2, refchg
-    sat0a = frmchg(1, 10016, 0.)
-    sat1a = frmchg(1, 10016, 86400.)
+    sat0a = frmchg(10016, 1, 0.)
+    sat1a = frmchg(10016, 1, 86400.)
     sat0b = sxform('IAU_SATURN', 'J2000', 0.)
     sat1b = sxform('IAU_SATURN', 'J2000', 86400.)
     sat0c = pxform('IAU_SATURN', 'J2000', 0.)
     sat1c = pxform('IAU_SATURN', 'J2000', 86400.)
     sat0d = pxfrm2('IAU_SATURN', 'J2000', 0., 0.)
     sat1d = pxfrm2('IAU_SATURN', 'J2000', 86400., 86400.)
-    sat0e = refchg(1, 10016, 0.)
-    sat1e = refchg(1, 10016, 86400.)
+    sat0e = refchg(10016, 1, 0.)
+    sat1e = refchg(10016, 1, 86400.)
 
     self.assertAllEqual(sat0a[:3,:3], sat0b[:3,:3], 0)
     self.assertAllEqual(sat0a[:3,:3], sat0c, 0)
     self.assertAllEqual(sat0a[:3,:3], sat0d, 0)
     self.assertAllEqual(sat0a[:3,:3], sat0e, 0)
-    self.assertAllEqual(sat0a[:3,:3], sat0a[3:,3:], 0)  # frmchg not rotating
+    self.assertAllEqual(sat0a[:3,:3], sat0a[3:,3:], 0) # true even for rotating frames
 
     self.assertAllEqual(sat1a[:3,:3], sat1b[:3,:3], 0)
     self.assertAllEqual(sat1a[:3,:3], sat1c, 0)
     self.assertAllEqual(sat1a[:3,:3], sat1d, 0)
     self.assertAllEqual(sat1a[:3,:3], sat1e, 0)
-    self.assertAllEqual(sat1a[:3,:3], sat1a[3:,3:], 0)
+    self.assertAllEqual(sat1a[:3,:3], sat1a[3:,3:], 0)  # true even for rotating frames
 
     (mat0a, vec0a) = xf2rav(sat0a)
     (mat1a, vec1a) = xf2rav(sat1a)
@@ -462,16 +462,22 @@ class Test_cspyce1_kernels(unittest.TestCase):
     self.assertAllEqual(sat0b[:3,:3], mat0b, 0)
     self.assertAllEqual(sat1b[:3,:3], mat1b, 0)
 
-    self.assertAllEqual(vec0a, 3*[0.], 0.)
-    self.assertAllEqual(vec1a, 3*[0.], 0.)
+    # Make sure that non-rotating frames have the form we're expecting
+    non_rotate = frmchg(1, 2, 0.)   # J2000 and B1950 are both fixed
+    self.assertAllEqual(non_rotate[:3,:3], non_rotate[3:,3:])
+    self.assertFalse(np.any(non_rotate[:3, 3:]))  # top left and bottom right are zero
+    self.assertFalse(np.any(non_rotate[3:, :3]))
+    non_rotate_matrix, non_rotate_vec = xf2rav(non_rotate)
+    self.assertAllEqual(non_rotate[:3, :3], non_rotate_matrix)
+    self.assertAllEqual(non_rotate_vec, [0., 0., 0.])
 
     self.assertAllEqual(vec0b, vec1b, 1.e-13)
 
-    sat01a = frmchg_vector(1, 10016, [0.,86400.])
+    sat01a = frmchg_vector(10016, 1, [0.,86400.])
     sat01b = sxform_vector('IAU_SATURN', 'J2000', [0.,86400.])
     sat01c = pxform_vector('IAU_SATURN', 'J2000', [0.,86400.])
     sat01d = pxfrm2_vector('IAU_SATURN', 'J2000', [0.,86400.], [0.,86400.])
-    sat01e = refchg_vector(1, 10016, [0.,86400.])
+    sat01e = refchg_vector(10016, 1, [0.,86400.])
 
     self.assertAllEqual(sat01a, [sat0a,sat1a], 0)
     self.assertAllEqual(sat01b, [sat0b,sat1b], 0)
