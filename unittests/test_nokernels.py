@@ -6,10 +6,10 @@ import numpy as np
 import numbers
 import cspyce as s
 
-π = pi = np.pi
+pi = np.pi
 
 
-class Test_cspyce1_nokernels:
+class TestCspyce1NoKernels:
     def assertAllEqual(self, arg1, arg2, tol=1.e-15):
         if type(arg1) == list:
             assert type(arg2) == list
@@ -36,18 +36,16 @@ class Test_cspyce1_nokernels:
             assert arg1 == arg2
 
     def test_constants(self):
-        assert s.pi() == π
-        assert s.halfpi() == π / 2
-        assert s.twopi() == π * 2
+        assert s.pi() == pi
+        assert s.halfpi() == pi / 2
+        assert s.twopi() == pi * 2
         assert s.intmin() == -2 ** 31
         assert s.intmax() == 2 ** 31 - 1
         assert s.dpmin() == -1.7976931348623157e+308
         assert s.dpmax() == 1.7976931348623157e+308
-        assert s.b1900() == 2415020.31352
-        assert s.b1950() == 2433282.42345905
         assert s.clight() == 299792.458
 
-        assert s.dpr() == 180./π
+        assert s.dpr() == 180./pi
         assert s.rpd() == 1./s.dpr()
 
         assert s.j1900() == 2415020.0
@@ -60,17 +58,6 @@ class Test_cspyce1_nokernels:
         assert s.b1900() == 2415020.31352
         assert s.b1950() == 2433282.42345905
         assert s.clight() == 299792.458
-
-        assert s.dpr() == 180./π
-        assert s.rpd() == 1./s.dpr()
-
-        assert s.j1900() == 2415020.0
-        assert s.j1950() == 2433282.5
-        assert s.j2000() == 2451545.0
-        assert s.j2100() == 2488070.0
-        assert s.jyear() == 31557600.0
-        assert s.tyear() == 31556925.9747
-        assert s.spd() == 86400.0
 
     def test_axisar(self):
         self.assertAllEqual(s.axisar([0,0,1],0.), [[ 1,0,0],[0, 1,0],[0,0,1]])
@@ -193,7 +180,7 @@ class Test_cspyce1_nokernels:
         ident = np.array([[1,0,0],[0,1,0],[0,0,1]]).astype('float')
         assert s.det(ident) == 1.
 
-        idents = np.arange(20).reshape(20, 1, 1) * ident
+        idents = np.arange(20).reshape((20, 1, 1)) * ident
         self.assertAllEqual(s.det_vector(idents), np.arange(20)**3)
 
     def test_diags2(self):
@@ -409,19 +396,19 @@ class Test_cspyce1_nokernels:
         mat = np.arange(9).reshape(3,3)
         self.assertAllEqual(s.xpose(mat), np.swapaxes(mat,0,1), 0)
 
-        mat = np.arange(18).reshape(2,3,3)
+        mat = np.arange(18).reshape((2,3,3))
         self.assertAllEqual(s.xpose_vector(mat), np.swapaxes(mat,1,2), 0)
 
-        mat = np.arange(36).reshape(6,6)
+        mat = np.arange(36).reshape((6,6))
         self.assertAllEqual(s.xpose6(mat), np.swapaxes(mat,0,1), 0)
 
-        mat = np.arange(72).reshape(2,6,6)
+        mat = np.arange(72).reshape((2,6,6))
         self.assertAllEqual(s.xpose6_vector(mat), np.swapaxes(mat,1,2), 0)
 
-        mat = np.arange(6).reshape(2,3)
+        mat = np.arange(6).reshape((2,3))
         self.assertAllEqual(s.xposeg(mat), np.swapaxes(mat,0,1), 0)
 
-        mat = np.arange(24).reshape(4,2,3)
+        mat = np.arange(24).reshape((4,2,3))
         self.assertAllEqual(s.xposeg_vector(mat), np.swapaxes(mat,1,2), 0)
 
     def test_tkvrsn(self):
@@ -889,10 +876,10 @@ class Test_cspyce1_nokernels:
     def test_trace(self):
         ident = [[1,0,0],[0,1,0],[0,0,1]]
         self.assertAllEqual(s.trace(ident), 3.)
-        self.assertAllEqual(s.trace(np.arange(9).reshape(3,3)), 12.)
-        self.assertAllEqual(s.trace_vector(np.arange(9).reshape(3,3)), 12.)
-        self.assertAllEqual(s.trace_vector(np.arange(9).reshape(1,3,3)), [12.])
-        self.assertAllEqual(s.trace_vector(np.arange(36).reshape(4,3,3)),
+        self.assertAllEqual(s.trace(np.arange(9).reshape((3,3))), 12.)
+        self.assertAllEqual(s.trace_vector(np.arange(9).reshape((3,3))), 12.)
+        self.assertAllEqual(s.trace_vector(np.arange(9).reshape((1,3,3))), [12.])
+        self.assertAllEqual(s.trace_vector(np.arange(36).reshape((4,3,3))),
                                 [12,39,66,93.])
 
     def test_pltarr_pltval_pltexp_pltnp(self):
