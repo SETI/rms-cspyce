@@ -307,15 +307,13 @@ class Test_cspyce1_kernels:
             ccifrm_error(INTMIN, INTMIN)
 
     def test_ckcov(self):
-        #### ckcov
         values = ckcov(PATH_ / '17257_17262ra.bc', -82000, False, 'INTERVAL', 1., 'SCLK')
         npt.assert_array_equal(values.as_intervals(),
                                [[304593554335.0, 304610188193.0],
                                 [304610195359.0, 304622337377.0],
                                 [304622354271.0, 304625376609.0]])
 
-        values = ckcov.flag(PATH_ / '17257_17262ra.bc', 1, False, 'INTERVAL', 1.,
-                            'SCLK')
+        values = ckcov.flag(PATH_ / '17257_17262ra.bc', 1, False, 'INTERVAL', 1., 'SCLK')
         assert values.card == 0
 
         with pytest.raises(KeyError):
@@ -331,7 +329,6 @@ class Test_cspyce1_kernels:
                             limits)
 
     def test_ckgp_ckgpav(self):
-        #### ckgp and ckgpav
         sclk = 304593554335.
         (array1a, sclk1, found1) = ckgp.flag(-82000, sclk, 1., 'J2000')
         (array2a, array2b, sclk2, found2) = ckgpav.flag(-82000, sclk, 1., 'J2000')

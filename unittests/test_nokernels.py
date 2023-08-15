@@ -43,6 +43,9 @@ class TestCspyce1NoKernels:
         assert s.intmax() == 2 ** 31 - 1
         assert s.dpmin() == -1.7976931348623157e+308
         assert s.dpmax() == 1.7976931348623157e+308
+
+        assert s.b1900() == 2415020.31352
+        assert s.b1950() == 2433282.42345905
         assert s.clight() == 299792.458
 
         assert s.dpr() == 180./pi
@@ -55,9 +58,6 @@ class TestCspyce1NoKernels:
         assert s.jyear() == 31557600.0
         assert s.tyear() == 31556925.9747
         assert s.spd() == 86400.0
-        assert s.b1900() == 2415020.31352
-        assert s.b1950() == 2433282.42345905
-        assert s.clight() == 299792.458
 
     def test_axisar(self):
         self.assertAllEqual(s.axisar([0,0,1],0.), [[ 1,0,0],[0, 1,0],[0,0,1]])

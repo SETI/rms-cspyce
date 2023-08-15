@@ -140,8 +140,7 @@ def test_erract_errdev_errprt():
     with pytest.raises(KeyError):
         s.bodn2c('abc')
     assert s.getmsg('short') == 'SPICE(BODYNAMENOTFOUND)'
-    assert s.getmsg('long') == \
-                     'body name "abc" not found in kernel pool'
+    assert s.getmsg('long') == 'body name "abc" not found in kernel pool'
     assert not s.failed()
 
     #### chkin, chkout, trcdep, trcnam, sigerr with erract="EXCEPTION"
