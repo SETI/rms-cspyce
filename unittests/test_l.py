@@ -137,6 +137,11 @@ def test_lstlti():
     x = lstlti(12, [-2, -2, 0, 1, 1, 11])
     assert x == 5
 
+def test_foobar():
+    print()
+    for string in (".0666|", "-.678|", "+.678|"):
+        last, nchar = lx4dec(string, 0)
+        print(string, last, nchar)
 
 def test_lx4dec():
     string = '123|-234|+345|-123.|+234.|1.23|-2.34|+3.4567|.666|-.678|+.789'
@@ -144,6 +149,7 @@ def test_lx4dec():
     numbers = []
     while first < len(string):
         (last, nchar) = lx4dec(string, first)
+        print(first, nchar, last)
         if nchar > 0:
             numbers.append(string[first:first+nchar])
             first = last + 2

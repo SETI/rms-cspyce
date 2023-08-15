@@ -15,7 +15,7 @@ TWOPI = 2 * np.pi
 
 @pytest.fixture(autouse=True)
 def load_kernel():
-    kernels = Path(__file__).parent.parent / 'unittest_support/'
+    kernels = Path(__file__).parent.parent / 'unittest_support'
     furnsh(kernels / 'de421.bsp')
     furnsh(kernels / 'naif0012.tls')
     yield

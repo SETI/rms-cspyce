@@ -9,7 +9,7 @@ from pathlib import Path
 from cspyce import *
 import pytest
 
-PATH_ = Path(os.path.realpath(__file__)).parent.parent / "unittest_support/"
+PATH_ = Path(os.path.realpath(__file__)).parent.parent / "unittest_support"
 
 def furnish_kernels():
     furnsh(PATH_ / 'naif0012.tls')
@@ -888,7 +888,7 @@ class Test_cspyce1_kernels:
         with pytest.raises(ValueError):
             tparse('Tue Aug  6 11:10:57  1996g')
         try:
-            _ = tparse('Tue Aug  6 11:10:57  1996g')
+            tparse('Tue Aug  6 11:10:57  1996g')
         except ValueError as e:
             fullmsg = str(e)
             msg = fullmsg.split(' -- ')[2]
@@ -915,7 +915,7 @@ class Test_cspyce1_kernels:
         with pytest.raises(ValueError):
             tpictr('Tue Aug  6 11:10:57  1996g')
         try:
-            _ = tpictr('Tue Aug  6 11:10:57  1996g')
+            tpictr('Tue Aug  6 11:10:57  1996g')
         except ValueError as e:
             fullmsg = str(e)
             msg = fullmsg.split(' -- ')[2]
