@@ -6,10 +6,7 @@ import pytest
 
 from gettestkernels import (
     CoreKernels,
-    CassiniKernels,
     ExtraKernels,
-    download_kernels,
-    cleanup_core_kernels,
     TEST_FILE_DIR,
     checking_pathlike_filename_variants
 )
@@ -32,10 +29,6 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
-
-
-def setup_module(module):
-    download_kernels()
 
 
 def test_kclear():
@@ -97,14 +90,6 @@ def test_kxtrct():
             "address: phone: name:".upper().split(),
             "ADDRESS: 4800 OAK GROVE DRIVE PHONE: 354-4321 "
         )
-# =============================================================================
-#         with pytest.raises(Exception):
-#             cs.kxtrct(
-#                 "NAME:",
-#                 "address: phone: name:".upper().split(),
-#                 "ADDRESS: 4800 OAK GROVE DRIVE PHONE: 354-4321 "
-#             )
-# =============================================================================
 
 
 def test_latcyl():
@@ -158,6 +143,7 @@ def test_latsrf():
     radii = [cs.recrad(x)[0] for x in srfpts]
     assert radii[0] > 9.77
     assert radii[1] > 9.51
+
 
 @checking_pathlike_filename_variants("path_type_variant")
 def test_ldpool(path_type_variant):
@@ -798,7 +784,7 @@ def test_oscelt():
         5.53312778515375192079e-01,
         2.51812865183709204197e+08,
         3.98600435436095925979e+05
-     ]
+    ]
     npt.assert_array_almost_equal(elts, expected, decimal=4)
 
 

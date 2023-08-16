@@ -8,10 +8,7 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
-    download_kernels,
-    cleanup_core_kernels,
-    TEST_FILE_DIR,
-    checking_pathlike_filename_variants
+    TEST_FILE_DIR
 )
 
 
@@ -34,11 +31,6 @@ def cleanup_kernel(path):
     pass
 
 
-def setup_module(module):
-    download_kernels()
-
-
-
 def test_saelgv():
     vec1 = [1.0, 1.0, 1.0]
     vec2 = [1.0, -1.0, 1.0]
@@ -47,16 +39,16 @@ def test_saelgv():
     smajor, sminor = cs.saelgv(vec1, vec2)
     npt.assert_array_almost_equal(smajor, expected_s_major)
     npt.assert_array_almost_equal(sminor, expected_s_minor)
-    
-    
+
+
 def test_scdecd():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
     timein = cs.scencd(-32, "2/20538:39:768")
     sclkch = cs.scdecd(-32, timein)
     assert sclkch == "2/20538:39:768"
-    
-    
+
+
 def test_sce2c():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
@@ -79,8 +71,8 @@ def test_sce2t():
     et = cs.str2et("1979 JUL 05 21:50:21.23379")
     sclkdp = cs.sce2t(-32, et)
     npt.assert_almost_equal(sclkdp, 985327950.000000)
-    
-    
+
+
 def test_scencd():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
@@ -88,7 +80,7 @@ def test_scencd():
     sclkdp = cs.scencd(-32, sclkch)
     npt.assert_almost_equal(sclkdp, 985327950.0)
     assert sclkch == "2/20538:39:768"
-    
+
 
 def test_scfmt():
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -98,16 +90,16 @@ def test_scfmt():
     stop = cs.scfmt(-32, pstop[0])
     assert start == "00011:00:001"
     assert stop == "04011:21:784"
-    
-    
+
+
 def test_scpart():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
     pstart, pstop = cs.scpart(-32)
     assert pstart is not None
     assert pstop is not None
-    
-    
+
+
 def test_scs2e():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
@@ -115,22 +107,22 @@ def test_scs2e():
     npt.assert_almost_equal(et, -646668528.58222842)
     utc = cs.et2utc(et, "C", 3)
     assert utc == "1979 JUL 05 21:50:21.234"
-    
-    
+
+
 def test_sct2e():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
     et = cs.sct2e(-32, 985327965.0)
     utc = cs.et2utc(et, "C", 3)
     assert utc == "1979 JUL 05 21:50:22.134"
-    
-    
+
+
 def test_sctiks():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
     ticks = cs.sctiks(-32, "20656:14:768")
     assert ticks == 991499967.00000000
-    
+
 
 # Fails due to sigerr
 def fail_setmsg():
@@ -139,14 +131,14 @@ def fail_setmsg():
     message = cs.getmsg("LONG", 2000)
     assert message == "test setmsg"
     cs.reset()
-    
-    
+
+
 def test_shellc():
     array = ["FEYNMAN", "NEWTON", "EINSTEIN", "GALILEO", "EUCLID", "Galileo"]
     expected = ["EINSTEIN", "EUCLID", "FEYNMAN", "GALILEO", "Galileo", "NEWTON"]
     assert list(cs.shellc(array)) == expected
-    
-    
+
+
 def test_shelld():
     array = [99.0, 33.0, 55.0, 44.0, -77.0, 66.0]
     expected = [-77.0, 33.0, 44.0, 55.0, 66.0, 99.0]
@@ -157,15 +149,15 @@ def test_shelli():
     array = [99, 33, 55, 44, -77, 66]
     expected = [-77, 33, 44, 55, 66, 99]
     npt.assert_array_almost_equal(cs.shelli(array), expected)
-    
-    
+
+
 def fail_sigerr():
     cs.sigerr("test error")
     message = cs.getmsg("SHORT", 200)
     assert message == "test error"
     cs.reset()
-    
-    
+
+
 def test_sincpt():
     # load kernels
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -198,25 +190,25 @@ def test_sincpt():
     ]
     npt.assert_array_almost_equal(spoint, expected_spoint, 5)
     npt.assert_array_almost_equal(obspos, expected_obspos, 5)
-    
-    
+
+
 def test_spd():
     assert cs.spd() == 86400.0
-    
-    
+
+
 def test_sphcyl():
     a = np.array(cs.sphcyl(1.4142, np.deg2rad(180.0), np.deg2rad(45.0)))
     b = [0.0, np.deg2rad(45.0), -np.sqrt(2)]
     np.testing.assert_almost_equal(a, b, decimal=4)
-    
-    
+
+
 # Needs issue
 def test_sphlat():
     result = np.array(cs.sphlat(1.0, cs.pi(), cs.halfpi()))
     expected = np.array([1.0, cs.halfpi(), -cs.halfpi()])
     npt.assert_array_almost_equal(result, expected)
-    
-    
+
+
 def test_sphrec():
     expected1 = np.array([0.0, 0.0, 0.0])
     expected2 = np.array([1.0, 0.0, 0.0])
@@ -226,8 +218,8 @@ def test_sphrec():
     npt.assert_array_almost_equal(
         cs.sphrec(1.0, 180.0 * cs.rpd(), 0.0), expected3
     )
-    
-    
+
+
 def test_spk14a():
     discrete_epochs = [100.0, 200.0, 300.0, 400.0]
     cheby_coeffs14 = [
@@ -323,8 +315,8 @@ def test_spk14a():
     end_size = os.path.getsize(spk14)
     assert end_size != init_size
     cleanup_kernel(spk14)
-    
-    
+
+
 def test_spk14b():
     # Same as test_spk14a
     discrete_epochs = [100.0, 200.0, 300.0, 400.0]
@@ -421,8 +413,8 @@ def test_spk14b():
     end_size = os.path.getsize(spk14)
     assert end_size != init_size
     cleanup_kernel(spk14)
-    
-    
+
+
 def test_spk14e():
     # Same as test_spk14a
     discrete_epochs = [100.0, 200.0, 300.0, 400.0]
@@ -519,8 +511,8 @@ def test_spk14e():
     end_size = os.path.getsize(spk14)
     assert end_size != init_size
     cleanup_kernel(spk14)
-    
-    
+
+
 def test_spkacs():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2000 JAN 1 12:00:00 TDB")
@@ -538,8 +530,8 @@ def test_spkacs():
     npt.assert_almost_equal(expected_lt, lt)
     npt.assert_almost_equal(expected_dlt, dlt)
     npt.assert_array_almost_equal(state, expected_state)
-    
-    
+
+
 def test_spkapo():
     MARS = 499
     MOON = 301
@@ -572,7 +564,7 @@ def test_spkapp():
         9.40678685353050170193e00,
     ]
     npt.assert_array_almost_equal(state_vec, expected_vec, decimal=6)
-    
+
 
 def test_spkaps():
     cs.furnsh(CoreKernels.testMetaKernel)
@@ -597,8 +589,8 @@ def test_spkaps():
     npt.assert_almost_equal(expected_lt, lt)
     npt.assert_almost_equal(expected_dlt, dlt)
     npt.assert_array_almost_equal(state, expected_state, decimal=5)
-    
-    
+
+
 def test_spkcls():
     # Same as test_spkw02
     spk2 = os.path.join(TEST_FILE_DIR, "test2.bsp")
@@ -664,8 +656,8 @@ def test_spkcls():
     end_size = os.path.getsize(spk2)
     assert end_size != init_size
     cleanup_kernel(spk2)
-    
-    
+
+
 def test_spkcov():
 
     ids = cs.spkobj(CoreKernels.spk)
@@ -683,8 +675,8 @@ def test_spkcov():
     result = [x for x in cover]
     expected = [-94651137.81606464, 315662463.18395346]
     npt.assert_array_almost_equal(result, expected)
-    
-    
+
+
 def test_spkcpo():
     cs.furnsh(ExtraKernels.earthStnSpk)
     cs.furnsh(ExtraKernels.earthHighPerPck)
@@ -729,8 +721,8 @@ def test_spkcpt():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state, decimal=6)
-    
-    
+
+
 def test_spkcvo():
     cs.furnsh(ExtraKernels.earthStnSpk)
     cs.furnsh(ExtraKernels.earthHighPerPck)
@@ -767,8 +759,8 @@ def test_spkcvo():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state, decimal=6)
-    
-    
+
+
 def test_spkcvt():
     cs.furnsh(ExtraKernels.earthStnSpk)
     cs.furnsh(ExtraKernels.earthHighPerPck)
@@ -797,8 +789,8 @@ def test_spkcvt():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state, decimal=6)
-    
-    
+
+
 def test_spkez():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("July 4, 2003 11:00 AM PST")
@@ -814,8 +806,8 @@ def test_spkez():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state)
-    
-    
+
+
 def test_spkezp():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("July 4, 2003 11:00 AM PST")
@@ -828,8 +820,8 @@ def test_spkezp():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(pos, expected_pos)
-    
-    
+
+
 def test_spkezr():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("July 4, 2003 11:00 AM PST")
@@ -845,8 +837,8 @@ def test_spkezr():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state)
-    
-    
+
+
 def test_spkgeo():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("July 4, 2003 11:00 AM PST")
@@ -862,8 +854,8 @@ def test_spkgeo():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state)
-    
-    
+
+
 def test_spkgps():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("July 4, 2003 11:00 AM PST")
@@ -876,14 +868,14 @@ def test_spkgps():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(pos, expected_pos)
-    
-    
+
+
 def test_spklef():
     handle = cs.spklef(CoreKernels.spk)
     assert handle != -1
     cs.spkuef(handle)
-    
-    
+
+
 def test_spkltc():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2000 JAN 1 12:00:00 TDB")
@@ -902,8 +894,8 @@ def test_spkltc():
     npt.assert_almost_equal(lt, expectedOneWayLt)
     npt.assert_almost_equal(dlt, expected_lt)
     npt.assert_array_almost_equal(state, expected_state, decimal=5)
-    
-    
+
+
 def test_spkobj():
     # Same as test_spkcov
     cover = cs.SpiceCell(typeno=1, size=2000)
@@ -913,8 +905,8 @@ def test_spkobj():
     result = [x for x in cover]
     expected = [-94651137.81606464, 315662463.18395346]
     npt.assert_array_almost_equal(result, expected)
-    
-    
+
+
 def test_spkopa():
     SPKOPA = os.path.join(TEST_FILE_DIR, "testspkopa.bsp")
     cleanup_kernel(SPKOPA)
@@ -938,8 +930,8 @@ def test_spkopa():
     cs.spkcls(handle_spkopa)
     # clean up
     cleanup_kernel(SPKOPA)
-    
-    
+
+
 def test_spkopn():
     # Same as test_spkw02
     spk2 = os.path.join(TEST_FILE_DIR, "test2.bsp")
@@ -1005,8 +997,8 @@ def test_spkopn():
     end_size = os.path.getsize(spk2)
     assert end_size != init_size
     cleanup_kernel(spk2)
-    
-    
+
+
 def test_spkpds():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2002 APR 27 00:00:00.000 TDB")
@@ -1015,8 +1007,8 @@ def test_spkpds():
     outframe = cs.frmnam(frame)
     spkpds_output = cs.spkpds(body, center, outframe, otype, first, last)
     npt.assert_almost_equal(spkpds_output, descr)
-    
-    
+
+
 def test_spkpos():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("July 4, 2003 11:00 AM PST")
@@ -1029,8 +1021,8 @@ def test_spkpos():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(pos, expected_pos)
-    
-    
+
+
 def test_spkpvn():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2002 APR 27 00:00:00.000 TDB")
@@ -1045,16 +1037,16 @@ def test_spkpvn():
         -1.28422514561611489370e00,
     ]
     npt.assert_array_almost_equal(state, expected_state)
-    
-    
+
+
 def test_spksfs():
     cs.furnsh(CoreKernels.testMetaKernel)
     idcode = cs.bodn2c("PLUTO BARYCENTER")
     et = cs.str2et("2001 FEB 18 UTC")
     handle, descr, ident = cs.spksfs(idcode, et)
     assert ident == "DE-405"
-    
-    
+
+
 def test_spkssb():
     cs.furnsh(CoreKernels.testMetaKernel)
     targ1 = 499
@@ -1066,8 +1058,8 @@ def test_spkssb():
     state2 = cs.spkssb(targ2, et, frame)
     dist = cs.vdist(state1[0:3], state2[0:3])
     npt.assert_approx_equal(dist, 80854820.0, significant=7)
-    
-    
+
+
 def test_spksub():
     SPKSUB = os.path.join(TEST_FILE_DIR, "testspksub.bsp")
     cleanup_kernel(SPKSUB)
@@ -1083,8 +1075,8 @@ def test_spksub():
     # close kernel
     cs.spkcls(handle_test)
     cleanup_kernel(SPKSUB)
-    
-    
+
+
 def test_spkuds():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2002 APR 27 00:00:00.000 TDB")
@@ -1094,14 +1086,14 @@ def test_spkuds():
     assert begin == 54073
     assert end == 57950
     assert otype == 2
-    
+
 
 def test_spkuef():
     handle = cs.spklef(CoreKernels.spk)
     assert handle != -1
     cs.spkuef(handle)
-    
-    
+
+
 def test_spkw02():
     spk2 = os.path.join(TEST_FILE_DIR, "test2.bsp")
     cleanup_kernel(spk2)
@@ -1166,8 +1158,8 @@ def test_spkw02():
     end_size = os.path.getsize(spk2)
     assert end_size != init_size
     cleanup_kernel(spk2)
-    
-    
+
+
 def test_spkw03():
     spk3 = os.path.join(TEST_FILE_DIR, "test3.bsp")
     cleanup_kernel(spk3)
@@ -1268,15 +1260,15 @@ def test_spkw03():
     end_size = os.path.getsize(spk3)
     assert end_size != init_size
     cleanup_kernel(spk3)
-    
- 
+
+
 def test_spkw05():
     spk5 = os.path.join(TEST_FILE_DIR, "test5.bsp")
     cleanup_kernel(spk5)
     handle = cs.spkopn(spk5, "Type 5 SPK internal file name.", 4)
     init_size = os.path.getsize(spk5)
     discrete_epochs = [100.0, 200.0, 300.0, 400.0, 500.0, 600.0, 700.0, 800.0, 900.0]
-    
+
     # Convert the list of lists to a 1-dimensional NumPy array
     discrete_states = np.array([
         [101.0, 201.0, 301.0, 401.0, 501.0, 601.0],
@@ -1289,7 +1281,7 @@ def test_spkw05():
         [108.0, 208.0, 308.0, 408.0, 508.0, 608.0],
         [109.0, 209.0, 309.0, 409.0, 509.0, 609.0],
     ])
-    
+
     segid = "SPK type 5 test segment"
     cs.spkw05(
         handle,
@@ -1308,7 +1300,7 @@ def test_spkw05():
     end_size = os.path.getsize(spk5)
     assert end_size != init_size
     cleanup_kernel(spk5)
-    
+
 
 def test_spkw08():
     spk8 = os.path.join(TEST_FILE_DIR, "test8.bsp")
@@ -1347,8 +1339,8 @@ def test_spkw08():
     end_size = os.path.getsize(spk8)
     assert end_size != init_size
     cleanup_kernel(spk8)
-    
-    
+
+
 def test_spkw09():
     spk9 = os.path.join(TEST_FILE_DIR, "test9.bsp")
     cleanup_kernel(spk9)
@@ -1384,8 +1376,8 @@ def test_spkw09():
     end_size = os.path.getsize(spk9)
     assert end_size != init_size
     cleanup_kernel(spk9)
-    
-    
+
+
 def test_spkw10():
     spk10 = os.path.join(TEST_FILE_DIR, "test10.bsp")
     tle = [
@@ -1487,8 +1479,8 @@ def test_spkw12():
     end_size = os.path.getsize(spk12)
     assert end_size != init_size
     cleanup_kernel(spk12)
-    
-    
+
+
 def test_spkw13():
     spk13 = os.path.join(TEST_FILE_DIR, "test13.bsp")
     cleanup_kernel(spk13)
@@ -1524,8 +1516,8 @@ def test_spkw13():
     end_size = os.path.getsize(spk13)
     assert end_size != init_size
     cleanup_kernel(spk13)
-    
-    
+
+
 def test_spkw15():
     discrete_epochs = [100.0, 900.0]
     #
@@ -1581,8 +1573,8 @@ def test_spkw15():
     assert end_size != init_size
     cleanup_kernel(spk15)
     #
-    
-    
+
+
 def test_spkw17():
     discrete_epochs = [100.0, 900.0]
     #
@@ -1637,8 +1629,8 @@ def test_spkw17():
     # cleanup
     assert end_size != init_size
     cleanup_kernel(spk17)
-    
-    
+
+
 def test_spkw18():
     #
     spk18 = os.path.join(TEST_FILE_DIR, "test18.bsp")
@@ -1733,8 +1725,8 @@ def test_spkw20():
     # cleanup
     assert end_size != init_size
     cleanup_kernel(spk20)
-    
-    
+
+
 def test_srfc2s():
     kernel = os.path.join(TEST_FILE_DIR, "srfc2s_ex1.tm")
     cleanup_kernel(kernel)
@@ -1755,8 +1747,8 @@ def test_srfc2s():
         cs.srfc2s(1, -1)
     cs.reset()
     cleanup_kernel(kernel)
-    
-    
+
+
 def test_srfcss():
     kernel = os.path.join(TEST_FILE_DIR, "srfcss_ex1.tm")
     cleanup_kernel(kernel)
@@ -1777,8 +1769,8 @@ def test_srfcss():
         cs.srfcss(1, "ZZZ")
     cs.reset()
     cleanup_kernel(kernel)
-    
-    
+
+
 def test_srfnrm():
     cs.furnsh(CoreKernels.pck)
     cs.furnsh(ExtraKernels.phobosDsk)
@@ -1789,15 +1781,15 @@ def test_srfnrm():
     srf_rad = np.array([cs.recrad(x) for x in srfpts])
     nrm_rad = np.array([cs.recrad(x) for x in normals])
     assert np.any(np.not_equal(srf_rad, nrm_rad))
-    
-    
+
+
 def test_srfrec():
     cs.furnsh(CoreKernels.testMetaKernel)
     x = cs.srfrec(399, 100.0 * cs.rpd(), 35.0 * cs.rpd())
     expected = [-906.24919474, 5139.59458217, 3654.29989637]
     npt.assert_array_almost_equal(x, expected)
-    
-    
+
+
 def test_srfs2c():
     kernel = os.path.join(TEST_FILE_DIR, "srfs2c_ex1.tm")
     cleanup_kernel(kernel)
@@ -1821,8 +1813,8 @@ def test_srfs2c():
         cs.srfs2c("ZZZ", "MARS")
     cs.reset()
     cleanup_kernel(kernel)
-    
-    
+
+
 def test_srfscc():
     kernel = os.path.join(TEST_FILE_DIR, "srfscc_ex1.tm")
     cleanup_kernel(kernel)
@@ -1845,7 +1837,7 @@ def test_srfscc():
         cs.srfscc("ZZZ", 499)
     cs.reset()
     cleanup_kernel(kernel)
-    
+
 
 def test_srfxpt():
     # load kernels
@@ -1880,7 +1872,7 @@ def test_srfxpt():
     ]
     npt.assert_array_almost_equal(spoint, expected_spoint)
     npt.assert_array_almost_equal(obspos, expected_obspos)
-    
+
 
 def test_stelab():
     IDOBS = 399
@@ -1907,8 +1899,8 @@ def test_stelab():
         -147722.30606629714020527899,
     ]
     npt.assert_array_almost_equal(expected_cortarg, cortarg)
-    
-    
+
+
 def test_stlabx():
     IDOBS = 399
     IDTARG = 301
@@ -1924,7 +1916,7 @@ def test_stlabx():
     pcorr = cs.stlabx(pos, sobs[3:6])
     expected_pcorr = [201782.730972, -260894.375627, -147724.405897]
     npt.assert_array_almost_equal(pcorr, expected_pcorr, 1)
-    
+
 
 def test_stpool():
     kernel = os.path.join(TEST_FILE_DIR, "stpool_t.ker")
@@ -1937,20 +1929,20 @@ def test_stpool():
         kernelFile.write("              'of_a_second_file_name' )\n")
         kernelFile.close()
     cs.furnsh(kernel)
-    string= cs.stpool("SPK_FILES", 0, "*")
+    string = cs.stpool("SPK_FILES", 0, "*")
     assert string == "this_is_the_full_path_specification_of_a_file_with_a_long_name"
     string = cs.stpool("SPK_FILES", 1, "*")
     assert string == "this_is_the_full_path_specification_of_a_second_file_name"
     cleanup_kernel(kernel)
-    
-    
+
+
 def test_str2et():
     cs.furnsh(CoreKernels.testMetaKernel)
     date = "Thu Mar 20 12:53:29 PST 1997"
     et = cs.str2et(date)
     npt.assert_almost_equal(et, -87836728.81438904)
-    
-    
+
+
 def test_subpnt():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2008 aug 11 00:00:00")
@@ -2023,8 +2015,8 @@ def test_subpt():
     sep = cs.vsep(point1, point2) * cs.dpr()
     npt.assert_almost_equal(dist, 16.705476097706171)
     npt.assert_almost_equal(sep, 0.15016657506598063)
-    
-    
+
+
 def test_subslr():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("2008 aug 11 00:00:00")
@@ -2075,8 +2067,8 @@ def test_subslr():
         supcrd, supcln, supclt = cs.reclat(sunpos)
         npt.assert_almost_equal(supcln * cs.dpr(), expected[7], decimal=5)
         npt.assert_almost_equal(supclt * cs.dpr(), expected[8], decimal=5)
-        
-        
+
+
 def test_subsol():
     cs.furnsh(CoreKernels.testMetaKernel)
     point = cs.subsol("near point", "earth", 0.0, "lt+s", "mars")
@@ -2087,28 +2079,28 @@ def test_subsol():
     npt.assert_array_almost_equal(
         intercept, [5844.4362338, 509.16450054, -2494.39569089], decimal=4
     )
-    
-    
+
+
 def test_sumad():
     assert cs.sumad([1.0, 2.0, 3.0]) == 6.0
-    
-    
+
+
 def test_sumai():
     assert cs.sumai([1, 2, 3]) == 6
-    
-    
+
+
 def test_surfnm():
     point = [0.0, 0.0, 3.0]
     npt.assert_array_almost_equal(cs.surfnm(1.0, 2.0, 3.0, point),
                                   [0.0, 0.0, 1.0])
-    
+
 
 def test_surfpt():
     position = [2.0, 0.0, 0.0]
     u = [-1.0, 0.0, 0.0]
     point = cs.surfpt(position, u, 1.0, 2.0, 3.0)
     npt.assert_array_almost_equal(point[0], [1.0, 0.0, 0.0])
-    
+
 
 def test_surfpv():
     stvrtx = [2.0, 0.0, 0.0, 0.0, 0.0, 3.0]
@@ -2116,8 +2108,8 @@ def test_surfpv():
     stx = cs.surfpv(stvrtx, stdir, 1.0, 2.0, 3.0)
     expected = [1.0, 0.0, 0.0, 0.0, 0.0, 7.0]
     npt.assert_array_almost_equal(expected, stx[0])
-    
-    
+
+
 def test_swpool():
     # add TEST_VAR_SWPOOL
     cs.pdpool("TEST_VAR_SWPOOL", [-666.0])
@@ -2132,8 +2124,8 @@ def test_swpool():
     assert value[0] == 555.0
     cs.clpool()
     assert updated is True
-    
-    
+
+
 def test_sxform():
     cs.furnsh(CoreKernels.testMetaKernel)
     lon = 118.25 * cs.rpd()

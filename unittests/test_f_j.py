@@ -9,8 +9,6 @@ from gettestkernels import (
     CassiniKernels,
     ExtraKernels,
     checking_pathlike_filename_variants,
-    download_kernels,
-    cleanup_core_kernels,
     TEST_FILE_DIR
 )
 
@@ -32,10 +30,6 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
-
-
-def setup_module(module):
-    download_kernels()
 
 
 def test_failed():

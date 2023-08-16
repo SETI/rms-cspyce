@@ -9,8 +9,6 @@ from gettestkernels import (
     CassiniKernels,
     ExtraKernels,
     checking_pathlike_filename_variants,
-    download_kernels,
-    cleanup_core_kernels,
     TEST_FILE_DIR
 )
 
@@ -32,10 +30,6 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
-
-
-def setup_module(module):
-    download_kernels()
 
 
 def test_axisar():
@@ -750,8 +744,8 @@ def fail_ckw03():
     cleanup_kernel(ck3)
 
 
-# Test fails.
-def fail_ckw05():
+# Test changed: subtyp variable chaged from int to string
+def test_ckw05():
     cs.kclear()
     ck5 = os.path.join(TEST_FILE_DIR, "type5.bc")
     cleanup_kernel(ck5)
@@ -822,7 +816,7 @@ def fail_ckw05():
     # test subtype 0
     cs.ckw05(
         handle,
-        0,
+        "C05TP0",
         15,
         epochs[0],
         epochs[-1],
@@ -839,7 +833,7 @@ def fail_ckw05():
     # test subtype 1
     cs.ckw05(
         handle,
-        1,
+        "C05TP1",
         15,
         epochs[0],
         epochs[-1],
@@ -856,7 +850,7 @@ def fail_ckw05():
     # test subtype 2
     cs.ckw05(
         handle,
-        2,
+        "C05TP2",
         15,
         epochs[0],
         epochs[-1],
@@ -873,7 +867,7 @@ def fail_ckw05():
     # test subtype 3
     cs.ckw05(
         handle,
-        3,
+        "C05TP3",
         15,
         epochs[0],
         epochs[-1],

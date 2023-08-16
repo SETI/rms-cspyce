@@ -8,12 +8,7 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
-    download_kernels,
-    cleanup_core_kernels,
-    cleanup_cassini_kernels,
-    cleanup_extra_kernels,
     TEST_FILE_DIR,
-    checking_pathlike_filename_variants
 )
 
 
@@ -26,18 +21,6 @@ def clear_kernel_pool_and_reset():
     # clear kernel pool again
     cs.kclear()
     cs.reset()
-
-
-def cleanup_kernel(path):
-    cs.kclear()
-    cs.reset()
-    if os.path.isfile(path):
-        os.remove(path)  # pragma: no cover
-    pass
-
-
-def setup_module(module):
-    download_kernels()
 
 
 # Test changed: furnsh() only works on one kernel at a time.

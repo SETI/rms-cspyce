@@ -13,10 +13,7 @@ from gettestkernels import (
     CoreKernels,
     CassiniKernels,
     ExtraKernels,
-    download_kernels,
-    cleanup_core_kernels,
-    TEST_FILE_DIR,
-    checking_pathlike_filename_variants
+    TEST_FILE_DIR
 )
 
 
@@ -39,10 +36,6 @@ def cleanup_kernel(path):
     pass
 
 
-def setup_module(module):
-    download_kernels()
-    
-    
 def test_pckopn_pckw02_pckcls():
     pck = os.path.join(TEST_FILE_DIR, "test_pck.pck")
     cleanup_kernel(pck)
@@ -52,7 +45,7 @@ def test_pckopn_pckw02_pckcls():
     )
     cs.pckcls(handle)
     cleanup_kernel(pck)
-    
+
 
 def test_pckcov():
     ids = cs.SpiceCell(typeno=2, size=1000)
@@ -62,26 +55,26 @@ def test_pckcov():
     result = [x for x in cover]
     expected = [94305664.18380372, 757080064.1838132]
     npt.assert_array_almost_equal(result, expected)
-    
-    
+
+
 def test_pckfrm():
     ids = cs.SpiceCell(typeno=2, size=1000)
     ids = cs.pckfrm(ExtraKernels.earthHighPerPck)
     assert ids[0] == 3000
-    
-    
+
+
 def test_pcklof():
     handle = cs.pcklof(ExtraKernels.earthHighPerPck)
     assert handle != -1
     cs.pckuof(handle)
-    
-    
+
+
 def test_pckuof():
     handle = cs.pcklof(ExtraKernels.earthHighPerPck)
     assert handle != -1
     cs.pckuof(handle)
-    
-    
+
+
 def test_pcpool():
     import string
 
@@ -89,15 +82,15 @@ def test_pcpool():
     cs.pcpool("pcpool_test", data)
     cvals = cs.gcpool("pcpool_test", 0)
     assert data == cvals
-    
-    
+
+
 def test_pdpool():
     data = np.arange(0.0, 10.0)
     cs.pdpool("pdpool_array", data)
     dvals = cs.gdpool("pdpool_array", 0)
     npt.assert_array_almost_equal(data, dvals)
-    
-    
+
+
 def test_pgrrec():
     cs.furnsh(CoreKernels.testMetaKernel)
     radii = cs.bodvrd("MARS", "RADII")
@@ -107,8 +100,8 @@ def test_pgrrec():
     rectan = cs.pgrrec("Mars", 90.0 * cs.rpd(), 45 * cs.rpd(), 300, re, f)
     expected = [1.604650025e-13, -2.620678915e3, 2.592408909e3]
     npt.assert_array_almost_equal(rectan, expected)
-    
-    
+
+
 def test_phaseq():
     relate = ["=", "<", ">", "LOCMIN", "ABSMIN", "LOCMAX", "ABSMAX"]
     expected = {
@@ -178,18 +171,18 @@ def test_phaseq():
                 temp_results.append(startPhase)
                 temp_results.append(stopPhase)
             npt.assert_array_almost_equal(temp_results, expected.get(relation))
-            
-            
+
+
 def test_pi():
     assert cs.pi() == np.pi
-    
-    
+
+
 def test_pipool():
     data = np.arange(0, 10)
     cs.pipool("pipool_array", data)
     ivals = cs.gipool("pipool_array", 0)
     npt.assert_array_almost_equal(data, ivals)
-    
+
 
 def test_pjelpl():
     center = [1.0, 1.0, 1.0]
@@ -205,8 +198,8 @@ def test_pjelpl():
     npt.assert_array_almost_equal(expected_center, ellipse[0:3])
     npt.assert_array_almost_equal(expected_s_major, ellipse[3:6])
     npt.assert_array_almost_equal(expected_s_minor, ellipse[6:9])
-    
-    
+
+
 def test_pl2nvc():
     normal = [-1.0, 5.0, -3.5]
     point = [9.0, -0.65, -12.0]
@@ -215,8 +208,8 @@ def test_pl2nvc():
     expected_normal = [-0.16169042, 0.80845208, -0.56591646]
     npt.assert_almost_equal(constant, 4.8102899, decimal=6)
     npt.assert_array_almost_equal(expected_normal, normal, decimal=6)
-    
-    
+
+
 def test_pl2nvp():
     plane_norm = [2.44, -5.0 / 3.0, 11.0 / 9.0]
     const = 3.141592654
@@ -224,8 +217,8 @@ def test_pl2nvp():
     norm_vec, point = cs.pl2nvp(plane)
     expected_point = [0.74966576, -0.51206678, 0.37551564]
     npt.assert_array_almost_equal(expected_point, point)
-    
-    
+
+
 def test_pl2psv():
     normal = [-1.0, 5.0, -3.5]
     point = [9.0, -0.65, -12.0]
@@ -234,14 +227,14 @@ def test_pl2psv():
     npt.assert_almost_equal(cs.vdot(point, span1), 0)
     npt.assert_almost_equal(cs.vdot(point, span2), 0)
     npt.assert_almost_equal(cs.vdot(span1, span2), 0)
-    
-    
+
+
 def test_pltar():
     vrtces = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     plates = [[1, 4, 3], [1, 2, 4], [1, 3, 2], [2, 3, 4]]
     assert cs.pltar(vrtces, plates) == pytest.approx(2.3660254037844)
-    
-    
+
+
 def test_pltexp():
     iverts = [
         [np.sqrt(3.0) / 2.0, -0.5, 7.0],
@@ -255,8 +248,8 @@ def test_pltexp():
         [-1.732050807569, -1.0, 7.0],
     ]
     npt.assert_array_almost_equal(expected, overts)
-    
-    
+
+
 def test_pltnp():
     point = [2.0, 2.0, 2.0]
     v1 = [1.0, 0.0, 0.0]
@@ -265,26 +258,26 @@ def test_pltnp():
     near, distance = cs.pltnp(point, v1, v2, v3)
     npt.assert_array_almost_equal([1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0], near)
     assert distance == pytest.approx(2.8867513)
-    
-    
+
+
 def test_pltnrm():
     v1 = [np.sqrt(3.0) / 2.0, -0.5, 0.0]
     v2 = [0.0, 1.0, 0.0]
     v3 = [-np.sqrt(3.0) / 2.0, -0.5, 0.0]
     npt.assert_array_almost_equal([0.0, 0.0, 2.59807621135], cs.pltnrm(v1, v2, v3))
-    
-    
+
+
 def test_pltvol():
     vrtces = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     plates = [[1, 4, 3], [1, 2, 4], [1, 3, 2], [2, 3, 4]]
     assert cs.pltvol(vrtces, plates) == pytest.approx(1.0 / 6.0)
-    
-    
+
+
 def test_polyds():
     result = cs.polyds([1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0], 3, 1)
     npt.assert_array_almost_equal([6.0, 10.0, 23.0, 78.0], result)
-    
-    
+
+
 def test_pos():
     string = "AN ANT AND AN ELEPHANT        "
     assert cs.pos(string, "AN", 0) == 0
@@ -360,16 +353,16 @@ def test_prop2b():
     )
     state = np.array(cs.prop2b(mu, pvinit, t))
     npt.assert_array_almost_equal(state, -1.0 * pvinit, decimal=6)
-    
-    
+
+
 def test_prsdp():
     assert cs.prsdp("-1. 000") == -1.0
-    
+
 
 def test_prsint():
     assert cs.prsint("PI") == 3
-    
-    
+
+
 def test_psv2pl():
     epoch = "Jan 1 2005"
     frame = "ECLIPJ2000"
@@ -384,8 +377,8 @@ def test_psv2pl():
     npt.assert_almost_equal(
         cs.vsep(es_norm, em_norm) * cs.dpr(), 5.0424941, decimal=6
     )
-    
-    
+
+
 def test_pxform():
     cs.furnsh(CoreKernels.testMetaKernel)
     lon = 118.25 * cs.rpd()
@@ -402,7 +395,7 @@ def test_pxform():
     jstate = np.dot(epos, rotate)
     expected = np.array([5042.1309421, 1603.52962986, 3549.82398086])
     npt.assert_array_almost_equal(jstate, expected, decimal=4)
-    
+
 
 def test_pxfrm2():
     # load kernels
@@ -446,8 +439,8 @@ def test_pxfrm2():
     npt.assert_almost_equal(radius, 250.14507342586242, decimal=5)
     npt.assert_almost_equal(lon, 125.42089677611104, decimal=5)
     npt.assert_almost_equal(lat, -6.3718522103931585, decimal=5)
-    
-    
+
+
 def test_q2m():
     mout = cs.q2m(np.array([0.5, 0.4, 0.3, 0.1]))
     expected = np.array(
@@ -458,8 +451,8 @@ def test_q2m():
         ]
     )
     assert np.array_equal(expected, mout)
-    
-    
+
+
 def test_qcktrc():
     cs.reset()
     cs.chkin("test")
@@ -469,16 +462,16 @@ def test_qcktrc():
     cs.chkout("qcktrc")
     cs.chkout("test")
     cs.reset()
-    
-    
+
+
 def test_qderiv():
     delta = 1.0e-3
     f0 = [(2.0 - delta) ** 2.0]
     f2 = [(2.0 + delta) ** 2.0]
     dfdt = cs.qderiv(f0, f2, delta)
     assert 4 - dfdt[0] < 1e-12
-    
-    
+
+
 def test_qdq2av():
     angle = [-20.0 * cs.rpd(), 50.0 * cs.rpd(), -60.0 * cs.rpd()]
     m = cs.eul2m(angle[2], angle[1], angle[0], 3, 1, 3)
@@ -489,8 +482,8 @@ def test_qdq2av():
     dq = [-0.5 * x for x in dq]
     av = cs.qdq2av(q, dq)
     npt.assert_array_almost_equal(av, expav)
-    
-    
+
+
 def test_qxq():
     qID = [1.0, 0.0, 0.0, 0.0]
     nqID = [-1.0, 0.0, 0.0, 0.0]
@@ -505,8 +498,8 @@ def test_qxq():
     npt.assert_array_almost_equal(cs.qxq(qK, qK), nqID)
     npt.assert_array_almost_equal(cs.qxq(qID, qI), qI)
     npt.assert_array_almost_equal(cs.qxq(qI, qID), qI)
-    
-    
+
+
 def test_radrec():
     npt.assert_array_almost_equal([1.0, 0.0, 0.0], cs.radrec(1.0, 0.0, 0.0))
     npt.assert_array_almost_equal(
@@ -515,14 +508,14 @@ def test_radrec():
     npt.assert_array_almost_equal(
         [0.0, 0.0, 1.0], cs.radrec(1.0, 0.0, 90.0 * cs.rpd())
     )
-    
-    
+
+
 def test_rav2xf():
     e = [1.0, 0.0, 0.0]
     rz = [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
     assert cs.rav2xf(rz, e) is not None
-    
-    
+
+
 def test_raxisa():
     axis = [1.0, 2.0, 3.0]
     angle = 0.1 * cs.twopi()
@@ -531,8 +524,8 @@ def test_raxisa():
     expected_angout = [0.26726124, 0.53452248, 0.80178373]
     npt.assert_approx_equal(angout, 0.62831853, significant=7)
     npt.assert_array_almost_equal(axout, expected_angout)
-    
-    
+
+
 def test_recazl():
     d = cs.dpr()
     npt.assert_array_almost_equal(
@@ -602,8 +595,8 @@ def test_recazl():
     npt.assert_array_almost_equal(
         cs.recazl([1.0, 1.0, 1.0], True, True), [1.732, 45.0 / d, 35.264 / d], 3
     )
-    
-    
+
+
 def test_refchg():
     et = 31415926.0
     frame1 = cs.namfrm("J2000")
@@ -612,7 +605,7 @@ def test_refchg():
     calculated = cs.refchg(frame1, frame2, et)
     npt.assert_almost_equal(expected, calculated)
 
-    
+
 def test_reccyl():
     expected1 = np.array([0.0, 0.0, 0.0])
     expected2 = np.array([1.0, 90.0 * cs.rpd(), 0.0])
@@ -620,8 +613,8 @@ def test_reccyl():
     npt.assert_array_almost_equal(expected1, cs.reccyl([0.0, 0.0, 0.0]), decimal=7)
     npt.assert_array_almost_equal(expected2, cs.reccyl([0.0, 1.0, 0.0]), decimal=7)
     npt.assert_array_almost_equal(expected3, cs.reccyl([0.0, -1.0, 0.0]), decimal=7)
-    
-    
+
+
 def test_recgeo():
     cs.furnsh(CoreKernels.testMetaKernel)
     radii = cs.bodvrd("EARTH", "RADII")
@@ -631,8 +624,8 @@ def test_recgeo():
     actual = [lon * cs.dpr(), lat * cs.dpr(), alt]
     expected = [118.000000, 32.000000, 0.001915518]
     npt.assert_array_almost_equal(actual, expected, decimal=4)
-    
-    
+
+
 def test_reclat():
     expected1 = np.array([1.0, 0.0, 0.0])
     expected2 = np.array([1.0, 90.0 * cs.rpd(), 0.0])
@@ -640,8 +633,8 @@ def test_reclat():
     npt.assert_array_almost_equal(expected1, cs.reclat([1.0, 0.0, 0.0]), decimal=7)
     npt.assert_array_almost_equal(expected2, cs.reclat([0.0, 1.0, 0.0]), decimal=7)
     npt.assert_array_almost_equal(expected3, cs.reclat([-1.0, 0.0, 0.0]), decimal=7)
-    
-    
+
+
 def test_recpgr():
     cs.furnsh(CoreKernels.testMetaKernel)
     radii = cs.bodvrd("MARS", "RADII")
@@ -651,8 +644,8 @@ def test_recpgr():
     actual = [lon * cs.dpr(), lat * cs.dpr(), alt]
     expected = [90.0, 45.0, 300.0]
     npt.assert_array_almost_equal(actual, expected, decimal=4)
-    
-    
+
+
 def test_recrad():
     range1, ra1, dec1 = cs.recrad([1.0, 0.0, 0.0])
     range2, ra2, dec2 = cs.recrad([0.0, 1.0, 0.0])
@@ -665,7 +658,7 @@ def test_recrad():
 def test_recsph():
     v1 = np.array([-1.0, 0.0, 0.0])
     assert cs.recsph(v1) == [1.0, np.pi / 2, np.pi]
-    
+
 
 # Test changed: outputs tuple, not array
 def test_reordc():
@@ -673,8 +666,8 @@ def test_reordc():
     iorder = [3, 0, 2, 1]
     outarray = cs.reordc(iorder, array)
     assert outarray == ("zero", "one", "two", "three")
-    
-    
+
+
 def test_reordd():
     array = [1.0, 3.0, 2.0]
     iorder = [0, 2, 1]
@@ -687,34 +680,34 @@ def test_reordi():
     iorder = [0, 2, 1]
     outarray = cs.reordi(iorder, array)
     npt.assert_array_almost_equal(outarray, [1, 2, 3])
-    
-    
+
+
 def test_reordl():
     array = [True, True, False]
     iorder = [0, 2, 1]
     outarray = cs.reordl(iorder, array)
     npt.assert_array_almost_equal(outarray, [True, False, True])
-    
-    
+
+
 def test_repmc():
     stringtestone = "The truth is #"
     outstringone = cs.repmc(stringtestone, "#", "SPICE")
     assert outstringone == "The truth is SPICE"
-    
-    
+
+
 def test_repmct():
     stringtestone = "The value is #"
     outstringone = cs.repmct(stringtestone, "#", 5, "U")
     outstringtwo = cs.repmct(stringtestone, "#", 5, "l")
     assert outstringone == "The value is FIVE"
     assert outstringtwo == "The value is five"
-    
-    
+
+
 def test_repmd():
     stringtestone = "The value is #"
     outstringone = cs.repmd(stringtestone, "#", 5.0e11, 1)
     assert outstringone == "The value is 5.E+11"
-    
+
 
 def test_repmf():
     stringtestone = "The value is #"
@@ -728,27 +721,27 @@ def test_repmi():
     stringtest = "The value is <opcode>"
     outstring = cs.repmi(stringtest, "<opcode>", 5)
     assert outstring == "The value is 5"
-    
-    
+
+
 def test_repmot():
     stringtestone = "The value is #"
     outstringone = cs.repmot(stringtestone, "#", 5, "U")
     outstringtwo = cs.repmot(stringtestone, "#", 5, "l")
     assert outstringone == "The value is FIFTH"
     assert outstringtwo == "The value is fifth"
-    
+
 
 def test_reset():
     cs.reset()
     assert not cs.failed()
-    
-    
+
+
 def test_return_():
     cs.reset()
     assert not cs.return_()
     cs.reset()
-    
-    
+
+
 def test_rotate():
     mout = cs.rotate(cs.pi() / 4, 3)
     mExpected = [
@@ -764,7 +757,7 @@ def test_rotmat():
     expected_r = [[0.0, 0.0, -1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]]
     r_out = cs.rotmat(ident, cs.halfpi(), 2)
     npt.assert_array_almost_equal(r_out, expected_r)
-    
+
 
 def test_rotvec():
     vin = [np.sqrt(2), 0.0, 0.0]
@@ -773,12 +766,12 @@ def test_rotvec():
     v_expected = [1.0, -1.0, 0.0]
     vout = cs.rotvec(vin, angle, iaxis)
     npt.assert_array_almost_equal(vout, v_expected)
-    
-    
+
+
 def test_rpd():
     assert cs.rpd() == np.arccos(-1.0) / 180.0
-    
-    
+
+
 def test_rquad():
     # solve x^2 + 2x + 3 = 0
     root1, root2 = cs.rquad(1.0, 2.0, 3.0)

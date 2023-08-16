@@ -6,11 +6,8 @@ import pytest
 
 from gettestkernels import (
     CoreKernels,
-    CassiniKernels,
     ExtraKernels,
     checking_pathlike_filename_variants,
-    download_kernels,
-    cleanup_core_kernels,
     TEST_FILE_DIR
 )
 
@@ -32,10 +29,6 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
-
-
-def setup_module(module):
-    download_kernels()
 
 
 def test_dafac():
@@ -669,7 +662,8 @@ def test_dlabfs_dlafns():
 
 @checking_pathlike_filename_variants("path_type_variant")
 def test_dlaopn_dlabns_dlaens_daswbr(path_type_variant):
-    path = path_type_variant(os.path.join(TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla"))
+    path = path_type_variant(os.path.join(
+        TEST_FILE_DIR, "dlaopn_dlabns_dlaens_daswbr.dla"))
     cleanup_kernel(path)
     handle = cs.dlaopn(path, "DLA", "Example DLA file for testing", 0)
     cs.dlabns(handle)  # start segm

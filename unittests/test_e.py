@@ -6,11 +6,8 @@ import pytest
 
 from gettestkernels import (
     CoreKernels,
-    CassiniKernels,
     ExtraKernels,
     checking_pathlike_filename_variants,
-    download_kernels,
-    cleanup_core_kernels,
     TEST_FILE_DIR
 )
 
@@ -32,10 +29,6 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
-
-
-def setup_module(module):
-    download_kernels()
 
 
 def test_edlimb():
@@ -522,13 +515,13 @@ def test_ekifld():
 
 
 @checking_pathlike_filename_variants("path_type_variant")
-def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
+def test_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
     ekpath = path_type_variant(os.path.join(
         TEST_FILE_DIR, "example_ekmany.ek"))
     tablename = "test_table_ekmany"
     cleanup_kernel(ekpath)
     # Create new EK and new segment with table
-    handle = cs.ekopn(ekpath, ekpath, 0)
+    handle = path_type_variant(cs.ekopn(ekpath, ekpath, 0))
     decls = [
         "DATATYPE = CHARACTER*(10),   NULLS_OK = FALSE, SIZE = VARIABLE",
         "DATATYPE = DOUBLE PRECISION, NULLS_OK = FALSE, SIZE = VARIABLE",
