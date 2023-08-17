@@ -672,10 +672,6 @@ class TestPrimitiveReturnTypes:
         assert ts.return_boolean(100) is True
         assert ts.return_boolean(0) is False
 
-    def test_sigerror(self):
-        with pytest.raises(RuntimeError):
-            ts.return_sigerr()
-
 
 class TestReturnValueThroughOutvar:
     # Each of the functions used here is defined in C as a void function with

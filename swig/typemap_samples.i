@@ -387,10 +387,6 @@ void sort_strings(SpiceInt rows, SpiceInt columns, SpiceChar* array);
     SpiceInt return_boolean(SpiceInt value) {
         return value;
     }
-
-    void return_sigerr(void) {
-    }
-
 %}
 
 %apply (SpiceChar *RETURN_STRING) {const SpiceChar* return_string};
@@ -398,9 +394,6 @@ const SpiceChar* return_string();
 
 %apply (SpiceInt RETURN_BOOLEAN) {SpiceInt return_boolean};
 SpiceInt return_boolean(SpiceInt value);
-
-%apply (void RETURN_VOID_SIGERR) {void return_sigerr};
-void return_sigerr(void);
 
 %{
     void outvar_set_from_var_int(SpiceInt in, SpiceInt* out) { *out = in; }

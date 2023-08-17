@@ -8153,7 +8153,7 @@ extern void sctiks_c(
 ***********************************************************************/
 
 %rename (sigerr) sigerr_c;
-%apply (void RETURN_VOID_SIGERR) {void sigerr_c};
+%apply (void RETURN_VOID) {void sigerr_c};
 
 extern void sigerr_c(
         ConstSpiceChar *CONST_STRING
