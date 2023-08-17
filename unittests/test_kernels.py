@@ -94,23 +94,6 @@ def assert_all_equal(arg1, arg2, tol=1.e-15, frac=False):
         else:
             assert abs(arg1 - arg2) <= tol
 
-@pytest.fixture
-def CASSINI_ET():
-    return 17.65 * 365.25 * 86400.
-
-@pytest.fixture
-def CASSINI_ET2(CASSINI_ET):
-    return CASSINI_ET + 86400
-
-@pytest.fixture
-def eps():
-    if platform.machine() == 'arm64':
-        # TODO(fy,rf,mrs): This code gives slightly different results on MacOS Arm64.
-        # This lowering of expectations needs to be investigated. Is it Mac only?
-        eps = 1e-5
-    else:
-        assert arg1 == arg2
-
 
 def assert_all_close(arg1, arg2, tol=1.e-8):
     return assert_all_equal(arg1, arg2, tol, frac=True)
@@ -373,7 +356,7 @@ def test_ckgp_ckgpav():
                          [-0.03169184, -0.92563955, 0.37707699],
                          [-0.99450248, 0.06687415, 0.08057704]])
 
-        result2b = np.array([3.46254953e-05, 5.05354838e-06, -1.12043171e-05])
+    result2b = np.array([3.46254953e-05, 5.05354838e-06, -1.12043171e-05])
 
     assert_all_equal(array2a, result2a, 5.e-9)
     assert_all_equal(array2b, result2b, 4.e-14)
@@ -521,10 +504,10 @@ def test_frmchg_sxform_pxform_xf2rav_pxfrm2_refchg():
     assert_all_equal(sat1a[:3, :3], sat1e, 0)
     assert_all_equal(sat1a[:3, :3], sat1a[3:, 3:], 0)  # true even for rotating frames
 
-        (mat0a, vec0a) = xf2rav(sat0a)
-        (mat1a, vec1a) = xf2rav(sat1a)
-        (mat0b, vec0b) = xf2rav(sat0b)
-        (mat1b, vec1b) = xf2rav(sat1b)
+    (mat0a, vec0a) = xf2rav(sat0a)
+    (mat1a, vec1a) = xf2rav(sat1a)
+    (mat0b, vec0b) = xf2rav(sat0b)
+    (mat1b, vec1b) = xf2rav(sat1b)
 
     assert_all_equal(sat0a[:3, :3], mat0a, 0)
     assert_all_equal(sat1a[:3, :3], mat1a, 0)
@@ -1016,4 +999,3 @@ def test_tsetyr():
 def test_unitim():
     assert_all_close(unitim(0., 'TAI', 'TDB'), 32.183927274)
     assert_all_close(unitim(0., 'TAI', 'JED'), 2451545.00037)
-
