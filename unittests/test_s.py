@@ -41,6 +41,16 @@ def test_saelgv():
     npt.assert_array_almost_equal(sminor, expected_s_minor)
 
 
+def test_saelgv_2():
+    npt.assert_almost_equal(cs.saelgv([2, 0, 0], [0, 3, 0]), [[0, 3, 0], [2, 0, 0]])
+    npt.assert_almost_equal(cs.saelgv_vector(
+        [2, 0, 0], [0, 3, 0]), [[0, 3, 0], [2, 0, 0]])
+    npt.assert_almost_equal(cs.saelgv_vector([2, 0, 0], [[0, 3, 0]]),
+                            [[[0, 3, 0]], [[2, 0, 0]]])
+    npt.assert_almost_equal(cs.saelgv_vector([2, 0, 0], [[0, 3, 0], [0, 1, 0]]),
+                            [[[0, 3, 0], [2, 0, 0]], [[2, 0, 0], [0, 1, 0]]])
+
+
 def test_scdecd():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.voyagerSclk)
@@ -1901,6 +1911,17 @@ def test_stelab():
     npt.assert_array_almost_equal(expected_cortarg, cortarg)
 
 
+def test_stelab_2():
+    cxx = cs.clight() / 100.
+    eps = 2.e-9
+    npt.assert_almost_equal(cs.stelab([1, 0, 0], [cxx, 0, 0]), [1, 0, 0])
+    npt.assert_almost_equal(cs.stelab([1, 0, 0], [0, cxx, 0]), [0.99995, 0.01, 0], eps)
+    npt.assert_almost_equal(cs.stelab_vector([1, 0, 0], [cxx, 0, 0]), [1, 0, 0])
+    npt.assert_almost_equal(cs.stelab_vector([[1, 0, 0]], [cxx, 0, 0]), [[1, 0, 0]])
+    npt.assert_almost_equal(cs.stelab_vector([1, 0, 0], [[cxx, 0, 0], [0, cxx, 0]]),
+                            [[1, 0, 0], [0.99995, 0.01, 0]], eps)
+
+
 def test_stlabx():
     IDOBS = 399
     IDTARG = 301
@@ -1916,6 +1937,17 @@ def test_stlabx():
     pcorr = cs.stlabx(pos, sobs[3:6])
     expected_pcorr = [201782.730972, -260894.375627, -147724.405897]
     npt.assert_array_almost_equal(pcorr, expected_pcorr, 1)
+
+
+def test_stlabx_2():
+    cxx = cs.clight() / 100.
+    eps = 2.e-9
+    npt.assert_almost_equal(cs.stlabx([1, 0, 0], [cxx, 0, 0]), [1, 0, 0])
+    npt.assert_almost_equal(cs.stlabx([1, 0, 0], [0, cxx, 0]), [0.99995, -0.01, 0], eps)
+    npt.assert_almost_equal(cs.stlabx_vector([1, 0, 0], [cxx, 0, 0]), [1, 0, 0])
+    npt.assert_almost_equal(cs.stlabx_vector([[1, 0, 0]], [cxx, 0, 0]), [[1, 0, 0]])
+    npt.assert_almost_equal(cs.stlabx_vector([1, 0, 0], [[cxx, 0, 0], [0, cxx, 0]]),
+                            [[1, 0, 0], [0.99995, -0.01, 0]], eps)
 
 
 def test_stpool():

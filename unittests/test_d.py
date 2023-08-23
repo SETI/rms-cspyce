@@ -213,7 +213,6 @@ def test_dafgn():
     cs.dafcls(handle)
 
 
-# Fails
 def test_dafgs():
     handle = cs.dafopr(CoreKernels.spk)
     cs.dafbfs(handle)
@@ -226,7 +225,6 @@ def test_dafgs():
     cs.dafcls(handle)
 
 
-# Fails due to dafgsr()
 def test_dafgsr():
     cs.reset()
     # Open DAF
@@ -596,6 +594,30 @@ def test_dcyldr():
     npt.assert_array_almost_equal(output, expected)
 
 
+def test_dcyldr_dgeodr_dlatdr_drdcyl_etc():
+    npt.assert_almost_equal(cs.dcyldr(1., 0., 0.), [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    npt.assert_almost_equal(cs.dgeodr(1., 0., 0., 1., 0.),
+                            [[0, 1, 0], [0, 0, 1, ], [1, 0, 0]])
+    npt.assert_almost_equal(cs.dlatdr(1., 0., 0.), [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    npt.assert_almost_equal(cs.drdcyl(1., 0., 0.), [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    npt.assert_almost_equal(cs.drdgeo(1., 0., 0., 1., 0.),
+                            [[-0.84147098, 0., 0.54030231],
+                             [0.54030231, 0., 0.84147098],
+                             [0., 1., 0.]], 5e-9)
+    npt.assert_almost_equal(cs.drdlat(1., 0., 0.), [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    npt.assert_almost_equal(cs.drdsph(1., 0., 0.), [[0, 1, 0], [0, 0, 0], [1, 0, 0]])
+    npt.assert_almost_equal(cs.dsphdr(1., 0., 0.), [[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+
+    assert cs.dcyldr_vector([1, 2, 3, 4], 0., 0.).shape == (4, 3, 3)
+    assert cs.dgeodr_vector(1., 0., 0., [1, 2, 3, 4], 0.1).shape == (4, 3, 3)
+    assert cs.dlatdr_vector(1., [1, 2, 3, 4], 0.).shape == (4, 3, 3)
+    assert cs.drdcyl_vector(1., 0., [1, 2, 3, 4]).shape == (4, 3, 3)
+    assert cs.drdgeo_vector([1, 2, 3, 4], 0., 0., 1., 0.).shape == (4, 3, 3)
+    assert cs.drdlat_vector(1., 0., [1, 2, 3, 4]).shape == (4, 3, 3)
+    assert cs.drdsph_vector(1., 0., [1, 2, 3, 4]).shape == (4, 3, 3)
+    assert cs.dsphdr_vector([1, 2, 3, 4], 0., 0.).shape == (4, 3, 3)
+
+
 def test_deltet():
     cs.furnsh(CoreKernels.testMetaKernel)
     UTC_1997 = "Jan 1 1997"
@@ -612,6 +634,14 @@ def test_det():
     m1 = np.array([[5.0, -2.0, 1.0], [0.0, 3.0, -1.0], [2.0, 0.0, 7.0]])
     expected = 103
     assert cs.det(m1) == expected
+
+
+def test_det_2():
+    ident = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]]).astype('float')
+    assert cs.det(ident) == 1.
+
+    idents = np.arange(20).reshape((20, 1, 1)) * ident
+    npt.assert_almost_equal(cs.det_vector(idents), np.arange(20)**3)
 
 
 def test_dgeodr():
@@ -638,6 +668,16 @@ def test_diags2():
     expected_rot = [[0.89442719, -0.44721360], [0.44721360, 0.89442719]]
     npt.assert_array_almost_equal(diag, expected_diag)
     npt.assert_array_almost_equal(rot, expected_rot)
+
+
+def test_diags2_2():
+    result1 = np.array([[0, 0], [0, 2]])
+    result2 = np.array([[1, 1], [-1, 1]]) * np.sqrt(0.5)
+    npt.assert_almost_equal(cs.diags2([[1, 1], [1, 1]])[0], result1)
+    npt.assert_almost_equal(cs.diags2([[1, 1], [1, 1]])[1], result2)
+
+    assert cs.diags2_vector([[[1, 2], [2, 1]], [[3, 1], [1, 3]]])[0].shape, (2, 2, 2)
+    assert cs.diags2_vector([[[1, 2], [2, 1]], [[3, 1], [1, 3]]])[1].shape, (2, 2, 2)
 
 
 def test_dlabbs_dlafps():
@@ -1241,6 +1281,18 @@ def test_ducrss():
     npt.assert_array_almost_equal(z_new, z_expected)
 
 
+def test_ducrss_dvcrss():
+    npt.assert_almost_equal(cs.ducrss([1, 0, 0, 1, 0, 0], [1, 1, 0, 1, 1, 0]),
+                            [0, 0, 1, 0, 0, 0])
+    npt.assert_almost_equal(cs.dvcrss([1, 0, 0, 1, 0, 0], [1, 1, 0, 1, 1, 0]),
+                            [0, 0, 1, 0, 0, 2])
+
+    npt.assert_almost_equal(cs.ducrss_vector(2 * [[1, 0, 0, 1, 0, 0]], [1, 1, 0, 1, 1, 0]),
+                            2 * [[0, 0, 1, 0, 0, 0]])
+    npt.assert_almost_equal(cs.dvcrss_vector(2 * [[1, 0, 0, 1, 0, 0]], [1, 1, 0, 1, 1, 0]),
+                            2 * [[0, 0, 1, 0, 0, 2]])
+
+
 def test_dvcrss():
     cs.furnsh(CoreKernels.testMetaKernel)
     z_earth = [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
@@ -1268,6 +1320,11 @@ def test_dvdot():
     )
 
 
+def test_dvdot_2():
+    assert cs.dvdot(6 * [1], 6 * [1]) == 6
+    npt.assert_almost_equal(cs.dvdot_vector(6 * [1], [6 * [1], 6 * [2]]), [6, 12])
+
+
 def test_dvhat():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("Jan 1, 2009")
@@ -1284,6 +1341,12 @@ def test_dvhat():
     npt.assert_array_almost_equal(expected, x_new)
 
 
+def test_dvhat_2():
+    npt.assert_almost_equal(cs.dvhat(6 * [1]), (3 * [np.sqrt(1. / 3.)] + 3 * [0.]))
+    npt.assert_almost_equal(cs.dvhat_vector([6 * [1], 6 * [2]]),
+                            2 * [3 * [np.sqrt(1. / 3.)] + 3 * [0.]])
+
+
 def test_dvnorm():
     mag = np.array([-4.0, 4, 12])
     x = np.array([1.0, np.sqrt(2.0), np.sqrt(3.0)])
@@ -1293,6 +1356,12 @@ def test_dvnorm():
     npt.assert_approx_equal(cs.dvnorm(s1), 2.4494897)
     npt.assert_approx_equal(cs.dvnorm(s2), -2.4494897)
     npt.assert_approx_equal(cs.dvnorm(s3), 0.0)
+
+
+def test_dvnorm_2():
+    npt.assert_almost_equal(cs.dvnorm(6 * [1]), np.sqrt(3.))
+    npt.assert_almost_equal(cs.dvnorm_vector([6 * [1], 6 * [2]]),
+                            [np.sqrt(3.), np.sqrt(12.)])
 
 
 def test_dvpool():
@@ -1310,3 +1379,99 @@ def test_dvsep():
     state_m, mltime = cs.spkezr("MOON", et, "J2000", "NONE", "SUN")
     dsept = cs.dvsep(state_e, state_m)
     npt.assert_approx_equal(dsept, 3.8121194e-09)
+
+
+def test_dvsep_2():
+    assert cs.dvsep([1, 0, 0, 0, 1, 0], [0, 1, 0, 0, 0, 1]) == -1
+    assert cs.dvsep_vector([[1, 0, 0, 0, 1, 0], [2, 0, 0, 0, 2, 0]],
+                           [0, 1, 0, 0, 0, 1]).shape == (2,)
+
+
+@pytest.fixture
+def das_handle():
+    handle = cs.dasops()
+    yield handle
+    cs.dascls(handle)
+
+
+def test_read_write_integers(das_handle):
+    # Add ten elements
+    cs.dasadi(das_handle, [10, 20, 30, 40, 50])
+    cs.dasadi(das_handle, [100, 200, 300, 400, 500])
+
+    # Reading the 5th and 6th gives us 50, 100 in a 32-bit int array
+    result = cs.dasrdi(das_handle, 5, 6)
+    print(result)
+    assert result.dtype == np.int32
+    assert list(result) == [50, 100]
+
+    # Modify two of the elements, and then read them.
+    cs.dasudi(das_handle, 2, 3, [-1, -2])
+    result = cs.dasrdi(das_handle, 1, 5)
+    assert list(result) == [10, -1, -2, 40, 50]
+
+
+def test_read_write_floats(das_handle):
+    # Add ten elements. These will be upgraded to doubls
+    cs.dasadd(das_handle, [10, 20, 30, 40, 50])
+    cs.dasadd(das_handle, [100, 200, 300, 400, 500])
+
+    # Reading the 5th and 6th gives us 50.0 and 100.0
+    result = cs.dasrdd(das_handle, 5, 6)
+    assert result.dtype == np.double
+    assert list(result) == [50.0, 100.0]
+
+    # Modify two of the elements, and then read them.
+    cs.dasudd(das_handle, 2, 3, [-1, -2])
+    result = cs.dasrdd(das_handle, 1, 5)
+    assert list(result) == [10.0, -1.0, -2.0, 40.0, 50.0]
+
+
+def test_read_write_char(das_handle):
+    # Make the characters be bcdefghijkBCDEFGHIJK by taking 1:11 of each string
+    cs.dasadc(das_handle, 20, 1, 10, ['abcdefghijklmnop', 'ABCDEFGHIJKLMNOP'])
+
+    result = cs.dasrdc(das_handle, 1, 20, 0, 19)
+    assert result == ['bcdefghijkBCDEFGHIJK']
+
+    # Read the same result as two groups of 10
+    result = cs.dasrdc(das_handle, 1, 20, 0, 9)
+    assert result == ['bcdefghijk', 'BCDEFGHIJK']
+
+    # Read the same result as three groups of 7
+    result = cs.dasrdc(das_handle, 1, 20, 0, 6)
+    assert result == ['bcdefgh', 'ijkBCDE', 'FGHIJK']
+
+    # Offset the results by 1, and chop one character off the end of the saved results
+    result = cs.dasrdc(das_handle, 2, 19, 1, 7)
+    assert result == ['\x00cdefghi', '\x00jkBCDEF', '\x00GHIJ']
+
+    # Same test as above, but we're overwriting a string
+    result = cs.dasrdc(das_handle, 2, 19, 1, 7, ['123456789'] * 4)
+    assert result == ['1cdefghi9', '1jkBCDEF9', '1GHIJ6789', '123456789']
+
+    # replace characters 1 and 2 with ??
+    cs.dasudc(das_handle, 1, 2, 0, 2, ['?????'])
+    result = cs.dasrdc(das_handle, 1, 5, 0, 4)
+    assert result == ['??def']
+
+
+def test_read_works_with_file(tmp_path):
+    # This test writes multiple times to an actual file, closes it,
+    # then assures
+    filename = str(tmp_path.joinpath("dasfile"))
+    handle = cs.dasonw(filename, "temp", filename, 0)
+    cs.dasadi(handle, [10, 20, 30, 40, 50])
+    cs.dasadd(handle, [100, 200, 300])
+    cs.dasadc(handle, 5, 0, 4, ["abcde"])
+    cs.dasadi(handle, [60, 70, 80, 90, 100])
+    cs.dasadd(handle, [400, 500, 600])
+    cs.dasadc(handle, 5, 0, 4, ["fghij"])
+    cs.dascls(handle)
+
+    handle = cs.dasopr(filename)
+    assert cs.daslla(handle) == [10, 6, 10]  # count of chars, doubles, ints
+    assert list(cs.dasrdi(handle, 1, 10)) == [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    assert list(cs.dasrdd(handle, 1, 6)) == [100., 200., 300., 400., 500., 600.]
+    assert cs.dasrdc(handle, 1, 10, 0, 9) == ['abcdefghij']
+    cs.dascls(handle)

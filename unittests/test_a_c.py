@@ -39,6 +39,15 @@ def test_axisar():
     npt.assert_array_almost_equal(expected, outmatrix, decimal=6)
 
 
+def test_axisar_2():
+    pi = np.pi
+    npt.assert_almost_equal(cs.axisar([0, 0, 1], 0.), [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    npt.assert_almost_equal(cs.axisar([0, 0, 1], pi), [[-1, 0, 0], [0, -1, 0], [0, 0, 1]])
+
+    npt.assert_almost_equal(cs.axisar_vector([0, 0, 1], [0., pi]), [[[1, 0, 0], [0, 1, 0], [0, 0, 1]],
+                                                                    [[-1, 0, 0], [0, -1, 0], [0, 0, 1]]])
+
+
 def test_azlcpo():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(ExtraKernels.earthTopoTf)
@@ -588,7 +597,7 @@ def test_ckupf():
     cs.reset()
 
 
-def fail_ckw01():
+def test_ckw01():
     ck1 = os.path.join(TEST_FILE_DIR, "type1.bc")
     cleanup_kernel(ck1)
     INST = -77701
@@ -611,7 +620,7 @@ def fail_ckw01():
     av[0] = [0.0, 0.0, RATE]
     sclkdp = np.arange(MAXREC) * SPACING_TICKS
     sclkdp += 1000.0
-    for i in range(1, MAXREC - 1):
+    for i in range(1, MAXREC):
         theta = i * RATE * SPACING_SECS * 1.0
         work_mat = cs.rotmat(work_mat, theta, 3)
         work_quat = cs.m2q(work_mat)
@@ -639,8 +648,7 @@ def fail_ckw01():
     cleanup_kernel(ck1)
 
 
-# Test fails.
-def fail_ckw02():
+def test_ckw02():
     ck2 = os.path.join(TEST_FILE_DIR, "type2.bc")
     cleanup_kernel(ck2)
     INST = -77702
@@ -666,14 +674,15 @@ def fail_ckw02():
     sclkdp += 1000.0
     starts = sclkdp
     stops = sclkdp + (0.8 * SPACING_TICKS)
-    for i in range(1, MAXREC - 1):
+    for i in range(1, MAXREC):
         theta = i * RATE * SPACING_SECS * 1.0
         work_mat = cs.rotmat(work_mat, theta, 3)
         work_quat = cs.m2q(work_mat)
         quats[i] = work_quat
         av[i] = [0.0, 0.0, RATE]
-    begtime = sclkdp[0]
-    endtime = sclkdp[-1]
+    # begtime = sclkdp[0]
+    # endtime = sclkdp[-1]
+    begtime, endtime = starts[0], stops[-1]
     cs.ckw02(
         handle,
         begtime,
@@ -694,7 +703,7 @@ def fail_ckw02():
     cleanup_kernel(ck2)
 
 
-def fail_ckw03():
+def test_ckw03():
     ck3 = os.path.join(TEST_FILE_DIR, "type3.bc")
     cleanup_kernel(ck3)
     MAXREC = 201
@@ -714,7 +723,7 @@ def fail_ckw03():
     av[0] = [0.0, 0.0, RATE]
     sclkdp = np.arange(MAXREC) * SPACING_TICKS
     sclkdp += 1000.0
-    for i in range(1, MAXREC - 1):
+    for i in range(1, MAXREC):
         theta = i * RATE * SPACING_SECS * 1.0
         work_mat = cs.rotmat(work_mat, theta, 3)
         work_quat = cs.m2q(work_mat)
@@ -945,6 +954,32 @@ def test_conics():
     npt.assert_array_almost_equal(pert, expected_pert, decimal=5)
 
 
+def test_conics_2():
+    pi = np.pi
+    elem1 = [1., 0., 0., 0., 0., 0., 0., 1.]
+    elem4 = [4., 0., 0., 0., 0., 0., 0., 1.]
+    state10 = cs.conics(elem1, 0.)
+    state11 = cs.conics(elem1, pi)
+    state40 = cs.conics(elem4, 0.)
+    state48 = cs.conics(elem4, 8*pi)
+
+    npt.assert_almost_equal(state10, [1, 0, 0, 0, 1, 0.])
+    npt.assert_almost_equal(state11, [-1, 0, 0, 0, -1, 0.])
+    npt.assert_almost_equal(state40, [4, 0, 0, 0, 0.5, 0.])
+    npt.assert_almost_equal(state48, [-4, 0, 0, 0, -0.5, 0.])
+
+    test1 = cs.conics_vector(elem1, [0., pi, 2*pi])
+    npt.assert_almost_equal(test1, [[1, 0, 0, 0, 1, 0.],
+                                    [-1, 0, 0, 0, -1, 0.],
+                                    [1, 0, 0, 0, 1, 0.]])
+
+    test1 = cs.conics_vector([elem1, elem1, elem4, elem4], [0., pi, 0, 8*pi])
+    npt.assert_almost_equal(test1, [[1, 0, 0, 0, 1,  0.],
+                                    [-1, 0, 0, 0, -1,  0.],
+                                    [4, 0, 0, 0, 0.5, 0.],
+                                    [-4, 0, 0, 0, -0.5, 0.]])
+
+
 def test_convrt():
     assert cs.convrt(300.0, "statute_miles", "km") == 482.80320
     npt.assert_almost_equal(
@@ -954,6 +989,12 @@ def test_convrt():
     npt.assert_almost_equal(
         cs.convrt(1, "AU", "km"), 149597870.7, decimal=0
     )
+
+
+def test_convrt_2():
+    npt.assert_almost_equal(cs.convrt(1., 'inches', 'feet'), 1/12.)
+    npt.assert_almost_equal(cs.convrt(12., 'inches', 'feet'), 1.)
+    npt.assert_almost_equal(cs.convrt_vector([1., 12.], 'inches', 'feet'), [1/12., 1.])
 
 
 def test_cpos():
@@ -1004,6 +1045,21 @@ def test_cvpool():
     assert updated is True
 
 
+def test_cvg2el_el2cvg():
+    ellipse = cs.cgv2el([0, 0, 0], [1, 0, 0], [0, 1, 0])
+    npt.assert_almost_equal(ellipse, [0, 0, 0, 1, 0, 0, 0, 1, 0])
+
+    npt.assert_almost_equal(cs.el2cgv(ellipse), [[0, 0, 0], [1, 0, 0], [0, 1, 0]])
+
+    ellipse = cs.cgv2el_vector([0, 0, 0], [[1, 0, 0], [2, 0, 0]], [0, 1, 0])
+    npt.assert_almost_equal(ellipse, [[0, 0, 0, 1, 0, 0, 0, 1, 0],
+                                      [0, 0, 0, 2, 0, 0, 0, 1, 0]])
+
+    npt.assert_almost_equal(cs.el2cgv_vector(ellipse), [[[0, 0, 0], [0, 0, 0]],
+                                                        [[1, 0, 0], [2, 0, 0]],
+                                                        [[0, 1, 0], [0, 1, 0]]])
+
+
 def test_cyllat():
     assert cs.cyllat(1.0, (180.0 * cs.rpd()), -1.0) == [
         np.sqrt(2),
@@ -1022,3 +1078,77 @@ def test_cylsph():
     a = np.array(cs.cylsph(1.0, np.deg2rad(180.0), 1.0))
     b = np.array([1.4142, np.deg2rad(45.0), np.deg2rad(180.0)])
     np.testing.assert_almost_equal(b, a, decimal=4)
+
+
+def test_cyllat_cylrec_cylsph_radrec_reclat_reccyl_etc():
+    pi = np.pi
+    npt.assert_almost_equal(cs.cyllat(1, 0, 0), [1, 0, 0])
+    npt.assert_almost_equal(cs.cylrec(1, 0, 0), [1, 0, 0])
+    npt.assert_almost_equal(cs.cylsph(1, 0, 0), [1, pi/2, 0])
+    npt.assert_almost_equal(cs.radrec(1, 0, 0), [1, 0, 0])
+
+    npt.assert_almost_equal(cs.reclat([1, 0, 0]), [1, 0, 0])
+    npt.assert_almost_equal(cs.reccyl([1, 0, 0]), [1, 0, 0])
+    npt.assert_almost_equal(cs.recsph([1, 0, 0]), [1, pi/2, 0])
+    npt.assert_almost_equal(cs.recrad([1, 0, 0]), [1, 0, 0])
+
+    npt.assert_almost_equal(cs.sphlat(1, 0, 0), [1, 0, pi/2])
+    npt.assert_almost_equal(cs.sphcyl(1, 0, 0), [0, 0, 1])
+    npt.assert_almost_equal(cs.sphrec(1, 0, 0), [0, 0, 1])
+
+    npt.assert_almost_equal(cs.latcyl(1, 0, 0), [1, 0, 0])
+    npt.assert_almost_equal(cs.latrec(1, 0, 0), [1, 0, 0])
+    npt.assert_almost_equal(cs.latsph(1., 0., 0.), [1, pi/2, 0])
+
+    npt.assert_almost_equal(cs.cyllat_vector([1, 2, 3, 4], 0, 0), [[1, 2, 3, 4],
+                                                                   [0, 0, 0, 0],
+                                                                   [0, 0, 0, 0]])
+    npt.assert_almost_equal(cs.cylrec_vector([1, 2, 3, 4], 0, 0), [[1, 0, 0],
+                                                                   [2, 0, 0],
+                                                                   [3, 0, 0],
+                                                                   [4, 0, 0]])
+    npt.assert_almost_equal(cs.cylsph_vector(0, 0, [1, 2, 3, 4]), [[1, 2, 3, 4],
+                                                                   [0, 0, 0, 0],
+                                                                   [0, 0, 0, 0]])
+
+    npt.assert_almost_equal(cs.reclat_vector(
+        5 * [[1, 0, 0]]), [5 * [1], 5 * [0], 5 * [0]])
+    npt.assert_almost_equal(cs.reccyl_vector(
+        5 * [[1, 0, 0]]), [5 * [1], 5 * [0], 5 * [0]])
+    npt.assert_almost_equal(cs.recsph_vector(5 * [[1, 0, 0]]),
+                            [5 * [1], 5 * [pi/2], 5 * [0]])
+    npt.assert_almost_equal(cs.recrad_vector(
+        5 * [[1, 0, 0]]), [5 * [1], 5 * [0], 5 * [0]])
+    npt.assert_almost_equal(cs.sphlat_vector([1, 1], 0, 0), [[1, 1], [0, 0], 2 * [pi/2]])
+    npt.assert_almost_equal(cs.sphcyl_vector([1, 1], 0, 0), [[0, 0], [0, 0], [1, 1]])
+    npt.assert_almost_equal(cs.sphrec_vector([1, 1], 0, 0), 2 * [[0, 0, 1]])
+    npt.assert_almost_equal(cs.latcyl_vector(1., 0., [0, 0]), [[1, 1], [0, 0], [0, 0]])
+    npt.assert_almost_equal(cs.latrec_vector(1., [0, 0], 0), 2 * [[1, 0, 0]])
+    npt.assert_almost_equal(cs.latsph_vector([1, 2], 0., 0.),
+                            [[1, 2], 2 * [pi/2], [0, 0]])
+
+
+def test_constants():
+    pi = np.pi
+    assert cs.pi() == pi
+    assert cs.halfpi() == pi / 2
+    assert cs.twopi() == pi * 2
+    assert cs.intmin() == -2 ** 31
+    assert cs.intmax() == 2 ** 31 - 1
+    assert cs.dpmin() == -1.7976931348623157e+308
+    assert cs.dpmax() == 1.7976931348623157e+308
+
+    assert cs.b1900() == 2415020.31352
+    assert cs.b1950() == 2433282.42345905
+    assert cs.clight() == 299792.458
+
+    assert cs.dpr() == 180./pi
+    assert cs.rpd() == 1./cs.dpr()
+
+    assert cs.j1900() == 2415020.0
+    assert cs.j1950() == 2433282.5
+    assert cs.j2000() == 2451545.0
+    assert cs.j2100() == 2488070.0
+    assert cs.jyear() == 31557600.0
+    assert cs.tyear() == 31556925.9747
+    assert cs.spd() == 86400.0

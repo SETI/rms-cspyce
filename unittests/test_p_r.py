@@ -200,6 +200,21 @@ def test_pjelpl():
     npt.assert_array_almost_equal(expected_s_minor, ellipse[6:9])
 
 
+def test_pjelpj():
+    npt.assert_almost_equal(cs.pjelpl([0, 0, 0, 2, 0, 0, 0, 3, 0], [0, 0, 1, 0]),
+                            [0, 0, 0, 0, 3, 0, 2, 0, 0])
+    npt.assert_almost_equal(cs.pjelpl([0, 0, 0, 2, 0, 0, 0, 4, 0], [0, 0, 1, 0]),
+                            [0, 0, 0, 0, 4, 0, 2, 0, 0])
+    npt.assert_almost_equal(cs.pjelpl_vector([0, 0, 0, 2, 0, 0, 0, 3, 0], [0, 0, 1, 0]),
+                            [0, 0, 0, 0, 3, 0, 2, 0, 0])
+    npt.assert_almost_equal(cs.pjelpl_vector([0, 0, 0, 2, 0, 0, 0, 3, 0], [[0, 0, 1, 0]]),
+                            [[0, 0, 0, 0, 3, 0, 2, 0, 0]])
+    npt.assert_almost_equal(cs.pjelpl_vector([[0, 0, 0, 2, 0, 0, 0, 3, 0],
+                                              [0, 0, 0, 2, 0, 0, 0, 4, 0]], [0, 0, 1, 0]),
+                            [[0, 0, 0, 0, 3, 0, 2, 0, 0],
+                             [0, 0, 0, 0, 4, 0, 2, 0, 0]])
+
+
 def test_pl2nvc():
     normal = [-1.0, 5.0, -3.5]
     point = [9.0, -0.65, -12.0]
@@ -210,6 +225,15 @@ def test_pl2nvc():
     npt.assert_array_almost_equal(expected_normal, normal, decimal=6)
 
 
+def test_pl2nvc_2():
+    npt.assert_almost_equal(cs.pl2nvc([0, 0, 1, 0]), [[0, 0, 1], 0])
+    npt.assert_almost_equal(cs.pl2nvc([0, 0, 0, 1]), [[0, 0, 0], 1])
+    npt.assert_almost_equal(cs.pl2nvc_vector([0, 0, 1, 0]), [[0, 0, 1], 0])
+    npt.assert_almost_equal(cs.pl2nvc_vector([[0, 0, 1, 0]]), [[[0, 0, 1]], [0]])
+    npt.assert_almost_equal(cs.pl2nvc_vector([[0, 0, 1, 0], [0, 0, 0, 1]]),
+                            [[[0, 0, 1], [0, 0, 0]], [0, 1]])
+
+
 def test_pl2nvp():
     plane_norm = [2.44, -5.0 / 3.0, 11.0 / 9.0]
     const = 3.141592654
@@ -217,6 +241,14 @@ def test_pl2nvp():
     norm_vec, point = cs.pl2nvp(plane)
     expected_point = [0.74966576, -0.51206678, 0.37551564]
     npt.assert_array_almost_equal(expected_point, point)
+
+
+def test_pl2nvp_2():
+    npt.assert_almost_equal(cs.pl2nvp([0, 0, 1, 0]), [[0, 0, 1], [0, 0, 0]])
+    npt.assert_almost_equal(cs.pl2nvp([0, 1, 0, 0]), [[0, 1, 0], [0, 0, 0]])
+    npt.assert_almost_equal(cs.pl2nvp_vector([0, 0, 1, 0]), [[0, 0, 1], [0, 0, 0]])
+    npt.assert_almost_equal(cs.pl2nvp_vector([[0, 0, 1, 0], [0, 1, 0, 0]]),
+                            [[[0, 0, 1], [0, 1, 0]], 2*[[0, 0, 0]]])
 
 
 def test_pl2psv():
@@ -229,10 +261,39 @@ def test_pl2psv():
     npt.assert_almost_equal(cs.vdot(span1, span2), 0)
 
 
+def test_pl2psv_2():
+    npt.assert_almost_equal(cs.pl2psv([0, 0, 1, 0]), [[0, 0, 0], [0, -1, 0], [1, 0, 0]])
+    npt.assert_almost_equal(cs.pl2psv([0, 1, 0, 0]), [[0, 0, 0], [0, 0, 1], [1, 0, 0]])
+    npt.assert_almost_equal(cs.pl2psv_vector([0, 0, 1, 0]), [
+                            [0, 0, 0], [0, -1, 0], [1, 0, 0]])
+    npt.assert_almost_equal(cs.pl2psv_vector([[0, 0, 1, 0], [0, 1, 0, 0]]),
+                            [2*[[0, 0, 0]], [[0, -1, 0], [0, 0, 1]], 2*[[1, 0, 0]]])
+
+
 def test_pltar():
     vrtces = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     plates = [[1, 4, 3], [1, 2, 4], [1, 3, 2], [2, 3, 4]]
     assert cs.pltar(vrtces, plates) == pytest.approx(2.3660254037844)
+
+
+def test_pltar_pltval_pltexp_pltnp():
+    vertices = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]]
+    indices = [[1, 2, 3], [1, 4, 2], [1, 3, 4], [2, 4, 3]]
+
+    npt.assert_almost_equal(cs.pltar(vertices, indices), 1.5 + np.sqrt(3)/2.)
+    npt.assert_almost_equal(cs.pltvol(vertices, indices), 1/6.)
+
+    npt.assert_almost_equal(cs.pltexp([[0, 0, 0], [0, 1, 0], [1, 0, 0]], 0.),
+                            [[0, 0, 0], [0, 1, 0], [1, 0, 0]])
+    npt.assert_almost_equal(cs.pltexp([[0, 0, 0], [0, 1, 0], [1, 0, 0]], 3.),
+                            [[-1, -1, 0], [-1, 3, 0], [3, -1, 0]])
+
+    npt.assert_almost_equal(cs.pltnp([1, 0, 0], [0, 0, 0], [0, 0, 1], [0, 1, 0]),
+                            [[0, 0, 0], 1])
+    npt.assert_almost_equal(cs.pltnp([1, -1, 0], [0, 0, 0], [0, 0, 1], [0, 1, 0]),
+                            [[0, 0, 0], np.sqrt(2)])
+    npt.assert_almost_equal(cs.pltnp([1, 1, 1], [0, 0, 0], [0, 0, 1], [0, 1, 0]),
+                            [[0, 0.5, 0.5], np.sqrt(1.5)])
 
 
 def test_pltexp():
@@ -355,6 +416,17 @@ def test_prop2b():
     npt.assert_array_almost_equal(state, -1.0 * pvinit, decimal=6)
 
 
+def test_prop2b_2():
+    pi = np.pi
+    npt.assert_almost_equal(cs.prop2b(1, [1, 0, 0, 0, 1, 0], pi/2), [0, 1, 0, -1, 0, 0])
+    npt.assert_almost_equal(cs.prop2b(1, [1, 0, 0, 0, 1, 0], pi/4),
+                            np.array([1, 1, 0, -1, 1, 0]) / np.sqrt(2))
+    npt.assert_almost_equal(cs.prop2b_vector(
+        1, [1, 0, 0, 0, 1, 0], pi/2), [0, 1, 0, -1, 0, 0])
+    npt.assert_almost_equal(cs.prop2b_vector(1, [1, 0, 0, 0, 1, 0], [pi/2, pi/4]),
+                            [[0, 1, 0, -1, 0, 0], np.array([1, 1, 0, -1, 1, 0]) / np.sqrt(2)])
+
+
 def test_prsdp():
     assert cs.prsdp("-1. 000") == -1.0
 
@@ -377,6 +449,15 @@ def test_psv2pl():
     npt.assert_almost_equal(
         cs.vsep(es_norm, em_norm) * cs.dpr(), 5.0424941, decimal=6
     )
+
+
+def test_psv2pl_2():
+    npt.assert_almost_equal(cs.psv2pl([0, 0, 0], [2, 0, 0], [0, 3, 0]), [0, 0, 1, 0])
+    npt.assert_almost_equal(cs.psv2pl([0, 0, 0], [2, 0, 0], [0, 1, 0]), [0, 0, 1, 0])
+    npt.assert_almost_equal(cs.psv2pl_vector(
+        [0, 0, 0], [2, 0, 0], [0, 3, 0]), [0, 0, 1, 0])
+    npt.assert_almost_equal(cs.psv2pl_vector([0, 0, 0], [2, 0, 0], [[0, 3, 0], [0, 1, 0]]),
+                            2*[[0, 0, 1, 0]])
 
 
 def test_pxform():
@@ -453,6 +534,19 @@ def test_q2m():
     assert np.array_equal(expected, mout)
 
 
+def test_q2m_m2q_qx1():
+    npt.assert_almost_equal(cs.q2m([1, 0, 0, 0]), [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 0)
+    npt.assert_almost_equal(cs.m2q([[1, 0, 0], [0, 1, 0], [0, 0, 1]]), [1, 0, 0, 0], 0)
+
+    npt.assert_almost_equal(cs.q2m_vector(2*[[1, 0, 0, 0]]),
+                            2*[[[1, 0, 0], [0, 1, 0], [0, 0, 1]]], 0)
+    npt.assert_almost_equal(cs.m2q_vector(
+        3*[[[1, 0, 0], [0, 1, 0], [0, 0, 1]]]), 3*[[1, 0, 0, 0]], 0)
+
+    npt.assert_almost_equal(cs.qxq([1, 1, 1, 1], [1, 0, 0, 0]), [1, 1, 1, 1], 0)
+    npt.assert_almost_equal(cs.qxq_vector([1, 1, 1, 1], 2*[[1, 0, 0, 0]]), 2*[4*[1]], 0)
+
+
 def test_qcktrc():
     cs.reset()
     cs.chkin("test")
@@ -482,6 +576,14 @@ def test_qdq2av():
     dq = [-0.5 * x for x in dq]
     av = cs.qdq2av(q, dq)
     npt.assert_array_almost_equal(av, expav)
+
+
+def test_qdq2av_2():
+    npt.assert_almost_equal(cs.qdq2av([1, 0, 0, 0], [0, 0, 0, 0]), [0, 0, 0])
+    npt.assert_almost_equal(cs.qdq2av([1, 0, 0, 0], [0, 1, 0, 0]), [-2, 0, 0])
+    npt.assert_almost_equal(cs.qdq2av_vector([1, 0, 0, 0], [0, 0, 0, 0]), [0, 0, 0])
+    npt.assert_almost_equal(cs.qdq2av_vector([1, 0, 0, 0], [[0, 0, 0, 0], [0, 1, 0, 0]]),
+                            [[0, 0, 0], [-2, 0, 0]])
 
 
 def test_qxq():
@@ -516,6 +618,29 @@ def test_rav2xf():
     assert cs.rav2xf(rz, e) is not None
 
 
+def test_rav2xf_2():
+    mat1 = [[0, 1, 0], [-1, 0, 0], [0, 0, -1]]
+    result1 = [[0, 1, 0, 0, 0, 0.],
+               [-1, 0, 0, 0, 0, 0.],
+               [0, 0, -1, 0, 0, 0.],
+               [0, 0, 0, 0, 1, 0.],
+               [0, 0, 0, -1, 0, 0.],
+               [0, 0, 0, 0, 0, -1.]]
+    result2 = [[0, 1, 0, 0, 0, 0.],
+               [-1, 0, 0, 0, 0, 0.],
+               [0, 0, -1, 0, 0, 0.],
+               [0, 0, 1, 0, 1, 0.],
+               [0, 0, 0, -1, 0, 0.],
+               [0, 1, 0, 0, 0, -1.]]
+
+    npt.assert_almost_equal(cs.rav2xf(mat1, [0, 0, 0]), result1)
+    npt.assert_almost_equal(cs.rav2xf(mat1, [1, 0, 0]), result2)
+    npt.assert_almost_equal(cs.rav2xf_vector(mat1, [0, 0, 0]), result1)
+    npt.assert_almost_equal(cs.rav2xf_vector([mat1], [0, 0, 0]), [result1])
+    npt.assert_almost_equal(cs.rav2xf_vector(mat1, [[0, 0, 0], [1, 0, 0]]),
+                            [result1, result2])
+
+
 def test_raxisa():
     axis = [1.0, 2.0, 3.0]
     angle = 0.1 * cs.twopi()
@@ -524,6 +649,21 @@ def test_raxisa():
     expected_angout = [0.26726124, 0.53452248, 0.80178373]
     npt.assert_approx_equal(angout, 0.62831853, significant=7)
     npt.assert_array_almost_equal(axout, expected_angout)
+
+
+def test_raxisa_2():
+    pi = np.pi
+    # raxisa
+    npt.assert_almost_equal(cs.raxisa([[0, 1, 0], [1, 0, 0], [0, 0, -1]]),
+                            [[-np.sqrt(0.5), -np.sqrt(0.5), 0.], pi])
+    npt.assert_almost_equal(cs.raxisa([[1, 0, 0], [0, 0, 1], [0, -1, 0]]),
+                            [[-1, 0, 0], pi/2])
+    npt.assert_almost_equal(cs.raxisa_vector([[0, 1, 0], [1, 0, 0], [0, 0, -1]]),
+                            [[-np.sqrt(0.5), -np.sqrt(0.5), 0.], pi])
+    npt.assert_almost_equal(cs.raxisa_vector([[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
+                                              [[1, 0, 0], [0, 0, 1], [0, -1, 0]]]),
+                            [[[-np.sqrt(0.5), -np.sqrt(0.5), 0], [-1, 0, 0]],
+                             [pi, pi/2]])
 
 
 def test_recazl():
@@ -695,6 +835,16 @@ def test_repmc():
     assert outstringone == "The truth is SPICE"
 
 
+def test_repmc_2():
+    pi = np.pi
+    assert cs.repmc('pi = ##!', '##', '3.14159') == 'pi = 3.14159!'
+    assert cs.repmct('On one, two, #', '#', 3, 'L') == 'On one, two, three'
+    assert cs.repmd('pi = #!', '#', pi, 6) == 'pi = 3.14159E+00!'
+    assert cs.repmf('pi = #!', '#', pi, 6, 'F') == 'pi = 3.14159!'
+    assert cs.repmi('On 1, 2, #', '#', 3) == 'On 1, 2, 3'
+    assert cs.repmot('On # base', '#', 3, 'L') == 'On third base'
+
+
 def test_repmct():
     stringtestone = "The value is #"
     outstringone = cs.repmct(stringtestone, "#", 5, "U")
@@ -721,6 +871,16 @@ def test_repmi():
     stringtest = "The value is <opcode>"
     outstring = cs.repmi(stringtest, "<opcode>", 5)
     assert outstring == "The value is 5"
+
+
+def test_repml():
+    input_string = "Either # or FALSE"
+    marker = "#"
+    value = True
+    rtcase = "U"
+    output_string = cs.repml(input_string, marker, value, rtcase)
+    expected_output_string = "Either TRUE or FALSE"
+    assert output_string == expected_output_string
 
 
 def test_repmot():
@@ -752,11 +912,34 @@ def test_rotate():
     npt.assert_array_almost_equal(mout, mExpected)
 
 
+def test_rotate_2():
+    pi = np.pi
+    ident = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+
+    npt.assert_almost_equal(cs.rotate(0, 1), ident)
+    npt.assert_almost_equal(cs.rotate(pi, 1), [[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    npt.assert_almost_equal(cs.rotate(pi/2, 1), [[1, 0, 0], [0, 0, 1], [0, -1, 0]])
+    npt.assert_almost_equal(cs.rotate_vector(0, 1), ident)
+    npt.assert_almost_equal(cs.rotate_vector([0], 1), [ident])
+    npt.assert_almost_equal(cs.rotate_vector(3*[0], 1), 3*[ident])
+
+
 def test_rotmat():
     ident = cs.ident()
     expected_r = [[0.0, 0.0, -1.0], [0.0, 1.0, 0.0], [1.0, 0.0, 0.0]]
     r_out = cs.rotmat(ident, cs.halfpi(), 2)
     npt.assert_array_almost_equal(r_out, expected_r)
+
+
+def test_rotmat_2():
+    pi = np.pi
+    ident = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    npt.assert_almost_equal(cs.rotmat(ident, 0, 1), ident)
+    npt.assert_almost_equal(cs.rotmat(ident, pi, 1), [[1, 0, 0], [0, -1, 0], [0, 0, -1]])
+    npt.assert_almost_equal(cs.rotmat_vector(ident, 0, 1), ident)
+    npt.assert_almost_equal(cs.rotmat_vector(ident, [0], 1), [ident])
+    npt.assert_almost_equal(cs.rotmat_vector(ident, [0, pi], 1),
+                            [ident, [[1, 0, 0], [0, -1, 0], [0, 0, -1]]])
 
 
 def test_rotvec():
@@ -766,6 +949,16 @@ def test_rotvec():
     v_expected = [1.0, -1.0, 0.0]
     vout = cs.rotvec(vin, angle, iaxis)
     npt.assert_array_almost_equal(vout, v_expected)
+
+
+def test_rotvec_2():
+    pi = np.pi
+    npt.assert_almost_equal(cs.rotvec([1, 0, 0], 0, 2), [1, 0, 0])
+    npt.assert_almost_equal(cs.rotvec([1, 0, 0], pi, 2), [-1, 0, 0])
+    npt.assert_almost_equal(cs.rotvec_vector([1, 0, 0], pi, 2), [-1, 0, 0])
+    npt.assert_almost_equal(cs.rotvec_vector([[1, 0, 0]], [pi], 2), [[-1, 0, 0]])
+    npt.assert_almost_equal(cs.rotvec_vector(
+        [[1, 0, 0]], [pi, 0], 2), [[-1, 0, 0], [1, 0, 0]])
 
 
 def test_rpd():
@@ -779,8 +972,12 @@ def test_rquad():
     expected_root_two = [-1.0, -np.sqrt(2.0)]
     npt.assert_array_almost_equal(root1, expected_root_one)
     npt.assert_array_almost_equal(root2, expected_root_two)
-# =============================================================================
-# prompt
-# =============================================================================
-# repml
-# =============================================================================
+
+
+def test_rquad_2():
+    npt.assert_almost_equal(cs.rquad(1, 0, -1), [[1, 0], [-1, 0]])
+    npt.assert_almost_equal(cs.rquad(1, 0, 1), [[0, 1], [0, -1]])
+    npt.assert_almost_equal(cs.rquad_vector(1, 0, -1), [[1, 0], [-1, 0]])
+    npt.assert_almost_equal(cs.rquad_vector(1, 0, [-1]), [[[1, 0]], [[-1, 0]]])
+    npt.assert_almost_equal(cs.rquad_vector(1, 0, [-1, 1]),
+                            [[[1, 0], [0, 1]], [[-1, 0], [0, -1]]])

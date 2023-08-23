@@ -150,17 +150,20 @@ def test_tkvrsn():
     assert version == "CSPICE_N0067"
 
 
-def fail_tparch():
+def test_tkvrsn_2():
+    assert cs.tkvrsn('toolkit') == 'CSPICE_N0067'
+    assert cs.tkvrsn() == 'CSPICE_N0067'
+
+
+def test_tparch():
     cs.tparch("NO")
+    e = cs.tparse("FEB 34, 1993")
+    assert e == -215352000.0
     cs.tparch("YES")
-    a, e = cs.tparse("FEB 34, 1993")
-    assert "The day of the month specified for the month of February was 3.40E+01." in e
-    cs.tparch("NO")
-    a, e = cs.tparse("FEB 34, 1993")
-    assert (
-        "The day of the month specified for the month of February was 3.40E+01."
-        not in e
-    )
+    f = cs.tparse("FEB 24, 1993")
+    assert f == -216216000.0
+    with pytest.raises(ValueError):
+        g = cs.tparse("FEB 34, 1993")
 
 
 def test_tparse():
@@ -181,6 +184,16 @@ def test_tpictr():
 def test_trace():
     matrix = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
     assert cs.trace(matrix) == 3.0
+
+
+def test_trace_2():
+    ident = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    npt.assert_almost_equal(cs.trace(ident), 3.)
+    npt.assert_almost_equal(cs.trace(np.arange(9).reshape((3, 3))), 12.)
+    npt.assert_almost_equal(cs.trace_vector(np.arange(9).reshape((3, 3))), 12.)
+    npt.assert_almost_equal(cs.trace_vector(np.arange(9).reshape((1, 3, 3))), [12.])
+    npt.assert_almost_equal(cs.trace_vector(np.arange(36).reshape((4, 3, 3))),
+                            [12, 39, 66, 93.])
 
 
 def test_trcdep():
@@ -277,6 +290,16 @@ def test_twovec():
     npt.assert_array_almost_equal(cs.twovec(axdef, 1, plndef, 2), expected)
 
 
+def test_twovec_2():
+    npt.assert_almost_equal(cs.twovec([1, 0, 0], 1, [0, 1, 0], 2),
+                            [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 0)
+    npt.assert_almost_equal(cs.twovec([1, 0, 0], 1, [1, 1, 0], 2),
+                            [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 0)
+
+    npt.assert_almost_equal(cs.twovec_vector([1, 0, 0], 1, [[0, 1, 0], [1, 1, 0]], 2),
+                            2*[[[1, 0, 0], [0, 1, 0], [0, 0, 1]]], 0)
+
+
 def test_twovxf():
     RAJ2K = 90.3991968556
     DECJ2K = -52.6956610556
@@ -361,6 +384,28 @@ def test_unorm():
     assert np.array_equal(expected_vout, vout)
 
 
+def test_unorm_unormg_vhat_vhatg_vnorm_vnormg():
+    vec = np.array([1, 2, 3])
+    vec2 = np.array([1, -3, 2])
+    mag = np.sqrt(np.sum(vec**2))
+    unit = vec / mag
+
+    npt.assert_almost_equal(cs.unorm(vec), [unit, mag])
+    npt.assert_almost_equal(cs.unormg(vec), [unit, mag])
+    npt.assert_almost_equal(cs.unorm_vector([vec, vec2]), [[unit, vec2/mag], 2*[mag]])
+    npt.assert_almost_equal(cs.unormg_vector([vec, vec2]), [[unit, vec2/mag], 2*[mag]])
+
+    npt.assert_almost_equal(cs.vhat(vec), unit)
+    npt.assert_almost_equal(cs.vhatg(vec), unit)
+    npt.assert_almost_equal(cs.vhat_vector([vec, vec2]), [unit, vec2/mag])
+    npt.assert_almost_equal(cs.vhatg_vector([vec, vec2]), [unit, vec2/mag])
+
+    npt.assert_almost_equal(cs.vnorm(vec), mag)
+    npt.assert_almost_equal(cs.vnormg(vec), mag)
+    npt.assert_almost_equal(cs.vnorm_vector([vec, vec2]), [mag, mag])
+    npt.assert_almost_equal(cs.vnormg_vector([vec, vec2]), [mag, mag])
+
+
 def test_unormg():
     v1 = np.array([5.0, 12.0])
     expected_vout = np.array([5.0 / 13.0, 12.0 / 13.0])
@@ -398,10 +443,40 @@ def test_vcrss():
     assert np.array_equal(vout, expected)
 
 
+def test_vcrss_ucrss():
+    vec = np.array([1, 2, 3])
+    vec2 = [2, 4, 7]  # can't be parallel to vec
+    vec3 = np.array([3, 1, 3])
+    cross12 = np.cross(vec, vec2)
+    cross13 = np.cross(vec, vec3)
+    norm12 = np.sqrt(np.sum(cross12**2))
+    norm13 = np.sqrt(np.sum(cross13**2))
+
+    npt.assert_almost_equal(cs.vcrss(vec, vec2), cross12, 0)
+    npt.assert_almost_equal(cs.ucrss(vec, vec2), cross12/norm12)
+
+    npt.assert_almost_equal(cs.vcrss_vector(vec, [vec2, vec3]), [cross12, cross13], 0)
+    npt.assert_almost_equal(cs.ucrss_vector(vec, [vec2, vec3]), [
+                            cross12/norm12, cross13/norm13])
+
+
 def test_vdist():
     v1 = np.array([2.0, 3.0, 0.0])
     v2 = np.array([5.0, 7.0, 12.0])
     assert cs.vdist(v1, v2) == 13.0
+
+
+def test_vdist_vdistg():
+    vec = np.array([1, 2, 3])
+    vec2 = [2, 4, 7]  # can't be parallel to vec
+    vec3 = np.array([3, 1, 3])
+
+    npt.assert_almost_equal(cs.vdist(vec, vec2), cs.vnorm(vec - vec2), 0)
+    npt.assert_almost_equal(cs.vdistg(vec, vec2), cs.vnormg(vec - vec2), 0)
+    npt.assert_almost_equal(cs.vdist_vector(vec, [vec2, vec3]),
+                            [cs.vnorm(vec - vec2), cs.vnorm(vec - vec3)], 0)
+    npt.assert_almost_equal(cs.vdistg_vector(vec, [vec2, vec3]),
+                            [cs.vnorm(vec - vec2), cs.vnorm(vec - vec3)], 0)
 
 
 def test_vdistg():
@@ -416,6 +491,22 @@ def test_vdot():
     assert cs.vdot(v1, v2) == 4.0
 
 
+def test_vdot_vdotg():
+    vec = np.array([1, 2, 3])
+    vec2 = np.array([2, 4, 6])
+    vec3 = np.array([3, 1, 3])
+
+    npt.assert_almost_equal(cs.vdot(vec, vec2),  np.dot(vec, vec2), 0)
+    npt.assert_almost_equal(cs.vdotg(vec, vec2), np.dot(vec, vec2), 0)
+
+    npt.assert_almost_equal(cs.vdot_vector(vec, [vec2, vec3]),  [
+        np.dot(vec, vec2), np.dot(vec, vec3)], 0)
+    npt.assert_almost_equal(cs.vdotg_vector(vec, [vec2, vec3]), [
+        np.dot(vec, vec2), np.dot(vec, vec3)], 0)
+
+    npt.assert_almost_equal(cs.vdotg_vector(vec, vec2), np.dot(vec, vec2), 0)
+
+
 def test_vdotg():
     v1 = np.array([1.0, 0.0])
     v2 = np.array([2.0, 1.0])
@@ -425,6 +516,78 @@ def test_vdotg():
 def test_vequ():
     v1 = np.ones(3)
     assert np.array_equal(v1, cs.vequ(v1))
+
+
+def test_vequ_vequg():
+    npt.assert_almost_equal(cs.vequ([1, 2, 3]), [1, 2, 3], 0)
+    npt.assert_almost_equal(cs.vequ_vector(
+        [[1, 2, 3], [4, 5, 6]]), [[1, 2, 3], [4, 5, 6]], 0)
+
+    npt.assert_almost_equal(cs.vequg([1, 2, 3]), [1, 2, 3], 0)
+    npt.assert_almost_equal(cs.vequg([4, 5, 6, 7]), [4, 5, 6, 7], 0)
+    npt.assert_almost_equal(cs.vequg_vector([1, 2, 3]), [1, 2, 3], 0)  # drop one dim
+    npt.assert_almost_equal(cs.vequg_vector([[1, 2, 3]]), [[1, 2, 3]], 0)  # retain dim
+    npt.assert_almost_equal(cs.vequg_vector(
+        [[1, 2, 3], [4, 5, 6]]), [[1, 2, 3], [4, 5, 6]], 0)
+
+
+def test_vequ_vequg_vminus_vminusg_vadd_vaddg_etc():
+    vec1 = np.array([1, 2, 3])
+    vec2 = np.array([2, 4, 6])
+    vec3 = np.array([3, 1, 3])
+
+    npt.assert_almost_equal(cs.vequ(vec1), vec1, 0)
+    npt.assert_almost_equal(cs.vequg(vec1), vec1, 0)
+    npt.assert_almost_equal(cs.vequ_vector([vec1, vec2]), [vec1, vec2], 0)
+    npt.assert_almost_equal(cs.vequg_vector([vec1, vec2]), [vec1, vec2], 0)
+
+    npt.assert_almost_equal(cs.vequ_vector(vec1), vec1, 0)  # drop one dim
+
+    npt.assert_almost_equal(cs.vminus(vec1), -vec1, 0)
+    npt.assert_almost_equal(cs.vminug(vec1), -vec1, 0)
+    npt.assert_almost_equal(cs.vminus_vector([vec1, vec2]), [-vec1, -vec2], 0)
+    npt.assert_almost_equal(cs.vminug_vector([vec1, vec2]), [-vec1, -vec2], 0)
+
+    npt.assert_almost_equal(cs.vadd(vec1, vec2), vec1+vec2, 0)
+    npt.assert_almost_equal(cs.vaddg(vec1, vec2), vec1+vec2, 0)
+    npt.assert_almost_equal(cs.vadd_vector([vec1, vec3], vec2), [vec1+vec2, vec3+vec2], 0)
+    npt.assert_almost_equal(cs.vaddg_vector(
+        [vec1, vec3], vec2), [vec1+vec2, vec3+vec2], 0)
+
+    npt.assert_almost_equal(cs.vsub(vec1, vec2), vec1-vec2, 0)
+    npt.assert_almost_equal(cs.vsubg(vec1, vec2), vec1-vec2, 0)
+    npt.assert_almost_equal(cs.vsub_vector([vec1, vec3], vec2), [vec1-vec2, vec3-vec2], 0)
+    npt.assert_almost_equal(cs.vsubg_vector(
+        [vec1, vec3], vec2), [vec1-vec2, vec3-vec2], 0)
+
+    npt.assert_almost_equal(cs.vlcom(2, vec1, 3, vec2), 2*vec1 + 3*vec2, 0)
+    npt.assert_almost_equal(cs.vlcomg(2, vec1, 3, vec2), 2*vec1 + 3*vec2, 0)
+    npt.assert_almost_equal(cs.vlcom_vector(2, [vec1, vec3], 3, vec2), [
+        2*vec1+3*vec2, 2*vec3+3*vec2], 0)
+    npt.assert_almost_equal(cs.vlcomg_vector(2, [vec1, vec3], 3, vec2), [
+        2*vec1+3*vec2, 2*vec3+3*vec2], 0)
+    npt.assert_almost_equal(cs.vlcom_vector([1, 2], vec1, 3, vec2), [
+        1*vec1+3*vec2, 2*vec1+3*vec2], 0)
+    npt.assert_almost_equal(cs.vlcomg_vector([1, 2], vec1, 3, vec2), [
+        1*vec1+3*vec2, 2*vec1+3*vec2], 0)
+
+    npt.assert_almost_equal(cs.vlcom3(2, vec1, 3, vec2, 4, vec3),
+                            2*vec1 + 3*vec2 + 4*vec3, 0)
+    npt.assert_almost_equal(cs.vlcom3_vector([1, 2], vec1, 3, vec2, 4, vec3),
+                            [1*vec1 + 3*vec2 + 4*vec3, 2*vec1 + 3*vec2 + 4*vec3], 0)
+
+    assert cs.vzero([0, 0, 0])
+    assert not cs.vzero([0, 0, 1.e-99])
+    assert cs.vzerog([0, 0, 0, 0])
+    assert not cs.vzerog([0, 0, 0, 1.e-99])
+
+    npt.assert_almost_equal(cs.vzero_vector([[0, 0, 0], [0, 0, 1]]), [True, False])
+    npt.assert_almost_equal(cs.vzerog_vector([[0, 0, 0, 0], [0, 0, 0, 1]]), [True, False])
+
+    npt.assert_almost_equal(cs.vscl(2, vec1), 2*vec1, 0)
+    npt.assert_almost_equal(cs.vsclg(2, vec1), 2*vec1, 0)
+    npt.assert_almost_equal(cs.vscl_vector([2, 3], [vec1, vec2]), [2*vec1, 3*vec2], 0)
+    npt.assert_almost_equal(cs.vsclg_vector([2, 3], [vec1, vec2]), [2*vec1, 3*vec2], 0)
 
 
 def test_vequg():
@@ -497,11 +660,34 @@ def test_vpack():
     assert np.array_equal(cs.vpack(1.0, 1.0, 1.0), np.ones(3))
 
 
+def test_vpack_vupack():
+    npt.assert_almost_equal(cs.vpack(1, 2, 3), [1, 2, 3], 0)
+    npt.assert_almost_equal(cs.vupack([2, 3, 4]), [2, 3, 4], 0)
+    npt.assert_almost_equal(cs.vpack_vector([0, 1], 2, 3), [[0, 2, 3], [1, 2, 3]], 0)
+    npt.assert_almost_equal(cs.vupack_vector([[1, 3, 4], [2, 3, 4]]), [
+        [1, 2], [3, 3], [4, 4]], 0)
+
+    npt.assert_almost_equal(cs.vpack_vector(0, 2, 3), [0, 2, 3], 0)
+    npt.assert_almost_equal(cs.vpack_vector([0], 2, 3), [[0, 2, 3]], 0)
+
+
 def test_vperp():
     v1 = np.array([6.0, 6.0, 6.0])
     v2 = np.array([2.0, 0.0, 0.0])
     expected = np.array([0.0, 6.0, 6.0])
     assert np.array_equal(cs.vperp(v1, v2), expected)
+
+
+def test_vperp_vproj():
+    npt.assert_almost_equal(cs.vperp([1, 2, 3], [2, 0, 0]), [0, 2, 3], 0)
+    npt.assert_almost_equal(cs.vperp([1, 2, 3], [0, 4, 0]), [1, 0, 3], 0)
+    npt.assert_almost_equal(cs.vperp_vector([1, 2, 3], [[2, 0, 0], [0, 4, 0]]), [
+        [0, 2, 3], [1, 0, 3]], 0)
+
+    npt.assert_almost_equal(cs.vproj([1, 2, 3], [2, 0, 0]), [1, 0, 0], 0)
+    npt.assert_almost_equal(cs.vproj([1, 2, 3], [0, 4, 0]), [0, 2, 0], 0)
+    npt.assert_almost_equal(cs.vproj_vector([1, 2, 3], [[2, 0, 0], [0, 4, 0]]), [
+        [1, 0, 0], [0, 2, 0]], 0)
 
 
 def test_vprjp():
@@ -512,6 +698,12 @@ def test_vprjp():
     proj = cs.vprjp(vec1, plane)
     expected = [-5.0, 7.0, 0.0]
     npt.assert_array_almost_equal(proj, expected)
+
+
+def test_vprjp_2():
+    npt.assert_almost_equal(cs.vprjp([0, 0, 1], [1, 1, 1, 1]), [0, 0, 1], 0)
+    npt.assert_almost_equal(cs.vprjp_vector(
+        2*[[0, 0, 1]], [1, 1, 1, 1]), 2*[[0, 0, 1]], 0)
 
 
 # Test changed. result is returned as a [Numpy Array, Boolean]
@@ -526,6 +718,13 @@ def test_vprjpi():
     result = cs.vprjpi(vec, plane1, plane2)
     expected = [1.0, 1.0, -0.35]
     npt.assert_array_almost_equal(result[0], expected)
+
+
+def test_vprjpi_2():
+    npt.assert_almost_equal(cs.vprjpi([0, 0, 1], [1, 1, 1, 1], [1, 0, 0, 1]),
+                            [[1, 1, 2], True], 0)
+    npt.assert_almost_equal(cs.vprjpi_vector(2*[[0, 0, 1]], [1, 1, 1, 1], 4*[[1, 0, 0, 1]]),
+                            [4*[[1, 1, 2]], 4*[True]], 0)
 
 
 def test_vproj():
@@ -555,6 +754,18 @@ def test_vrel():
     npt.assert_almost_equal(cs.vrel(vec1, vec2), 1.0016370)
 
 
+def test_vrel_vrelg():
+    npt.assert_almost_equal(cs.vrel([1, 0, 0], [0, 0, 1]), np.sqrt(2), 0)
+    npt.assert_almost_equal(cs.vrel([2, 0, 0], [0, 0, 2]), np.sqrt(2), 0)
+    npt.assert_almost_equal(cs.vrel_vector([[1, 0, 0], [2, 0, 0]],
+                                           [[0, 1, 0], [0, 0, 2]]), 2*[np.sqrt(2)], 0)
+
+    npt.assert_almost_equal(cs.vrelg([1, 0, 0], [0, 0, 1]), np.sqrt(2), 0)
+    npt.assert_almost_equal(cs.vrelg([2, 0, 0], [0, 0, 2]), np.sqrt(2), 0)
+    npt.assert_almost_equal(cs.vrelg_vector([[1, 0, 0], [2, 0, 0]],
+                                            [[0, 1, 0], [0, 0, 2]]), 2*[np.sqrt(2)], 0)
+
+
 def test_vrelg():
     vec1 = [12.3, -4.32, 76.0, 1.87]
     vec2 = [23.0423, -11.99, -0.10, -99.1]
@@ -568,6 +779,14 @@ def test_vrotv():
     vout = cs.vrotv(v, axis, theta)
     expected = np.array([-2.0, 1.0, 3.0])
     np.testing.assert_almost_equal(vout, expected, decimal=7)
+
+
+def test_vrotv_2():
+    pi = np.pi
+    npt.assert_almost_equal(cs.vrotv([1, 1, 0], [0, 0, 1], pi),   [-1, -1, 0])
+    npt.assert_almost_equal(cs.vrotv([1, 1, 0], [0, 0, 1], pi/2), [-1, 1, 0])
+    npt.assert_almost_equal(cs.vrotv_vector([1, 1, 0], [0, 0, 1], [pi, pi/2]),
+                            [[-1, -1, 0], [-1, 1, 0]])
 
 
 def test_vscl():
@@ -586,6 +805,20 @@ def test_vsep():
     v1 = np.array([1.0, 0.0, 0.0])
     v2 = np.array([0.0, 1.0, 0.0])
     assert cs.vsep(v1, v2) == np.pi / 2
+
+
+def test_vsep_vsepg():
+    pi = np.pi
+    npt.assert_almost_equal(cs.vsep([1, 0, 0], [0, 2, 0]), pi/2, 0)
+    npt.assert_almost_equal(cs.vsepg([1, 0, 0, 0], [0, 0, 2, 0]), pi/2, 0)
+
+    npt.assert_almost_equal(cs.vsep([1, 0, 0], [2, 2, 0]), pi/4, 0)
+    npt.assert_almost_equal(cs.vsepg([1, 0, 0, 0], [2, 0, 2, 0]), pi/4., 0)
+
+    npt.assert_almost_equal(cs.vsep_vector(
+        [1, 0, 0], [[0, 2, 0], [2, 2, 0]]), [pi/2, pi/4], 0)
+    npt.assert_almost_equal(cs.vsepg_vector(
+        [1, 0, 0], [[0, 2, 0], [2, 2, 0]]), [pi/2, pi/4], 0)
 
 
 def test_vsepg():
@@ -613,6 +846,17 @@ def test_vtmv():
     v2 = np.array([1.0, 1.0, 1.0])
     matrix = np.array([[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
     assert cs.vtmv(v1, matrix, v2) == 4.0
+
+
+def test_vtmv_vtmvg():
+    mat1 = np.arange(9).reshape(3, 3)
+    vec = np.array([3, 1, 2])
+    vecT = np.array([vec])
+    prod = np.dot(np.dot(vecT, mat1), vec)[0]
+    npt.assert_almost_equal(cs.vtmv(vec, mat1, vec), prod, 0)
+    npt.assert_almost_equal(cs.vtmv_vector(vec, 2*[mat1], vec), 2*[prod], 0)
+    npt.assert_almost_equal(cs.vtmvg(vec, mat1, vec), prod, 0)
+    npt.assert_almost_equal(cs.vtmvg_vector(vec, 2*[mat1], vec), 2*[prod], 0)
 
 
 def test_vtmvg():
@@ -902,6 +1146,26 @@ def test_xpose():
         cs.xpose(np.array(m1)), [[1.0, 0.0, 0.0],
                                  [2.0, 4.0, 6.0], [3.0, 5.0, 0.0]]
     )
+
+
+def test_xpose_xpose6_xposeg():
+    mat = np.arange(9).reshape(3, 3)
+    npt.assert_almost_equal(cs.xpose(mat), np.swapaxes(mat, 0, 1), 0)
+
+    mat = np.arange(18).reshape((2, 3, 3))
+    npt.assert_almost_equal(cs.xpose_vector(mat), np.swapaxes(mat, 1, 2), 0)
+
+    mat = np.arange(36).reshape((6, 6))
+    npt.assert_almost_equal(cs.xpose6(mat), np.swapaxes(mat, 0, 1), 0)
+
+    mat = np.arange(72).reshape((2, 6, 6))
+    npt.assert_almost_equal(cs.xpose6_vector(mat), np.swapaxes(mat, 1, 2), 0)
+
+    mat = np.arange(6).reshape((2, 3))
+    npt.assert_almost_equal(cs.xposeg(mat), np.swapaxes(mat, 0, 1), 0)
+
+    mat = np.arange(24).reshape((4, 2, 3))
+    npt.assert_almost_equal(cs.xposeg_vector(mat), np.swapaxes(mat, 1, 2), 0)
 
 
 def test_xpose6():

@@ -93,6 +93,11 @@ def test_frame():
     npt.assert_array_almost_equal(expected_z, z)
 
 
+def test_frame_2():
+    npt.assert_almost_equal(cs.frame([1, 0, 0]), [[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+    npt.assert_almost_equal(cs.frame([0, 1, 0]), [[0, 1, 0], [0, 0, 1], [1, 0, 0]])
+
+
 def test_frinfo():
     assert cs.frinfo(13000) == [399, 2, 3000]
 
@@ -141,6 +146,16 @@ def test_georec():
     output = cs.georec(lon, lat, alt, radii[0], flat)
     expected = [-2541.74621567, 4780.329376, 3360.4312092]
     npt.assert_array_almost_equal(expected, output)
+
+
+def test_georec_recgeo():
+    npt.assert_almost_equal(cs.georec(0, 0, 1, 1, 0.1), [2, 0, 0])
+    npt.assert_almost_equal(cs.recgeo([2, 0, 0], 1, 0.1), [0, 0, 1])
+
+    npt.assert_almost_equal(cs.georec_vector([0, 0], 0, 1, 1, 0.1), 2*[[2, 0, 0]])
+
+    npt.assert_almost_equal(cs.recgeo_vector(
+        [2, 0, 0], [1, 1], 0.1), [[0, 0], [0, 0], [1, 1]])
 
 
 def test_getelm():
@@ -972,20 +987,20 @@ def test_hrmint():
     assert deriv == pytest.approx(456.0)
 
 
-# Fails due to error andling
-def fail_hx2dp():
+def test_hx2dp():
     assert cs.hx2dp("1^1") == 1.0
     assert cs.hx2dp("7F5EB^5") == 521707.0
     assert cs.hx2dp("+1B^+2") == 27.0
-    # Bad value
-    badReturn = "ERROR: Illegal character 'Z' encountered."
-    assert cs.hx2dp("1Z^+2")[: len(badReturn)] == badReturn
 
 
 def test_ident():
     ident = cs.ident()
     expected = np.identity(3)
     npt.assert_array_almost_equal(ident, expected)
+
+
+def test_ident_2():
+    assert np.all(cs.ident() == [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
 def test_illum():
@@ -1144,6 +1159,17 @@ def test_inedpl():
     npt.assert_almost_equal(cs.vnorm(semi_minor), 6358.0558, decimal=2)
 
 
+def test_indedpl():
+    npt.assert_almost_equal(cs.inedpl(1., 1., 1., [1, 0, 0, 0]),
+                            [[0, 0, 0, 0, 0, -1, 0, 1, 0], True], 0)
+    npt.assert_almost_equal(cs.inedpl_vector(1., 1., 1., [1, 0, 0, 0]),
+                            [[0, 0, 0, 0, 0, -1, 0, 1, 0], True], 0)
+    npt.assert_almost_equal(cs.inedpl_vector([1.], 1., 1., [1, 0, 0, 0]),
+                            [[[0, 0, 0, 0, 0, -1, 0, 1, 0]], [True]], 0)
+    npt.assert_almost_equal(cs.inedpl_vector(1., 1., [1, 1], [1, 0, 0, 0]),
+                            [2*[[0, 0, 0, 0, 0, -1, 0, 1, 0]], 2*[True]], 0)
+
+
 def test_inelpl():
     cs.furnsh(CoreKernels.testMetaKernel)
     radii = cs.bodvrd("SATURN", "RADII")
@@ -1160,6 +1186,17 @@ def test_inelpl():
     npt.assert_array_almost_equal(expectedXpt2, xpt2, decimal=4)
 
 
+def test_inelpl_2():
+    npt.assert_almost_equal(cs.inelpl([0, 0, 0, 1, 0, 0, 0, 1, 0], [1, 0, 0, 0]),
+                            [2, [0, -1, 0], [0, 1, 0]])
+    npt.assert_almost_equal(cs.inelpl_vector([0, 0, 0, 1, 0, 0, 0, 1, 0], [1, 0, 0, 0]),
+                            [2, [0, -1, 0], [0, 1, 0]])
+    npt.assert_almost_equal(cs.inelpl_vector([0, 0, 0, 1, 0, 0, 0, 1, 0], [[1, 0, 0, 0]]),
+                            [[2], [[0, -1, 0]], [[0, 1, 0]]])
+    npt.assert_almost_equal(cs.inelpl_vector(4*[[0, 0, 0, 1, 0, 0, 0, 1, 0]], 2*[[1, 0, 0, 0]]),
+                            [4*[2], 4*[[0, -1, 0]], 4*[[0, 1, 0]]])
+
+
 def test_inrypl():
     cs.furnsh(CoreKernels.testMetaKernel)
     radii = cs.bodvrd("SATURN", "RADII")
@@ -1172,6 +1209,17 @@ def test_inrypl():
     expectedXpt = np.array([180804.0, 47080.6050513, 0.0])
     assert nxpts == 1
     np.testing.assert_almost_equal(np.array(xpt), expectedXpt, decimal=6)
+
+
+def test_inrypl_2():
+    npt.assert_almost_equal(cs.inrypl([0, 0, 0], [1, 0, 0], [1, 0, 0, 0]),
+                            [1, [0, 0, 0]], 0)
+    npt.assert_almost_equal(cs.inrypl_vector([0, 0, 0], [1, 0, 0], [1, 0, 0, 0]),
+                            [1, [0, 0, 0]], 0)
+    npt.assert_almost_equal(cs.inrypl_vector([[0, 0, 0]], [1, 0, 0], [1, 0, 0, 0]),
+                            [[1], [[0, 0, 0]]], 0)
+    npt.assert_almost_equal(cs.inrypl_vector([0, 0, 0], [1, 0, 0], [[1, 0, 0, 0], [2, 0, 0, 0]]),
+                            [2*[1], 2*[[0, 0, 0]]], 0)
 
 
 def test_intmax():
@@ -1189,11 +1237,31 @@ def test_invert():
     assert np.array_equal(expected, mout)
 
 
+def test_invert_2():
+    ident = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+    npt.assert_almost_equal(cs.invert(ident), ident, 0)
+
+    mat = [[2, 0, 0], [0, 0, -1], [0, 1, 0]]
+    inv = cs.invert(mat)
+    npt.assert_almost_equal(np.dot(mat, inv), ident, 0)
+    npt.assert_almost_equal(cs.invert_vector([ident, mat]), [ident, inv], 0)
+
+
 def test_invort():
     # I think this is valid...
     m = cs.ident()
     mit = cs.invort(m)
     npt.assert_array_almost_equal(m, mit)
+
+
+def test_invort_2():
+    mat = (np.arange(9) - 4.).reshape(3, 3)
+    inv = np.array([[-0.19047619, -0.04761905,  0.0952381],
+                    [-0.16666667,  0.,  0.16666667],
+                    [-0.0952381,  0.04761905,  0.19047619]])
+
+    npt.assert_almost_equal(cs.invort(mat), inv, 1.e-7)
+    npt.assert_almost_equal(cs.invort_vector(3*[mat]), 3*[inv], 1.e-7)
 
 
 def test_invstm():
@@ -1248,6 +1316,18 @@ def test_isrchi():
 
 def test_isrot():
     assert cs.isrot(cs.ident(), 0.0001, 0.0001)
+
+
+def test_isrot_2():
+    assert cs.isrot([[1, 0, 0], [0, 1, 0], [0, 0, 1]], 0, 0)
+    assert not cs.isrot([[1, 0, 0], [0, 1, 0], [0, 0, 0.9999999999]], 0, 0)
+    assert cs.isrot([[1, 0, 0], [0, 1, 0], [0, 0, 0.9999999999]], 0.00001, 0)
+
+    npt.assert_almost_equal(cs.isrot_vector([[1, 0, 0], [0, 1, 0], [0, 0, 0.9999999999]],
+                                            [0, 0.00001], 0), [False, True])
+
+    npt.assert_almost_equal(cs.isrot_vector(
+        [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 0, 0), True)
 
 
 def test_iswhsp():

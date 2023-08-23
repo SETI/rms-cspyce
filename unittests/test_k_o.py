@@ -92,6 +92,24 @@ def test_kxtrct():
         )
 
 
+def test_kxtrct_2():
+    x = cs.kxtrct("TO", ["FROM", "TO", "BEGINNING", "ENDING"],
+                  "FROM 1 October 1984 12:00:00 TO 1 January 1987")
+    assert x == ["FROM 1 October 1984 12:00:00", True, "1 January 1987"]
+
+    x = cs.kxtrct("FROM", ["FROM", "TO", "BEGINNING", "ENDING"],
+                  "FROM 1 October 1984 12:00:00 TO 1 January 1987")
+    assert x == [" TO 1 January 1987", True, "1 October 1984 12:00:00"]
+
+    x = cs.kxtrct("ADDRESS:", ["ADDRESS:", "PHONE:", "NAME:"],
+                  "ADDRESS: 4800 OAK GROVE DRIVE PHONE: 354-4321 ")
+    assert x == [" PHONE: 354-4321", True, "4800 OAK GROVE DRIVE"]
+
+    x = cs.kxtrct("NAME:", ["ADDRESS:", "PHONE:", "NAME:"],
+                  "ADDRESS: 4800 OAK GROVE DRIVE PHONE: 354-4321 ")
+    assert x == ["ADDRESS: 4800 OAK GROVE DRIVE PHONE: 354-4321", False, ""]
+
+
 def test_latcyl():
     expected1 = np.array([1.0, 0.0, 0.0])
     expected2 = np.array([1.0, 90.0 * cs.rpd(), 0.0])
@@ -206,10 +224,32 @@ def test_lgresp():
     assert a == pytest.approx(1.0)
 
 
+def test_lgresp_2():
+    x = cs.lgresp(5., -2., [148.0, 26.0, -8.0, -2.0], 2.)
+    assert x == 1.
+
+    x = cs.lgresp_vector(5., -2., [148.0, 26.0, -8.0, -2.0], [2., 3.])
+    assert np.all(x == [1., 26.])
+
+    x = cs.lgresp_vector(5., [-2., 2.], [148.0, 26.0, -8.0, -2.0], [2., 3.])
+    assert np.all(x == [1., 406.])
+
+
 def test_lgrind():
     p, dp = cs.lgrind([-1.0, 0.0, 1.0, 3.0], [-2.0, -7.0, -8.0, 26.0], 2.0)
     assert p == pytest.approx(1.0)
     assert dp == pytest.approx(16.0)
+
+
+def test_lgrind_2():
+    x = cs.lgrind([-1., 0., 1., 3.], [-2., -7., -8., 26.], 2.)
+    assert np.all(x == [1.0, 16.0])
+
+    x = cs.lgrind_vector([-1., 0., 1., 3.], [-2., -7., -8., 26.], [2., -1., 1.])
+    assert np.all(x == np.array([[1., -2., -8.], [16., -5., 3.]]))
+
+    with pytest.raises(ValueError):
+        cs.lgrind([-1., 0., 1., 3.], [-2., -7., -8.], 2.)
 
 
 def test_lgrint():
@@ -298,6 +338,14 @@ def test_lparse():
     assert items == ("one", "two", "three", "four")
 
 
+def test_lparse_2():
+    x = cs.lparse(" ,bob,   carol,, ted,  alice", ",")
+    assert x == ('', 'bob', 'carol', '', 'ted', 'alice')
+
+    x = cs.lparse("//option1//option2/ //", "/", )
+    assert x == ('', '', 'option1', '', 'option2', '', '', '')
+
+
 def test_lparsm():
     stringtest = "  A number of words   separated   by spaces   "
     # Test with nmax (20) not equal to lenout (23), to ensure that
@@ -307,6 +355,14 @@ def test_lparsm():
     # Test without lenout
     items = cs.lparsm(stringtest, " ")
     assert items == ("A", "number", "of", "words", "separated", "by", "spaces")
+
+
+def test_lparsm_2():
+    x = cs.lparsm("Run and find out.", " ")
+    assert x == ('Run', 'and', 'find', 'out.')
+
+    x = cs.lparsm("  1986-187// 13:15:12.184 ", " ,/-:")
+    assert x == ('1986', '187', '', '13', '15', '12.184')
 
 
 def test_lspcn():
@@ -325,6 +381,17 @@ def test_lstlec():
     assert cs.lstlec("BETHE", array) == -1
 
 
+def test_lstlec_2():
+    x = cs.lstlec("EINSTEIN", ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == 1
+
+    x = cs.lstlec("Galileo",  ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == 3
+
+    x = cs.lstlec("BETHE",    ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == -1
+
+
 def test_lstled():
     array = [-2.0, -2.0, 0.0, 1.0, 1.0, 11.0]
     assert cs.lstled(-3.0, array) == -1
@@ -332,6 +399,23 @@ def test_lstled():
     assert cs.lstled(0.0, array) == 2
     assert cs.lstled(1.0, array) == 4
     assert cs.lstled(11.1, array) == 5
+
+
+def test_lstled_2():
+    x = cs.lstled(-3., np.array([-2., -2., 0., 1., 1., 11.]))
+    assert x == -1
+
+    x = cs.lstled(-2., [-2., -2., 0., 1., 1., 11.])
+    assert x == 1
+
+    x = cs.lstled(0., [-2., -2., 0., 1., 1., 11.])
+    assert x == 2
+
+    x = cs.lstled(1., [-2., -2., 0., 1., 1., 11.])
+    assert x == 4
+
+    x = cs.lstled(11.1, [-2., -2., 0., 1., 1., 11.])
+    assert x == 5
 
 
 def test_lstlei():
@@ -343,6 +427,23 @@ def test_lstlei():
     assert cs.lstlei(12, array) == 5
 
 
+def test_lstlei_2():
+    x = cs.lstlei(-3, np.array([-2, -2, 0, 1, 1, 11]))
+    assert x == -1
+
+    x = cs.lstlei(-2, np.array([-2, -2, 0, 1, 1, 11], dtype='int64'))
+    assert x == 1
+
+    x = cs.lstlei(0, np.array([-2, -2, 0, 1, 1, 11], dtype='int32'))
+    assert x == 2
+
+    x = cs.lstlei(1, np.array([-2, -2, 0, 1, 1, 11], dtype='int16'))
+    assert x == 4
+
+    x = cs.lstlei(12, [-2, -2, 0, 1, 1, 11])
+    assert x == 5
+
+
 def test_lstltc():
     array = ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"]
     assert cs.lstltc("NEWTON", array) == 3
@@ -350,6 +451,20 @@ def test_lstltc():
     assert cs.lstltc("GALILEO", array) == 2
     assert cs.lstltc("Galileo", array) == 3
     assert cs.lstltc("BETHE", array) == -1
+
+
+def test_lstltc_2():
+    x = cs.lstltc("NEWTON", ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == 3
+
+    x = cs.lstltc("EINSTEIN", ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == 0
+
+    x = cs.lstltc("Galileo",  ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == 3
+
+    x = cs.lstltc("BETHE",    ["BOHR", "EINSTEIN", "FEYNMAN", "GALILEO", "NEWTON"])
+    assert x == -1
 
 
 def test_lstltd():
@@ -361,6 +476,23 @@ def test_lstltd():
     assert cs.lstltd(11.1, array) == 5
 
 
+def test_lstltd_2():
+    x = cs.lstltd(-3., np.array([-2., -2., 0., 1., 1., 11.]))
+    assert x == -1
+
+    x = cs.lstltd(-2., [-2., -2., 0., 1., 1., 11.])
+    assert x == -1
+
+    x = cs.lstltd(0., [-2, -2, 0, 1, 1, 11])
+    assert x == 1
+
+    x = cs.lstltd(1., [-2., -2., 0., 1., 1., 11.])
+    assert x == 2
+
+    x = cs.lstltd(11.1, [-2., -2., 0., 1., 1., 11.])
+    assert x == 5
+
+
 def test_lstlti():
     array = [-2, -2, 0, 1, 1, 11]
     assert cs.lstlti(-3, array) == -1
@@ -368,6 +500,23 @@ def test_lstlti():
     assert cs.lstlti(0, array) == 1
     assert cs.lstlti(1, array) == 2
     assert cs.lstlti(12, array) == 5
+
+
+def test_lstlti_2():
+    x = cs.lstlti(-3, np.array([-2, -2, 0, 1, 1, 11]))
+    assert x == -1
+
+    x = cs.lstlti(-2, [-2., -2., 0., 1., 1., 11.])
+    assert x == -1
+
+    x = cs.lstlti(0, [-2, -2, 0, 1, 1, 11])
+    assert x == 1
+
+    x = cs.lstlti(1, [-2, -2, 0, 1, 1, 11])
+    assert x == 2
+
+    x = cs.lstlti(12, [-2, -2, 0, 1, 1, 11])
+    assert x == 5
 
 
 def test_ltime():
@@ -392,11 +541,45 @@ def test_lx4dec():
     assert cs.lx4dec("1%2%3", 2) == [2, 1]
 
 
+def test_lx4dec_2():
+    string = '123|-234|+345|-123.|+234.|1.23|-2.34|+3.4567|.666|-.678|+.789'
+    first = 0
+    numbers = []
+    while first < len(string):
+        (last, nchar) = cs.lx4dec(string, first)
+        print(first, nchar, last)
+        if nchar > 0:
+            numbers.append(string[first:first+nchar])
+            first = last + 2
+        else:
+            first += 1
+    assert numbers == ['123', '-234', '+345', '-123.', '+234.', '1.23',
+                       '-2.34', '+3.4567', '.666', '-.67', '+.78']
+
+
 def test_lx4num():
     assert cs.lx4num("1%2%3", 0) == [0, 1]
     assert cs.lx4num("1%2%3", 1) == [0, 0]
     assert cs.lx4num("1%2%3", 2) == [2, 1]
     assert cs.lx4num("1%2e1%3", 2) == [4, 3]
+
+
+def test_lx4num_2():
+    string = '123|-234|+345|-123.|+234.|1.23|-2.34|+3.4567|.666|-.678|+.789|' + \
+             '123e4|234.e5|-2.3d-4|+345.6e+78|-.12e3|.23e4|+.34e-5|-.456E-78'
+    first = 0
+    numbers = []
+    while first < len(string):
+        (last, nchar) = cs.lx4num(string, first)
+        if nchar > 0:
+            numbers.append(string[first:first+nchar])
+            first = last + 2
+        else:
+            first += 1
+    assert numbers == ['123', '-234', '+345', '-123.', '+234.', '1.23',
+                       '-2.34', '+3.4567', '.666', '-.67', '+.78',
+                       '123e4', '234.e5', '-2.3d-4', '+345.6e+78', '-.12e3',
+                       '.23e4', '+.34e-5', '-.456E-78']
 
 
 def test_lx4sgn():
@@ -405,9 +588,37 @@ def test_lx4sgn():
     assert cs.lx4sgn("1%2%3", 2) == [2, 1]
 
 
+def test_lx4sgn_2():
+    string = '123|-234|+345|0|+0|-0'
+    first = 0
+    numbers = []
+    while first < len(string):
+        (last, nchar) = cs.lx4sgn(string, first)
+        if nchar > 0:
+            numbers.append(string[first:first+nchar])
+            first = last + 2
+        else:
+            first += 1
+    assert numbers == ['123', '-234', '+345', '0', '+0', '-0']
+
+
 def test_lx4uns():
     # not a very good test
     assert cs.lx4uns("test 10 end", 4) == [3, 0]
+
+
+def test_lx4uns_2():
+    string = '123|-234|+345|0|+0|-0'
+    first = 0
+    numbers = []
+    while first < len(string):
+        (last, nchar) = cs.lx4uns(string, first)
+        if nchar > 0:
+            numbers.append(string[first:first+nchar])
+            first = last + 2
+        else:
+            first += 1
+    assert numbers == ['123', '234', '345', '0', '0', '0']
 
 
 def test_lxqstr():
@@ -417,6 +628,18 @@ def test_lxqstr():
     assert cs.lxqstr('The "SPICE" system', "'", 4) == [3, 0]
     assert cs.lxqstr('The """SPICE"""" system', '"', 4) == [14, 11]
     assert cs.lxqstr("The &&&SPICE system", "&", 4) == [5, 2]
+    assert cs.lxqstr("' '", "'", 0) == [2, 3]
+    assert cs.lxqstr("''", "'", 0) == [1, 2]
+
+
+def test_lxqstr_2():
+    assert cs.lxqstr('The "SPICE" system', '"', 4) == [10, 7]
+    assert cs.lxqstr('The "SPICE" system', '"', 0) == [-1, 0]
+    assert cs.lxqstr('The "SPICE" system', "'", 4) == [3, 0]
+    #   self.assertEqual(lxqstr('The """SPICE"" system"',  '"', 4), [12,  9]) wrong in docs?
+    assert cs.lxqstr('The """SPICE"" system"', '"', 4) == [21, 18]
+    assert cs.lxqstr('The """SPICE"""" system', '"', 4) == [14, 11]
+    assert cs.lxqstr('The &&&SPICE system', '&', 4) == [5, 2]
     assert cs.lxqstr("' '", "'", 0) == [2, 3]
     assert cs.lxqstr("''", "'", 0) == [1, 2]
 
@@ -482,6 +705,15 @@ def test_mequ():
     assert np.array_equal(m1, mout)
 
 
+def test_mequ_mequg():
+    mat1 = np.arange(9).reshape(3, 3)
+    mat2 = mat1[::-1]
+    npt.assert_almost_equal(cs.mequ(mat1), mat1, 0)
+    npt.assert_almost_equal(cs.mequ_vector([mat1, mat2]), [mat1, mat2], 0)
+    npt.assert_almost_equal(cs.mequg(mat1), mat1, 0)
+    npt.assert_almost_equal(cs.mequg_vector([mat1, mat2]), [mat1, mat2], 0)
+
+
 def test_mequg():
     m1 = np.identity(2)
     mout = cs.mequg(m1)
@@ -494,6 +726,18 @@ def test_mtxm():
     mout = cs.mtxm(m1, m2)
     expected = np.array([[-3.0, 5.0, 7.0], [-3.0, 7.0, 8.0], [-3.0, 9.0, 9.0]])
     assert np.array_equal(mout, expected)
+
+
+def test_mtxm_mtxmg():
+    mat1 = np.arange(9).reshape(3, 3)
+    mat2 = mat1[::-1]
+    mmat1 = np.array(mat1)
+    mmat2 = np.array(mat2)
+    prod = np.matmul(mmat1.T, mmat2)
+    npt.assert_almost_equal(cs.mtxm(mat1, mat2), prod, 0)
+    npt.assert_almost_equal(cs.mtxm_vector(2*[mat1], mat2), 2*[prod], 0)
+    npt.assert_almost_equal(cs.mtxmg(mat1, mat2), prod, 0)
+    npt.assert_almost_equal(cs.mtxmg_vector(2*[mat1], mat2), 2*[prod], 0)
 
 
 def test_mtxmg():
@@ -514,6 +758,16 @@ def test_mtxv():
     assert np.array_equal(mout, expected)
 
 
+def test_mtxv_mtxvg():
+    mat1 = np.arange(9).reshape(3, 3)
+    vec = np.array([3, 1, 2])
+    prod = np.dot(mat1.T, vec)
+    npt.assert_almost_equal(cs.mtxv(mat1, vec), prod, 0)
+    npt.assert_almost_equal(cs.mtxv_vector(2*[mat1], vec), 2*[prod], 0)
+    npt.assert_almost_equal(cs.mtxvg(mat1, vec), prod, 0)
+    npt.assert_almost_equal(cs.mtxvg_vector(2*[mat1], vec), 2*[prod], 0)
+
+
 def test_mtxvg():
     m1 = np.array([[1.0, 2.0], [1.0, 3.0], [1.0, 4.0]])
     v2 = np.array([1.0, 2.0, 3.0])
@@ -532,6 +786,18 @@ def test_mxm():
     assert np.array_equal(mout, mout2)
 
 
+def test_mxm_mxmg():
+    mat1 = np.arange(9).reshape(3, 3)
+    mat2 = mat1[::-1]
+    mmat1 = np.array(mat1)
+    mmat2 = np.array(mat2)
+    prod = np.matmul(mmat1, mmat2)
+    npt.assert_almost_equal(cs.mxm(mat1, mat2), prod, 0)
+    npt.assert_almost_equal(cs.mxm_vector(2*[mat1], mat2), 2*[prod], 0)
+    npt.assert_almost_equal(cs.mxmg(mat1, mat2), prod, 0)
+    npt.assert_almost_equal(cs.mxmg_vector(2*[mat1], mat2), 2*[prod], 0)
+
+
 def test_mxmg():
     m1 = [[1.0, 4.0], [2.0, 5.0], [3.0, 6.0]]
     m2 = [[1.0, 2.0, 3.0], [2.0, 4.0, 6.0]]
@@ -546,6 +812,18 @@ def test_mxmt():
     m1 = [[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]
     mout = cs.mxmt(m1, m1)
     assert np.array_equal(mout, np.identity(3))
+
+
+def test_mxmt_mxmtg():
+    mat1 = np.arange(9).reshape(3, 3)
+    mat2 = mat1[::-1]
+    mmat1 = np.array(mat1)
+    mmat2 = np.array(mat2)
+    prod = np.matmul(mmat1, mmat2.T)
+    npt.assert_almost_equal(cs.mxmt(mat1, mat2), prod, 0)
+    npt.assert_almost_equal(cs.mxmt_vector(2*[mat1], mat2), 2*[prod], 0)
+    npt.assert_almost_equal(cs.mxmtg(mat1, mat2), prod, 0)
+    npt.assert_almost_equal(cs.mxmtg_vector(2*[mat1], mat2), 2*[prod], 0)
 
 
 def test_mxmtg():
@@ -563,6 +841,16 @@ def test_mxv():
     mout = cs.mxv(m1, vin)
     expected = np.array([2.0, -1.0, 3.0])
     assert np.array_equal(mout, expected)
+
+
+def test_mxv_mxvg():
+    mat1 = np.arange(9).reshape(3, 3)
+    vec = np.array([3, 1, 2])
+    prod = np.dot(mat1, vec)
+    npt.assert_almost_equal(cs.mxv(mat1, vec), prod, 0)
+    npt.assert_almost_equal(cs.mxv_vector(2*[mat1], vec), 2*[prod], 0)
+    npt.assert_almost_equal(cs.mxvg(mat1, vec), prod, 0)
+    npt.assert_almost_equal(cs.mxvg_vector(2*[mat1], vec), 2*[prod], 0)
 
 
 def test_mxvg():
@@ -628,6 +916,14 @@ def test_nearpt():
     npt.assert_array_almost_equal(pnear, expected_pnear)
 
 
+def test_nearpt_2():
+    npt.assert_almost_equal(cs.nearpt([3, 0, 0], 2, 3, 1), [[2, 0, 0], 1])
+    npt.assert_almost_equal(cs.nearpt([0, 0, 3], 2, 3, 1), [[0, 0, 1], 2])
+    npt.assert_almost_equal(cs.nearpt_vector([3, 0, 0], 2, 3, 1), [[2, 0, 0], 1])
+    npt.assert_almost_equal(cs.nearpt_vector([[3, 0, 0], [0, 0, 3]], 2, 3, 1),
+                            [[[2, 0, 0], [0, 0, 1]], [1, 2]])
+
+
 def test_npedln():
     linept = [1.0e6, 2.0e6, 3.0e6]
     a, b, c = 7.0e5, 7.0e5, 6.0e5
@@ -637,6 +933,15 @@ def test_npedln():
     expected_dist = 2389967.9
     npt.assert_almost_equal(dist, expected_dist, decimal=1)
     npt.assert_array_almost_equal(expected_pnear, pnear, decimal=2)
+
+
+def test_npedln_2():
+    npt.assert_almost_equal(cs.npedln(3, 2, 1, [6, 0, 0], [-1, 0, 0]), [[3, 0, 0], 0])
+    npt.assert_almost_equal(cs.npedln(3, 2, 1, [6, 0, 6], [-1, 0, 0]), [[0, 0, 1], 5])
+    npt.assert_almost_equal(cs.npedln_vector(
+        3, 2, 1, [6, 0, 0], [-1, 0, 0]), [[3, 0, 0], 0])
+    npt.assert_almost_equal(cs.npedln_vector(3, 2, 1, [[6, 0, 0], [6, 0, 6]], [-1, 0, 0]),
+                            [[[3, 0, 0], [0, 0, 1]], [0, 5]])
 
 
 def test_npelpt():
@@ -652,6 +957,17 @@ def test_npelpt():
     npt.assert_array_almost_equal(expected_pnear, pnear)
 
 
+def test_npelpt_2():
+    npt.assert_almost_equal(
+        cs.npelpt([5, 0, 4], [0, 0, 0, 2, 0, 0, 0, 3, 0]), [[2, 0, 0], 5])
+    npt.assert_almost_equal(
+        cs.npelpt([0, 7, 3], [0, 0, 0, 2, 0, 0, 0, 3, 0]), [[0, 3, 0], 5])
+    npt.assert_almost_equal(cs.npelpt_vector([5, 0, 4], [0, 0, 0, 2, 0, 0, 0, 3, 0]),
+                            [[2, 0, 0], 5])
+    npt.assert_almost_equal(cs.npelpt_vector([[5, 0, 4], [0, 7, 3]], [0, 0, 0, 2, 0, 0, 0, 3, 0]),
+                            [[[2, 0, 0], [0, 3, 0]], [5, 5]])
+
+
 def test_nplnpt():
     linept = [1.0, 2.0, 3.0]
     linedr = [0.0, 1.0, 1.0]
@@ -661,6 +977,19 @@ def test_nplnpt():
     expected_dist = 7.0
     assert dist == expected_dist
     npt.assert_array_almost_equal(expected_pnear, pnear)
+
+
+def test_nplnpt_2():
+    npt.assert_almost_equal(cs.nplnpt([0, 0, 0], [0, 0, 7], [0, 1, 1]),
+                            [[0, 0, 1], 1], 0)
+    npt.assert_almost_equal(cs.nplnpt([0, 0, 0], [0, 0, 7], [2, 0, 2]),
+                            [[0, 0, 2], 2], 0)
+    npt.assert_almost_equal(cs.nplnpt_vector([0, 0, 0], [0, 0, 7], [0, 1, 1]),
+                            [[0, 0, 1], 1], 0)
+    npt.assert_almost_equal(cs.nplnpt_vector([0, 0, 0], [[0, 0, 7]], [0, 1, 1]),
+                            [[[0, 0, 1]], [1]], 0)
+    npt.assert_almost_equal(cs.nplnpt_vector([0, 0, 0], [0, 0, 7], [[0, 1, 1], [2, 0, 2]]),
+                            [[[0, 0, 1], [0, 0, 2]], [1, 2]], 0)
 
 
 # Test changed
@@ -674,6 +1003,13 @@ def test_nvc2pl():
     npt.assert_almost_equal(plane[-1], expected_constant, decimal=6)
 
 
+def test_nvc2pl_2():
+    npt.assert_almost_equal(cs.nvc2pl([0, 0, 1], 1), [0, 0, 1, 1], 0)
+    npt.assert_almost_equal(cs.nvc2pl_vector([0, 0, 1], 1), [0, 0, 1, 1], 0)
+    npt.assert_almost_equal(cs.nvc2pl_vector([0, 0, 1], 3*[1]),
+                            3*[[0, 0, 1, 1]], 0)
+
+
 def test_nvp2pl():
     normal = [1.0, 1.0, 1.0]
     point = [1.0, 4.0, 9.0]
@@ -682,6 +1018,13 @@ def test_nvp2pl():
     plane = cs.nvp2pl(normal, point)
     npt.assert_array_almost_equal(plane[0:3], expected_normal)
     npt.assert_almost_equal(plane[-1], expected_constant, decimal=6)
+
+
+def test_nvp2pl_2():
+    npt.assert_almost_equal(cs.nvp2pl([0, 0, 7], [2, 0, 0]), [0, 0, 1, 0], 0)
+    npt.assert_almost_equal(cs.nvp2pl_vector([0, 0, 7], [2, 0, 0]), [0, 0, 1, 0], 0)
+    npt.assert_almost_equal(cs.nvp2pl_vector([0, 0, 7], 9*[[2, 0, 0]]),
+                            9*[[0, 0, 1, 0]], 0)
 
 
 def test_occult():
@@ -788,6 +1131,19 @@ def test_oscelt():
     npt.assert_array_almost_equal(elts, expected, decimal=4)
 
 
+def test_oscelt_2():
+    npt.assert_almost_equal(cs.oscelt([1, 0, 0, 0, 1, 0], 0, 1),
+                            [1, 0, 0, 0, 0, 0, 0, 1])
+    npt.assert_almost_equal(cs.oscelt([1, 0, 0, 0, 1, 0], 0, 0.25),
+                            [1, 3, 0, 0, 0, 0, 0, 0.25])
+    npt.assert_almost_equal(cs.oscelt_vector([1, 0, 0, 0, 1, 0], 0, 1),
+                            [1, 0, 0, 0, 0, 0, 0, 1])
+    npt.assert_almost_equal(cs.oscelt_vector([1, 0, 0, 0, 1, 0], 0, [1]),
+                            [[1, 0, 0, 0, 0, 0, 0, 1]])
+    npt.assert_almost_equal(cs.oscelt_vector([1, 0, 0, 0, 1, 0], 0, [1, 0.25]),
+                            [[1, 0, 0, 0, 0, 0, 0, 1], [1, 3, 0, 0, 0, 0, 0, 0.25]])
+
+
 def test_oscltx():
     cs.furnsh(CoreKernels.testMetaKernel)
     et = cs.str2et("Dec 25, 2007")
@@ -808,3 +1164,18 @@ def test_oscltx():
         2.43839270213373843580e+06
     ]
     npt.assert_array_almost_equal(elts[0:11], expected, decimal=4)
+
+
+def test_oscltx_2():
+    pi = np.pi
+    npt.assert_almost_equal(cs.oscltx([1, 0, 0, 0, 1, 0], 0, 1),
+                            [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2*pi, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    npt.assert_almost_equal(cs.oscltx([1, 0, 0, 0, 1, 0], 0, 0.25),
+                            [1, 3, 0, 0, 0, 0, 0, 0.25, 0, -0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    npt.assert_almost_equal(cs.oscltx_vector([1, 0, 0, 0, 1, 0], 0, 1),
+                            [1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2*pi, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    npt.assert_almost_equal(cs.oscltx_vector([1, 0, 0, 0, 1, 0], [0], [1]),
+                            [[1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2*pi, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+    npt.assert_almost_equal(cs.oscltx_vector([1, 0, 0, 0, 1, 0], 0, [1, 0.25]),
+                            [[1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 2*pi, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                             [1, 3, 0, 0, 0, 0, 0, 0.25, 0, -0.5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
