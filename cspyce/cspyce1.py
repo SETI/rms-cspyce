@@ -266,13 +266,13 @@ def gcpool_error(name, start=0):
     with chkin_and_chkout('gcpool_error'):
         (cvals, found) = cspyce0.gcpool(name, start)
         if not found:
-            ok, _count, _nctype = cspyce0.dtpool(name)
+            ok, _, _ = cspyce0.dtpool(name)
             if not ok:
-                    setmsg(f'pool variable "{name}" not found')
-                    sigerr('SPICE(VARIABLENOTFOUND)')
+                setmsg(f'pool variable "{name}" not found')
+                sigerr('SPICE(VARIABLENOTFOUND)')
             return []
 
-        _ok, count, nctype = cspyce0.dtpool(name)
+        _, count, nctype = cspyce0.dtpool(name)
         if nctype != 'C':
             setmsg(f'string information not available; '
                    f'kernel pool variable "{name}" has numeric values')
@@ -719,7 +719,7 @@ def invert_error(m1):
 
 def invert_vector_error(m1):
     inverses = cspyce0.invert_vector(m1)
-    tests = np.all(inverses == 0., (-2,-1))
+    tests = np.all(inverses == 0., (-2, -1))
     if np.any(tests):
         with chkin_and_chkout('invert_error'):
             setmsg('singular matrix encountered; inverse failed')
@@ -739,7 +739,7 @@ def pcpool(name, cvals):
         cspyce0.pcpool(name, cvals)
 
 ################################################################################
-# These wrappers on the comment readers dafec an dasec ensure that the entire
+# These wrappers on the comment readers dafec and dasec ensure that the entire
 # comment field is read. They eliminate the "done" return value.
 ################################################################################
 

@@ -126,16 +126,17 @@ def test_set_msg():
     assert msg == 'Long pi=3.1415900000000E+00; four=4; foo="FOO"'
 
 
-def fail_output_to_screen(capfd):
+def test_output_to_screen(capfd):
     # This test seems to run fine when run singly, but fails when run as part of a
     # larger pytest.  Somehow the ability to catch what is written to stdout is
     # different.  Need to investigate.
     s.errdev('set', 'screen')
     s.chkin('Name1')
     s.chkout('Name2')
-    out, _err = capfd.readouterr()
-    assert "Caller is Name2" in out
-    assert "popped name is Name1" in out
+    output = capfd.readouterr()
+    print(output)
+    assert "Caller is Name2" in output.out
+    assert "popped name is Name1" in output.out
 
 
 def test_no_output_to_screen(capfd):
