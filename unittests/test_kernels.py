@@ -276,6 +276,7 @@ class Test_cspyce1_kernels:
             bodvcd(699, 'RADIIxxx')
 
     def test_bodvrd(self):
+        cs.furnsh(CoreKernels.testMetaKernel)
         assert bodvrd('SATURN', 'RADII')[0] == 60268.
         assert bodvrd('SATURN', 'RADII')[1] == 60268.
         assert bodvrd('SATURN', 'RADII')[2] == 54364.
