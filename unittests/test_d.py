@@ -628,6 +628,13 @@ def test_deltet():
     delt_2004 = cs.deltet(et_2004, "ET")
     npt.assert_almost_equal(delt_1997, 62.1839353, decimal=6)
     npt.assert_almost_equal(delt_2004, 64.1839116, decimal=6)
+    
+    
+def test_deltet_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    d = cs.deltet(0., 'UTC')
+    npt.assert_almost_equal(d - 64.1839272847, 0.)
+    npt.assert_almost_equal(cs.deltet_vector(np.arange(10), 'UTC'), 10 * [d])
 
 
 def test_det():
@@ -758,6 +765,20 @@ def test_dpgrdr():
         [0.004618598844358383, 0.0023092994221791917, 0.9999866677515724],
     ]
     npt.assert_array_almost_equal(output, expected)
+
+
+def test_dpgrdr_drdpgr():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    npt.assert_allclose(cs.dpgrdr('saturn', 1., 0., 0., 1., 0.), [[0, -1, 0],
+                                                               [0, 0, 1],
+                                                               [1, 0, 0]])
+    npt.assert_almost_equal(cs.drdpgr('saturn', 1., 0., 0., 1., 0.),
+                        [[-0.84147098, 0., 0.54030231],
+                         [-0.54030231, 0., -0.84147098],
+                         [0., 1., 0.]])
+    assert cs.dpgrdr_vector('saturn', 1., 0., [1, 2, 3, 4], 1., 0.).shape == \
+                     (4, 3, 3)
+    assert cs.drdpgr_vector('saturn', 1., 0., 0., 1., [0.1, 0.02, 0.03, 0.04]).shape == (4, 3, 3)
 
 
 def test_dpmax():

@@ -143,6 +143,17 @@ def test_edterm():
         "Ellipsoid", "MOON", et, "IAU_MOON", "LT+S", "EARTH", trmpts[2]
     )
     npt.assert_almost_equal(cs.dpr() * solar2, 89.730234322)
+    
+    
+def test_edterm_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    results = cs.edterm('UMBRAL', 'SUN', 'EARTH', 0., 'IAU_EARTH', 'LT+S',
+                     'MOON', 100)
+    assert len(results) == 3
+    assert np.shape(results[0]) == ()
+    assert results[1].shape == (3,)
+    assert results[2].shape == (100, 3)
+    cs.reset()
 
 
 def test_ekacec():
@@ -939,6 +950,14 @@ def test_et2lst():
     assert sc == 22
     assert time == "11:19:22"
     assert ampm == "11:19:22 A.M."
+    
+    
+def test_et2lst_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    assert cs.et2lst(0., 399, 0., 'PLANETOCENTRIC') == \
+                     [11, 55, 27, '11:55:27', '11:55:27 A.M.']
+    assert cs.et2lst(0., 399, 43200., 'PLANETOCENTRIC') == \
+                     [23, 46, 9, '23:46:09', '11:46:09 P.M.']
 
 
 def test_et2utc():
@@ -946,6 +965,15 @@ def test_et2utc():
     et = -527644192.5403653
     output = cs.et2utc(et, "J", 6)
     assert output == "JD 2445438.006415"
+    
+    
+def test_et2utc_utc2et_str2et_etcal():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    utc = '2000-01-01T11:58:55.816'
+    assert cs.et2utc(0., 'ISOC', 3) == utc
+    assert abs(cs.utc2et(utc)) < 0.5e-3
+    assert abs(cs.str2et(utc)) < 0.5e-3
+    assert cs.etcal(0.) == '2000 JAN 01 12:00:00.000'
 
 
 def test_etcal():
@@ -1052,6 +1080,17 @@ def test_expool():
     cs.lmpool(textbuf)
     assert cs.expool("DELTET/K")
     assert cs.expool("DELTET/EB")
+
+
+def test_expool_dtpool_2():
+    cs.furnsh(CoreKernels.pck)
+    assert cs.expool('BODY699_RADII')
+    assert not cs.expool('BODY699_RADIIxxx')
+    assert cs.dtpool_error('BODY699_RADII') == [3, 'N']
+    assert cs.dtpool.flag('BODY699_RADII') == [True, 3, 'N']
+    assert cs.dtpool.flag('BODY699_RADIIxxx')[0] == False
+    with pytest.raises(KeyError):
+        cs.dtpool_error('BODY699_RADIIxxx')
 
 
 def test_erract_errdev_errprt():

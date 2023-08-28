@@ -100,6 +100,18 @@ def test_pgrrec():
     rectan = cs.pgrrec("Mars", 90.0 * cs.rpd(), 45 * cs.rpd(), 300, re, f)
     expected = [1.604650025e-13, -2.620678915e3, 2.592408909e3]
     npt.assert_array_almost_equal(rectan, expected)
+    
+    
+def test_pgrrec_recpgr():
+    #### pgrrec, recpgr
+    cs.furnsh(CoreKernels.testMetaKernel)
+    npt.assert_almost_equal(cs.pgrrec('MIMAS', 0, 0, 1, 1, 0.1), [2, 0, 0])
+    npt.assert_almost_equal(cs.recpgr('MIMAS', [2, 0, 0], 1, 0.1), [0, 0, 1])
+    
+    npt.assert_almost_equal(cs.pgrrec_vector('MIMAS', [0, 0], 0, 1, 1, 0.1), 2 * [[2, 0, 0]])
+    npt.assert_almost_equal(cs.recpgr_vector('MIMAS', [2, 0, 0], [1, 1], 0.1),
+                        [[0, 0], [0, 0], [1, 1]])
+    cs.reset()
 
 
 def test_phaseq():

@@ -1966,6 +1966,27 @@ def test_stpool():
     string = cs.stpool("SPK_FILES", 1, "*")
     assert string == "this_is_the_full_path_specification_of_a_second_file_name"
     cleanup_kernel(kernel)
+    
+    
+def test_stpool_2():
+    SPK_FILES = ['this_is_the_full_path_specification_*',
+                 'of_a_file_with_a_long_name',
+                 'this_is_the_full_path_specification_*',
+                 'of_a_second_file_with_a_very_long_*',
+                 'name']
+    cs.pcpool('SPK_FILES', SPK_FILES)
+    
+    assert cs.stpool('SPK_FILES', 0, '*') == SPK_FILES[0][:-1] + SPK_FILES[1]
+    assert cs.stpool('SPK_FILES', 1, '*') == \
+                     SPK_FILES[2][:-1] + SPK_FILES[3][:-1] + SPK_FILES[4]
+    with pytest.raises(KeyError):
+        cs.stpool('SPK_FILES', 2, '*')
+    
+    assert cs.stpool.flag('SPK_FILES', 0, '*') == \
+                     [SPK_FILES[0][:-1] + SPK_FILES[1], True]
+    assert cs.stpool.flag('SPK_FILES', 1, '*') == \
+                     [SPK_FILES[2][:-1] + SPK_FILES[3][:-1] + SPK_FILES[4], True]
+    assert not cs.stpool.flag('SPK_FILES', 2, '*')[1]
 
 
 def test_str2et():

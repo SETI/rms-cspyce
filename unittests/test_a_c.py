@@ -9,7 +9,8 @@ from gettestkernels import (
     CassiniKernels,
     ExtraKernels,
     checking_pathlike_filename_variants,
-    TEST_FILE_DIR
+    TEST_FILE_DIR,
+    KERNEL_DIR
 )
 
 
@@ -152,6 +153,50 @@ def test_bltfrm():
 def test_bodc2n():
     assert cs.bodc2n(399) == "EARTH"
     assert cs.bodc2n(0) == "SOLAR SYSTEM BARYCENTER"
+    
+    
+def test_bodc2n_bodn2c_bodc2s_bods2c():
+    INTMAX = cs.intmax()
+    #### bodc2n, bodn2c, bodc2s, bods2c
+    cs.boddef('BIG!', -INTMAX)
+    
+    assert cs.bodc2n.flag(699) == ['SATURN', True]
+    assert cs.bodc2n_error(699) == 'SATURN'
+    assert cs.bodc2n.flag(INTMAX)[1] == False
+    with pytest.raises(Exception):
+        cs.bodc2n_error(INTMAX)
+    
+    assert cs.bodn2c.flag('SATuRN ') == [699, True]
+    assert cs.bodn2c_error('SATURN') == 699
+    assert cs.bodn2c.flag('foobar')[1] == False
+    with pytest.raises(Exception):
+        cs.bodn2c_error('foobar')
+    
+    assert cs.bodc2s(699) == 'SATURN'
+    assert cs.bodc2s(INTMAX) == str(INTMAX)
+    
+    assert cs.bods2c.flag('SATuRN ') == [699, True]
+    assert cs.bods2c_error('SATURN') == 699
+    assert cs.bods2c.flag('foobar')[1] == False
+    with pytest.raises(Exception):
+        cs.bods2c_error('foobar')
+    assert cs.bods2c_error('  699 ') == 699
+    assert cs.bods2c_error(str(INTMAX)) == INTMAX
+    
+    npt.assert_almost_equal(cs.bltfrm(1).as_array(), range(1, 22), 0)
+    
+    #  self.assertAllEqual(kplfrm(1), range(1,22), 0)
+    cs.boddef('BIG!', INTMAX)
+    
+    assert cs.bodc2n.flag(INTMAX) == ['BIG!', True]
+    assert cs.bodc2n_error(INTMAX) == 'BIG!'
+    
+    assert cs.bodn2c.flag('BiG! ') == [INTMAX, True]
+    assert cs.bodn2c_error('BIG!') == INTMAX
+    
+    assert cs.bodc2s(INTMAX) == 'BIG!'
+    assert cs.bods2c.flag('BiG! ') == [INTMAX, True]
+    assert cs.bods2c_error('BIG!') == INTMAX
 
 
 def test_bodc2s():
@@ -167,6 +212,14 @@ def test_boddef():
 def test_bodfnd():
     cs.furnsh(CoreKernels.testMetaKernel)
     assert cs.bodfnd(599, "RADII")
+    
+    
+def test_bodfnd_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    INTMIN = cs.intmin()
+    assert cs.bodfnd(699, 'RADII')
+    assert not cs.bodfnd(699, 'RADIIxxx')
+    assert not cs.bodfnd(INTMIN, 'RADII')
 
 
 def test_bodn2c():
@@ -186,6 +239,15 @@ def test_bodvar():
     radii = cs.bodvar(399, "RADII")
     expected = np.array([6378.140, 6378.140, 6356.755])
     np.testing.assert_array_almost_equal(expected, radii, decimal=1)
+    
+    
+def test_bodvar_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    assert cs.bodvar(699, 'RADII')[0] == 60268.
+    assert cs.bodvar(699, 'RADII')[1] == 60268.
+    assert cs.bodvar(699, 'RADII')[2] == 54364.
+    with pytest.raises(KeyError):
+        cs.bodvar(699, 'RADIIxxx')
 
 
 def test_bodvcd():
@@ -194,6 +256,15 @@ def test_bodvcd():
     assert dim == 3
     expected = np.array([6378.140, 6378.140, 6356.755])
     np.testing.assert_array_almost_equal(expected, values, decimal=1)
+    
+    
+def test_bodvcd_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    assert cs.bodvcd(699, 'RADII')[0] == 60268.
+    assert cs.bodvcd(699, 'RADII')[1] == 60268.
+    assert cs.bodvcd(699, 'RADII')[2] == 54364.
+    with pytest.raises(KeyError):
+        cs.bodvcd(699, 'RADIIxxx')
 
 
 def test_bodvrd():
@@ -202,6 +273,15 @@ def test_bodvrd():
     assert dim == 3
     expected = np.array([6378.140, 6378.140, 6356.755])
     np.testing.assert_array_almost_equal(expected, values, decimal=1)
+    
+    
+def test_bodvrd_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    assert cs.bodvrd('SATURN', 'RADII')[0] == 60268.
+    assert cs.bodvrd('SATURN', 'RADII')[1] == 60268.
+    assert cs.bodvrd('SATURN', 'RADII')[2] == 54364.
+    with pytest.raises(KeyError):
+        cs.bodvrd('SATURN', 'RADIIxxx')
 
 
 def test_brcktd():
@@ -266,6 +346,16 @@ def test_ccifrm():
     assert frname == "ITRF93"
     assert frcode == 13000
     assert center == 399
+    
+    
+def test_ccifrm_2():
+    INTMIN = cs.intmin()
+    assert cs.cidfrm.flag(INTMIN)[2] == False
+    assert cs.ccifrm.flag(2, 699) == [10016, 'IAU_SATURN', 699, True]
+    assert cs.ccifrm_error(2, 699) == [10016, 'IAU_SATURN', 699]
+    assert cs.ccifrm.flag(2, INTMIN)[3] == False
+    with pytest.raises(ValueError):
+        cs.ccifrm_error(INTMIN, INTMIN)
 
 
 def test_cgv2el():
@@ -347,6 +437,15 @@ def test_cidfrm():
     assert frname == "IAU_MOON"
 
 
+def test_cidfrm_2():
+    INTMIN = cs.intmin()
+    assert cs.cidfrm.flag(699) == [10016, 'IAU_SATURN', True]
+    assert cs.cidfrm_error(699) == [10016, 'IAU_SATURN']
+    assert cs.cidfrm.flag(INTMIN)[2] == False
+    with pytest.raises(KeyError):
+        cs.cidfrm_error(INTMIN)
+
+
 def test_ckcls():
     # Spice crashes if ckcls detects nothing written to ck1
     ck1 = os.path.join(TEST_FILE_DIR, "ckopenkernel.bc")
@@ -384,6 +483,32 @@ def test_ckcov(path_type_variant):
         [267868006304.000000, 267876773792.000000],
     ]
     npt.assert_array_equal(cover.as_intervals(), expected_intervals)
+    
+    
+def test_ckcov_2():
+    cassCk = os.path.join(KERNEL_DIR,'13056_13057ra.bc' )
+    values = cs.ckcov(cassCk, -82000, False, 'INTERVAL', 1., 'SCLK')
+    npt.assert_allclose(values.as_intervals(),
+                           [[2.67832538e+11, 2.67839247e+11],
+                            [2.67839256e+11, 2.67867970e+11],
+                            [2.67868006e+11, 2.67876774e+11]])
+    
+    values = cs.ckcov.flag(cassCk, 1, False, 'INTERVAL', 1., 'SCLK')
+    assert values.card == 0
+    
+    with pytest.raises(KeyError):
+        cs.ckcov_error(cassCk, 1, False, 'INTERVAL', 1., 'SCLK')
+    
+    #### pckcov, pckfrm
+    with pytest.raises(IOError):
+        pck = os.path.join(KERNEL_DIR,'pck00010.tpc' )
+        cs.pckcov(pck, 10016)
+    
+    predict = os.path.join(KERNEL_DIR, 'earth_031228_231229_predict.bpc')
+    frames = cs.pckfrm(predict)
+    limits = [9.430566e+07, 7.570801e+08]
+    npt.assert_allclose(cs.pckcov(predict, 3000).as_array(),
+                        limits)
 
 
 def test_ckfrot():
@@ -444,6 +569,83 @@ def test_ckgp():
     ]
     npt.assert_array_almost_equal(cmat, expected_cmat)
     assert clkout == 267832537952.0
+    cs.reset()
+
+
+def test_ckgp_ckgpav():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSclk)
+    cs.furnsh(CassiniKernels.cassCk)
+    cs.furnsh(CassiniKernels.cassIk)
+    cs.furnsh(CassiniKernels.cassFk)
+    cs.furnsh(CassiniKernels.cassPck)
+    ckid = cs.ckobj(CassiniKernels.cassCk)[0]
+    cover = cs.ckcov(CassiniKernels.cassCk, ckid,
+                     False, "INTERVAL", 0.0, "SCLK")
+    
+    (array1a, sclk1, found1) = cs.ckgp.flag(ckid, cover[0], 1., 'J2000')
+    (array2a, array2b, sclk2, found2) = cs.ckgpav.flag(ckid, cover[0], 1., 'J2000')
+    
+    assert found1
+    assert found2
+    
+    (array1a, sclk1,) = cs.ckgp(ckid, cover[0], 1., 'J2000')
+    (array2a, array2b, sclk2) = cs.ckgpav(ckid, cover[0], 1., 'J2000')
+    
+    assert abs(sclk1 - sclk1) <= 1.
+    assert sclk1 == sclk2
+    npt.assert_array_equal(array1a, array2a, 0.)
+    
+    result2a = np.array([[ 0.506467, -0.757942,  0.411115],
+                         [-0.423721,  0.196477,  0.884227],
+                         [-0.750967, -0.622029, -0.221647]])
+    
+    result2b = np.array([-0.00231258, -0.00190334, -0.000696574])
+    
+    npt.assert_array_almost_equal(array2a, result2a)
+    npt.assert_array_almost_equal(array2b, result2b)
+    
+    # sclk is 0.
+    assert not cs.ckgp.flag(-82000, 0., 1., 'J2000')[-1]
+    assert not cs.ckgpav.flag(-82000, 0., 1., 'J2000')[-1]
+    
+    with pytest.raises(IOError):
+        cs.ckgp_error(-82000, 0., 1., 'J2000')
+    with pytest.raises(IOError):
+        cs.ckgpav_error(-82000, 0., 1., 'J2000')
+    
+    # sclk is 0.
+    assert not cs.ckgp.flag(-82000, 0., 1., 'J2000')[-1]
+    assert not cs.ckgpav.flag(-82000, 0., 1., 'J2000')[-1]
+    
+    with pytest.raises(IOError):
+        cs.ckgp_error(-82000, 0., 1., 'J2000')
+    with pytest.raises(IOError):
+        cs.ckgpav_error(-82000, 0., 1., 'J2000')
+    
+    sclk = cover[0] + 100. * np.arange(10)
+    (array1ax, sclk1x) = cs.ckgp_vector(-82000, sclk, 1., 'J2000')
+    (array2ax, array2bx, sclk2x) = cs.ckgpav_vector(-82000, sclk, 1., 'J2000')
+    
+    assert array1ax.shape == (10, 3, 3)
+    assert array2ax.shape == (10, 3, 3)
+    assert array2bx.shape == (10, 3)
+    npt.assert_array_equal(array1ax[0], array1a, 0)
+    npt.assert_array_equal(array2ax[0], array2a, 0)
+    npt.assert_array_equal(array2bx[0], array2b, 0)
+    
+    sclk = sclk + 100. * np.arange(10)
+    (array1ax, sclk1x, found1x) = cs.ckgp_vector.flag(-82000, sclk, 1., 'J2000')
+    (array2ax, array2bx, sclk2x, found2x) = cs.ckgpav_vector.flag(-82000, sclk, 1., 'J2000')
+    
+    assert array1ax.shape == (10, 3, 3)
+    assert array2ax.shape == (10, 3, 3)
+    assert array2bx.shape == (10, 3)
+    npt.assert_array_equal(array1ax[0], array1a, 0)
+    npt.assert_array_equal(array2ax[0], array2a, 0)
+    npt.assert_array_equal(array2bx[0], array2b, 0)
+    assert np.all(found1x)
+    assert np.all(found2x)
     cs.reset()
 
 
@@ -560,6 +762,10 @@ def test_ckobj(path_type_variant):
     cs.furnsh(CassiniKernels.cassSclk)
     ids = cs.ckobj(path_type_variant(CassiniKernels.cassCk))
     assert len(ids) == 1
+    
+    
+def test_ckobj_2():
+    assert cs.ckobj(os.path.join(KERNEL_DIR, '13056_13057ra.bc')).as_array() == [-82000]
 
 
 @checking_pathlike_filename_variants("path_type_variant")
@@ -914,6 +1120,17 @@ def test_clpool():
     cs.clpool()
     with pytest.raises(KeyError):
         cs.gdpool("TEST_VAR", 0)
+        
+        
+def test_clpool_dlpool():
+#### clpool, ldpool
+    cs.furnsh(CoreKernels.pck)
+    assert cs.bodfnd(599, 'RADII')
+    assert cs.bodfnd(699, 'RADII')
+    cs.clpool()
+    assert not cs.bodfnd(699, 'RADII')
+    cs.ldpool(CoreKernels.pck)
+    assert cs.bodfnd(699, 'RADII')
 
 
 def test_cmprss():
@@ -931,6 +1148,14 @@ def test_cnmfrm():
     ioFrcode, ioFrname = cs.cnmfrm("IO")
     assert ioFrcode == 10023
     assert ioFrname == "IAU_IO"
+
+
+def test_cnmfrm_2():
+    assert cs.cnmfrm('SATURN') == [10016, 'IAU_SATURN']
+    assert cs.cnmfrm.flag('SATURN')[-1]
+    assert not cs.cnmfrm.flag('foo')[-1]
+    with pytest.raises(KeyError):
+        cs.cnmfrm_error('foo')
 
 
 def test_conics():

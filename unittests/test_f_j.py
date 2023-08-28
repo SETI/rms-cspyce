@@ -102,12 +102,93 @@ def test_frinfo():
     assert cs.frinfo(13000) == [399, 2, 3000]
 
 
-# INSERT FRMCHG FUNCTION HERE
+def test_frmchg_sxform_pxform_xf2rav_pxfrm2_refchg():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    sat0a = cs.frmchg(10016, 1, 0.)
+    sat1a = cs.frmchg(10016, 1, 86400.)
+    sat0b = cs.sxform('IAU_SATURN', 'J2000', 0.)
+    sat1b = cs.sxform('IAU_SATURN', 'J2000', 86400.)
+    sat0c = cs.pxform('IAU_SATURN', 'J2000', 0.)
+    sat1c = cs.pxform('IAU_SATURN', 'J2000', 86400.)
+    sat0d = cs.pxfrm2('IAU_SATURN', 'J2000', 0., 0.)
+    sat1d = cs.pxfrm2('IAU_SATURN', 'J2000', 86400., 86400.)
+    sat0e = cs.refchg(10016, 1, 0.)
+    sat1e = cs.refchg(10016, 1, 86400.)
+    
+    npt.assert_almost_equal(sat0a[:3, :3], sat0b[:3, :3], 0)
+    npt.assert_almost_equal(sat0a[:3, :3], sat0c, 0)
+    npt.assert_almost_equal(sat0a[:3, :3], sat0d, 0)
+    npt.assert_almost_equal(sat0a[:3, :3], sat0e, 0)
+    npt.assert_almost_equal(sat0a[:3, :3], sat0a[3:, 3:], 0)  # true even for rotating frames
+    
+    npt.assert_almost_equal(sat1a[:3, :3], sat1b[:3, :3], 0)
+    npt.assert_almost_equal(sat1a[:3, :3], sat1c, 0)
+    npt.assert_almost_equal(sat1a[:3, :3], sat1d, 0)
+    npt.assert_almost_equal(sat1a[:3, :3], sat1e, 0)
+    npt.assert_almost_equal(sat1a[:3, :3], sat1a[3:, 3:], 0)  # true even for rotating frames
+    
+    (mat0a, vec0a) = cs.xf2rav(sat0a)
+    (mat1a, vec1a) = cs.xf2rav(sat1a)
+    (mat0b, vec0b) = cs.xf2rav(sat0b)
+    (mat1b, vec1b) = cs.xf2rav(sat1b)
+    
+    npt.assert_almost_equal(sat0a[:3, :3], mat0a, 0)
+    npt.assert_almost_equal(sat1a[:3, :3], mat1a, 0)
+    npt.assert_almost_equal(sat0b[:3, :3], mat0b, 0)
+    npt.assert_almost_equal(sat1b[:3, :3], mat1b, 0)
+    
+    # Make sure that non-rotating frames have the form we're expecting
+    non_rotate = cs.frmchg(1, 2, 0.)  # J2000 and B1950 are both fixed
+    npt.assert_almost_equal(non_rotate[:3, :3], non_rotate[3:, 3:])
+    assert not np.any(non_rotate[:3, 3:])  # top left and bottom right are zero
+    assert not np.any(non_rotate[3:, :3])
+    non_rotate_matrix, non_rotate_vec = cs.xf2rav(non_rotate)
+    npt.assert_almost_equal(non_rotate[:3, :3], non_rotate_matrix)
+    npt.assert_almost_equal(non_rotate_vec, [0., 0., 0.])
+    
+    npt.assert_almost_equal(vec0b, vec1b, 1.e-13)
+    
+    sat01a = cs.frmchg_vector(10016, 1, [0., 86400.])
+    sat01b = cs.sxform_vector('IAU_SATURN', 'J2000', [0., 86400.])
+    sat01c = cs.pxform_vector('IAU_SATURN', 'J2000', [0., 86400.])
+    sat01d = cs.pxfrm2_vector('IAU_SATURN', 'J2000', [0., 86400.], [0., 86400.])
+    sat01e = cs.refchg_vector(10016, 1, [0., 86400.])
+    
+    npt.assert_almost_equal(sat01a, [sat0a, sat1a], 0)
+    npt.assert_almost_equal(sat01b, [sat0b, sat1b], 0)
+    npt.assert_almost_equal(sat01c, [sat0c, sat1c], 0)
+    npt.assert_almost_equal(sat01d, [sat0d, sat1d], 0)
+    npt.assert_almost_equal(sat01e, [sat0e, sat1e], 0)
+    
+    (mat01b, vec01b) = cs.xf2rav_vector(sat01b)
+    npt.assert_almost_equal(mat01b, [mat0b, mat1b], 0)
+    npt.assert_almost_equal(vec01b, [vec0b, vec1b], 0)
 
 
 def test_frmnam():
     assert cs.frmnam(13000) == "ITRF93"
     assert cs.frmnam(13000) == "ITRF93"
+    
+    
+def test_frmnam_namfrm_frinfo():
+    INTMAX = cs.intmax()
+    assert cs.frmnam(10016) == 'IAU_SATURN'
+    assert cs.frmnam.flag(10016) == 'IAU_SATURN'
+    assert cs.frmnam.flag(INTMAX) == ''
+    with pytest.raises(KeyError):
+        cs.frmnam_error(INTMAX)
+    
+    assert cs.namfrm('IAU_SATURN') == 10016
+    assert cs.namfrm.flag('IAU_SATURN') == 10016
+    assert cs.namfrm.flag('xxxxx') == 0
+    with pytest.raises(KeyError):
+        cs.namfrm_error('xxxxx')
+    
+    assert cs.frinfo(10016) == [699, 2, 699]
+    assert cs.frinfo.flag(10016) == [699, 2, 699, True]
+    assert not cs.frinfo.flag(INTMAX)[-1]
+    with pytest.raises(KeyError):
+        cs.frinfo(INTMAX)
 
 
 @checking_pathlike_filename_variants("path_type_variant")
@@ -947,6 +1028,74 @@ def test_gipool():
     cs.pipool("pipool_array", data)
     ivals = cs.gipool("pipool_array", 0)
     npt.assert_array_almost_equal(data, ivals)
+    
+    
+def test_gipool_2():
+    # This test adapted from cs.pipool_c.html
+    cs.pipool('FRAME_MYTOPO', [1500000])
+    cs.pcpool('FRAME_1500000_NAME', ['MYTOPO'])
+    cs.pipool('FRAME_1500000_CLASS', [4])
+    cs.pipool('FRAME_1500000_CLASS_ID', [1500000])
+    cs.pipool('FRAME_1500000_CENTER', [300000])
+    cs.pcpool('OBJECT_300000_FRAME', ['MYTOPO'])
+    cs.pcpool('TKFRAME_MYTOPO_RELATIVE', ['J2000'])
+    cs.pcpool('TKFRAME_MYTOPO_SPEC', ['ANGLES'])
+    cs.pcpool('TKFRAME_MYTOPO_UNITS', ['DEGREES'])
+    cs.pipool('TKFRAME_MYTOPO_AXES', [3, 2, 3])
+    cs.pdpool('TKFRAME_MYTOPO_ANGLES', [22.2, 0., -22.2])
+    et = 0.
+
+    rmat = cs.pxform('J2000', 'MYTOPO', et)
+    npt.assert_allclose(rmat, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    et = 10. * 365. * 86400.
+    rmat = cs.pxform('J2000', 'MYTOPO', et)
+    npt.assert_allclose(rmat, [[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    cs.pcpool('CTEST', ['LARRY', 'MOE', 'CURLY'])
+    cs.pipool('ITEST', [3141, 186, 282])
+    cs.pdpool('DTEST', [3.1415, 186.282, .0175])
+
+    # This doesn't work, but calls to cs.expool below work fine.
+    #     self.assertTrue(cs.expool('CTEST'))
+    assert cs.expool('ITEST')
+    assert cs.expool('DTEST')
+    assert not cs.expool('DTESTxxx')
+
+    assert cs.dtpool('CTEST') == [3, 'C']
+    assert cs.dtpool('ITEST') == [3, 'N']
+    assert cs.dtpool('DTEST') == [3, 'N']
+    with pytest.raises(KeyError):
+        cs.dtpool('DTESTxxx')
+
+    assert cs.dtpool.flag('CTEST') == [True, 3, 'C']
+    assert cs.dtpool.flag('ITEST') == [True, 3, 'N']
+    assert cs.dtpool.flag('DTEST') == [True, 3, 'N']
+    assert cs.dtpool.flag('DTESTxxx')[0] == False
+
+    assert list(cs.gipool('ITEST')) == [3141, 186, 282]
+    assert list(cs.gdpool('DTEST')) == [3.1415, 186.282, .0175]
+    assert list(cs.gcpool('CTEST')) == ['LARRY', 'MOE', 'CURLY']
+
+    assert list(cs.gipool('ITEST', 1)) == [186, 282]
+    assert list(cs.gdpool('DTEST', 1)) == [186.282, .0175]
+    assert list(cs.gcpool('CTEST', 1)) == ['MOE', 'CURLY']
+
+    with pytest.raises(KeyError):
+        cs.gipool('ITESTxxx')
+    with pytest.raises(KeyError):
+        cs.gdpool('DTESTxxx')
+    with pytest.raises(KeyError):
+        cs.gcpool('CTESTxxx')
+
+    assert len(cs.gipool.flag('ITEST')) == 2
+    assert len(cs.gdpool.flag('DTEST')) == 2
+    assert len(cs.gcpool.flag('CTEST')) == 2
+
+    assert cs.gipool.flag('ITEST')[-1]
+    assert cs.gdpool.flag('DTEST')[-1]
+    assert cs.gcpool.flag('CTEST')[-1]
+    assert not cs.gcpool.flag('CTESTxxx')[-1]
 
 
 def test_gnpool():
@@ -966,6 +1115,19 @@ def test_gnpool():
     ]
     kervar = cs.gnpool(var, index)
     assert set(expected) == set(kervar)
+    
+    
+def test_gnpool_2():
+    cs.furnsh(CoreKernels.pck)
+    assert set(cs.gnpool('BODY699*RA*')) == set(['BODY699_POLE_RA',
+                                                      'BODY699_RADII'])
+    with pytest.raises(KeyError):
+        cs.gnpool('BODY699*RAxxx*')
+    
+    assert set(cs.gnpool.flag('BODY699*RA*')[0]) == \
+                     set(['BODY699_POLE_RA', 'BODY699_RADII'])
+    assert cs.gnpool.flag('BODY699*RA*')[1]
+    assert not cs.gnpool.flag('BODY699*RAxxx*')[1]
 
 
 def test_halfpi():
@@ -1159,15 +1321,16 @@ def test_inedpl():
     npt.assert_almost_equal(cs.vnorm(semi_minor), 6358.0558, decimal=2)
 
 
-def test_indedpl():
-    npt.assert_almost_equal(cs.inedpl(1., 1., 1., [1, 0, 0, 0]),
-                            [[0, 0, 0, 0, 0, -1, 0, 1, 0], True], 0)
-    npt.assert_almost_equal(cs.inedpl_vector(1., 1., 1., [1, 0, 0, 0]),
-                            [[0, 0, 0, 0, 0, -1, 0, 1, 0], True], 0)
-    npt.assert_almost_equal(cs.inedpl_vector([1.], 1., 1., [1, 0, 0, 0]),
-                            [[[0, 0, 0, 0, 0, -1, 0, 1, 0]], [True]], 0)
-    npt.assert_almost_equal(cs.inedpl_vector(1., 1., [1, 1], [1, 0, 0, 0]),
-                            [2*[[0, 0, 0, 0, 0, -1, 0, 1, 0]], 2*[True]], 0)
+def test_inedpl_2():
+    npt.assert_almost_equal(cs.inedpl(1., 1., 1., [1, 0, 0, 0])[0],
+                            np.array([0, 0, 0, 0, 0, -1, 0, 1, 0]))
+    npt.assert_almost_equal(cs.inedpl_vector(1., 1., 1., [1, 0, 0, 0])[0],
+                            np.array([0, 0, 0, 0, 0, -1, 0, 1, 0]))
+    npt.assert_almost_equal(cs.inedpl_vector([1.], 1., 1., [1, 0, 0, 0])[0],
+                            np.array([list([0, 0, 0, 0, 0, -1, 0, 1, 0])]))
+    npt.assert_array_almost_equal(cs.inedpl_vector(1., 1., [1, 1], [1, 0, 0, 0])[0],
+                            np.array([[ 0.,  0.,  0.,  0.,  0., -1.,  0.,  1., -0.],
+                                  [ 0.,  0.,  0.,  0.,  0., -1.,  0.,  1., -0.]]))
 
 
 def test_inelpl():
