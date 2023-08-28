@@ -65,33 +65,13 @@ void reset_messages(void) {
 }
 
 void flush_traceback(void) {
+    // Not currently used, but it may be used in the future.
     // Empty the traceback list
     int depth;
     trcdep_c(&depth);
     for (int k = depth-1; k >= 0; k--) {
         char module[100];
         trcnam_c(k, 100, module);
-        chkout_c(module);
-    }
-}
-
-void flush_traceback_to(char *name) {
-    int depth;
-    trcdep_c(&depth);
-    for (int k = depth-1; k >= 0; k--) {
-        char module[100];
-        trcnam_c(k, 100, module);
-        chkout_c(module);
-        if (strcmp(module, name) == 0) return;
-    }
-}
-
-void pop_traceback(void) {
-    int depth;
-    trcdep_c(&depth);
-    if (depth) {
-        char module[100];
-        trcnam_c(depth-1, 100, module);
         chkout_c(module);
     }
 }
@@ -492,32 +472,6 @@ void handle_swig_exception(const char *symname) {
     chkin_c(symname);
     set_python_exception(symname);
     chkout_c(symname);
-    reset_c();
-}
-%}
-
-%define RAISE_SIGERR_EXCEPTION
-{
-    handle_sigerr_exception();
-    SWIG_fail;
-}
-%enddef
-
-%{
-void handle_sigerr_exception(void) {
-    // TODO(fy): Ask Mark why we can't use $symname
-    int depth;
-    char symname[100];
-
-    trcdep_c(&depth);
-    if (depth > 0) {
-        trcnam_c(depth-1, 100, symname);
-    } else {
-        symname[0] = 0;
-    }
-
-    set_python_exception(symname);
-    pop_traceback();
     reset_c();
 }
 %}
@@ -3335,14 +3289,6 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
 
     TEST_FOR_EXCEPTION;
     $result = SWIG_Python_AppendOutput($result, PyUnicode_FromString((char *) $1));
-}
-
-// Special handler just for direct calls to sigerr()
-%typemap(out) (void RETURN_VOID_SIGERR) {
-    RAISE_SIGERR_EXCEPTION;
-    Py_XDECREF($result);
-    Py_INCREF(Py_None);
-    $result = Py_None;
 }
 
 %typemap(in)
