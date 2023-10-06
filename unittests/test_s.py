@@ -1,4 +1,5 @@
 import cspyce as cs
+import numbers
 import numpy as np
 import numpy.testing as npt
 import os
@@ -29,6 +30,49 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
+
+
+@pytest.fixture
+def CASSINI_ET():
+    return 17.65 * 365.25 * 86400.
+
+
+@pytest.fixture
+def CASSINI_ET2(CASSINI_ET):
+    return CASSINI_ET + 86400
+
+
+def assert_all_equal(arg1, arg2, tol=1.e-15, frac=False):
+    if isinstance(arg1, list):
+        assert type(arg2) == list
+        assert len(arg1) == len(arg2)
+        for (item1, item2) in zip(arg1, arg2):
+            assert_all_equal(item1, item2, tol, frac)
+
+    elif isinstance(arg1, np.ndarray):
+        arg1 = np.array(arg1)
+        arg2 = np.array(arg2)
+        assert arg1.shape == arg2.shape
+        arg1 = arg1.flatten()
+        arg2 = arg2.flatten()
+        for (x1, x2) in zip(arg1, arg2):
+            if isinstance(x1, numbers.Real):
+                if frac:
+                    assert abs(x1 - x2) <= tol * abs(x1 + x2) / 2.
+                else:
+                    assert abs(x1 - x2) <= tol
+            else:
+                assert x1 == x2, tol
+
+    elif isinstance(arg1, numbers.Real):
+        if frac:
+            assert abs(arg1 - arg2) <= tol * abs(arg1 + arg2) / 2.
+        else:
+            assert abs(arg1 - arg2) <= tol
+            
+            
+def assert_all_close(arg1, arg2, tol=1.e-8):
+    return assert_all_equal(arg1, arg2, tol, frac=True)
 
 
 def test_saelgv():
@@ -108,6 +152,57 @@ def test_scpart():
     pstart, pstop = cs.scpart(-32)
     assert pstart is not None
     assert pstop is not None
+    
+    
+def test_sce2c_sce2s_sce2t_scdecd_sct2e_scencd_scs2e_sctiks_scfmt_scpart(CASSINI_ET, CASSINI_ET2):
+    scdp = 3.04176877635e+11
+    scdp2 = 3.04198996178e+11
+    sclk = '1/1882414947.067'
+    sclk2 = '1/1882501347.210'
+
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSclk)
+    assert_all_close(cs.sce2c(-82, CASSINI_ET), scdp, .1)
+    assert_all_close(cs.sce2c(-82, CASSINI_ET2), scdp2, 1.)
+    assert_all_close(cs.sce2s(-82, CASSINI_ET), sclk)
+    assert_all_close(cs.sce2s(-82, CASSINI_ET2), sclk2)
+    assert_all_close(cs.sce2t(-82, CASSINI_ET), scdp, 1.)
+    assert_all_close(cs.sce2t(-82, CASSINI_ET2), scdp2, 1.)
+    assert_all_close(cs.scdecd(-82, scdp), sclk)
+    assert_all_close(cs.scdecd(-82, scdp2), sclk2)
+    assert_all_close(cs.sct2e(-82, scdp), CASSINI_ET, 1.)
+    assert_all_close(cs.sct2e(-82, scdp2), CASSINI_ET2, 1.)
+    assert_all_close(cs.scencd(-82, sclk), scdp, 1.)
+    assert_all_close(cs.scencd(-82, sclk2), scdp2, 1.)
+    assert_all_close(cs.scs2e(-82, sclk), CASSINI_ET, 1.)
+    assert_all_close(cs.scs2e(-82, sclk2), CASSINI_ET2, 1.)
+    
+    assert_all_close(cs.sctiks(-82, "1.000"), 256.)
+    assert_all_close(cs.sctiks(-82, "0.001"), 1.)
+    
+    assert_all_close(cs.scfmt(-82, scdp), '1188190928.067')
+    assert_all_close(cs.scfmt(-82, scdp2), '1188277328.210')
+    
+    parts = [[1.77721349e+11], [1.09951163e+12]]
+    assert_all_close(cs.scpart(-82), parts, 30000.)
+    
+    assert_all_close(cs.sce2c_vector(-82, CASSINI_ET), scdp, 1.)
+    assert_all_close(cs.sce2c_vector(-82, CASSINI_ET2), scdp2, 1.)
+    assert_all_close(cs.sce2t_vector(-82, CASSINI_ET), scdp, 1.)
+    assert_all_close(cs.sce2t_vector(-82, CASSINI_ET2), scdp2, 1.)
+    assert_all_close(cs.sct2e_vector(-82, scdp), CASSINI_ET, 1.)
+    assert_all_close(cs.sct2e_vector(-82, scdp2), CASSINI_ET2, 1.)
+    
+    assert_all_close(cs.sce2c_vector(-82, [CASSINI_ET]), [scdp], 1.)
+    assert_all_close(cs.sce2c_vector(-82, [CASSINI_ET2]), [scdp2], 1.)
+    assert_all_close(cs.sce2t_vector(-82, [CASSINI_ET]), [scdp], 1.)
+    assert_all_close(cs.sce2t_vector(-82, [CASSINI_ET2]), [scdp2], 1.)
+    assert_all_close(cs.sct2e_vector(-82, [scdp]), [CASSINI_ET], 1.)
+    assert_all_close(cs.sct2e_vector(-82, [scdp2]), [CASSINI_ET2], 1.)
+    
+    assert_all_close(cs.sce2c_vector(-82, [CASSINI_ET, CASSINI_ET2]), [scdp, scdp2], 1.)
+    assert_all_close(cs.sce2t_vector(-82, [CASSINI_ET, CASSINI_ET2]), [scdp, scdp2], 1.)
+    assert_all_close(cs.sct2e_vector(-82, [scdp, scdp2]), [CASSINI_ET, CASSINI_ET2], 1.)
 
 
 def test_scs2e():
@@ -687,6 +782,30 @@ def test_spkcov():
     npt.assert_array_almost_equal(result, expected)
 
 
+# Test set to fail until server refresh    
+def fail_spkcov_spkobj():
+    #### spkcov, spkobj
+    with pytest.raises(IOError):
+        cs.spkcov('foo.bsp', -82)
+
+    spkpath = CassiniKernels.cassSpkPart
+    with pytest.raises(KeyError):
+        cs.spkcov(spkpath, 401)
+
+    limits = [5.55782400e+08, 5.58745200e+08]
+    assert_all_equal(cs.spkcov(spkpath, -82).as_intervals(), [limits], 1.)
+    assert_all_equal(cs.spkcov(spkpath, 699).as_intervals(), [limits], 1.)
+
+    assert_all_equal(cs.spkcov.flag(spkpath, 699).as_intervals(), [limits], 1.)
+    assert_all_equal(cs.spkcov.flag(spkpath, 401).as_intervals(), np.empty((0, 2)))
+
+    bodies = set([-82, 301, 399, 699] + list(range(1, 11)) +
+                 list(range(601, 613)) +
+                 list(range(615, 618)))
+    temp = cs.spkobj(CassiniKernels.cassSpkPart)
+    assert set(temp) == bodies
+
+
 def test_spkcpo():
     cs.furnsh(ExtraKernels.earthStnSpk)
     cs.furnsh(ExtraKernels.earthHighPerPck)
@@ -878,6 +997,35 @@ def test_spkgps():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(pos, expected_pos)
+    
+    
+def test_spkez_spkgeo_spkgps(CASSINI_ET, CASSINI_ET2):
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSpkPart)
+    xstate = [-5.80171789e+04, 8.94351951e+05, -3.86485973e+05,
+              -1.49767494e+01, -5.10452110e+00, 1.77892184e+00]
+    xstate2 = [2.09767900e+04, 2.11758713e+05, 1.01478492e+05,
+               -3.43824167e+00, 1.42971900e+01, 8.91882636e+00]
+    xlt = 3.2556313860561055
+    xlt2 = 0.7863886730607871
+    
+    (state, lt) = cs.spkez(601, CASSINI_ET, 'J2000', 'none', -82)
+    (state2, lt2) = cs.spkez(601, CASSINI_ET2, 'J2000', 'none', -82)
+    
+    assert_all_close(cs.spkez(601, CASSINI_ET, 'J2000', 'none', -82),
+                        [xstate, xlt])
+    assert_all_close(cs.spkez(601, CASSINI_ET2, 'J2000', 'none', -82),
+                        [xstate2, xlt2])
+    
+    assert_all_equal(cs.spkgeo(601, CASSINI_ET, 'J2000', -82),
+                     [state, lt], 0)
+    assert_all_equal(cs.spkgeo(601, CASSINI_ET2, 'J2000', -82),
+                     [state2, lt2], 0)
+    
+    assert_all_equal(cs.spkgps(601, CASSINI_ET, 'J2000', -82),
+                     [state[:3], lt], 0)
+    assert_all_equal(cs.spkgps(601, CASSINI_ET2, 'J2000', -82),
+                     [state2[:3], lt2], 0)
 
 
 def test_spklef():
@@ -1031,6 +1179,71 @@ def test_spkpos():
     ]
     npt.assert_almost_equal(lt, expected_lt)
     npt.assert_array_almost_equal(pos, expected_pos)
+    
+    
+def test_spkssb_spkacs_spkapo_spkez_spkezr_spkpos(CASSINI_ET, CASSINI_ET2):
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSpkPart)
+    
+    xssb = [-9.35325266e+07, -1.38980049e+09, -5.69362184e+08, 1.00994262e+01,
+            5.57457613e+00, -1.32361199e+00]
+    xssb2 = [-9.28933887e+07, -1.38916427e+09, -5.69894015e+08, -8.14701094e-01,
+             -1.90665286e+01, -8.26491731e+00]
+    
+    ssb = cs.spkssb(-82, CASSINI_ET, 'J2000')
+    ssb2 = cs.spkssb(-82, CASSINI_ET2, 'J2000')
+    assert_all_close(cs.spkssb(-82, CASSINI_ET, 'J2000'), xssb)
+    assert_all_close(cs.spkssb(-82, CASSINI_ET2, 'J2000'), xssb2)
+    
+    xstate = [-5.80013005e+04, 8.94350415e+05, -3.86487455e+05,
+              -1.49765896e+01, -5.10106017e+00, 1.77874639e+00]
+    xstate2 = [2.09801346e+04, 2.11762463e+05, 1.01477978e+05,
+               -3.43826105e+00, 1.42982547e+01, 8.91877142e+00]
+    xlt = 3.255625500957274
+    xdlt = -1.4972390244438447e-05
+    xlt2 = 0.7864001637489081
+    xdlt2 = 5.4624503604634114e-05
+    
+    (state, lt, dlt) = cs.spkaps(601, CASSINI_ET, 'J2000', 'lt', ssb, [0, 0, 0])
+    (state2, lt2, dlt2) = cs.spkaps(601, CASSINI_ET2, 'J2000', 'lt', ssb2, [0, 0, 0])
+    
+    assert_all_close([state, lt, dlt], [xstate, xlt, xdlt])
+    assert_all_close([state2, lt2, dlt2], [xstate2, xlt2, xdlt2])
+    
+    assert_all_equal(cs.spkacs(601, CASSINI_ET, 'J2000', 'lt', -82),
+                     [state, lt, dlt], 0)
+    assert_all_equal(cs.spkacs(601, CASSINI_ET2, 'J2000', 'lt', -82),
+                     [state2, lt2, dlt2], 0)
+    
+    assert_all_equal(cs.spkapo(601, CASSINI_ET, 'J2000', ssb, 'lt'),
+                     [state[:3], lt], 0)
+    assert_all_equal(cs.spkapo(601, CASSINI_ET2, 'J2000', ssb2, 'lt'),
+                     [state2[:3], lt2], 0)
+    
+    assert_all_equal(cs.spkez(601, CASSINI_ET, 'J2000', 'lt', -82),
+                     [state, lt], 0)
+    assert_all_equal(cs.spkez(601, CASSINI_ET2, 'J2000', 'lt', -82),
+                     [state2, lt2], 0)
+    
+    assert_all_equal(cs.spkezp(601, CASSINI_ET, 'J2000', 'lt', -82),
+                     [state[:3], lt], 0)
+    assert_all_equal(cs.spkezp(601, CASSINI_ET2, 'J2000', 'lt', -82),
+                     [state2[:3], lt2], 0)
+    
+    assert_all_equal(cs.spkezr('mimas', CASSINI_ET, 'J2000', 'lt', 'cassini'),
+                     [state, lt], 0)
+    assert_all_equal(cs.spkezr('mimas', CASSINI_ET2, 'J2000', 'lt', 'cassini'),
+                     [state2, lt2], 0)
+    
+    assert_all_equal(cs.spkpos('mimas', CASSINI_ET, 'J2000', 'lt', 'cassini'),
+                     [state[:3], lt], 0)
+    assert_all_equal(cs.spkpos('mimas', CASSINI_ET2, 'J2000', 'lt', 'cassini'),
+                     [state2[:3], lt2], 0)
+    
+    assert_all_equal(cs.spkltc(601, CASSINI_ET, 'J2000', 'lt', ssb),
+                     [state, lt, dlt], 0)
+    assert_all_equal(cs.spkltc(601, CASSINI_ET2, 'J2000', 'lt', ssb2),
+                     [state2, lt2, dlt2], 0)
 
 
 def test_spkpvn():
@@ -1847,6 +2060,57 @@ def test_srfscc():
         cs.srfscc("ZZZ", 499)
     cs.reset()
     cleanup_kernel(kernel)
+    
+    
+def test_srfc2s_srfcss_srfs2c_srfscc():
+    kernel = os.path.join(TEST_FILE_DIR, "phobos_surface.tm")
+    cleanup_kernel(kernel)
+    with open(kernel, "w") as kernelFile:
+        kernelFile.write("\\begindata\n")
+        kernelFile.write("NAIF_SURFACE_NAME += ( 'MGS MOLA  64 pixel/deg',\n")
+        kernelFile.write("                       'MGS MOLA 128 pixel/deg',\n")
+        kernelFile.write("                       'PHOBOS GASKELL Q512'     )\n")
+        kernelFile.write("NAIF_SURFACE_CODE += (   1,   2,    1 )\n")
+        kernelFile.write("NAIF_SURFACE_BODY += ( 499, 499,  401 )\n")
+        kernelFile.write("\\begintext\n")
+        kernelFile.close()
+    
+    cs.furnsh(kernel)
+    assert cs.srfc2s(1, 401) == 'PHOBOS GASKELL Q512'
+    assert cs.srfcss(1, 'phobos') == 'PHOBOS GASKELL Q512'
+    assert cs.srfs2c('PHOBOS GASKELL Q512', 'phobos') == 1
+    assert cs.srfscc('PHOBOS GASKELL Q512', 401) == 1
+    
+    with pytest.raises(KeyError):
+        cs.srfc2s(2, 401)
+    with pytest.raises(KeyError):
+        cs.srfc2s(1, 402)
+    with pytest.raises(KeyError):
+        cs.srfcss(2, 'phobos')
+    with pytest.raises(KeyError):
+        cs.srfcss(1, 'deimos')
+    with pytest.raises(KeyError):
+        cs.srfs2c('whatever', 'phobos')
+    with pytest.raises(KeyError):
+        cs.srfs2c('PHOBOS GASKELL Q512', 'deimos')
+    with pytest.raises(KeyError):
+        cs.srfscc('whatever', 401)
+    with pytest.raises(KeyError):
+        cs.srfscc('PHOBOS GASKELL Q512', 402)
+    
+    assert_all_equal(cs.srfc2s.flag(1, 401), ['PHOBOS GASKELL Q512', True])
+    assert_all_equal(cs.srfcss.flag(1, 'phobos'), ['PHOBOS GASKELL Q512', True])
+    assert_all_equal(cs.srfs2c.flag('PHOBOS GASKELL Q512', 'phobos'), [1, True])
+    assert_all_equal(cs.srfscc.flag('PHOBOS GASKELL Q512', 401), [1, True])
+    
+    assert not cs.srfc2s.flag(2, 401)[1]
+    assert not cs.srfc2s.flag(1, 402)[1]
+    assert not cs.srfcss.flag(2, 'phobos')[1]
+    assert not cs.srfcss.flag(1, 'deimos')[1]
+    assert not cs.srfs2c.flag('whatever', 'phobos')[1]
+    assert not cs.srfs2c.flag('PHOBOS GASKELL Q512', 'deimos')[1]
+    assert not cs.srfscc.flag('whatever', 401)[1]
+    assert not cs.srfscc.flag('PHOBOS GASKELL Q512', 402)[1]
 
 
 def test_srfxpt():

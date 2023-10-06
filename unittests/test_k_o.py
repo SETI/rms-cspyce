@@ -1,4 +1,5 @@
 import cspyce as cs
+import numbers
 import numpy as np
 import numpy.testing as npt
 import os
@@ -6,6 +7,7 @@ import pytest
 
 from gettestkernels import (
     CoreKernels,
+    CassiniKernels,
     ExtraKernels,
     TEST_FILE_DIR,
     checking_pathlike_filename_variants
@@ -29,6 +31,32 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
+
+
+def assert_all_equal(arg1, arg2, tol=1.e-15):
+    if type(arg1) == list:
+        assert type(arg2) == list
+        assert len(arg1) == len(arg2)
+        for (item1, item2) in zip(arg1, arg2):
+            assert_all_equal(item1, item2)
+
+    elif isinstance(arg1, np.ndarray):
+        arg1 = np.array(arg1)
+        arg2 = np.array(arg2)
+        assert arg1.shape == arg2.shape
+        arg1 = arg1.flatten()
+        arg2 = arg2.flatten()
+        for (x1, x2) in zip(arg1, arg2):
+            if isinstance(x1, numbers.Real):
+                assert abs(x1 - x2) <= tol
+            else:
+                assert x1 == x2
+
+    elif isinstance(arg1, numbers.Real):
+        assert abs(arg1 - arg2) <= tol
+
+    else:
+        assert arg1 == arg2
 
 
 def test_kclear():
@@ -161,6 +189,21 @@ def test_latsrf():
     radii = [cs.recrad(x)[0] for x in srfpts]
     assert radii[0] > 9.77
     assert radii[1] > 9.51
+    
+    
+def test_latsrf_2():  # no vector version
+    cs.furnsh(CoreKernels.testMetaKernel)
+    Y2005 = 5 * 365.25 * 86400.
+    Y2006 = 6 * 365.25 * 86400.
+    mimas = cs.bodn2c('MIMAS')
+    (a, b, C) = cs.bodvcd(mimas, 'RADII')
+    lonlats = np.array([[0, 0], [90, 0], [180, 0], [270, 0], [0, -90], [0, 90]]) * cs.rpd()
+    results5 = cs.latsrf('ELLIPSOID', 'MIMAS', Y2005, 'IAU_MIMAS', lonlats)
+    results6 = cs.latsrf('ELLIPSOID', 'MIMAS', Y2006, 'IAU_MIMAS', lonlats)
+
+    target = [[a, 0, 0], [0, b, 0], [-a, 0, 0], [0, -b, 0], [0, 0, -C], [0, 0, C]]
+    assert_all_equal(results5, target, 4e-14)
+    assert_all_equal(results6, target, 4e-14)
 
 
 @checking_pathlike_filename_variants("path_type_variant")
@@ -370,6 +413,19 @@ def test_lspcn():
     et = cs.str2et("21 march 2005")
     lon = cs.dpr() * cs.lspcn("EARTH", et, "NONE")
     npt.assert_almost_equal(lon, 0.48153755894179384)
+    
+
+# Test is set to fail until server reflects new added SPICE kernel
+def fail_lspcn_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.satSpkFull)
+    Y2005 = 5 * 365.25 * 86400.
+    Y2006 = 6 * 365.25 * 86400.
+    assert_all_equal(cs.lspcn('SATURN', Y2005, 'LT+S'), 5.23103124275, 1.e-11)
+    assert_all_equal(cs.lspcn('SATURN', Y2006, 'LT+S'), 5.46639556423, 1.e-11)
+    assert_all_equal(cs.lspcn_vector('SATURN', Y2006, 'LT+S'), 5.46639556423, 1.e-11)
+    assert_all_equal(cs.lspcn_vector('SATURN', [Y2005, Y2006], 'LT+S'),
+                     [5.23103124275, 5.46639556423], 1.e-11)
 
 
 def test_lstlec():
@@ -533,6 +589,20 @@ def test_ltime():
     receive_utc = cs.et2utc(receive, "C", 3)
     npt.assert_almost_equal(rtime, 2918.75247, decimal=4)
     assert receive_utc == "2004 JUL 03 23:11:21.248"
+
+# Setting to fail until server refreshes
+def fail_ltime_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSpkPart)
+    CASSINI_ET = 17.65 * 365.25 * 86400.0
+    assert_all_equal(cs.ltime(CASSINI_ET, -82, '->', 399),
+                     [556996483.4720103, 4843.472010222729], 1.e-7)
+    assert_all_equal(cs.ltime(CASSINI_ET, -82, '<-', 399),
+                     [556986797.4373786, 4842.562621312754], 1.e-7)
+    assert_all_equal(cs.ltime_vector(CASSINI_ET, -82, '<-', 399),
+                     [556986797.4373786, 4842.562621312754], 1.e-7)
+    assert_all_equal(cs.ltime_vector(3 * [CASSINI_ET], -82, '<-', 399),
+                     [3 * [556986797.4373786], 3 * [4842.562621312754]], 1.e-7)
 
 
 def test_lx4dec():
@@ -917,11 +987,11 @@ def test_nearpt():
 
 
 def test_nearpt_2():
-    npt.assert_almost_equal(cs.nearpt([3, 0, 0], 2, 3, 1), [[2, 0, 0], 1])
-    npt.assert_almost_equal(cs.nearpt([0, 0, 3], 2, 3, 1), [[0, 0, 1], 2])
-    npt.assert_almost_equal(cs.nearpt_vector([3, 0, 0], 2, 3, 1), [[2, 0, 0], 1])
-    npt.assert_almost_equal(cs.nearpt_vector([[3, 0, 0], [0, 0, 3]], 2, 3, 1),
-                            [[[2, 0, 0], [0, 0, 1]], [1, 2]])
+    assert_all_equal(cs.nearpt([3,0,0],2,3,1), [[2,0,0],1])
+    assert_all_equal(cs.nearpt([0,0,3],2,3,1), [[0,0,1],2])
+    assert_all_equal(cs.nearpt_vector([3,0,0],2,3,1), [[2,0,0],1])
+    assert_all_equal(cs.nearpt_vector([[3,0,0],[0,0,3]],2,3,1),
+                        [[[2,0,0],[0,0,1]],[1,2]])
 
 
 def test_npedln():
@@ -936,12 +1006,11 @@ def test_npedln():
 
 
 def test_npedln_2():
-    npt.assert_almost_equal(cs.npedln(3, 2, 1, [6, 0, 0], [-1, 0, 0]), [[3, 0, 0], 0])
-    npt.assert_almost_equal(cs.npedln(3, 2, 1, [6, 0, 6], [-1, 0, 0]), [[0, 0, 1], 5])
-    npt.assert_almost_equal(cs.npedln_vector(
-        3, 2, 1, [6, 0, 0], [-1, 0, 0]), [[3, 0, 0], 0])
-    npt.assert_almost_equal(cs.npedln_vector(3, 2, 1, [[6, 0, 0], [6, 0, 6]], [-1, 0, 0]),
-                            [[[3, 0, 0], [0, 0, 1]], [0, 5]])
+    assert_all_equal(cs.npedln(3,2,1,[6,0,0],[-1,0,0]), [[3,0,0],0])
+    assert_all_equal(cs.npedln(3,2,1,[6,0,6],[-1,0,0]), [[0,0,1],5])
+    assert_all_equal(cs.npedln_vector(3,2,1,[6,0,0],[-1,0,0]), [[3,0,0],0])
+    assert_all_equal(cs.npedln_vector(3,2,1,[[6,0,0],[6,0,6]],[-1,0,0]),
+                        [[[3,0,0],[0,0,1]],[0,5]])
 
 
 def test_npelpt():
@@ -958,13 +1027,11 @@ def test_npelpt():
 
 
 def test_npelpt_2():
-    npt.assert_almost_equal(
-        cs.npelpt([5, 0, 4], [0, 0, 0, 2, 0, 0, 0, 3, 0]), [[2, 0, 0], 5])
-    npt.assert_almost_equal(
-        cs.npelpt([0, 7, 3], [0, 0, 0, 2, 0, 0, 0, 3, 0]), [[0, 3, 0], 5])
-    npt.assert_almost_equal(cs.npelpt_vector([5, 0, 4], [0, 0, 0, 2, 0, 0, 0, 3, 0]),
+    assert_all_equal(cs.npelpt([5, 0, 4], [0, 0, 0, 2, 0, 0, 0, 3, 0]), [[2, 0, 0], 5])
+    assert_all_equal(cs.npelpt([0, 7, 3], [0, 0, 0, 2, 0, 0, 0, 3, 0]), [[0, 3, 0], 5])
+    assert_all_equal(cs.npelpt_vector([5, 0, 4], [0, 0, 0, 2, 0, 0, 0, 3, 0]),
                             [[2, 0, 0], 5])
-    npt.assert_almost_equal(cs.npelpt_vector([[5, 0, 4], [0, 7, 3]], [0, 0, 0, 2, 0, 0, 0, 3, 0]),
+    assert_all_equal(cs.npelpt_vector([[5, 0, 4], [0, 7, 3]], [0, 0, 0, 2, 0, 0, 0, 3, 0]),
                             [[[2, 0, 0], [0, 3, 0]], [5, 5]])
 
 
@@ -980,17 +1047,16 @@ def test_nplnpt():
 
 
 def test_nplnpt_2():
-    npt.assert_almost_equal(cs.nplnpt([0, 0, 0], [0, 0, 7], [0, 1, 1]),
-                            [[0, 0, 1], 1], 0)
-    npt.assert_almost_equal(cs.nplnpt([0, 0, 0], [0, 0, 7], [2, 0, 2]),
-                            [[0, 0, 2], 2], 0)
-    npt.assert_almost_equal(cs.nplnpt_vector([0, 0, 0], [0, 0, 7], [0, 1, 1]),
-                            [[0, 0, 1], 1], 0)
-    npt.assert_almost_equal(cs.nplnpt_vector([0, 0, 0], [[0, 0, 7]], [0, 1, 1]),
-                            [[[0, 0, 1]], [1]], 0)
-    npt.assert_almost_equal(cs.nplnpt_vector([0, 0, 0], [0, 0, 7], [[0, 1, 1], [2, 0, 2]]),
-                            [[[0, 0, 1], [0, 0, 2]], [1, 2]], 0)
-
+    assert_all_equal(cs.nplnpt([0,0,0],[0,0,7],[0,1,1]),
+                        [[0,0,1], 1], 0)
+    assert_all_equal(cs.nplnpt([0,0,0],[0,0,7],[2,0,2]),
+                        [[0,0,2], 2], 0)
+    assert_all_equal(cs.nplnpt_vector([0,0,0],[0,0,7],[0,1,1]),
+                        [[0,0,1], 1], 0)
+    assert_all_equal(cs.nplnpt_vector([0,0,0],[[0,0,7]],[0,1,1]),
+                        [[[0,0,1]], [1]], 0)
+    assert_all_equal(cs.nplnpt_vector([0,0,0],[0,0,7],[[0,1,1],[2,0,2]]),
+                        [[[0,0,1],[0,0,2]], [1,2]], 0)
 
 # Test changed
 def test_nvc2pl():

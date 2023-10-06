@@ -4,9 +4,11 @@ import textwrap
 from pathlib import Path
 
 import cspyce as cs
+import numbers
 import numpy as np
 import numpy.testing as npt
 import os
+import platform
 import pytest
 
 from gettestkernels import (
@@ -34,6 +36,56 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
+
+
+@pytest.fixture
+def eps():
+    if platform.machine() == 'arm64':
+        # TODO(fy,rf,mrs): This code gives slightly different results on MacOS Arm64.
+        # This lowering of expectations needs to be investigated. Is it Mac only?
+        eps = 1e-5
+    else:
+        eps = 5e-8
+    return eps
+
+
+@pytest.fixture
+def CASSINI_ET():
+    return 17.65 * 365.25 * 86400.
+
+
+@pytest.fixture
+def CASSINI_ET2(CASSINI_ET):
+    return CASSINI_ET + 86400
+
+
+def assert_all_equal(arg1, arg2, tol=1.e-15, frac=False):
+    if isinstance(arg1, list):
+        assert type(arg2) == list
+        assert len(arg1) == len(arg2)
+        for (item1, item2) in zip(arg1, arg2):
+            assert_all_equal(item1, item2, tol, frac)
+
+    elif isinstance(arg1, np.ndarray):
+        arg1 = np.array(arg1)
+        arg2 = np.array(arg2)
+        assert arg1.shape == arg2.shape
+        arg1 = arg1.flatten()
+        arg2 = arg2.flatten()
+        for (x1, x2) in zip(arg1, arg2):
+            if isinstance(x1, numbers.Real):
+                if frac:
+                    assert abs(x1 - x2) <= tol * abs(x1 + x2) / 2.
+                else:
+                    assert abs(x1 - x2) <= tol
+            else:
+                assert x1 == x2, tol
+
+    elif isinstance(arg1, numbers.Real):
+        if frac:
+            assert abs(arg1 - arg2) <= tol * abs(arg1 + arg2) / 2.
+        else:
+            assert abs(arg1 - arg2) <= tol
 
 
 def test_pckopn_pckw02_pckcls():
@@ -185,6 +237,25 @@ def test_phaseq():
             npt.assert_array_almost_equal(temp_results, expected.get(relation))
 
 
+def test_phaseq_2(CASSINI_ET, CASSINI_ET2, eps):
+    phase = 2.33564238748
+    phase2 = 3.07809474673
+    
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSpkPart)
+    assert_all_equal(cs.phaseq(CASSINI_ET, 'mimas', 'sun', 'cassini', 'lt+s'),
+                     phase, eps)
+    assert_all_equal(cs.phaseq(CASSINI_ET2, 'mimas', 'sun', 'cassini', 'lt+s'),
+                     phase2, eps)
+    
+    assert_all_equal(cs.phaseq_vector(CASSINI_ET, 'mimas', 'sun', 'cassini', 'lt+s'),
+                     phase, eps)
+    
+    assert_all_equal(
+        cs.phaseq_vector([CASSINI_ET, CASSINI_ET2], 'mimas', 'sun', 'cassini', 'lt+s'),
+        [phase, phase2], eps)
+    
+
 def test_pi():
     assert cs.pi() == np.pi
 
@@ -238,12 +309,12 @@ def test_pl2nvc():
 
 
 def test_pl2nvc_2():
-    npt.assert_almost_equal(cs.pl2nvc([0, 0, 1, 0]), [[0, 0, 1], 0])
-    npt.assert_almost_equal(cs.pl2nvc([0, 0, 0, 1]), [[0, 0, 0], 1])
-    npt.assert_almost_equal(cs.pl2nvc_vector([0, 0, 1, 0]), [[0, 0, 1], 0])
-    npt.assert_almost_equal(cs.pl2nvc_vector([[0, 0, 1, 0]]), [[[0, 0, 1]], [0]])
-    npt.assert_almost_equal(cs.pl2nvc_vector([[0, 0, 1, 0], [0, 0, 0, 1]]),
-                            [[[0, 0, 1], [0, 0, 0]], [0, 1]])
+    assert_all_equal(cs.pl2nvc([0,0,1,0]), [[0,0,1],0])
+    assert_all_equal(cs.pl2nvc([0,0,0,1]), [[0,0,0],1])
+    assert_all_equal(cs.pl2nvc_vector([0,0,1,0]), [[0,0,1],0])
+    assert_all_equal(cs.pl2nvc_vector([[0,0,1,0]]), [[[0,0,1]],[0]])
+    assert_all_equal(cs.pl2nvc_vector([[0,0,1,0],[0,0,0,1]]),
+                        [[[0,0,1],[0,0,0]],[0,1]])
 
 
 def test_pl2nvp():
@@ -289,24 +360,23 @@ def test_pltar():
 
 
 def test_pltar_pltval_pltexp_pltnp():
-    vertices = [[0, 0, 0], [0, 0, 1], [0, 1, 0], [1, 0, 0]]
-    indices = [[1, 2, 3], [1, 4, 2], [1, 3, 4], [2, 4, 3]]
+    vertices = [[0,0,0],[0,0,1],[0,1,0],[1,0,0]]
+    indices = [[1,2,3],[1,4,2],[1,3,4],[2,4,3]]
 
-    npt.assert_almost_equal(cs.pltar(vertices, indices), 1.5 + np.sqrt(3)/2.)
-    npt.assert_almost_equal(cs.pltvol(vertices, indices), 1/6.)
+    assert_all_equal(cs.pltar( vertices,indices), 1.5 + np.sqrt(3)/2.)
+    assert_all_equal(cs.pltvol(vertices,indices), 1/6.)
 
-    npt.assert_almost_equal(cs.pltexp([[0, 0, 0], [0, 1, 0], [1, 0, 0]], 0.),
-                            [[0, 0, 0], [0, 1, 0], [1, 0, 0]])
-    npt.assert_almost_equal(cs.pltexp([[0, 0, 0], [0, 1, 0], [1, 0, 0]], 3.),
-                            [[-1, -1, 0], [-1, 3, 0], [3, -1, 0]])
+    assert_all_equal(cs.pltexp([[0,0,0],[0,1,0],[1,0,0]], 0.),
+                            [[0,0,0],[0,1,0],[1,0,0]])
+    assert_all_equal(cs.pltexp([[0,0,0],[0,1,0],[1,0,0]], 3.),
+                            [[-1,-1,0],[-1,3,0],[3,-1,0]])
 
-    npt.assert_almost_equal(cs.pltnp([1, 0, 0], [0, 0, 0], [0, 0, 1], [0, 1, 0]),
-                            [[0, 0, 0], 1])
-    npt.assert_almost_equal(cs.pltnp([1, -1, 0], [0, 0, 0], [0, 0, 1], [0, 1, 0]),
-                            [[0, 0, 0], np.sqrt(2)])
-    npt.assert_almost_equal(cs.pltnp([1, 1, 1], [0, 0, 0], [0, 0, 1], [0, 1, 0]),
-                            [[0, 0.5, 0.5], np.sqrt(1.5)])
-
+    assert_all_equal(cs.pltnp([1,0,0],[0,0,0],[0,0,1],[0,1,0]),
+                            [[0,0,0],1])
+    assert_all_equal(cs.pltnp([1,-1,0],[0,0,0],[0,0,1],[0,1,0]),
+                            [[0,0,0],np.sqrt(2)])
+    assert_all_equal(cs.pltnp([1,1,1],[0,0,0],[0,0,1],[0,1,0]),
+                            [[0,0.5,0.5],np.sqrt(1.5)])
 
 def test_pltexp():
     iverts = [
@@ -665,17 +735,16 @@ def test_raxisa():
 
 def test_raxisa_2():
     pi = np.pi
-    # raxisa
-    npt.assert_almost_equal(cs.raxisa([[0, 1, 0], [1, 0, 0], [0, 0, -1]]),
-                            [[-np.sqrt(0.5), -np.sqrt(0.5), 0.], pi])
-    npt.assert_almost_equal(cs.raxisa([[1, 0, 0], [0, 0, 1], [0, -1, 0]]),
-                            [[-1, 0, 0], pi/2])
-    npt.assert_almost_equal(cs.raxisa_vector([[0, 1, 0], [1, 0, 0], [0, 0, -1]]),
-                            [[-np.sqrt(0.5), -np.sqrt(0.5), 0.], pi])
-    npt.assert_almost_equal(cs.raxisa_vector([[[0, 1, 0], [1, 0, 0], [0, 0, -1]],
-                                              [[1, 0, 0], [0, 0, 1], [0, -1, 0]]]),
-                            [[[-np.sqrt(0.5), -np.sqrt(0.5), 0], [-1, 0, 0]],
-                             [pi, pi/2]])
+    assert_all_equal(cs.raxisa([[0,1,0],[1,0,0],[0,0,-1]]),
+                        [[-np.sqrt(0.5), -np.sqrt(0.5), 0.], pi])
+    assert_all_equal(cs.raxisa([[1,0,0],[0,0,1],[0,-1,0]]),
+                        [[-1,0,0], pi/2])
+    assert_all_equal(cs.raxisa_vector([[0,1,0],[1,0,0],[0,0,-1]]),
+                        [[-np.sqrt(0.5), -np.sqrt(0.5), 0.], pi])
+    assert_all_equal(cs.raxisa_vector([[[0,1,0],[1,0,0],[0,0,-1]],
+                                         [[1,0,0],[0,0,1],[0,-1,0]]]),
+                        [[[-np.sqrt(0.5),-np.sqrt(0.5),0],[-1,0,0]],
+                         [pi,pi/2]])
 
 
 def test_recazl():

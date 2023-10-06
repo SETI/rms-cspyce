@@ -1,7 +1,9 @@
 import cspyce as cs
+import numbers
 import numpy as np
 import numpy.testing as npt
 import os
+import platform
 import pytest
 
 from gettestkernels import (
@@ -30,6 +32,54 @@ def cleanup_kernel(path):
     if os.path.isfile(path):
         os.remove(path)  # pragma: no cover
     pass
+
+
+@pytest.fixture
+def eps():
+    if platform.machine() == 'arm64':
+        eps = 1e-5
+    else:
+        eps = 5e-8
+    return eps
+
+
+@pytest.fixture
+def CASSINI_ET():
+    return 17.65 * 365.25 * 86400.
+
+
+@pytest.fixture
+def CASSINI_ET2(CASSINI_ET):
+    return CASSINI_ET + 86400
+
+
+def assert_all_equal(arg1, arg2, tol=1.e-15, frac=False):
+    if isinstance(arg1, list):
+        assert type(arg2) == list
+        assert len(arg1) == len(arg2)
+        for (item1, item2) in zip(arg1, arg2):
+            assert_all_equal(item1, item2, tol, frac)
+
+    elif isinstance(arg1, np.ndarray):
+        arg1 = np.array(arg1)
+        arg2 = np.array(arg2)
+        assert arg1.shape == arg2.shape
+        arg1 = arg1.flatten()
+        arg2 = arg2.flatten()
+        for (x1, x2) in zip(arg1, arg2):
+            if isinstance(x1, numbers.Real):
+                if frac:
+                    assert abs(x1 - x2) <= tol * abs(x1 + x2) / 2.
+                else:
+                    assert abs(x1 - x2) <= tol
+            else:
+                assert x1 == x2, tol
+
+    elif isinstance(arg1, numbers.Real):
+        if frac:
+            assert abs(arg1 - arg2) <= tol * abs(arg1 + arg2) / 2.
+        else:
+            assert abs(arg1 - arg2) <= tol
 
 
 def test_failed():
@@ -1284,6 +1334,100 @@ def test_ilumin():
         "Ellipsoid", "MOON", et, "IAU_MOON", "LT+S", "EARTH", trmpts[2]
     )
     npt.assert_almost_equal(cs.dpr() * solar2, 90.269765730)
+    
+    
+def test_illum_illumf_illumg_ilumin_phaseg(CASSINI_ET, CASSINI_ET2, eps):
+    trgepc = 556991636.744989
+    srfvec = [-898913.54085495, -158678.38639218, -344986.06074434]
+    phase = 2.3355683234002207
+    incdnc = 2.6877326371660395
+    emissn = 0.39969284462247634
+    visibl = True
+    lit = False
+
+    trgepc2 = 557078039.2141582
+    srfvec2 = [-197119.85363806, 61957.21359249, 113170.06834279]
+    phase2 = 3.0776373659048852
+    incdnc2 = 2.6248933305972493
+    emissn2 = 0.5795501233580607
+    visibl2 = True
+    lit2 = False
+
+    cs.furnsh(CoreKernels.testMetaKernel)
+    cs.furnsh(CassiniKernels.cassSpkPart)
+    assert_all_equal(cs.illum('mimas', CASSINI_ET, 'lt+S', 'cassini',
+                           [200, 0, 0]),
+                     [phase, incdnc, emissn], eps)
+    assert_all_equal(cs.illumf('ellipsoid', 'mimas', 'sun', CASSINI_ET,
+                               'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc, srfvec, phase, incdnc, emissn, visibl, lit], eps)
+    assert_all_equal(cs.illumg('ellipsoid', 'mimas', 'sun', CASSINI_ET,
+                               'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc, srfvec, phase, incdnc, emissn], eps)
+    assert_all_equal(cs.ilumin('ellipsoid', 'mimas', CASSINI_ET,
+                               'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc, srfvec, phase, incdnc, emissn], eps)
+    
+    assert_all_equal(cs.illum('mimas', CASSINI_ET2, 'lt+S', 'cassini',
+                           [200, 0, 0]),
+                     [phase2, incdnc2, emissn2], eps)
+    assert_all_equal(cs.illumf('ellipsoid', 'mimas', 'sun', CASSINI_ET2,
+                               'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc2, srfvec2, phase2, incdnc2, emissn2, visibl2, lit2],
+                     eps)
+    assert_all_equal(cs.illumg('ellipsoid', 'mimas', 'sun', CASSINI_ET2,
+                               'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc2, srfvec2, phase2, incdnc2, emissn2], eps)
+    assert_all_equal(cs.ilumin('ellipsoid', 'mimas', CASSINI_ET2,
+                               'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc2, srfvec2, phase2, incdnc2, emissn2], eps)
+    
+    assert_all_equal(cs.illum_vector('mimas', CASSINI_ET, 'lt+S', 'cassini',
+                                  [200, 0, 0]),
+                     [phase, incdnc, emissn], eps)
+    assert_all_equal(cs.illumf_vector('ellipsoid', 'mimas', 'sun', CASSINI_ET,
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc, srfvec, phase, incdnc, emissn, visibl, lit], eps)
+    assert_all_equal(cs.illumg_vector('ellipsoid', 'mimas', 'sun', CASSINI_ET,
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc, srfvec, phase, incdnc, emissn], eps)
+    assert_all_equal(cs.ilumin_vector('ellipsoid', 'mimas', CASSINI_ET,
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [trgepc, srfvec, phase, incdnc, emissn], eps)
+    
+    
+    assert_all_equal(cs.illum_vector('mimas', [CASSINI_ET], 'lt+S', 'cassini',
+                                  [200, 0, 0]),
+                     [[phase], [incdnc], [emissn]], eps)
+    assert_all_equal(cs.illumf_vector('ellipsoid', 'mimas', 'sun', [CASSINI_ET],
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [[trgepc], [srfvec], [phase], [incdnc], [emissn], [visibl],
+                         [lit]], eps)
+    assert_all_equal(cs.illumg_vector('ellipsoid', 'mimas', 'sun', [CASSINI_ET],
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [[trgepc], [srfvec], [phase], [incdnc], [emissn]], eps)
+    assert_all_equal(cs.ilumin_vector('ellipsoid', 'mimas', [CASSINI_ET],
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [[trgepc], [srfvec], [phase], [incdnc], [emissn]], eps)
+    
+    assert_all_equal(
+        cs.illum_vector('mimas', [CASSINI_ET, CASSINI_ET2], 'lt+S', 'cassini',
+                     [200, 0, 0]),
+        [[phase, phase2], [incdnc, incdnc2], [emissn, emissn2]], eps)
+    assert_all_equal(
+        cs.illumf_vector('ellipsoid', 'mimas', 'sun', [CASSINI_ET, CASSINI_ET2],
+                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+        [[trgepc, trgepc2], [srfvec, srfvec2], [phase, phase2], [incdnc, incdnc2],
+         [emissn, emissn2], [visibl, visibl2], [lit, lit2]], eps)
+    assert_all_equal(
+        cs.illumg_vector('ellipsoid', 'mimas', 'sun', [CASSINI_ET, CASSINI_ET2],
+                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+        [[trgepc, trgepc2], [srfvec, srfvec2], [phase, phase2], [incdnc, incdnc2],
+         [emissn, emissn2]], eps)
+    assert_all_equal(cs.ilumin_vector('ellipsoid', 'mimas', [CASSINI_ET, CASSINI_ET2],
+                                      'iau_mimas', 'lt+s', 'cassini', [200, 0, 0]),
+                     [[trgepc, trgepc2], [srfvec, srfvec2], [phase, phase2],
+                         [incdnc, incdnc2], [emissn, emissn2]], eps)
 
 
 # Test changed
@@ -1350,14 +1494,14 @@ def test_inelpl():
 
 
 def test_inelpl_2():
-    npt.assert_almost_equal(cs.inelpl([0, 0, 0, 1, 0, 0, 0, 1, 0], [1, 0, 0, 0]),
-                            [2, [0, -1, 0], [0, 1, 0]])
-    npt.assert_almost_equal(cs.inelpl_vector([0, 0, 0, 1, 0, 0, 0, 1, 0], [1, 0, 0, 0]),
-                            [2, [0, -1, 0], [0, 1, 0]])
-    npt.assert_almost_equal(cs.inelpl_vector([0, 0, 0, 1, 0, 0, 0, 1, 0], [[1, 0, 0, 0]]),
-                            [[2], [[0, -1, 0]], [[0, 1, 0]]])
-    npt.assert_almost_equal(cs.inelpl_vector(4*[[0, 0, 0, 1, 0, 0, 0, 1, 0]], 2*[[1, 0, 0, 0]]),
-                            [4*[2], 4*[[0, -1, 0]], 4*[[0, 1, 0]]])
+    assert_all_equal(cs.inelpl([0,0,0,1,0,0,0,1,0],[1,0,0,0]),
+                        [2,[0,-1,0],[0,1,0]])
+    assert_all_equal(cs.inelpl_vector([0,0,0,1,0,0,0,1,0],[1,0,0,0]),
+                        [2,[0,-1,0],[0,1,0]])
+    assert_all_equal(cs.inelpl_vector([0,0,0,1,0,0,0,1,0],[[1,0,0,0]]),
+                        [[2],[[0,-1,0]],[[0,1,0]]])
+    assert_all_equal(cs.inelpl_vector(4*[[0,0,0,1,0,0,0,1,0]],2*[[1,0,0,0]]),
+                        [4*[2],4*[[0,-1,0]],4*[[0,1,0]]])
 
 
 def test_inrypl():
@@ -1375,14 +1519,14 @@ def test_inrypl():
 
 
 def test_inrypl_2():
-    npt.assert_almost_equal(cs.inrypl([0, 0, 0], [1, 0, 0], [1, 0, 0, 0]),
-                            [1, [0, 0, 0]], 0)
-    npt.assert_almost_equal(cs.inrypl_vector([0, 0, 0], [1, 0, 0], [1, 0, 0, 0]),
-                            [1, [0, 0, 0]], 0)
-    npt.assert_almost_equal(cs.inrypl_vector([[0, 0, 0]], [1, 0, 0], [1, 0, 0, 0]),
-                            [[1], [[0, 0, 0]]], 0)
-    npt.assert_almost_equal(cs.inrypl_vector([0, 0, 0], [1, 0, 0], [[1, 0, 0, 0], [2, 0, 0, 0]]),
-                            [2*[1], 2*[[0, 0, 0]]], 0)
+    assert_all_equal(cs.inrypl([0,0,0],[1,0,0],[1,0,0,0]),
+                        [1,[0,0,0]], 0)
+    assert_all_equal(cs.inrypl_vector([0,0,0],[1,0,0],[1,0,0,0]),
+                        [1,[0,0,0]], 0)
+    assert_all_equal(cs.inrypl_vector([[0,0,0]],[1,0,0],[1,0,0,0]),
+                        [[1],[[0,0,0]]], 0)
+    assert_all_equal(cs.inrypl_vector([0,0,0],[1,0,0],[[1,0,0,0],[2,0,0,0]]),
+                        [2*[1],2*[[0,0,0]]], 0)
 
 
 def test_intmax():

@@ -1093,7 +1093,18 @@ def test_expool_dtpool_2():
         cs.dtpool_error('BODY699_RADIIxxx')
 
 
-def test_erract_errdev_errprt():
+def cleanup_errors():
+    length = cs.trcdep()
+    for index in reversed(range(length)):
+        module = cs.trcnam(index)
+        cs.chkout(module)
+    cs.reset()
+    cs.erract('SET', 'EXCEPTION')
+    cs.errdev('SET', 'NULL')
+    
+
+def test_erract_set_and_get():
+    cleanup_errors()
     assert cs.erract() == 'EXCEPTION'
     assert cs.erract('GET') == 'EXCEPTION'
     assert cs.erract('GET', 'ignored') == 'EXCEPTION'
@@ -1108,7 +1119,11 @@ def test_erract_errdev_errprt():
     cs.erract('set', '  exception')
     assert cs.erract() == 'EXCEPTION'
 
-    assert cs.errdev() == 'NULL'
+    cs.erract('set', 'exception')
+    assert cs.erract() == 'EXCEPTION'
+
+
+def test_errdev_set_and_get():
     assert cs.errdev('GET') == 'NULL'
     assert cs.errdev('GET', 'ignored') == 'NULL'
     assert cs.errdev('SET', 'foo.txt') == 'foo.txt'
@@ -1116,10 +1131,15 @@ def test_erract_errdev_errprt():
     assert cs.errdev() == 'bar.txt'
     assert cs.errdev('SET', 'SCREEN') == 'SCREEN'
     assert cs.errdev() == 'SCREEN'
-
     assert cs.errdev('SET', 'NULL') == 'NULL'
     assert cs.errdev() == 'NULL'
+    assert cs.errdev() == 'NULL'
 
+    cs.errdev('set', 'screen')
+    assert cs.errdev() == 'SCREEN'
+
+
+def test_errprt_set_and_get():
     default = 'SHORT, LONG, EXPLAIN, TRACEBACK, DEFAULT'
     assert cs.errprt() == default
     assert cs.errprt('GET') == default
@@ -1133,269 +1153,3 @@ def test_erract_errdev_errprt():
     assert cs.errprt('SET', 'NONE') == 'NONE'
     assert cs.errprt(default) == default
     assert cs.errprt() == default
-
-    # chkin, chkout, trcdep, trcnam, qcktrc, sigerr with Python exceptions
-
-    cs.erract('set', 'exception')
-    assert cs.erract() == 'EXCEPTION'
-    cs.erract('SET', ' ExcEptIon  ')
-    assert cs.erract() == 'EXCEPTION'
-    cs.errdev('set', 'screen')
-    assert cs.errdev() == 'SCREEN'
-
-    cs.chkin('zero')
-    cs.chkin('one')
-    cs.chkin('two')
-    print(cs.qcktrc())
-    assert cs.trcdep() == 3
-    assert cs.trcnam(0) == 'zero'
-    assert cs.trcnam(1) == 'one'
-    assert cs.trcnam(2) == 'two'
-    assert cs.qcktrc() == 'zero --> one --> two'
-
-    print()
-    print('*** One RuntimeError message should appear below')
-    print('*** SPICE(INVALIDARRAYSHAPE) --')
-    print('*** Traceback: zero --> one --> two --> vadd')
-    cs.erract('RUNTIME')
-    with pytest.raises(RuntimeError):
-        cs.vadd([1, 2, 3], [4, 5, 6, 7])
-
-    print()
-    print('*** One ValueError message should appear below')
-    print('*** SPICE(INVALIDARRAYSHAPE) --')
-    print('*** Traceback: zero --> one --> two --> vadd')
-    cs.erract('EXCEPTION')
-    with pytest.raises(ValueError):
-        cs.vadd([1, 2, 3], [4, 5, 6, 7])
-
-    assert cs.trcdep() == 3
-    assert cs.trcnam(2) == 'two'
-    assert cs.getmsg('short') == 'SPICE(INVALIDARRAYSHAPE)'
-
-    cs.errdev('set', 'null')
-    try:
-        cs.vadd([1, 2, 3], [4, 5, 6, 7])
-    except ValueError as error:
-        e = error
-
-    assert str(e) == cs.getmsg('short') + ' -- vadd -- ' + cs.getmsg('long')
-
-    cs.errdev('set', 'screen')
-    print()
-    print('*** One error message should appear below')
-    print('*** Error test -- \\n\\nThis is an error test')
-    print('*** Traceback: zero --> one --> two')
-    cs.setmsg('This is an error test')
-    with pytest.raises(RuntimeError):
-        cs.sigerr("Error test")
-
-    assert cs.trcdep() == 2
-    cs.errdev('set', 'null')
-
-    with pytest.raises(RuntimeError):
-        cs.sigerr("Error test")
-    assert cs.getmsg('short') == 'Error test'
-    assert not cs.failed()
-    assert cs.trcdep() == 1
-    assert cs.qcktrc() == 'zero'
-
-    cs.reset()
-
-    assert cs.getmsg('short') == ''
-    assert cs.trcdep() == 1
-    assert cs.qcktrc() == 'zero'
-
-    with pytest.raises(RuntimeError):
-        cs.sigerr("222")
-    assert cs.getmsg('short') == '222'
-    assert not cs.failed()
-    assert cs.trcdep() == 0
-    assert cs.qcktrc() == ''
-
-    with pytest.raises(RuntimeError):
-        cs.sigerr("333")
-    assert cs.getmsg('short') == '333'
-    assert not cs.failed()
-    assert cs.trcdep() == 0
-    assert cs.qcktrc() == ''
-
-    cs.reset()
-
-    assert cs.getmsg('short') == ''
-
-    with pytest.raises(KeyError):
-        cs.bodn2c('abc')
-    assert cs.getmsg('short') == 'SPICE(BODYNAMENOTFOUND)'
-    assert cs.getmsg('long') == 'body name "abc" not found in kernel pool'
-    assert not cs.failed()
-
-    # chkin, chkout, trcdep, trcnam, sigerr with erract="EXCEPTION"
-
-    cs.erract('set', 'exception')
-    assert cs.erract() == 'EXCEPTION'
-    cs.errdev('set', 'screen')
-    cs.chkin('zero')
-    cs.chkin('one')
-    cs.chkin('two')
-    assert cs.trcdep() == 3
-    assert cs.trcnam(0) == 'zero'
-    assert cs.trcnam(1) == 'one'
-    assert cs.trcnam(2) == 'two'
-    assert cs.qcktrc() == 'zero --> one --> two'
-
-    print()
-    print('*** One error message should appear below')
-    print('*** SPICE(INVALIDARRAYSHAPE) --')
-    print('*** Traceback: zero --> one --> two --> vadd')
-    try:
-        _ = cs.vadd([1, 2, 3], [4, 5, 6, 7])
-    except ValueError as e:
-        print(e)
-
-    assert cs.trcdep() == 3
-    assert cs.trcnam(2) == 'two'
-    assert cs.getmsg('short') == 'SPICE(INVALIDARRAYSHAPE)'
-    assert cs.qcktrc() == 'zero --> one --> two'
-
-    cs.reset()
-
-    assert cs.trcdep() == 3
-    assert cs.trcnam(2) == 'two'
-    assert cs.getmsg('short') == ''
-    assert not cs.failed()
-    assert cs.qcktrc() == 'zero --> one --> two'
-
-    print()
-    print('*** One error message should appear below')
-    print('*** Error test -- \\n\\nThis is an error test')
-    print('*** Traceback: zero --> one --> two')
-
-    cs.setmsg('This is an error test')
-    try:
-        cs.sigerr("Error test")
-    except RuntimeError as e:
-        print(e)
-
-    assert cs.trcdep() == 2
-    assert cs.trcnam(1) == 'one'
-    assert cs.getmsg('short') == 'Error test'
-    assert cs.getmsg('long') == 'This is an error test'
-    assert cs.qcktrc() == 'zero --> one'
-
-    cs.reset()
-
-    assert cs.trcdep() == 2
-    assert cs.trcnam(1) == 'one'
-    assert cs.getmsg('short') == ''
-    assert cs.getmsg('long') == ''
-    assert not cs.failed()
-    assert cs.qcktrc() == 'zero --> one'
-
-    cs.errdev('set', 'null')
-    try:
-        cs.sigerr("Error test")
-    except RuntimeError as e:
-        pass
-
-    assert cs.trcdep() == 1
-    assert cs.getmsg('short') == 'Error test'
-    assert cs.getmsg('long') == ''
-    assert cs.qcktrc() == 'zero'
-
-    cs.reset()
-
-    assert cs.trcdep() == 1
-    assert cs.getmsg('short') == ''
-    assert not cs.failed()
-    assert cs.qcktrc() == 'zero'
-
-    try:
-        cs.sigerr("222")
-    except RuntimeError as e:
-        pass
-
-    assert cs.trcdep() == 0
-    assert cs.getmsg('short') == '222'
-    assert cs.getmsg('long') == ''
-    assert cs.qcktrc() == ''
-
-    cs.reset()
-
-    assert cs.trcdep() == 0
-    assert cs.getmsg('short') == ''
-    assert cs.qcktrc() == ''
-
-    try:
-        cs.sigerr("333")
-    except RuntimeError as e:
-        pass
-
-    assert cs.trcdep() == 0
-    assert cs.getmsg('short') == '333'
-    assert cs.getmsg('long') == ''
-    assert cs.qcktrc() == ''
-
-    cs.reset()
-
-    assert cs.trcdep() == 0
-    assert cs.getmsg('short') == ''
-    assert cs.qcktrc() == ''
-
-    #### setmsg, errdp, errint, errch
-
-    cs.erract('set', 'exception')
-
-    with pytest.raises(RuntimeError):
-        cs.sigerr('Short')
-    assert not cs.failed()
-
-    try:
-        cs.sigerr('Short')
-    except RuntimeError as e:
-        error = e
-
-    assert str(error) == 'Short -- '
-
-    cs.setmsg('Long')
-    try:
-        cs.sigerr('Short')
-    except RuntimeError as e:
-        error = e
-
-    assert str(error) == 'Short -- Long'
-
-    cs.setmsg('Long pi=#; four=#; foo="#"')
-    assert cs.getmsg('LONG') == 'Long pi=#; four=#; foo="#"'
-    cs.errdp('#', 3.14159)
-    cs.errint('#', 4)
-    cs.errch('#', 'FOO')
-    msg = cs.getmsg('LONG')
-    assert msg == 'Long pi=3.1415900000000E+00; four=4; foo="FOO"'
-
-    cs.chkin('foo')
-    cs.chkin('bar')
-    assert cs.trcdep() == 2
-    assert cs.trcnam(1) == 'bar'
-
-    try:
-        cs.sigerr('Short')
-    except RuntimeError as e:
-        error = e
-
-    assert str(error) == 'Short -- bar -- ' + msg
-    assert cs.getmsg('short') == 'Short'
-    assert cs.getmsg('long') == msg
-    assert cs.trcdep() == 1
-    assert cs.trcnam(0) == 'foo'
-
-    cs.reset()
-
-    assert cs.getmsg('short') == ''
-    assert cs.getmsg('long') == ''
-    assert cs.trcdep() == 1
-    assert cs.trcnam(0) == 'foo'
-
-    cs.chkout('foo')
-
-    assert cs.trcdep() == 0

@@ -1,4 +1,5 @@
 import cspyce as cs
+import numbers
 import numpy as np
 import numpy.testing as npt
 import os
@@ -21,6 +22,39 @@ def clear_kernel_pool_and_reset():
     # clear kernel pool again
     cs.kclear()
     cs.reset()
+
+
+def assert_all_equal(arg1, arg2, tol=1.e-15, frac=False):
+    if isinstance(arg1, list):
+        assert type(arg2) == list
+        assert len(arg1) == len(arg2)
+        for (item1, item2) in zip(arg1, arg2):
+            assert_all_equal(item1, item2, tol, frac)
+
+    elif isinstance(arg1, np.ndarray):
+        arg1 = np.array(arg1)
+        arg2 = np.array(arg2)
+        assert arg1.shape == arg2.shape
+        arg1 = arg1.flatten()
+        arg2 = arg2.flatten()
+        for (x1, x2) in zip(arg1, arg2):
+            if isinstance(x1, numbers.Real):
+                if frac:
+                    assert abs(x1 - x2) <= tol * abs(x1 + x2) / 2.
+                else:
+                    assert abs(x1 - x2) <= tol
+            else:
+                assert x1 == x2, tol
+
+    elif isinstance(arg1, numbers.Real):
+        if frac:
+            assert abs(arg1 - arg2) <= tol * abs(arg1 + arg2) / 2.
+        else:
+            assert abs(arg1 - arg2) <= tol
+        
+        
+def assert_all_close(arg1, arg2, tol=1.e-8):
+    return assert_all_equal(arg1, arg2, tol, frac=True)
 
 
 # Test changed: furnsh() only works on one kernel at a time.
@@ -106,6 +140,22 @@ def test_timdef():
     # Cleanup
 
 
+def test_timdef_2():
+    assert cs.timdef('get', 'calendar') == 'GREGORIAN'
+    assert cs.timdef('get', 'system') == 'UTC'
+    assert cs.timdef('get', 'zone') == ''
+    
+    assert cs.timdef('set', 'calendar', 'mixed ') == 'mixed '
+    assert cs.timdef('get', 'calendar') == 'MIXED'
+    
+    assert cs.timdef('set', 'system', 'utC') == 'utC'
+    assert cs.timdef('get', 'system') == 'UTC'
+    
+    assert cs.timdef('set', 'zone', 'PDT') == 'PDT'
+    assert cs.timdef('get', 'zone') == 'UTC-7'
+    cs.timdef('set', 'zone', 'UTC-0')
+
+
 # Test changed: tpictr() only has one returned value
 def test_timout():
     sample = "Thu Oct 1 11:11:11 PDT 1111"
@@ -114,6 +164,39 @@ def test_timout():
     et = 188745364.0
     out = cs.timout(et, pic)
     assert out == "Sat Dec 24 18:14:59 PDT 2005"
+    
+    
+def test_tpictr_timout():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    time = 'Tue Aug 06 11:10:57  1996'
+    pictr = 'Wkd Mon DD HR:MN:SC  YYYY'
+    secs = -107398143.0
+    assert cs.tparse(time) == secs
+    assert cs.tpictr(time) == pictr
+    assert cs.timout(secs + cs.deltet(secs, 'UTC'), pictr) == time
+    
+    time = 'JANUARY 01, 2000 12:00'
+    pictr = 'MONTH DD, YYYY HR:MN'
+    secs = 0.
+    assert cs.tparse(time) == secs
+    assert cs.tpictr(time) == pictr
+    assert cs.timout(secs + cs.deltet(secs, 'UTC'), pictr) == time
+    
+    with pytest.raises(ValueError):
+        cs.tpictr('Tue Aug  6 11:10:57  1996g')
+    try:
+        cs.tpictr('Tue Aug  6 11:10:57  1996g')
+    except ValueError as e:
+        fullmsg = str(e)
+        msg = fullmsg.split(' -- ')[2]
+    
+    assert_all_equal(cs.tpictr.flag('Tue Aug  6 11:10:57  1996'),
+                     ['Wkd Mon  DD HR:MN:SC  YYYY', True, ''])
+    assert_all_equal(cs.tpictr.flag('JANUary 1, 2000 12:00'),
+                     ['MONTH DD, YYYY HR:MN', True, ''])
+    assert_all_equal(cs.tpictr.flag('Tue Aug  6 11:10:57  1996g')[1:], [False, msg])
+    
+    assert cs.timout(0., 'xxx') == 'xxx'
 
 
 def test_tipbod():
@@ -173,6 +256,23 @@ def test_tparse():
     assert actual_two == -65748690.808
     actual_three = cs.tparse("1997-162::12:18:28.827")
     assert actual_three == -80696491.173
+    
+
+def test_tparse_2():
+    assert cs.tparse('Tue Aug  6 11:10:57  1996') == -107398143.0
+    assert cs.tparse('JANUary 1, 2000 12:00') == 0.
+    
+    with pytest.raises(ValueError):
+        cs.tparse('Tue Aug  6 11:10:57  1996g')
+    try:
+        cs.tparse('Tue Aug  6 11:10:57  1996g')
+    except ValueError as e:
+        fullmsg = str(e)
+        msg = fullmsg.split(' -- ')[2]
+    
+    assert cs.tparse.flag('Tue Aug  6 11:10:57  1996') == [-107398143.0, '']
+    assert cs.tparse.flag('JANUary 1, 2000 12:00') == [0., '']
+    assert cs.tparse.flag('Tue Aug  6 11:10:57  1996g')[1] == msg
 
 
 def test_tpictr():
@@ -279,6 +379,13 @@ def test_tsetyr():
     cs.reset()
 
 
+def test_tsetyr_2():
+    cs.tsetyr(2000)
+    assert cs.tparse('Dec 31, 99') == 3155630400.0
+    cs.tsetyr(1950)
+    assert cs.tparse('Dec 31, 99') == -129600.0
+
+
 def test_twopi():
     assert cs.twopi() == np.pi * 2
 
@@ -345,6 +452,12 @@ def test_unitim():
     et = cs.str2et("Dec 19 2003")
     converted_et = cs.unitim(et, "ET", "JED")
     npt.assert_almost_equal(converted_et, 2452992.5007428653)
+    
+    
+def test_unitim_2():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    assert_all_close(cs.unitim(0., 'TAI', 'TDB'), 32.183927274)
+    assert_all_close(cs.unitim(0., 'TAI', 'JED'), 2451545.00037)
 
 
 # Test changed: cspyce can't load lists of kernels in this format
@@ -385,25 +498,25 @@ def test_unorm():
 
 
 def test_unorm_unormg_vhat_vhatg_vnorm_vnormg():
-    vec = np.array([1, 2, 3])
-    vec2 = np.array([1, -3, 2])
+    vec = np.array([1,2,3])
+    vec2 = np.array([1,-3,2])
     mag = np.sqrt(np.sum(vec**2))
     unit = vec / mag
 
-    npt.assert_almost_equal(cs.unorm(vec), [unit, mag])
-    npt.assert_almost_equal(cs.unormg(vec), [unit, mag])
-    npt.assert_almost_equal(cs.unorm_vector([vec, vec2]), [[unit, vec2/mag], 2*[mag]])
-    npt.assert_almost_equal(cs.unormg_vector([vec, vec2]), [[unit, vec2/mag], 2*[mag]])
+    assert_all_equal(cs.unorm(vec), [unit,mag])
+    assert_all_equal(cs.unormg(vec), [unit,mag])
+    assert_all_equal(cs.unorm_vector([vec,vec2]), [[unit,vec2/mag], 2*[mag]])
+    assert_all_equal(cs.unormg_vector([vec,vec2]), [[unit,vec2/mag], 2*[mag]])
 
-    npt.assert_almost_equal(cs.vhat(vec), unit)
-    npt.assert_almost_equal(cs.vhatg(vec), unit)
-    npt.assert_almost_equal(cs.vhat_vector([vec, vec2]), [unit, vec2/mag])
-    npt.assert_almost_equal(cs.vhatg_vector([vec, vec2]), [unit, vec2/mag])
+    assert_all_equal(cs.vhat(vec), unit)
+    assert_all_equal(cs.vhatg(vec), unit)
+    assert_all_equal(cs.vhat_vector([vec,vec2]), [unit,vec2/mag])
+    assert_all_equal(cs.vhatg_vector([vec,vec2]), [unit,vec2/mag])
 
-    npt.assert_almost_equal(cs.vnorm(vec), mag)
-    npt.assert_almost_equal(cs.vnormg(vec), mag)
-    npt.assert_almost_equal(cs.vnorm_vector([vec, vec2]), [mag, mag])
-    npt.assert_almost_equal(cs.vnormg_vector([vec, vec2]), [mag, mag])
+    assert_all_equal(cs.vnorm(vec), mag)
+    assert_all_equal(cs.vnormg(vec), mag)
+    assert_all_equal(cs.vnorm_vector([vec,vec2]), [mag,mag])
+    assert_all_equal(cs.vnormg_vector([vec,vec2]), [mag,mag])
 
 
 def test_unormg():
@@ -721,10 +834,10 @@ def test_vprjpi():
 
 
 def test_vprjpi_2():
-    npt.assert_almost_equal(cs.vprjpi([0, 0, 1], [1, 1, 1, 1], [1, 0, 0, 1]),
-                            [[1, 1, 2], True], 0)
-    npt.assert_almost_equal(cs.vprjpi_vector(2*[[0, 0, 1]], [1, 1, 1, 1], 4*[[1, 0, 0, 1]]),
-                            [4*[[1, 1, 2]], 4*[True]], 0)
+    assert_all_equal(cs.vprjpi([0,0,1], [1,1,1,1], [1,0,0,1]),
+                                    [[1,1,2], True], 0)
+    assert_all_equal(cs.vprjpi_vector(2*[[0,0,1]], [1,1,1,1], 4*[[1,0,0,1]]),
+                                    [4*[[1,1,2]], 4*[True]], 0)
 
 
 def test_vproj():
