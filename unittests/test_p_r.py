@@ -327,7 +327,7 @@ def test_prompt(tmp_path):
     script_file = tmp_path / "script.py"
     script = f"""
         import sys
-        sys.path.insert(0, "{path}")  # Make sure we get the correct cspyce
+        sys.path.insert(0, r"{path}")  # Make sure we get the correct cspyce
         import cspyce as cs
         text = cs.prompt("{prompt}")
         print(text, end='', file=sys.stderr)
