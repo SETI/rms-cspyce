@@ -18,7 +18,7 @@ array inputs, and aliases.
 
 `cspyce` may be installed by running `pip install cspyce`.
 
-Python versions 3.8 thru 3.11 are currently supported, with pre-built wheels
+Python versions 3.8 thru 3.12 are currently supported, with pre-built wheels
 available for Linux, MacOS, and Windows.
 
 If you are looking for information on running or distributing this code from
