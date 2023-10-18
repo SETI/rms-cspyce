@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "numpy>=1.17.0"]
+requires = ["setuptools>=68", "setuptools_scm[toml]>=8", "numpy>=1.26.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +9,7 @@ description = "High-performance Python interface to the NAIF CSPICE library"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    "numpy >= 1.17.0",
+    "numpy >= 1.26.1",
 ]
 license = {text = "Apache-2.0"}
 maintainers = [
@@ -27,6 +27,7 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Operating System :: MacOS :: MacOS X",
   "Operating System :: POSIX :: Linux",
   "Operating System :: Microsoft :: Windows"
