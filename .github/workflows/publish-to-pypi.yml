@@ -7,9 +7,8 @@ run-name: Publish to PyPI triggered by ${{ github.ref_type }} ${{ github.ref_nam
 # Controls when the workflow will run - push of a "v*" tag
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 jobs:
   build_wheels:
