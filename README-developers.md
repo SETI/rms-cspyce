@@ -4,15 +4,15 @@ March 2022
 Frank Yellin.
 
 This guide is intended for those who have downloaded the
-[GitHub source code](https://github.com/SETI/pds-cspyce/) and are modifying
+[GitHub source code](https://github.com/SETI/rms-cspyce/) and are modifying
 or extending the `cspyce` toolkit.
 You do not need to read this if you are installing an existing `PyPI`
 distribition of the sources.
 
 ## SETTING UP
 
-The root of the GitHub tree is called `pds-cspyce`.
-When we use `pds-cspyce` in this document, we are referring to that directory,
+The root of the GitHub tree is called `rms-cspyce`.
+When we use `rms-cspyce` in this document, we are referring to that directory,
 wherever it happens to be on your computer.
 
 The GitHub source code intentionally does not include the source code to
@@ -43,8 +43,8 @@ the interface between Python and the CSPICE code.
 This command will also determine what operating system and architecture you are running
 on, and use this information to download the appropriate CSPICE sources.
 The downloaded sources will appear in two directories:
-* pds-cspyce/cspice/\<os>-\<arch>/src
-* pds-cspyce/cspice/\<os>-\<arch>/include
+* rms-cspyce/cspice/\<os>-\<arch>/src
+* rms-cspyce/cspice/\<os>-\<arch>/include
 
 where `<os>` and `<arch>` indicate your machine's operating system and architecture.
 
@@ -247,7 +247,7 @@ password.
 
 #### Tell GitHub these secrets
 
-1. Log into your GitHub repository for pds-cspyce
+1. Log into your GitHub repository for rms-cspyce
 2. Click "settings", then "secrets" on the left-hand menu, then "actions".
 3. Use the "New Repository Secret" button to add two secrets named `PYPI_API_TOKEN`
 and `TEST_PYPI_API_TOKEN`.

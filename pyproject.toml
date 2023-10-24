@@ -34,10 +34,10 @@ classifiers = [
 ]
 
 [project.urls]
-homepage = "https://github.com/SETI/pds-cspyce"
-Repository = "https://github.com/SETI/pds-cspyce"
-Source = "https://github.com/SETI/pds-cspyce"
-Issues = "https://github.com/SETI/pds-cspyce/issues"
+homepage = "https://github.com/SETI/rms-cspyce"
+Repository = "https://github.com/SETI/rms-cspyce"
+Source = "https://github.com/SETI/rms-cspyce"
+Issues = "https://github.com/SETI/rms-cspyce/issues"
 
 [tool.setuptools]
 packages = ["cspyce"]
