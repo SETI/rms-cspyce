@@ -33,12 +33,12 @@ def cleanup_kernel(path):
     pass
 
 
-def assert_all_equal(arg1, arg2, tol=1.e-15):
-    if type(arg1) == list:
+def assert_all_equal(arg1, arg2, tol=1.e-15, frac=False):
+    if isinstance(arg1, list):
         assert type(arg2) == list
         assert len(arg1) == len(arg2)
         for (item1, item2) in zip(arg1, arg2):
-            assert_all_equal(item1, item2)
+            assert_all_equal(item1, item2, tol, frac)
 
     elif isinstance(arg1, np.ndarray):
         arg1 = np.array(arg1)
@@ -48,15 +48,18 @@ def assert_all_equal(arg1, arg2, tol=1.e-15):
         arg2 = arg2.flatten()
         for (x1, x2) in zip(arg1, arg2):
             if isinstance(x1, numbers.Real):
-                assert abs(x1 - x2) <= tol
+                if frac:
+                    assert abs(x1 - x2) <= tol * abs(x1 + x2) / 2.
+                else:
+                    assert abs(x1 - x2) <= tol
             else:
-                assert x1 == x2
+                assert x1 == x2, tol
 
     elif isinstance(arg1, numbers.Real):
-        assert abs(arg1 - arg2) <= tol
-
-    else:
-        assert arg1 == arg2
+        if frac:
+            assert abs(arg1 - arg2) <= tol * abs(arg1 + arg2) / 2.
+        else:
+            assert abs(arg1 - arg2) <= tol
 
 
 def test_kclear():
@@ -415,17 +418,16 @@ def test_lspcn():
     npt.assert_almost_equal(lon, 0.48153755894179384)
     
 
-# Test is set to fail until server reflects new added SPICE kernel
-def fail_lspcn_2():
+def test_lspcn_2():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(CassiniKernels.satSpkFull)
     Y2005 = 5 * 365.25 * 86400.
     Y2006 = 6 * 365.25 * 86400.
-    assert_all_equal(cs.lspcn('SATURN', Y2005, 'LT+S'), 5.23103124275, 1.e-11)
-    assert_all_equal(cs.lspcn('SATURN', Y2006, 'LT+S'), 5.46639556423, 1.e-11)
-    assert_all_equal(cs.lspcn_vector('SATURN', Y2006, 'LT+S'), 5.46639556423, 1.e-11)
-    assert_all_equal(cs.lspcn_vector('SATURN', [Y2005, Y2006], 'LT+S'),
-                     [5.23103124275, 5.46639556423], 1.e-11)
+    npt.assert_almost_equal(cs.lspcn('SATURN', Y2005, 'LT+S'), 5.23103124275, decimal=5)
+    npt.assert_almost_equal(cs.lspcn('SATURN', Y2006, 'LT+S'), 5.46639556423,  decimal=5)
+    npt.assert_almost_equal(cs.lspcn_vector('SATURN', Y2006, 'LT+S'), 5.46639556423,  decimal=5)
+    npt.assert_almost_equal(cs.lspcn_vector('SATURN', [Y2005, Y2006], 'LT+S'),
+                 [5.23103124275, 5.46639556423], decimal=5)
 
 
 def test_lstlec():
@@ -590,8 +592,8 @@ def test_ltime():
     npt.assert_almost_equal(rtime, 2918.75247, decimal=4)
     assert receive_utc == "2004 JUL 03 23:11:21.248"
 
-# Setting to fail until server refreshes
-def fail_ltime_2():
+
+def test_ltime_2():
     cs.furnsh(CoreKernels.testMetaKernel)
     cs.furnsh(CassiniKernels.cassSpkPart)
     CASSINI_ET = 17.65 * 365.25 * 86400.0

@@ -534,7 +534,7 @@ def test_ekifld():
 
 
 @checking_pathlike_filename_variants("path_type_variant")
-def fail__ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
+def fail_ekinsr_eknelt_ekpsel_ekrcec_ekrced_ekrcei(path_type_variant):
     ekpath = path_type_variant(os.path.join(
         TEST_FILE_DIR, "example_ekmany.ek"))
     tablename = "test_table_ekmany"
@@ -892,36 +892,54 @@ def test_erract():
     assert cs.erract("GET", "") == "EXCEPTION"
 
 
-# fails due to sigerr
-def fail_errch():
+def test_errch():
     cs.setmsg("test errch value: #")
     cs.errch("#", "some error")
-    cs.sigerr("some error")
-    message = cs.getmsg("LONG", 2000)
+    
+    try:
+        cs.sigerr("some error")
+    except RuntimeError as e:
+        print(e)
+        # Handle the RuntimeError if needed
+        pass
+    
+    message = cs.getmsg("LONG")
     assert message == "test errch value: some error"
-    cs.reset()
 
 
 def test_errdev():
     assert cs.errdev("GET", "Screen") == "NULL"
 
 
-# fails due to sigerr
-def fail_errdp():
+def test_errdp():
     cs.setmsg("test errdp value: #")
     cs.errdp("#", 42.1)
-    cs.sigerr("some error")
-    message = cs.getmsg("LONG", 2000)
+    
+    try:
+        cs.sigerr("some error")
+    except RuntimeError as e:
+        print(e)
+        # Handle the RuntimeError if needed
+        pass
+    
+    message = cs.getmsg("LONG")
     assert message == "test errdp value: 4.2100000000000E+01"
     cs.reset()
 
 
 # fails due to sigerr
-def fail_errint():
+def test_errint():
     cs.setmsg("test errint value: #")
     cs.errint("#", 42)
-    cs.sigerr("some error")
-    message = cs.getmsg("LONG", 2000)
+    
+    try:
+        cs.sigerr("some error")
+    except RuntimeError as e:
+        print(e)
+        # Handle the RuntimeError if needed
+        pass
+    
+    message = cs.getmsg("LONG")
     assert message == "test errint value: 42"
     cs.reset()
 

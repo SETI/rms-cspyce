@@ -76,6 +76,8 @@ class CassiniKernels:
     cassPck_md5 = "8c16afc3bd886326e852b54bd71cc751"
     satSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130220AP_SE_13043_13073.bsp"
     satSpk_md5 = "056c65b8a8064f2958aa097db40160b2"
+    satSpkFull_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/sat164.bsp"
+    satSpkFull_md5 = "d41d8cd98f00b204e9800998ecf8427e"
     cassTourSpk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/130212AP_SK_13043_13058.bsp"
     cassTourSpk_md5 = "41210b787e06c1b8bce7ded3d0b930ab"
     cassFk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cas_v40.tf"
@@ -86,23 +88,29 @@ class CassiniKernels:
     cassSclk_md5 = "a30faec21039ba589d3c88db6b5fb536"
     cassIk_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/cas_iss_v10.ti"
     cassIk_md5 = "101419660e4fe5856d30eb624da61a3f"
+    cassSpkPart_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/171106R_SCPSE_17224_17258.bsp"
+    cassSpkPart_md5 = "24554eb3db3cfe23f016effed746e555"
     cassPck = get_path_from_url(cassPck_url)
     satSpk = get_path_from_url(satSpk_url)
+    satSpkFull = get_path_from_url(satSpkFull_url)
     cassTourSpk = get_path_from_url(cassTourSpk_url)
     cassFk = get_path_from_url(cassFk_url)
     cassCk = get_path_from_url(cassCk_url)
     cassSclk = get_path_from_url(cassSclk_url)
     cassIk = get_path_from_url(cassIk_url)
+    cassSpkPart = get_path_from_url(cassSpkPart_url)
 
 
 def cleanup_cassini_kernels() -> None:
     cleanup_file(CassiniKernels.cassPck)
     cleanup_file(CassiniKernels.satSpk)
+    cleanup_file(CassiniKernels.satSpkFull)
     cleanup_file(CassiniKernels.cassTourSpk)
     cleanup_file(CassiniKernels.cassFk)
     cleanup_file(CassiniKernels.cassCk)
     cleanup_file(CassiniKernels.cassSclk)
     cleanup_file(CassiniKernels.cassIk)
+    cleanup_file(CassiniKernels.cassSpkPart)
 
 
 class ExtraKernels:
@@ -126,6 +134,8 @@ class ExtraKernels:
     mro2007sub_md5 = "8ed34eb77b21ac611f4680806677edfb"
     spk430sub_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/de430sub.bsp"
     spk430sub_md5 = "0b49545fa316f9053f5cfbcce155becc"
+    spk432_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/de432s.bsp"
+    spk432_md5 = "d66c2153188958472fec67016b4b4e7a"
     vexboomck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/VEX_BOOM_V01.BC"
     vexboomck_md5 = "2f4dba65649246d72836fb3b53823c3d"
     v02swuck_url = "https://pds-rings.seti.org/testrunner_support/cspyce-unit-test-kernels/vo2_swu_ck2.bc"
@@ -140,6 +150,7 @@ class ExtraKernels:
     geophKer = get_path_from_url(geophysical_url)
     mro2007sub = get_path_from_url(mro2007sub_url)
     spk430sub = get_path_from_url(spk430sub_url)
+    spk432 = get_path_from_url(spk432_url)
     vexboomck = get_path_from_url(vexboomck_url)
     v02swuck = get_path_from_url(v02swuck_url)
 
@@ -155,6 +166,7 @@ def cleanup_extra_kernels() -> None:
     cleanup_file(ExtraKernels.geophKer)
     cleanup_file(ExtraKernels.mro2007sub)
     cleanup_file(ExtraKernels.spk430sub)
+    cleanup_file(ExtraKernels.spk432)
     cleanup_file(ExtraKernels.vexboomck)
     cleanup_file(ExtraKernels.v02swuck)
 
@@ -274,6 +286,7 @@ def get_extra_test_kernels() -> None:
     get_kernel(ExtraKernels.geophysical_url, ExtraKernels.geophysical_md5)
     get_kernel(ExtraKernels.mro2007sub_url, ExtraKernels.mro2007sub_md5)
     get_kernel(ExtraKernels.spk430sub_url, ExtraKernels.spk430sub_md5)
+    get_kernel(ExtraKernels.spk432_url, ExtraKernels.spk432_md5)
     get_kernel(ExtraKernels.vexboomck_url, ExtraKernels.vexboomck_md5)
     get_kernel(ExtraKernels.v02swuck_url, ExtraKernels.v02swuck_md5)
 
@@ -281,11 +294,13 @@ def get_extra_test_kernels() -> None:
 def get_cassini_test_kernels() -> None:
     get_kernel(CassiniKernels.cassPck_url, CassiniKernels.cassPck_md5)
     get_kernel(CassiniKernels.satSpk_url, CassiniKernels.satSpk_md5)
+    get_kernel(CassiniKernels.satSpkFull_url, CassiniKernels.satSpkFull_md5)
     get_kernel(CassiniKernels.cassTourSpk_url, CassiniKernels.cassTourSpk_md5)
     get_kernel(CassiniKernels.cassFk_url, CassiniKernels.cassFk_md5)
     get_kernel(CassiniKernels.cassCk_url, CassiniKernels.cassCk_md5)
     get_kernel(CassiniKernels.cassSclk_url, CassiniKernels.cassSclk_md5)
     get_kernel(CassiniKernels.cassIk_url, CassiniKernels.cassIk_md5)
+    get_kernel(CassiniKernels.cassSpkPart_url, CassiniKernels.cassSpkPart_md5)
 
 
 def write_test_meta_kernel() -> None:
