@@ -185,12 +185,84 @@ def test_cgv2el_vector():
     npt.assert_array_almost_equal(expected_s_minor, ellipse[:3, 6:9])
     
 
-chbder  
-chbigr
-chbint
-chbval
-conics
-convrt
-cyllat
-cylrec
-cylsph
+# chbder_vector needs to be fixed
+def fail_chbder_vector():
+    cp = [1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0]
+    x2s = [0.5, 3.0]
+    dpdxs = cs.chbder_vector(cp, x2s, 1.0, 3)
+    npt.assert_array_almost_equal([-0.340878, 0.382716, 4.288066, -1.514403],
+                                  dpdxs)
+
+
+def test_chbigr_vector():
+    p, itgrlp = cs.chbigr_vector([[0.0, 3.75, 0.0, 1.875, 0.0, 0.375],
+                                  [0.0, 3.75, 0.0, 1.875, 0.0, 0.375]], [20.0, 10.0],
+                          30.0)
+    assert p == pytest.approx([6.0, 6.0])
+    assert itgrlp == pytest.approx([10.0, 10.0])
+    
+    
+def test_chbint_vector():
+    p, dpdx = cs.chbint_vector([[1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0],
+                                [1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0]], [0.5, 3.0], 1.0)
+    assert p == pytest.approx([-0.340878, -0.340878], abs=1e-6)
+    assert dpdx == pytest.approx([0.382716, 0.382716], abs=1e-6)
+    
+    
+def test_chbval_vector():
+    p = cs.chbval_vector([[1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0],
+                                [1.0, 3.0, 0.5, 1.0, 0.5, -1.0, 1.0]], [0.5, 3.0], 1.0)
+    assert p == pytest.approx([-0.340878, -0.340878], abs=1e-6)
+    
+    
+def test_conics_vector():
+    cs.furnsh(CoreKernels.testMetaKernel)
+    et = cs.str2et("Dec 25, 2007")
+    state, ltime = cs.spkezr("Moon", et, "J2000", "NONE", "EARTH")
+    mu = cs.bodvrd("EARTH", "GM")
+    elts = [cs.oscelt(state, et, mu[0]), cs.oscelt(state, et, mu[0])]
+    later = et + 7.0 * cs.spd()
+    later_state = cs.conics_vector(elts, later)
+    state, ltime = cs.spkezr("Moon", later, "J2000", "NONE", "EARTH")
+    pert = np.array(later_state) - np.array(state)
+    expected_pert = [[-7.48885583e+03,  3.97608014e+02,
+                      1.95744667e+02, -3.61527428e-02,
+                      -1.27926899e-03, -2.01458907e-03],
+                     [-7.48885583e+03,  3.97608014e+02,
+                      1.95744667e+02, -3.61527428e-02,
+                      -1.27926899e-03, -2.01458907e-03]]
+    npt.assert_array_almost_equal(pert, expected_pert, decimal=5)
+    
+    
+def test_convrt_vector():
+    npt.assert_almost_equal(cs.convrt_vector([300.0, 300.0], "statute_miles", "km"),
+                           [482.8032, 482.8032])
+    npt.assert_almost_equal(cs.convrt_vector([1.0, 2.0], "parsecs", "lightyears"),
+                            [3.26156378, 6.52312755])
+    
+    
+def test_cyllat_vector():
+    npt.assert_almost_equal(
+        cs.cyllat_vector([1.0, 1.0],
+                         [(180.0 * cs.rpd()), (180.0 * cs.rpd())],
+                         -1.0),
+        [[np.sqrt(2), np.sqrt(2)],
+             [np.pi, np.pi],
+             [-np.pi / 4, -np.pi / 4]]
+        )
+    
+    
+def test_cylrec_vector():
+    npt.assert_almost_equal(cs.cylrec_vector([0.0, 0.0], np.array([np.radians(33.0),
+                                               np.radians(63.0)]), [0.0, 0.0, 0.0]),
+                            [[0.0, 0.0, 0.0],
+                             [0.0, 0.0, 0.0],
+                             [0.0, 0.0, 0.0]])
+    
+    
+def test_cylsph_vector():
+    a = np.array(cs.cylsph_vector([1.0, 1.0],
+                                  [np.deg2rad(180.0), np.deg2rad(180.0)], [1.0, 1.0]))
+    b = np.array([[1.4142, 1.4142], [np.deg2rad(45.0), np.deg2rad(45.0)],
+                  [np.deg2rad(180.0), np.deg2rad(180.0)]])
+    np.testing.assert_almost_equal(b, a, decimal=4)
