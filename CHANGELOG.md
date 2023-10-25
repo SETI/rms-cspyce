@@ -4,6 +4,21 @@ All notable changes to `cspyce` will be documented here
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.2.0] - 2023-10-17
+Support Python 3.12. 
+Complete testing of all scalar functions.
+Significant internal cleanup including fixing memory leaks.
+Fix bugs with `dskgd`, `dskmi2`, `dskv02`, `ekacld`, `ekgd`, `ekifld`, 
+`ekrcei`, `ekssum`, `frmchg`, `gcpool`, `gfocce`, `gfvent`, `lparse`, `lparsm`,
+`matchi`, `matchw`, `prompt`, `refchg` and many others.
+Allow all functions that expect a filename/path argument to accept a string, 
+byte string, or `pathlib.Path` object. 
+Implement SpiceCell data type.
+Implement Plane and Ellipse data types.
+Add IDE-detectable docstrings to all functions.
+For full details see the top-level `README.md` and the docstrings for each
+function.
+
 ## [2.1.1] - 2023-05-23
 Fix various memory corruption issues that caused crashing under MacOS.
 Fix implementation issues with `dafgda`, `dafus`, `dasrdc`, `dp2hx`,

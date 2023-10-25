@@ -652,7 +652,7 @@ class Test_INOUT_STRINGS_SizeFromArg:
 
     def test_okay_to_pass_empty_list(self):
         result = ts.sort_strings(())
-        assert result is ()
+        assert result == ()
 
     def test_requires_one_dimensional_array(self):
         argument = np.array([["a", "b", "c", "d"], ["w", "x", "y", "z"]])
