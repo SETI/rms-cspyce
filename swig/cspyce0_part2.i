@@ -491,7 +491,7 @@ extern SpiceInt bsrchi_c(
         // out21 is dpdxs
 
         int nderiv_plus_1 = nderiv + 1;
-        int degp = in21_dim1 - 1;
+        int degp = in21_dim2 - 1;
 
         *out21 = NULL;
         *out21_dim1 = 0;
