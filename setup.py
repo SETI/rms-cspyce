@@ -76,7 +76,7 @@ ARCHITECTURE_TRANSLATOR = {"aarch64": "arm64", "AMD64": "x86_64"}
 SPICE_VERSION = "N0067"
 
 
-class GetCspice(object):
+class GetCspice:
     def __init__(self):
         self.host_OS = platform.system()
         architecture = platform.machine()
@@ -89,8 +89,8 @@ class GetCspice(object):
             "cspice", self.host_OS + "-" + self.architecture)
 
     def download(self):
-        if (Path(os.path.join(self.target_directory, "src")).is_dir() and
-            Path(os.path.join(self.target_directory, "include")).is_dir()):
+        if all(Path(os.path.join(self.target_directory, name)).is_dir()
+               for name in ("src", "include", "lib")):
             return self.target_directory
         with tempfile.TemporaryDirectory() as tmpdir:
             self.download_cspice(destination=tmpdir)
@@ -98,6 +98,9 @@ class GetCspice(object):
                             os.path.join(self.target_directory, "src"))
             shutil.copytree(os.path.join(tmpdir, "cspice", "include"),
                             os.path.join(self.target_directory, "include"))
+            shutil.copytree(os.path.join(tmpdir, "cspice", "lib"),
+                            os.path.join(self.target_directory, "lib"))
+
         return self.target_directory
 
     def download_cspice(self, destination):
@@ -179,9 +182,11 @@ class GenerateCommand(Command):
 cspice_directory = GetCspice().download()
 
 def get_c_libraries():
+    if IS_WINDOWS:
+        return []
     files = sorted(glob(os.path.join(cspice_directory, "src", "*.c")))
     splits = 1 if IS_LINUX else 1 + (len(files) // 250)
-    compiler_flags = ["-DKR_headers", "-DMSDOS", "/nowarn"] if IS_WINDOWS else ["-w"]
+    compiler_flags = ["-w"]
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
             "sources": files[i::splits],
@@ -193,21 +198,29 @@ def get_c_libraries():
 
 
 def get_extensions():
-    cspyce_cflags = ["/DSWIG_PYTHON_CAST_MODE"] if IS_WINDOWS \
-                      else ["-DSWIG_PYTHON_CAST_MODE"]
+    extra_args = {}
+    if IS_WINDOWS:
+        cspyce_cflags = ["/DSWIG_PYTHON_CAST_MODE"]
+        extra_args["libraries"] = ["cspice", "csupport"]
+        extra_args["library_dirs"] = [os.path.join(cspice_directory, "lib")]
+    else:
+        cspyce_cflags = ["-DSWIG_PYTHON_CAST_MODE"]
+
     include_dirs = [os.path.join(cspice_directory, "include"), numpy.get_include()]
 
     cspyce0_module = Extension(
         "cspyce._cspyce0",
         sources=["swig/cspyce0_wrap.c"],
         include_dirs=include_dirs,
-        extra_compile_args=cspyce_cflags)
+        extra_compile_args=cspyce_cflags,
+        **extra_args)
 
     typemap_samples_module = Extension(
         "cspyce._typemap_samples",
         sources=["swig/typemap_samples_wrap.c"],
         include_dirs=include_dirs,
         extra_compile_args=cspyce_cflags,
+        **extra_args
     )
     return [cspyce0_module, typemap_samples_module]
 
@@ -226,5 +239,6 @@ def do_setup():
             "generate": GenerateCommand,
         }
     )
+
 
 do_setup()
