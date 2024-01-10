@@ -6338,7 +6338,7 @@ extern void gfdist_c(
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble spoint[3]};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfilum_c(
         ConstSpiceChar   *method,
@@ -6357,6 +6357,7 @@ extern void gfilum_c(
         SpiceCell        *cnfine,
         SpiceCell        *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gfocce_c ( GF, occultation event )
@@ -11500,7 +11501,7 @@ VECTORIZE_di_di__di(vprojg, my_vprojg_nomalloc)
 %rename (wncomd) wncomd_c;
 %apply (void RETURN_VOID) {void wncomd_c};
 %apply (SpiceCellDouble* INPUT) {SpiceCell *window};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *result};
 
 extern void wncomd_c(
         SpiceDouble left,
@@ -11508,6 +11509,7 @@ extern void wncomd_c(
         SpiceCell   *window,
         SpiceCell   *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure wncond_c ( Contract the intervals of a DP window )
@@ -11564,16 +11566,16 @@ extern void wncond_c(
 
 %rename (wndifd) wndifd_c;
 %apply (void RETURN_VOID) {void wndifd_c};
-
 %apply (SpiceCellDouble* INPUT) {SpiceCell *a};
 %apply (SpiceCellDouble* INPUT) {SpiceCell *b};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *c};
 
 extern void wndifd_c(
         SpiceCell *a,
         SpiceCell *b,
         SpiceCell *c
 );
+//CSPYCE_DEFAULT:c:2000
 
 /***********************************************************************
 * -Procedure wnelmd_c ( Element of a DP window )
@@ -11814,13 +11816,15 @@ extern void wninsd_c(
 %apply (void RETURN_VOID) {void wnintd_c};
 %apply (SpiceCellDouble* INPUT) {SpiceCell *a};
 %apply (SpiceCellDouble* INPUT) {SpiceCell *b};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *c};
 
 extern void wnintd_c(
         SpiceCell *a,
         SpiceCell *b,
         SpiceCell *c
 );
+//CSPYCE_DEFAULT:c:2000
+
 
 /***********************************************************************
 * -Procedure wnreld_c ( Compare two DP windows )
@@ -11932,12 +11936,14 @@ extern void wnsumd_c(
 %apply (void RETURN_VOID) {void wnunid_c};
 %apply (SpiceCellDouble* INPUT) {SpiceCell *a};
 %apply (SpiceCellDouble* INPUT) {SpiceCell *b};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *c};
+%apply (SpiceCellDouble* INOUT) {SpiceCell *c};
 
 extern void wnunid_c(
         SpiceCell *a,
         SpiceCell *b,
         SpiceCell *c
 );
+//CSPYCE_DEFAULT:c:2000
+
 
 /**********************************************************************/

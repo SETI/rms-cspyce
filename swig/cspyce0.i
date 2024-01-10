@@ -6026,12 +6026,14 @@ extern void pckcov_c(
 %rename (pckfrm) pckfrm_c;
 %apply (void RETURN_VOID) {void pckfrm_c};
 %apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *pck};
-%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
+%apply (SpiceCellInt *INOUT) {SpiceCell *ids};
 
 extern void pckfrm_c(
         ConstSpiceChar *pck,
         SpiceCell      *ids
 );
+//CSPYCE_DEFAULT:ids:2000
+
 
 /***********************************************************************
 * -Procedure pcpool_c ( Put character strings into the kernel pool )
