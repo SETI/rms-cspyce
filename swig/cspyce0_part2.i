@@ -3495,7 +3495,7 @@ extern void dskobj_c(
         SpiceCell *bodids
 );
 
-//CSPYCE_DEFAULT:bodids:()
+//CSPYCE_DEFAULT:bodids:10000
 
 /***********************************************************************
 * -Procedure dskopn_c ( DSK, open new file )
@@ -3661,7 +3661,7 @@ extern void dsksrf_c(
         SpiceCell      *srfids
 );
 
-//CSPYCE_DEFAULT:srfids:()
+//CSPYCE_DEFAULT:srfids:10000
 
 
 /***********************************************************************
@@ -6019,7 +6019,7 @@ extern SpiceInt esrchc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfdist_c(
         ConstSpiceChar *target,
@@ -6033,6 +6033,8 @@ extern void gfdist_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
+
 
 /***********************************************************************
 * -Procedure gfevnt_c (GF, geometric event finder )
@@ -6121,7 +6123,7 @@ extern void gfdist_c(
 %apply (ConstSpiceBoolean *IN_ARRAY1) {ConstSpiceBoolean *qlpars};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar    *op};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 %inline %{
     void my_gfevnt_c(
@@ -6173,6 +6175,7 @@ extern void gfdist_c(
         PyMem_Free(temp);
     }
 %}
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gffove_c ( GF, is target in FOV? )
@@ -6230,7 +6233,7 @@ extern void gfdist_c(
 * udrepf     I   Function that finalizes progress reporting.
 * bail       I   Logical indicating program interrupt monitoring.
 * udbail     I   Name of a routine that signals a program interrupt.
-* cnfine     I  SPICE window to which the search is restricted.
+* cnfine     I   SPICE window to which the search is restricted.
 * result     O   SPICE window containing results.
 * windows    O   Array giving start/stop time pairs for the intervals found.
 * step       I   Time step for searching.
@@ -6241,11 +6244,10 @@ extern void gfdist_c(
 %rename (gffove) my_gffove_c;
 %apply (void RETURN_VOID) {void my_gffove_c};
 %apply (ConstSpiceDouble IN_ARRAY1[ANY]) {ConstSpiceDouble raydir[3]};
-
 %apply (SpiceDouble OUT_ARRAY2[ANY][ANY], SpiceInt *SIZE1)
                 {(SpiceDouble windows[WINDOWS][2], SpiceInt *intervals)};
 %apply (SpiceCellDouble* INPUT)  {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)  {SpiceCell *result};
 
 %inline %{
     void my_gffove_c(
@@ -6268,6 +6270,8 @@ extern void gfdist_c(
                  SPICEFALSE, NULL, cnfine, result);
     }
 %}
+//CSPYCE_DEFAULT:result:2000
+
 
 /***********************************************************************
 * -Procedure gfilum_c ( GF, illumination angle search )
@@ -6428,7 +6432,7 @@ extern void gfilum_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 %inline %{
     void my_gfocce_c(
@@ -6453,6 +6457,8 @@ extern void gfilum_c(
                  SPICEFALSE, NULL, cnfine, result);
     }
 %}
+//CSPYCE_DEFAULT:result:2000
+
 
 /***********************************************************************
 * -Procedure gfoclt_c ( GF, find occultation )
@@ -6513,7 +6519,7 @@ extern void gfilum_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 
 extern void gfoclt_c(
@@ -6530,6 +6536,8 @@ extern void gfoclt_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
+
 
 /***********************************************************************
 * -Procedure gfpa_c ( GF, phase angle search )
@@ -6582,7 +6590,7 @@ extern void gfoclt_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 
 extern void gfpa_c(
@@ -6598,6 +6606,7 @@ extern void gfpa_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gfposc_c (GF, observer-target vector coordinate search)
@@ -6657,7 +6666,7 @@ extern void gfpa_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfposc_c(
         ConstSpiceChar *target,
@@ -6674,6 +6683,8 @@ extern void gfposc_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
+
 
 /***********************************************************************
 * -Procedure gfrfov_c ( GF, is ray in FOV? )
@@ -6724,7 +6735,7 @@ extern void gfposc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfrfov_c(
         ConstSpiceChar   *inst,
@@ -6736,6 +6747,7 @@ extern void gfrfov_c(
         SpiceCell        *cnfine,
         SpiceCell        *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gfrr_c (GF, range rate search )
@@ -6784,7 +6796,7 @@ extern void gfrfov_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfrr_c(
         ConstSpiceChar *target,
@@ -6798,6 +6810,8 @@ extern void gfrr_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
+
 
 /***********************************************************************
 * -Procedure gfsep_c (GF, angular separation search)
@@ -6865,7 +6879,7 @@ extern void gfrr_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfsep_c(
         ConstSpiceChar *targ1,
@@ -6884,6 +6898,7 @@ extern void gfsep_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gfsntc_c (GF, surface intercept vector coordinate search)
@@ -6951,7 +6966,7 @@ extern void gfsep_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfsntc_c(
         ConstSpiceChar   *target,
@@ -6971,6 +6986,7 @@ extern void gfsntc_c(
         SpiceCell        *cnfine,
         SpiceCell        *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gfstol_c ( GF, set a tolerance value for GF )
@@ -7056,7 +7072,7 @@ extern void gfstol_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *coord};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *relate};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gfsubc_c(
         ConstSpiceChar *target,
@@ -7074,6 +7090,7 @@ extern void gfsubc_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:2000
 
 /***********************************************************************
 * -Procedure gftfov_c ( GF, is target in FOV? )
@@ -7127,7 +7144,7 @@ extern void gfsubc_c(
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *abcorr};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *obsrvr};
 %apply (SpiceCellDouble* INPUT)       {SpiceCell *cnfine};
-%apply (SpiceCellDouble* OUTPUT)      {SpiceCell *result};
+%apply (SpiceCellDouble* INOUT)       {SpiceCell *result};
 
 extern void gftfov_c(
         ConstSpiceChar *inst,
@@ -7140,6 +7157,7 @@ extern void gftfov_c(
         SpiceCell      *cnfine,
         SpiceCell      *result
 );
+//CSPYCE_DEFAULT:result:20000
 
 /***********************************************************************
 * -Procedure hrmesp_c ( Hermite polynomial interpolation, equal spacing )

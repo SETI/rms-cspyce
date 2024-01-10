@@ -183,8 +183,8 @@ def cidfrm_error(code):
 
     return [frcode, name]
 
-def ckcov_error(ck, idcode, needav, level, tol, timsys):
-    coverage = cspyce0.ckcov(ck, idcode, needav, level, tol, timsys)
+def ckcov_error(ck, idcode, needav, level, tol, timsys, coverage):
+    coverage = cspyce0.ckcov(ck, idcode, needav, level, tol, timsys, coverage)
     if coverage.card == 0:
         with chkin_and_chkout('ckcov_error'):
             setmsg(f'body code {idcode} not found in C kernel file {ck}')
@@ -362,8 +362,8 @@ def namfrm1_error(frname):  # change of name; namfrm_error is defined below
 
     return frcode
 
-def pckcov_error(pck, code):
-    coverage = cspyce0.pckcov(pck, code)
+def pckcov_error(pck, code, coverage):
+    coverage = cspyce0.pckcov(pck, code, coverage)
     if coverage.card == 0:
         with chkin_and_chkout('pckcov_error'):
             setmsg(f'frame code {code} not found in binary PC kernel file {pck}')
@@ -371,8 +371,8 @@ def pckcov_error(pck, code):
 
     return coverage
 
-def spkcov_error(spk, code):
-    coverage = cspyce0.spkcov(spk, code)
+def spkcov_error(spk, code, coverage):
+    coverage = cspyce0.spkcov(spk, code, coverage)
     if coverage.card == 0:
         with chkin_and_chkout('spkcov_error'):
             setmsg(f'body code {code} not found in SP kernel file {spk}')

@@ -256,7 +256,7 @@ extern SpiceDouble b1950_c (void);
 
 %rename (bltfrm) bltfrm_c;
 %apply (void RETURN_VOID) {void bltfrm_c};
-%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
+%apply (SpiceCellInt *INOUT) {SpiceCell *ids};
 
 extern void bltfrm_c(
         SpiceInt frmcls,
@@ -264,6 +264,7 @@ extern void bltfrm_c(
 );
 
 //CSPYCE_TYPE:ids:frame_code
+//CSPYCE_DEFAULT:ids:1000
 
 /***********************************************************************
 * -Procedure bodc2n_c ( Body ID code to name translation )
@@ -807,7 +808,7 @@ extern void chkout_c(
 %apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *ck};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *level};
 %apply (ConstSpiceChar *CONST_STRING) {ConstSpiceChar *timsys};
-%apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
+%apply (SpiceCellDouble *INOUT) {SpiceCell *cover};
 
 extern void ckcov_c(
         ConstSpiceChar *ck,
@@ -820,6 +821,7 @@ extern void ckcov_c(
 );
 
 //CSPYCE_TYPE:idcode:body_code
+//CSPYCE_DEFAULT:cover:20000
 
 /***********************************************************************
 * -Procedure ckgp_c ( C-kernel, get pointing )
@@ -947,7 +949,7 @@ extern void ckobj_c(
         SpiceCell      *bodids
 );
 
-//CSPYCE_DEFAULT:bodids:()
+//CSPYCE_DEFAULT:bodids:1000
 
 /***********************************************************************
 * -Procedure clight_c ( C, Speed of light in a vacuum )
@@ -4424,7 +4426,7 @@ extern SpiceDouble jyear_c(void);
 
 %rename (kplfrm) kplfrm_c;
 %apply (void RETURN_VOID) {void kplfrm_c};
-%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
+%apply (SpiceCellInt *INOUT) {SpiceCell *ids};
 
 extern void kplfrm_c(
         SpiceInt frmcls,
@@ -4432,6 +4434,7 @@ extern void kplfrm_c(
 );
 
 //CSPYCE_TYPE:ids:frame_code
+//CSPYCE_DEFAULT:ids:1000
 
 /***********************************************************************
 * -Procedure latcyl_c ( Latitudinal to cylindrical coordinates )
@@ -5987,13 +5990,15 @@ VECTORIZE_dX_2d__dN(oscltx, oscltx_c, SPICE_OSCLTX_NELTS)
 %rename (pckcov) pckcov_c;
 %apply (void RETURN_VOID) {void pckcov_c};
 %apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *pck};
-%apply (SpiceCellDouble *OUTPUT) {SpiceCell* cover};
+%apply (SpiceCellDouble *INOUT) {SpiceCell* cover};
 
 extern void pckcov_c(
         ConstSpiceChar *pck,
         SpiceInt       idcode,
         SpiceCell      *cover
 );
+//CSPYCE_DEFAULT:cover:2000
+
 
 //CSPYCE_TYPE:idcode:frame_code
 
@@ -8614,14 +8619,14 @@ VECTORIZE_i_d_2s_dX_dX__dN_d_d(spkaps, spkaps_c, 6)
 %rename (spkcov) spkcov_c;
 %apply (void RETURN_VOID) {void spkcov_c};
 %apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *spk};
-%apply (SpiceCellDouble *OUTPUT) {SpiceCell *cover};
+%apply (SpiceCellDouble *INOUT) {SpiceCell *cover};
 
 extern void spkcov_c(
         ConstSpiceChar *spk,
         SpiceInt       idcode,
         SpiceCell      *cover
 );
-
+//CSPYCE_DEFAULT:cover:2000
 //CSPYCE_TYPE:idcode:body_code
 
 /***********************************************************************
@@ -8930,7 +8935,7 @@ VECTORIZE_i_d_2s_dX__dN_d_d(spkltc, spkltc_c, 6)
 %rename (spkobj)  spkobj_c;
 %apply (void RETURN_VOID) {void spkobj_c};
 %apply (ConstSpiceChar *CONST_FILENAME) {ConstSpiceChar *spk};
-%apply (SpiceCellInt *OUTPUT) {SpiceCell *ids};
+%apply (SpiceCellInt *INOUT) {SpiceCell *ids};
 
 extern void spkobj_c(
         ConstSpiceChar *spk,
@@ -8938,6 +8943,7 @@ extern void spkobj_c(
 );
 
 //CSPYCE_TYPE:ids:body_code
+//CSPYCE_DEFAULT:ids:1000
 
 /***********************************************************************
 * -Procedure spkpos_c ( S/P Kernel, position )
