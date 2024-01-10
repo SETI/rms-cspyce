@@ -29,6 +29,8 @@
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 
+#define NO_ARRAY_DIMENSION -1
+
 /*******************************************************************************
 *******************************************************************************/
 
@@ -861,7 +863,7 @@ void debug_print_object(PyObject *object, FILE* file) {
 *
 * If a scalar should be shaped into an array of shape (1,):
 *       (type *IN_ARRAY01, SpiceInt DIM1)
-* If a scalar is given, then DIM1 = 0.
+* If a scalar is given, then DIM1 = NO_ARRAY_DIMENSION.
 *******************************************************************************/
 
 
@@ -988,7 +990,7 @@ void debug_print_object(PyObject *object, FILE* file) {
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 0, 1, pyarr)
     $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
     if (PyArray_NDIM(pyarr) == 0) {
-        $2 = 0;                                                 // DIM1
+        $2 = NO_ARRAY_DIMENSION;                                // DIM1
     } else {
         $2 = (SpiceInt) PyArray_DIM(pyarr, 0);                  // DIM1
     }
@@ -1078,7 +1080,7 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 *
 * If the first dimension can be missing:
 *       (type *IN_ARRAY12, SpiceInt DIM1, SpiceInt DIM2)
-* If it is missing, DIM1 = 0.
+* If it is missing, DIM1 = NO_ARRAY_DIMENSION.
 *******************************************************************************/
 
 %define TYPEMAP_IN(Type, Typecode) /* Use to fill in numeric types below!
@@ -1265,12 +1267,11 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 1, 2, pyarr)
 
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
     if (PyArray_NDIM(pyarr) == 1) {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
-        $2 = 0;                                                 // DIM1
+        $2 = NO_ARRAY_DIMENSION;                                // DIM1
         $3 = (SpiceInt) PyArray_DIM(pyarr, 0);                  // DIM2
     } else {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
         $2 = (SpiceInt) PyArray_DIM(pyarr, 0);                  // DIM1
         $3 = (SpiceInt) PyArray_DIM(pyarr, 1);                  // DIM2
     }
@@ -1288,20 +1289,17 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
 //      (Type *IN_ARRAY23, SpiceInt DIM1, SpiceInt DIM2, SpiceInt DIM3)
 
     CONVERT_TO_CONTIGUOUS_ARRAY(Typecode, $input, 2, 3, pyarr)
-
+    $1 = ($1_ltype) PyArray_DATA(pyarr);                        // ARRAY
     if (PyArray_NDIM(pyarr) == 2) {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
-        $2 = 0;                                                 // DIM1
+        $2 = NO_ARRAY_DIMENSION;                                // DIM1
         $3 = (SpiceInt) PyArray_DIM(pyarr, 0);                  // DIM2
         $4 = (SpiceInt) PyArray_DIM(pyarr, 1);                  // DIM3
     } else {
-        $1 = ($1_ltype) PyArray_DATA(pyarr);                    // ARRAY
         $2 = (SpiceInt) PyArray_DIM(pyarr, 0);                  // DIM1
         $3 = (SpiceInt) PyArray_DIM(pyarr, 1);                  // DIM2
         $4 = (SpiceInt) PyArray_DIM(pyarr, 2);                  // DIM3
     }
 }
-
 
 /*******************************************************
 * %typemap(argout)
@@ -1735,7 +1733,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
-    if (dimsize$argnum[0] == 0) {
+    if (dimsize$argnum[0] == NO_ARRAY_DIMENSION) {
         PyObject* value = PyArray_GETITEM(pyarr$argnum, PyArray_DATA(pyarr$argnum));
         TEST_MALLOC_FAILURE(value);
         // AppendOutput steals the reference to this object, so we don't need DECREF
@@ -2226,7 +2224,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[2] = {dimsize$argnum[0], dimsize$argnum[1]};
-    int nd = (dims[0] == 0) ? 1 : 2;
+    int nd = (dims[0] == NO_ARRAY_DIMENSION) ? 1 : 2;
     pyarr$argnum = create_array_with_owned_data(nd, &dims[2 - nd], Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
@@ -2295,7 +2293,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     npy_intp dims[3] = {dimsize$argnum[0], dimsize$argnum[1], dimsize$argnum[2]};
-    int nd = dims[0] == 0 ? 2 : 3;
+    int nd = dims[0] == NO_ARRAY_DIMENSION ? 2 : 3;
     pyarr$argnum = create_array_with_owned_data(nd, &dims[3 - nd], Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 

@@ -10,6 +10,8 @@ import cspyce.typemap_samples as ts
 from cspyce import SPICE_CELL_DOUBLE, SPICE_CELL_INT, SpiceCell
 
 
+NO_ARRAY_DIMENSION = -1
+
 def flatten(array):
     return tuple(tuple(array.ravel()))
 
@@ -312,7 +314,7 @@ class Test_IN_ARRAY12_VariableDimensions:
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
     def test_run_1d(self):
         array = np.arange(100, 150, dtype='int32')
-        assert (flatten(array), 0, array.size) == ts.in_array12(array)
+        assert (flatten(array), NO_ARRAY_DIMENSION, array.size) == ts.in_array12(array)
 
     def test_run_2d(self):
         array = np.arange(100, 150, dtype='int32').reshape((10, 5))
@@ -321,7 +323,7 @@ class Test_IN_ARRAY12_VariableDimensions:
 
     def test_run_on_tuple(self):
         value = (2, 3, 5, 7, 11)
-        assert (value, 0, len(value)) == ts.in_array12(value)
+        assert (value, NO_ARRAY_DIMENSION, len(value)) == ts.in_array12(value)
 
     def test_non_contiguous_array_2d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 1]
@@ -330,7 +332,7 @@ class Test_IN_ARRAY12_VariableDimensions:
 
     def test_non_contiguous_array_1d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[1, :, 2]
-        assert (flatten(array), 0, array.size) == ts.in_array12(array)
+        assert (flatten(array), NO_ARRAY_DIMENSION, array.size) == ts.in_array12(array)
 
     def test_no_other_data_type(self):
         array = np.arange(100, 150, dtype='double')
@@ -352,7 +354,7 @@ class Test_IN_ARRAY23_VariableDimensions:
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
     def test_run_2d(self):
         array = np.arange(100, 150, dtype='int32').reshape((10, 5))
-        expected_result = (flatten(array), 0) + tuple(array.shape)
+        expected_result = (flatten(array), NO_ARRAY_DIMENSION) + tuple(array.shape)
         assert expected_result == ts.in_array23(array)
 
     def test_run_3d(self):
@@ -362,7 +364,7 @@ class Test_IN_ARRAY23_VariableDimensions:
 
     def test_non_contiguous_array_2d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 1]
-        assert (flatten(array), 0, 3, 5) == ts.in_array23(array)
+        assert (flatten(array), NO_ARRAY_DIMENSION, 3, 5) == ts.in_array23(array)
 
     def test_non_contiguous_array_3d(self):
         array = np.empty((3, 4, 5, 8), dtype='int32')[..., 2]
@@ -418,7 +420,7 @@ class Test_OUT_ARRAY01_MallocedArray:
     # Again, a malloced array, but if the function indicates size 0, then we want a scalar
     # Again, start and length, but this time we use floats
     def test_return_scalar(self):
-        result = ts.out_array01_malloc(5.0, 0)
+        result = ts.out_array01_malloc(5.0, NO_ARRAY_DIMENSION)
         assert type(result) == float
         assert 5.0 == result
 
@@ -475,14 +477,14 @@ class Test_OUT_ARRAY2_FixedSize:
 
 class Test_OUT_ARRAY12_FixedSize:
     # %apply (int **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
-    # Same as before, but a dim1=0 indicates to return a 1-dimensional array
+    # Same as before, but a dim1=NO_ARRAY_DIMENSION indicates to return a 1-dimensional array
     def test_2d_array(self):
         value1 = ts.out_array12_1(25, 40, 41)
         assert (40, 41) == value1.shape
         assert 25 == value1[0, 0]
 
     def test_generating_1d_array(self):
-        value2 = ts.out_array12_1(25, 0, 41)
+        value2 = ts.out_array12_1(25, NO_ARRAY_DIMENSION, 41)
         assert (41,) == value2.shape
         assert 25 == value2[0]
 
@@ -500,7 +502,7 @@ class Test_OUT_ARRAY23_FixedSize:
         assert 25 == value1[0, 0, 0]
 
     def test_yields_2d(self):
-        value2 = ts.out_array23_1(25, 0, 4, 5)
+        value2 = ts.out_array23_1(25, NO_ARRAY_DIMENSION, 4, 5)
         assert (4, 5) == value2.shape
         assert 25 == value2[0, 0]
 

@@ -62,7 +62,7 @@
     }
 
     PyObject* in_array01_1(SpiceInt *arg, SpiceInt dim) {
-        if (dim == 0) {
+        if (dim == NO_ARRAY_DIMENSION) {
             return Py_BuildValue("i", arg[0]);
         }
         return int_array_to_tuple(arg, dim);
@@ -103,12 +103,14 @@ PyObject* in_array01_1(SpiceInt *arg, SpiceInt dim);
    }
 
    PyObject *in_array12(SpiceInt *arg, SpiceInt dim1, SpiceInt dim2) {
-       PyObject* info = int_array_to_tuple(arg, max(dim1, 1) * dim2);
+       SpiceInt xdim1 = dim1 == NO_ARRAY_DIMENSION ? 1 : dim1;
+       PyObject* info = int_array_to_tuple(arg, xdim1 * dim2);
        return Py_BuildValue("Nii", info, dim1, dim2);
    }
 
    PyObject *in_array23(SpiceInt *arg, SpiceInt dim1, SpiceInt dim2, SpiceInt dim3) {
-       PyObject* info = int_array_to_tuple(arg, max(dim1, 1) * dim2 * dim3);
+       SpiceInt xdim1 = dim1 == NO_ARRAY_DIMENSION ? 1 : dim1;
+       PyObject* info = int_array_to_tuple(arg, xdim1 * dim2 * dim3);
        return Py_BuildValue("Niii", info, dim1, dim2, dim3);
    }
 %}
@@ -159,7 +161,7 @@ PyObject *in_array23(SpiceInt *arg, SpiceInt dim1, SpiceInt dim2, SpiceInt dim3)
     }
 
     void out_array01_malloc(SpiceDouble start, SpiceInt length, SpiceDouble **arrayP, SpiceInt *size) {
-        SpiceInt real_length = max(length, 1);
+        SpiceInt real_length = length == NO_ARRAY_DIMENSION ? 1 : length;
         *size = length;
         if (start >= 0) {
             *arrayP = PyMem_Malloc(real_length * sizeof(SpiceDouble));
@@ -236,7 +238,7 @@ void out_array01_malloc(SpiceDouble start, SpiceInt length, SpiceDouble **arrayP
     void out_array12_1(SpiceInt start, SpiceInt length1, SpiceInt length2, SpiceInt **result, SpiceInt *size1, SpiceInt *size2) {
         SpiceInt *ptr = NULL;
         if (start >= 0) {
-            SpiceInt xlength1 = max(length1, 1);
+            SpiceInt xlength1 = length1 == NO_ARRAY_DIMENSION ? 1 : length1;
             ptr = PyMem_Malloc(xlength1 * length2 * sizeof(SpiceInt));
             for (SpiceInt i = 0; i < xlength1 * length2; i++) {
                 ptr[i] = start + i;
@@ -251,7 +253,7 @@ void out_array01_malloc(SpiceDouble start, SpiceInt length, SpiceDouble **arrayP
                        SpiceDouble **result, SpiceInt *size1, SpiceInt *size2, SpiceInt *size3) {
         SpiceDouble *ptr = NULL;
         if (start >= 0) {
-            SpiceInt xlength1 = max(length1, 1);
+            SpiceInt xlength1 = length1 == NO_ARRAY_DIMENSION ? 1 : length1;
             ptr = PyMem_Malloc(xlength1 * length2 * length3 * sizeof(SpiceDouble));
             for (SpiceInt i = 0; i < xlength1 * length2; i++) {
                 ptr[i] = start + i;
