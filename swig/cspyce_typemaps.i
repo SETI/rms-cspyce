@@ -1701,7 +1701,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 *       (type **OUT_ARRAY01, SpiceInt *DIM1)
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type, Typecode, BuildString) // To fill in types below!
+%define TYPEMAP_ARGOUT(Type, Typecode, Converter) // To fill in types below!
 
 /***************************************************************
 * (Type **OUT_ARRAY01, SpiceInt *SIZE1)
@@ -1730,9 +1730,10 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
     if (dimsize$argnum[0] == NO_ARRAY_DIMENSION) {
-        PyObject* value = Py_BuildValue(BuildString, *(Type *)buffer$argnum);
+        // Convert the first element of the buffer to an appropriate Python object
+        PyObject* value = Converter(*(Type *)buffer$argnum);
         TEST_MALLOC_FAILURE(value);
-        // AppendOutput steals the reference to value
+        // AppendOutput steals the reference to value.  No need to DECREF.
         // buffer is freed by the freearg code.
         $result = SWIG_Python_AppendOutput($result, value);
     } else {
@@ -1758,10 +1759,10 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 * Now define these typemaps for every numeric type
 *******************************************************/
 
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  "i")
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  "i")
-TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT,  "i")
-TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, "d")
+TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  PyInt_FromLong)
+TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  PyInt_FromLong)
+TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT,  PyInt_FromLong)
+TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
 
 #undef TYPEMAP_ARGOUT
 
