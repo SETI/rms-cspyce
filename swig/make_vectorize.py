@@ -274,13 +274,20 @@ class MacroGenerator:
     def get_maxdim_and_size(self):
         out = self.out
         sizers = [arg.dim_names[0] for arg in self.inargs if arg.rank > 0]
-        out(f'int maxdim = {sizers[0]};')
-        for sizer in sizers[1:]:
-            out(f'if (maxdim < {sizer}) maxdim = {sizer};')
-        out()
-        out(f'int size = (maxdim == 0 ? 1 : maxdim);')
-        for sizer in sizers:
-            out(f'{sizer} = ({sizer} == 0 ? 1 : {sizer});')
+        any_zero_test = ' || '.join(f'{sizer} == 0' for sizer in sizers)
+        out(f'int maxdim, size;')
+        out(f'if ({any_zero_test}) {{')
+        with self.indent:
+            out(f'maxdim = size = 0;')
+        out(f'}} else {{')
+        with self.indent:
+            out(f'maxdim = {sizers[0]};')
+            for sizer in sizers[1:]:
+                out(f'if (maxdim < {sizer}) maxdim = {sizer};')
+            out(f'size = (maxdim == NO_ARRAY_DIMENSION) ? 1 : maxdim;')
+            for sizer in sizers:
+                out(f'{sizer} = ({sizer} == NO_ARRAY_DIMENSION ? 1 : {sizer});')
+        out(f'}}')
         out()
 
     def generate_initialize_output_vars(self):

@@ -10,6 +10,8 @@ import cspyce.typemap_samples as ts
 from cspyce import SPICE_CELL_DOUBLE, SPICE_CELL_INT, SpiceCell
 
 
+NO_ARRAY_DIMENSION = -1
+
 def flatten(array):
     return tuple(tuple(array.ravel()))
 
@@ -131,9 +133,7 @@ class Test_IN_ARRAY1_GivenDimension:
 class Test_IN_ARRAY01_GivenDimension:
     # %apply (int *IN_ARRAY01, int DIM1) {(int *arg, int dim)};
     # cs.in_array01_1 received either an int scalar or sequence of integer, and
-    SMALL_INT_ARRAY = np.array((4, 5, 6), dtype="int32")
-    SMALL_FLOAT_ARRAY = np.array((4.0, 5.0, 6.0), dtype="double")
-
+    # returns either that integer or the array as a tuple.
     def test_basic_test_scalar(self):
         assert 1 == ts.in_array01_1(1)
 
@@ -143,6 +143,10 @@ class Test_IN_ARRAY01_GivenDimension:
     def test_basic_test_int_array(self):
         arg = np.arange(1, 10, dtype='int32')
         assert flatten(arg) == ts.in_array01_1(arg)
+
+    def test_empty_array(self):
+        arg = np.array((), dtype=int)
+        assert () == ts.in_array01_1(arg)
 
     def test_non_contiguous_array(self):
         array = np.arange(12, dtype='int32').reshape((4, 3))[:, 0]
@@ -312,25 +316,25 @@ class Test_IN_ARRAY12_VariableDimensions:
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
     def test_run_1d(self):
         array = np.arange(100, 150, dtype='int32')
-        assert (flatten(array), 0, array.size) == ts.in_array12(array)
+        assert (flatten(array), array.size) == ts.in_array12(array)
 
     def test_run_2d(self):
         array = np.arange(100, 150, dtype='int32').reshape((10, 5))
-        expected_result = (flatten(array),) + tuple(array.shape)
+        expected_result = (flatten(array), *array.shape)
         assert expected_result == ts.in_array12(array)
 
     def test_run_on_tuple(self):
         value = (2, 3, 5, 7, 11)
-        assert (value, 0, len(value)) == ts.in_array12(value)
+        assert (value, len(value)) == ts.in_array12(value)
 
     def test_non_contiguous_array_2d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 1]
-        expected_result = (flatten(array),) + tuple(array.shape)
+        expected_result = (flatten(array), *array.shape)
         assert expected_result == ts.in_array12(array)
 
     def test_non_contiguous_array_1d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[1, :, 2]
-        assert (flatten(array), 0, array.size) == ts.in_array12(array)
+        assert (flatten(array), array.size) == ts.in_array12(array)
 
     def test_no_other_data_type(self):
         array = np.arange(100, 150, dtype='double')
@@ -352,7 +356,7 @@ class Test_IN_ARRAY23_VariableDimensions:
     # then dim1 == 0.  As usual, this returns the array elements, and the dimension
     def test_run_2d(self):
         array = np.arange(100, 150, dtype='int32').reshape((10, 5))
-        expected_result = (flatten(array), 0) + tuple(array.shape)
+        expected_result = (flatten(array), *array.shape)
         assert expected_result == ts.in_array23(array)
 
     def test_run_3d(self):
@@ -362,7 +366,7 @@ class Test_IN_ARRAY23_VariableDimensions:
 
     def test_non_contiguous_array_2d(self):
         array = np.arange(150, dtype='int32').reshape((3, 5, 10))[..., 1]
-        assert (flatten(array), 0, 3, 5) == ts.in_array23(array)
+        assert (flatten(array), 3, 5) == ts.in_array23(array)
 
     def test_non_contiguous_array_3d(self):
         array = np.empty((3, 4, 5, 8), dtype='int32')[..., 2]
@@ -418,13 +422,17 @@ class Test_OUT_ARRAY01_MallocedArray:
     # Again, a malloced array, but if the function indicates size 0, then we want a scalar
     # Again, start and length, but this time we use floats
     def test_return_scalar(self):
-        result = ts.out_array01_malloc(5.0, 0)
+        result = ts.out_array01_malloc(5.0, NO_ARRAY_DIMENSION)
         assert type(result) == float
         assert 5.0 == result
 
     def test_return_1d(self):
         result = ts.out_array01_malloc(5.0, 2)
         assert (5.0, 6.0) == flatten(result)
+
+    def test_return_empty_1d(self):
+        result = ts.out_array01_malloc(5.0, 0)
+        assert result.size == 0
 
     def test_memory_error(self):
         with pytest.raises(MemoryError):
@@ -447,7 +455,7 @@ class Test_OUT_ARRAY2_FixedSize:
         assert (10, 2) == value.shape
         assert 30 == value[0, 0]
 
-    # %apply (int **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
+    # %apply (int **OUT_ARRAY2, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
     # Malloced array.  Our function has arguments start value, and dim1, dim2
     # If the start value is < 0, instead, it simulates a malloc failure
     def test_malloced_array(self):
@@ -475,16 +483,20 @@ class Test_OUT_ARRAY2_FixedSize:
 
 class Test_OUT_ARRAY12_FixedSize:
     # %apply (int **OUT_ARRAY12, int *SIZE1, int *SIZE2) {(int **result, int *size1, int *size2)};
-    # Same as before, but a dim1=0 indicates to return a 1-dimensional array
+    # Same as before, but a dim1=NO_ARRAY_DIMENSION indicates to return a 1-dimensional array
     def test_2d_array(self):
-        value1 = ts.out_array12_1(25, 40, 41)
-        assert (40, 41) == value1.shape
-        assert 25 == value1[0, 0]
+        value = ts.out_array12_1(25, 40, 41)
+        assert (40, 41) == value.shape
+        assert 25 == value[0, 0]
 
     def test_generating_1d_array(self):
-        value2 = ts.out_array12_1(25, 0, 41)
-        assert (41,) == value2.shape
-        assert 25 == value2[0]
+        value = ts.out_array12_1(25, NO_ARRAY_DIMENSION, 41)
+        assert (41,) == value.shape
+        assert 25 == value[0]
+
+    def test_generating_1d_empty_array(self):
+        value = ts.out_array12_1(25, 0, 41)
+        assert (0, 41) == value.shape
 
     def test_memory_error(self):
         with pytest.raises(MemoryError):
@@ -495,14 +507,18 @@ class Test_OUT_ARRAY23_FixedSize:
     # %apply (double **OUT_ARRAY23, int *SIZE1, int *SIZE2, int *SIZE3) {(double **result, int *size1, int *size2, int *size3)};
     # Same as before, but 2 or 3 dimensions
     def test_yields_3d(self):
-        value1 = ts.out_array23_1(25, 3, 4, 5)
-        assert (3, 4, 5) == value1.shape
-        assert 25 == value1[0, 0, 0]
+        value = ts.out_array23_1(25, 3, 4, 5)
+        assert (3, 4, 5) == value.shape
+        assert 25 == value[0, 0, 0]
 
     def test_yields_2d(self):
-        value2 = ts.out_array23_1(25, 0, 4, 5)
-        assert (4, 5) == value2.shape
-        assert 25 == value2[0, 0]
+        value = ts.out_array23_1(25, NO_ARRAY_DIMENSION, 4, 5)
+        assert (4, 5) == value.shape
+        assert 25 == value[0, 0]
+
+    def test_yields_2d_empty(self):
+        value = ts.out_array23_1(25, 0, 4, 5)
+        assert (0, 4, 5) == value.shape
 
     def test_memory_error(self):
         with pytest.raises(MemoryError):
@@ -775,6 +791,9 @@ class Test_SpiceCell:
         t3 = SpiceCell.as_spice_cell(SPICE_CELL_DOUBLE, ())
         assert isinstance(t3[0], float)
 
+        with pytest.raises(ValueError):
+            SpiceCell.as_spice_cell(-1, ())
+
     def test_append(self):
         t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
         old_size = t1.size
@@ -810,6 +829,46 @@ class Test_SpiceCell:
         t1[1], t1[-2] = 20, 30
         assert tuple(t1) == (1, 20, 30, 4)
 
+    def test_size(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        t1.card = 10
+        assert t1.size == 10
+        # Growing the size doesn't affect the cardinality
+        t1.size = 20
+        assert t1.size == 20 and t1.card == 10
+        # Shrinking the size can change the cardinality
+        t1.card = 15
+        t1.size = 10
+        assert t1.size == t1.card == 10
+
+    def test_size_error(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        with pytest.raises(ValueError):
+            t1.size = -1
+        with pytest.raises(ValueError):
+            t1.size = 5.7
+        with pytest.raises(ValueError):
+            t1.size = None
+
+    def test_card_error(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        with pytest.raises(ValueError):
+            t1.card = -1
+        with pytest.raises(ValueError):
+            t1.card = 5.7
+        with pytest.raises(ValueError):
+            t1.card = None
+        with pytest.raises(ValueError):
+            t1.card = t1.size + 1
+
+    def test_boolean(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        assert not t1
+        t1.append(10)
+        assert t1
+
+
+
 class Test_SpiceCell_Typemap():
     def test_spice_cell_in(self):
         cell = SpiceCell((1, 2, 3, 4))
@@ -828,7 +887,7 @@ class Test_FileName:
         assert ts.decode_filename('a/b/string.txt') == 'a/b/string.txt'
 
     def test_byte_array(self):
-        assert ts.decode_filename(b'a/b/bytes.bin') =='a/b/bytes.bin'
+        assert ts.decode_filename(b'a/b/bytes.bin') == 'a/b/bytes.bin'
 
     def test_Path(self):
         expected_value = os.sep.join(["a", "b", "filepath"])
