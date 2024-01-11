@@ -450,6 +450,10 @@ work as expected.
 You can also write a for loop `for item in spice_cell: ...` to iterate through
 the active elements.
 
+`bool(spice_cell)`
+: If a `spice_cell` is used in a boolean context, its value is `False` if all elements
+are inactive (`spice.cell.card == 0`), and `True` otherwise. 
+
 #### SpiceCell-specific operations
 
 `SpiceCell` also has the following methods and properties specific to a `SpiceCell`.
