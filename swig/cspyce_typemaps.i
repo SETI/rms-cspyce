@@ -1701,7 +1701,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 *       (type **OUT_ARRAY01, SpiceInt *DIM1)
 *******************************************************************************/
 
-%define TYPEMAP_ARGOUT(Type, Typecode) // To fill in types below!
+%define TYPEMAP_ARGOUT(Type, Typecode, BuildString) // To fill in types below!
 
 /***************************************************************
 * (Type **OUT_ARRAY01, SpiceInt *SIZE1)
@@ -1729,17 +1729,16 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type **OUT_ARRAY01, SpiceInt *SIZE1)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
-    npy_intp dim = dimsize$argnum[0];
-    pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode,  (void **)&buffer$argnum);
-    TEST_MALLOC_FAILURE(pyarr$argnum);
-
     if (dimsize$argnum[0] == NO_ARRAY_DIMENSION) {
-        PyObject* value = PyArray_GETITEM(pyarr$argnum, PyArray_DATA(pyarr$argnum));
+        PyObject* value = Py_BuildValue(BuildString, *(Type *)buffer$argnum);
         TEST_MALLOC_FAILURE(value);
-        // AppendOutput steals the reference to this object, so we don't need DECREF
-        // pyarr$argnum is cleaned up by the freearg
+        // AppendOutput steals the reference to value
+        // buffer is freed by the freearg code.
         $result = SWIG_Python_AppendOutput($result, value);
     } else {
+        npy_intp dim = dimsize$argnum[0];
+        pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode, (void **)&buffer$argnum);
+        TEST_MALLOC_FAILURE(pyarr$argnum);
         $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
         // AppendOutput steals the reference to the argument.
         pyarr$argnum = NULL;
@@ -1759,12 +1758,10 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 * Now define these typemaps for every numeric type
 *******************************************************/
 
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT)
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT)
-TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT)
-TYPEMAP_ARGOUT(long,          NPY_LONG)
-TYPEMAP_ARGOUT(double,        NPY_DOUBLE)
-TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
+TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  "i")
+TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  "i")
+TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT,  "i")
+TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, "d")
 
 #undef TYPEMAP_ARGOUT
 
