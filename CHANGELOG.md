@@ -4,6 +4,23 @@ All notable changes to `cspyce` will be documented here
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project tries to adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.2.4] - 2024-01-11
+Change functions that return SpiceCells to allow an optional final argument
+that is a SpiceCell to populate or an integer giving the size of the returned
+SpiceCell (issue #154).
+Fix a bug when zero-length arrays being passed to vectorized functions (issue #155).
+
+## [2.2.3] - 2023-12-22
+Fix a bug with `chbder` (issue #150).
+Fix a problem with Windows where a compiler upgrade seems to have broken Windows
+tests. We now use the NAIF pre-built library for Windows (issue #151).
+
+## [2.2.2] - 2023-10-24
+Repo renamed from SETI/pds-cspyce to SETI/rms-cspyce.
+
+## [2.2.1] - 2023-10-18
+Cosmetic changes to README.md.
+
 ## [2.2.0] - 2023-10-17
 Support Python 3.12. 
 Complete testing of all scalar functions.
