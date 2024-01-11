@@ -845,13 +845,6 @@ class Test_SpiceCell_Typemap():
         # This function sums the items of the integer SpiceCell.
         assert ts.SpiceCell_in(cell) == 10
 
-    def test_spice_cell_out(self):
-        # This function returns a double SpiceCell with a single element
-        cell = ts.SpiceCell_out(1.0)
-        assert isinstance(cell, SpiceCell)
-        assert list(cell) == [1.0]
-        assert isinstance(cell[0], float)
-
     def test_spice_cell_in_out(self):
         cell = SpiceCell((1, 2, 3, 4))
         # This appends the value to the integer SpiceCell

@@ -398,6 +398,16 @@ Any CSPICE function that expects a `SpiceCell` as an input can also be passed an
 a tuple, or anything that can reasonably be converted into an appropriately typed
 `SpiceCell`:
 
+Any CSPICE function that returns a `SpiceCell` as a result takes an optional final
+argument.  
+* If this argument is omitted, a `SpiceCell` with a function-specific default capacity
+  will be created, and the output will be placed into it. 
+* If this argument is a `SpiceCell`, it will be used as the output argument.
+* If this argument is an integer, a `SpiceCell` with that capacity will be created and
+  used as the output.
+
+In all cases, the `SpiceCell` output will also be a return value.
+
 ```shell
 >>> import cspyce
 >>> cspyce.wninsd(2.0, 4.9, (1.0, 3.0, 5.0, 7.0, 9.0, 11.0))
