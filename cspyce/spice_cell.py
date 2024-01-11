@@ -38,6 +38,8 @@ class SpiceCell:
     def as_spice_cell(my_type, record):
         if isinstance(record, SpiceCell) and record._header._dtype == my_type:
             return record
+        if isinstance(record, int):
+            return SpiceCell.create_spice_cell(my_type, record)
         return SpiceCell(data=record, typeno=my_type)
 
     def __init__(self, data=None, typeno=None, size: int = 0, length: int = 0):

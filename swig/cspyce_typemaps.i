@@ -3154,12 +3154,16 @@ typedef SpiceCell SpiceCellDouble;
 {
 //      $1_type $1_name
 //      Type *OUTPUT
+    ERROR A SpiceCell should never be an output-only argument. "$1_type $1_name" in "$symname".
+#if 0
+    foobar baz bym
     record = PyObject_CallMethod(SWIG_CALLBACK_CLASS , "create_spice_cell", "i", TypeCode);
     TEST_MALLOC_FAILURE(record);
 
     PyObject *header_address = PyObject_GetAttrString(record, "_header_address");
     $1 = PyLong_AsVoidPtr(header_address);
     Py_XDECREF(header_address);
+#endif
 }
 
 %typemap(argout)

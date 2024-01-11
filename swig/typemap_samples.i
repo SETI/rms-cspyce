@@ -452,10 +452,6 @@ void ellipse_out(SpiceEllipse *arg);
     void SpiceCell_append(SpiceCell *arg, SpiceInt value) {
         appndi_c(value, arg);
     }
-
-    void SpiceCell_out(SpiceCell *arg, SpiceDouble value) {
-        appndd_c(value, arg);
-    }
 %}
 
 %apply (SpiceCellInt* INPUT) {SpiceCell *arg};
@@ -463,9 +459,6 @@ int SpiceCell_in(SpiceCell *arg);
 
 %apply (SpiceCellInt* INOUT) {SpiceCell *arg};
 void SpiceCell_append(SpiceCell *arg, SpiceInt value);
-
-%apply (SpiceCellDouble* OUTPUT) {SpiceCell *arg};
-void SpiceCell_out(SpiceCell *arg, SpiceDouble value);
 
 %{
     const SpiceChar* decode_filename(const char* filename) {
