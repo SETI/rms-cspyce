@@ -791,6 +791,9 @@ class Test_SpiceCell:
         t3 = SpiceCell.as_spice_cell(SPICE_CELL_DOUBLE, ())
         assert isinstance(t3[0], float)
 
+        with pytest.raises(ValueError):
+            SpiceCell.as_spice_cell(-1, ())
+
     def test_append(self):
         t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
         old_size = t1.size
@@ -837,6 +840,33 @@ class Test_SpiceCell:
         t1.card = 15
         t1.size = 10
         assert t1.size == t1.card == 10
+
+    def test_size_error(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        with pytest.raises(ValueError):
+            t1.size = -1
+        with pytest.raises(ValueError):
+            t1.size = 5.7
+        with pytest.raises(ValueError):
+            t1.size = None
+
+    def test_card_error(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        with pytest.raises(ValueError):
+            t1.card = -1
+        with pytest.raises(ValueError):
+            t1.card = 5.7
+        with pytest.raises(ValueError):
+            t1.card = None
+        with pytest.raises(ValueError):
+            t1.card = t1.size + 1
+
+    def test_boolean(self):
+        t1 = SpiceCell(typeno=SPICE_CELL_INT, size=10)
+        assert not t1
+        t1.append(10)
+        assert t1
+
 
 
 class Test_SpiceCell_Typemap():
