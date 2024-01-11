@@ -1729,7 +1729,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 //      (Type **OUT_ARRAY01, SpiceInt *SIZE1)
 
     TEST_MALLOC_FAILURE(buffer$argnum);
-    npy_intp dim = max(dimsize$argnum[0], 1);
+    npy_intp dim = dimsize$argnum[0];
     pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 

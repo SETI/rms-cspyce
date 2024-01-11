@@ -140,8 +140,10 @@ class SpiceCell:
 
     @size.setter
     def size(self, size):
-        assert isinstance(size, int) and size > 0
-        self.__grow_array(size)
+        if isinstance(size, int) and size > 0:
+            self.__grow_array(size)
+        else:
+            raise ValueError("size must be a positive integer")
 
     @property
     def card(self):
@@ -149,8 +151,10 @@ class SpiceCell:
 
     @card.setter
     def card(self, value):
-        assert isinstance(value, int) and 0 <= value <= self.size
-        self._header._card = value
+        if isinstance(value, int) and 0 <= value <= self.size:
+            self._header._card = value
+        else:
+            raise ValueError("cardinality must be between 0 and the size of the cell")
 
     def as_array(self):
         return self._user_data[0:self.card]

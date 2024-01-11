@@ -394,12 +394,21 @@ def test_utc2et():
     assert output == 155185515.1831043
     # icy utc2et example gives 1.5518552e+08 as output
 
-
 def test_vadd():
     v1 = [1.0, 2.0, 3.0]
     v2 = [4.0, 5.0, 6.0]
     npt.assert_array_almost_equal(cs.vadd(v1, v2), [5.0, 7.0, 9.0])
 
+# This test is temporary until we have a better structure for dealing with vectors.
+# But we need to test that 0-length vectors are handled properly.
+def test_vadd_vector():
+    v1 = np.array(((1.0, 2.0, 3.0), (4.0, 5.0, 6.0)))
+    v2 = np.zeros((0, 3), dtype=float)
+
+    # Normal add works
+    npt.assert_array_almost_equal(cs.vadd.vector(v1, (100, 200, 300)), v1 + (100, 200, 300))
+    # If there is an empty array, then the result is an empty array.
+    assert cs.vadd.vector(v1, v2).shape == (0, 3)
 
 def test_vaddg():
     v1 = [1.0, 2.0, 3.0]

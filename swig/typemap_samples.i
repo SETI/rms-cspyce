@@ -105,13 +105,21 @@ PyObject* in_array01_1(SpiceInt *arg, SpiceInt dim);
    PyObject *in_array12(SpiceInt *arg, SpiceInt dim1, SpiceInt dim2) {
        SpiceInt xdim1 = dim1 == NO_ARRAY_DIMENSION ? 1 : dim1;
        PyObject* info = int_array_to_tuple(arg, xdim1 * dim2);
-       return Py_BuildValue("Nii", info, dim1, dim2);
+       if (dim1 != NO_ARRAY_DIMENSION) {
+           return Py_BuildValue("Nii", info, dim1, dim2);
+       } else {
+           return Py_BuildValue("Ni", info, dim2);
+       }
    }
 
    PyObject *in_array23(SpiceInt *arg, SpiceInt dim1, SpiceInt dim2, SpiceInt dim3) {
        SpiceInt xdim1 = dim1 == NO_ARRAY_DIMENSION ? 1 : dim1;
        PyObject* info = int_array_to_tuple(arg, xdim1 * dim2 * dim3);
-       return Py_BuildValue("Niii", info, dim1, dim2, dim3);
+       if (dim1 != NO_ARRAY_DIMENSION) {
+           return Py_BuildValue("Niii", info, dim1, dim2, dim3);
+       } else {
+           return Py_BuildValue("Nii", info, dim2, dim3);
+       }
    }
 %}
 
