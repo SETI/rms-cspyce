@@ -152,18 +152,17 @@ def define_body_aliases(*items):
         k = -needed - 1
         name_list = name_list[:k] + name_list[k+1:] + name_list[k:k+1]
 
-    # Update the kernel pool
-    for (name, code) in zip(name_list, code_list):
+    # Update the kernel pool, but only with the first name and the first code. Otherwise,
+    # it is too easy to hit the limit on the number of allowed boddef's.
+    name = name_list[0]
+    code = code_list[0]
 
-        # Don't enter info that is already there, because the name pool is small
-        (test_code, found) = cspyce1.bodn2c.flag(name)
-        if found and test_code == code:
-            continue
-
-        (test_name, found) = cspyce1.bodc2n.flag(code)
-        if found and test_name.upper() == code:
-            continue
-
+    (test_name, found) = cspyce1.bodc2n.flag(code)
+    if found:
+        # Assign new name only if it is different from the existing name
+        if test_name.upper() != name.upper():
+            cspyce1.boddef(name, code)
+    else:
         cspyce1.boddef(name, code)
 
 def define_frame_aliases(*items):
