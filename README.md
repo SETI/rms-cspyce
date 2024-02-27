@@ -1,9 +1,12 @@
+[![GitHub release; latest by date](https://img.shields.io/github/v/release/SETI/rms-cspyce)](https://github.com/SETI/rms-cspyce/releases)
+[![GitHub Release Date](https://img.shields.io/github/release-date/SETI/rms-cspyce)](https://github.com/SETI/rms-cspyce/releases)
 [![Test Status](https://img.shields.io/github/actions/workflow/status/SETI/rms-cspyce/run-tests.yml?branch=main)](https://github.com/SETI/rms-cspyce/actions)
 [![Code coverage](https://img.shields.io/codecov/c/github/SETI/rms-cspyce/main?logo=codecov)](https://codecov.io/gh/SETI/rms-cspyce)
-[![GitHub Release Date](https://img.shields.io/github/release-date/SETI/rms-cspyce)](https://github.com/SETI/rms-cspyce/releases)
-[![GitHub release; latest by date](https://img.shields.io/github/v/release/SETI/rms-cspyce)](https://github.com/SETI/rms-cspyce/releases)
+<br />
 [![PyPI - Version](https://img.shields.io/pypi/v/cspyce)](https://pypi.org/project/cspyce)
+[![PyPI - Format](https://img.shields.io/pypi/format/cspyce)](https://pypi.org/project/cspyce)
 [![PyPI - Downloads](https://img.shields.io/pypi/dm/cspyce)](https://pypi.org/project/cspyce)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cspyce)](https://pypi.org/project/cspyce)
 <br />
 [![GitHub commits since latest release](https://img.shields.io/github/commits-since/SETI/rms-cspyce/latest)](https://github.com/SETI/rms-cspyce/commits/main/)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/SETI/rms-cspyce)](https://github.com/SETI/rms-cspyce/commits/main/)
