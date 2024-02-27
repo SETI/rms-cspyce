@@ -1,6 +1,6 @@
 | PyPI Release | Test Status | Code Coverage |
 | ------------ | ----------- | ------------- |
-| [![PyPI version](https://badge.fury.io/py/cspyce.svg)](https://badge.fury.io/py/cspyce) | [![Build status](https://img.shields.io/github/actions/workflow/status/SETI/rms-cspyce/run-tests.yml?branch=master)](https://github.com/SETI/rms-cspyce/actions) | [![Code coverage](https://img.shields.io/codecov/c/github/SETI/rms-cspyce/main?logo=codecov)](https://codecov.io/gh/SETI/rms-cspyce) |
+| [![PyPI version](https://badge.fury.io/py/cspyce.svg)](https://badge.fury.io/py/cspyce) | [![Build status](https://img.shields.io/github/actions/workflow/status/SETI/rms-cspyce/run-tests.yml?branch=main)](https://github.com/SETI/rms-cspyce/actions) | [![Code coverage](https://img.shields.io/codecov/c/github/SETI/rms-cspyce/main?logo=codecov)](https://codecov.io/gh/SETI/rms-cspyce) |
 
 
 # `cspyce` MODULE OVERVIEW
@@ -399,9 +399,9 @@ a tuple, or anything that can reasonably be converted into an appropriately type
 `SpiceCell`:
 
 Any CSPICE function that returns a `SpiceCell` as a result takes an optional final
-argument.  
+argument.
 * If this argument is omitted, a `SpiceCell` with a function-specific default capacity
-  will be created, and the output will be placed into it. 
+  will be created, and the output will be placed into it.
 * If this argument is a `SpiceCell`, it will be used as the output argument.
 * If this argument is an integer, a `SpiceCell` with that capacity will be created and
   used as the output.
@@ -452,7 +452,7 @@ the active elements.
 
 `bool(spice_cell)`
 : If a `spice_cell` is used in a boolean context, its value is `False` if all elements
-are inactive (`spice.cell.card == 0`), and `True` otherwise. 
+are inactive (`spice.cell.card == 0`), and `True` otherwise.
 
 #### SpiceCell-specific operations
 
