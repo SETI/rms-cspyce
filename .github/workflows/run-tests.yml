@@ -25,6 +25,12 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Get swig on MacOs
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install swig
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
