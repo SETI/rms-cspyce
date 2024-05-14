@@ -25,6 +25,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get swig on MacOS
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew update
+          brew install swig
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.5
         env:
