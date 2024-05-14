@@ -25,7 +25,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Get swig on MacOs
+      - name: Get swig on MacOS
         if: matrix.os == 'macos-latest'
         run: |
           brew update
