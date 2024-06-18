@@ -4,8 +4,13 @@ All notable changes to `cspyce` will be documented here
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project tries to adhere to [Semantic Versioning](http://semver.org/).
 
-## [2.2.6] - 2024-06-18
-Recompiled with NumPy 2.0.0, which supports both NumPy 1.x and 2.x.
+## [2.3.0] - 2024-06-18
+Recompiled with NumPy 2.0.0, which supports both NumPy 1.x and 2.x. 
+Python 3.8 no longer supported!
+
+## [2.2.6] - 2024-05-14
+Fixed problems with compiling on MacOS. Added contributing guide and code of 
+conduct. Other minor cosmetic changes.
 
 ## [2.2.5] - 2024-02-05
 Fix problem with too many boddefs.
