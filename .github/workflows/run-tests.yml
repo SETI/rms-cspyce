@@ -18,7 +18,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: [ '3.9', '3.10', '3.11', '3.12' ]
-        numpy1: [ yes, no ]
+        numpy-version: [ np1, np2 ]
       fail-fast: false
     steps:
       - name: Checkout
@@ -42,9 +42,9 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Maybe revert to NumPy 1.26
-        if: matrix.numpy1 == 'yes'
+        if: matrix.numpy-version == 'np1'
         run: |
-          python -m pip uninstall numpy
+          python -m pip uninstall -y numpy
           python -m pip install numpy==1.26.4
 
       - name: Cache CSPICE source code
