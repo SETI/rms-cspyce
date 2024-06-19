@@ -2,5 +2,5 @@ coverage
 pytest
 pytest-cov
 requests
-numpy
+numpy>=2.0.0
 setuptools
