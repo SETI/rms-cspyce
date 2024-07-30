@@ -204,7 +204,7 @@ def get_extensions():
         extra_args["libraries"] = ["cspice", "csupport"]
         extra_args["library_dirs"] = [os.path.join(cspice_directory, "lib")]
     else:
-        cspyce_cflags = ["-DSWIG_PYTHON_CAST_MODE"]
+        cspyce_cflags = ["-DSWIG_PYTHON_CAST_MODE", "-Wimplicit-int"]
 
     include_dirs = [os.path.join(cspice_directory, "include"), numpy.get_include()]
 
