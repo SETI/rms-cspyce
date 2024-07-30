@@ -186,7 +186,7 @@ def get_c_libraries():
         return []
     files = sorted(glob(os.path.join(cspice_directory, "src", "*.c")))
     splits = 1 if IS_LINUX else 1 + (len(files) // 250)
-    compiler_flags = ["-w"]
+    compiler_flags = ["-w", "-Wimplicit-int"]
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
             "sources": files[i::splits],
@@ -204,7 +204,7 @@ def get_extensions():
         extra_args["libraries"] = ["cspice", "csupport"]
         extra_args["library_dirs"] = [os.path.join(cspice_directory, "lib")]
     else:
-        cspyce_cflags = ["-DSWIG_PYTHON_CAST_MODE", "-Wimplicit-int"]
+        cspyce_cflags = ["-DSWIG_PYTHON_CAST_MODE"]
 
     include_dirs = [os.path.join(cspice_directory, "include"), numpy.get_include()]
 
