@@ -186,7 +186,8 @@ def get_c_libraries():
         return []
     files = sorted(glob(os.path.join(cspice_directory, "src", "*.c")))
     splits = 1 if IS_LINUX else 1 + (len(files) // 250)
-    compiler_flags = ["-w", "-Wno-error=implicit-int"]
+    compiler_flags = ["-w", "-std=c89",  "-Wno-logical-op-parentheses",
+                      "-Wno-shift-op-parentheses", "-Wno-parentheses"]
     cspice_libraries = [
         ("cspice_" + str(i + 1), {
             "sources": files[i::splits],
