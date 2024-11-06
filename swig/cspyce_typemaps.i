@@ -1586,7 +1586,7 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
     (Type OUT_ARRAY1[ANY], SpiceInt DIM1),
     (SpiceInt DIM1, Type OUT_ARRAY1[ANY])
 {
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -1603,7 +1603,7 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
     npy_intp new_dim[1] = {size$argnum[0]};
     HANDLE_RESIZE(pyarr$argnum, new_dim)
 
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -1671,7 +1671,7 @@ TYPEMAP_IN(ConstSpiceDouble, NPY_DOUBLE)
     pyarr$argnum = create_array_with_owned_data(1, dims, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -1735,12 +1735,12 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
         TEST_MALLOC_FAILURE(value);
         // AppendOutput steals the reference to value.  No need to DECREF.
         // buffer is freed by the freearg code.
-        $result = SWIG_Python_AppendOutput($result, value);
+        $result = SWIG_AppendOutput($result, value);
     } else {
         npy_intp dim = dimsize$argnum[0];
         pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(1, &dim, Typecode, (void **)&buffer$argnum);
         TEST_MALLOC_FAILURE(pyarr$argnum);
-        $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+        $result = SWIG_AppendOutput($result, (PyObject *)pyarr$argnum);
         // AppendOutput steals the reference to the argument.
         pyarr$argnum = NULL;
     }
@@ -2106,7 +2106,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
     (Type OUT_ARRAY2[ANY][ANY], SpiceInt DIM1, SpiceInt DIM2),
     (SpiceInt DIM1, SpiceInt DIM2, Type OUT_ARRAY2[ANY][ANY])
 {
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -2122,7 +2122,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
 {
     npy_intp dims[2] = {outsize$argnum, dimsize$argnum[1]};
     HANDLE_RESIZE(pyarr$argnum, dims)
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *)pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -2133,7 +2133,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
 {
     npy_intp dims[2] = {outsize$argnum[0], outsize$argnum[1]};
     HANDLE_RESIZE(pyarr$argnum, dims)
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *)pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -2210,7 +2210,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
     pyarr$argnum = (PyArrayObject *) create_array_with_owned_data(2, dims, Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -2226,7 +2226,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
     pyarr$argnum = create_array_with_owned_data(nd, &dims[2 - nd], Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -2295,7 +2295,7 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
     pyarr$argnum = create_array_with_owned_data(nd, &dims[3 - nd], Typecode,  (void **)&buffer$argnum);
     TEST_MALLOC_FAILURE(pyarr$argnum);
 
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *)pyarr$argnum);
     // AppendOutput steals the reference to the argument.
     pyarr$argnum = NULL;
 }
@@ -2363,7 +2363,7 @@ TYPEMAP_ARGOUT(SpiceDouble, NPY_DOUBLE)
     (SpiceInt DIM1, Type INOUT_ARRAY1[])
     (SpiceInt DIM1, Type INOUT_ARRAY2[][ANY])
 {
-    $result = SWIG_Python_AppendOutput($result, (PyObject *)pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *)pyarr$argnum);
     pyarr$argnum = NULL;
 }
 
@@ -2665,7 +2665,7 @@ char *byte_string_to_buffer_minimum_size(
 {
     buffer$argnum[dim1$argnum-1] = '\0';  // Make sure string is terminated
     PyObject *obj = PyUnicode_FromString((Type *) buffer$argnum);
-    $result = SWIG_Python_AppendOutput($result, obj);
+    $result = SWIG_AppendOutput($result, obj);
 }
 
 %typemap(freearg)
@@ -2749,14 +2749,14 @@ char *byte_string_to_buffer_minimum_size(
 {
     buffer$argnum[dim1$argnum-1] = '\0';  // Make sure string is terminated
     PyObject *obj = PyUnicode_FromString((Type *) buffer$argnum);
-    $result = SWIG_Python_AppendOutput($result, obj);
+    $result = SWIG_AppendOutput($result, obj);
 }
 
 %typemap(argout)
     (Type OUT_STRING[ANY], SpiceInt *SIZE1)
 {
     PyObject *obj = PyUnicode_FromStringAndSize((Type *) buffer$argnum, size1$argnum);
-    $result = SWIG_Python_AppendOutput($result, obj);
+    $result = SWIG_AppendOutput($result, obj);
 }
 
 %typemap(freearg)
@@ -2846,7 +2846,7 @@ TYPEMAP_INOUT_OUT(SpiceChar)
     Py_XDECREF(list$argnum);
     list$argnum = NULL;
     CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer$argnum, $1, $2, list$argnum);
-    $result = SWIG_Python_AppendOutput($result, list$argnum);
+    $result = SWIG_AppendOutput($result, list$argnum);
     list$argnum = NULL;
 }
 
@@ -2951,7 +2951,7 @@ TYPEMAP_IN(ConstSpiceChar)
     (SpiceInt DIM2, SpiceInt *NSTRINGS, Type OUT_STRINGS[ANY][ANY])
 {
     CONVERT_BUFFER_TO_ARRAY_OF_STRINGS(buffer$argnum, nstrings$argnum, dimsize$argnum[1], list$argnum)
-    $result = SWIG_Python_AppendOutput($result, list$argnum);
+    $result = SWIG_AppendOutput($result, list$argnum);
     list$argnum = NULL;
 }
 
@@ -3020,7 +3020,7 @@ TYPEMAP_OUT(SpiceChar)
 %typemap(argout)
     (Type *OUTPUT)
 %{
-    $result = SWIG_Python_AppendOutput($result, record$argnum);
+    $result = SWIG_AppendOutput($result, record$argnum);
     record$argnum = NULL;
 %}
 
@@ -3088,7 +3088,7 @@ TYPEMAP_RECORDS(ConstSpiceDSKDescr, SpiceDSKDescr)
 %typemap(argout)
     (Type *OUTPUT)
 %{
-    $result = SWIG_Python_AppendOutput($result, (PyObject *) pyarr$argnum);
+    $result = SWIG_AppendOutput($result, (PyObject *) pyarr$argnum);
     pyarr$argnum = NULL;
 %}
 
@@ -3166,7 +3166,7 @@ typedef SpiceCell SpiceCellDouble;
     (Type *OUTPUT),
     (Type *INOUT)
 %{
-    $result = SWIG_Python_AppendOutput($result, record$argnum);
+    $result = SWIG_AppendOutput($result, record$argnum);
     record$argnum = NULL;
 %}
 
@@ -3214,7 +3214,7 @@ TYPEMAP_SPICE_CELL(SpiceCellChar,    SPICE_CHR)
 //      $1_type $1_name
 //      (Type *OUTPUT)
 
-    $result = SWIG_Python_AppendOutput($result, converter);
+    $result = SWIG_AppendOutput($result, converter);
 }
 
 %typemap(freearg) (Type *OUTPUT) ""
@@ -3256,7 +3256,7 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
 
 %typemap(out) (PyPointer* RETURN_OBJECT) {
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($1);
+    $result = SWIG_AppendOutput($result, $1);
 }
 
 
@@ -3265,14 +3265,14 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
     (SpiceBoolean RETURN_BOOLEAN) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result, PyBool_FromLong((long) $1));
+    $result = SWIG_AppendOutput($result, PyBool_FromLong((long) $1));
 }
 
 %typemap(out)
     (SpiceInt RETURN_INT) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result, PyInt_FromLong((long) $1));
+    $result = SWIG_AppendOutput($result, PyInt_FromLong((long) $1));
 }
 
 %typemap(out)
@@ -3280,7 +3280,7 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
     (SpiceDouble RETURN_DOUBLE) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result, PyFloat_FromDouble((double) $1));
+    $result = SWIG_AppendOutput($result, PyFloat_FromDouble((double) $1));
 }
 
 %typemap(out)
@@ -3288,7 +3288,7 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
     (SpiceChar *RETURN_STRING) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_Python_AppendOutput($result, PyUnicode_FromString((char *) $1));
+    $result = SWIG_AppendOutput($result, PyUnicode_FromString((char *) $1));
 }
 
 %typemap(in)
