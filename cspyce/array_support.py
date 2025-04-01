@@ -43,7 +43,7 @@ def array_version(func):
     exists, just return it. If there is no vector version, the array version is
     simply the scalar version.
     """
-
+ f
     if hasattr(func, 'array'):
         return func.array
 
@@ -191,7 +191,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
         # Convert to floating-point array
         error = False
         try:
-            arg = np.asfarray(arg)
+            arg = np.asarray(arg, dtype=np.float64)
         except ValueError:
             error = True
 
