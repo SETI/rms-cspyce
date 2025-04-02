@@ -191,7 +191,7 @@ def _exec_with_broadcasting(func, *args, **keywords):
         # Convert to floating-point array
         error = False
         try:
-            arg = np.asfarray(arg)
+            arg = np.asarray(arg, dtype=np.float64)
         except ValueError:
             error = True
 
