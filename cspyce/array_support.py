@@ -43,7 +43,7 @@ def array_version(func):
     exists, just return it. If there is no vector version, the array version is
     simply the scalar version.
     """
- f
+
     if hasattr(func, 'array'):
         return func.array
 
