@@ -16,7 +16,7 @@
 %fragment("NumPy_Fragments");
 
 %init %{
-    import_array(); /* For numpy interface */
+    import_array1(0); /* For numpy interface */
     erract_c("SET", 256, "RETURN");
     errdev_c("SET", 256, "NULL");   /* Suppresses default error messages */
     initialize_typemap_globals();
