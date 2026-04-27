@@ -21,9 +21,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+        uses: actions/checkout@v6
 
       - name: Get swig on MacOS
         if: matrix.os == 'macos-latest'
@@ -32,7 +30,7 @@ jobs:
           brew install swig
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -41,7 +39,7 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Cache CSPICE source code
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         env:
           cache-name: cspice-source-code
         with:
@@ -70,7 +68,7 @@ jobs:
 
       - name: Cache libraries
         id: cache-libraries
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         env:
           cache-name: cspice-libraries
         with:
@@ -106,7 +104,7 @@ jobs:
           pytest -v -rA --cov=./ --cov-report=xml
 
       - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
