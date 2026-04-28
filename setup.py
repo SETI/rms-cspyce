@@ -95,11 +95,14 @@ class GetCspice:
         with tempfile.TemporaryDirectory() as tmpdir:
             self.download_cspice(destination=tmpdir)
             shutil.copytree(os.path.join(tmpdir, "cspice", "src", "cspice"),
-                            os.path.join(self.target_directory, "src"))
+                            os.path.join(self.target_directory, "src"),
+                            dirs_exist_ok=True)
             shutil.copytree(os.path.join(tmpdir, "cspice", "include"),
-                            os.path.join(self.target_directory, "include"))
+                            os.path.join(self.target_directory, "include"),
+                            dirs_exist_ok=True)
             shutil.copytree(os.path.join(tmpdir, "cspice", "lib"),
-                            os.path.join(self.target_directory, "lib"))
+                            os.path.join(self.target_directory, "lib"),
+                            dirs_exist_ok=True)
 
         return self.target_directory
 
@@ -157,6 +160,13 @@ class GenerateCommand(Command):
         pass
 
     def run(self):
+        # When invoked by pip via exec(), the project root may not be on
+        # sys.path, so the local 'swig' package won't be importable without this.
+        project_root = os.path.dirname(os.path.abspath(__file__)) \
+            if "__file__" in globals() else os.getcwd()
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
+
         # Create vectorize.i and cspyce0_info.py from existing swig .i files
         from swig.make_vectorize import create_vectorize_header_file
         from swig.make_cspyce0_info import make_cspice0_info
@@ -229,6 +239,11 @@ def get_extensions():
 class MyBuildExt(build_ext):
     def initialize_options(self):
         build_ext.initialize_options(self)
+
+    def run(self):
+        if not Path("swig/cspyce0_wrap.c").exists():
+            self.run_command("generate")
+        build_ext.run(self)
 
 
 def do_setup():
