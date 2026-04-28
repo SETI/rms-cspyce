@@ -43,6 +43,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
+          name: wheels-${{ matrix.os }}
           path: ./wheelhouse/*.whl
 
 
@@ -77,6 +78,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
+          name: sdist
           path: dist/*.tar.gz
 
 
@@ -87,8 +89,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v8
         with:
-          name: artifact   # prevents extra directory
           path: dist
+          merge-multiple: true
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.14.0
