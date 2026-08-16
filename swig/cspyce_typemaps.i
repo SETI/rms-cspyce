@@ -1759,9 +1759,9 @@ TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE)
 * Now define these typemaps for every numeric type
 *******************************************************/
 
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  PyInt_FromLong)
-TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  PyInt_FromLong)
-TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT,  PyInt_FromLong)
+TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  PyLong_FromLong)
+TYPEMAP_ARGOUT(SpiceInt,      NPY_INT,  PyLong_FromLong)
+TYPEMAP_ARGOUT(SpiceBoolean,  NPY_INT,  PyLong_FromLong)
 TYPEMAP_ARGOUT(SpiceDouble,   NPY_DOUBLE, PyFloat_FromDouble)
 
 #undef TYPEMAP_ARGOUT
@@ -3222,7 +3222,7 @@ TYPEMAP_SPICE_CELL(SpiceCellChar,    SPICE_CHR)
 %enddef
 
 TYPEMAP_ARGOUT(SpiceBoolean, PyBool_FromLong(value$argnum))
-TYPEMAP_ARGOUT(SpiceInt,     PyInt_FromLong(value$argnum))
+TYPEMAP_ARGOUT(SpiceInt,     PyLong_FromLong(value$argnum))
 TYPEMAP_ARGOUT(SpiceDouble,  PyFloat_FromDouble(value$argnum))
 TYPEMAP_ARGOUT(SpiceChar,    PyUnicode_FromStringAndSize(&value$argnum, 1))
 TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
@@ -3272,7 +3272,7 @@ TYPEMAP_ARGOUT(PyObject*,    (value$argnum))
     (SpiceInt RETURN_INT) {
 
     TEST_FOR_EXCEPTION;
-    $result = SWIG_AppendOutput($result, PyInt_FromLong((long) $1));
+    $result = SWIG_AppendOutput($result, PyLong_FromLong((long) $1));
 }
 
 %typemap(out)
