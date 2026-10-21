@@ -24,8 +24,8 @@ The current SPICE Toolkit version is N0067, released January 3, 2022.
 ## BUILDING CSPYCE
 Whenever we use the program `python` as a command, we mean your specific Python
 runtime. If you have multiple versions of Python installed on your computer,
-you may need to be running `python2` and `python3`, or `python3.8` and
-`python3.9`.
+you may need to be running `python2` and `python3`, or `python3.11` and
+`python3.12`.
 
 In general, our `.py` and `.c` sources should work across all implementations of
 Python beyond 2.7. However, there is no expectation of binary compatibility between
@@ -33,7 +33,7 @@ multiple versions.
 
 ### Step1:
 
-You must have swig and a newer version (≥ 3.8) of Python3 running on
+You must have swig and a newer version (≥ 3.11) of Python3 running on
 your computer for the first step:
 ```shell
 python3 setup.py generate
