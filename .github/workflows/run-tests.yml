@@ -17,11 +17,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.11', '3.12', '3.13', '3.14', '3.15']
       fail-fast: false
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Get swig on MacOS
         if: matrix.os == 'macos-latest'
@@ -30,7 +30,7 @@ jobs:
           brew install swig
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -39,7 +39,7 @@ jobs:
           python -m pip install -r requirements.txt
 
       - name: Cache CSPICE source code
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         env:
           cache-name: cspice-source-code
         with:
@@ -68,7 +68,7 @@ jobs:
 
       - name: Cache libraries
         id: cache-libraries
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         env:
           cache-name: cspice-libraries
         with:
@@ -92,9 +92,9 @@ jobs:
           python -m pip install .
 
       # We want to test operation with NumPy 1.x without needing a whole new matrix,
-      # so we arbitrarily choose that 3.10 should use 1.x instead of 2.x
+      # so we arbitrarily choose that 3.11 should use 1.x instead of 2.x
       - name: Maybe revert to NumPy 1.26
-        if: matrix.python-version == '3.10'
+        if: matrix.python-version == '3.11'
         run: |
           python -m pip uninstall -y numpy
           python -m pip install numpy==1.26.4
@@ -104,7 +104,7 @@ jobs:
           pytest -v -rA --cov=./ --cov-report=xml
 
       - name: Upload coverage report to codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

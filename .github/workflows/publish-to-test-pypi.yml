@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -33,9 +33,9 @@ jobs:
           brew install swig
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.3.3
         env:
-          CIBW_PROJECT_REQUIRES_PYTHON: '>=3.9'
+          CIBW_PROJECT_REQUIRES_PYTHON: '>=3.11'
           CIBW_BEFORE_BUILD: 'pip3 install numpy setuptools setuptools_scm && python3 setup.py generate && git status && git log --decorate -n 3'
           CIBW_SKIP: 'pp* *musllinux* *cp27mu*'
           CIBW_ARCHS: 'auto64'
@@ -53,14 +53,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Build sdist
         run: |
